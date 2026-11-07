@@ -1,0 +1,34 @@
+{
+  "brand": "Toogo",
+  "tagline": "Plan the trip together",
+  "brief": "A shared trip planner: friends plan the itinerary, bookings, places and lists together, and every change shows up for everyone live. Japan first, more countries later. It should feel shared and warm, but also premium and minimal.",
+  "adjectives": ["shared", "warm", "premium", "minimal"],
+  "criteria": "Success: avoids travel clichés (pins, planes, globes), doesn't depend on Japan, recognisable at 16 px, works in one colour, keeps the app's red.",
+  "mockups": ["app-icon", "website", "favicon-tab", "social", "tote", "sticker"],
+  "nav": ["Trips", "Places", "Bookings"],
+  "brand_color": "#bc002d",
+  "greyscale": false,
+  "final": true,
+  "round": 2,
+  "designer": "Toogo",
+  "concepts": [
+    {
+      "name": "Step up",
+      "symbol": "../masters/toogo-symbol.svg",
+      "lockup": "../masters/toogo-horizontal.svg",
+      "stacked": "../masters/toogo-stacked.svg",
+      "symbol_on_dark": "../masters/toogo-symbol-white.svg",
+      "lockup_on_dark": "../masters/toogo-horizontal-white.svg",
+      "stacked_on_dark": "../masters/toogo-stacked-white.svg",
+      "idea": "The two o's of toogo walk side by side, and the second one steps up: two people going together, one already on the next step.",
+      "rationale": [
+        "Comes straight from the name: the 'too' (two) in toogo, with no travel cliché",
+        "Warm and friendly, yet only two circles: premium and minimal",
+        "Doesn't depend on Japan, so it stays right when new countries arrive",
+        "Built on one stroke width; a heavier cut keeps it clear at 16 px"
+      ]
+    }
+  ],
+  "recommendation": "Step up: red on white across the product, with a red app-icon tile so it stands out on the home screen.",
+  "next_steps": ["Trademark and domain check for 'Toogo'", "Swap the new icons into the app", "Update the app name and manifest"]
+}

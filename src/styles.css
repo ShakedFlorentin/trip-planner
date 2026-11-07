@@ -186,7 +186,11 @@ form.card, .login .card { display: flex; flex-direction: column; gap: 12px; widt
   justify-content: center;
 }
 .login h1 { font-size: 1.75rem; }
-.hinomaru { width: 84px; height: 84px; border-radius: 50%; background: var(--accent-fill); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+/* the Toogo logo: brand red #bc002d on light; on dark the brighter accent, since the deep red sinks into black */
+.login-logo { margin: 0; line-height: 0; }
+.login-logo svg { width: 168px; height: auto; display: block; }
+.logo-rings { fill: #bc002d; }
+@media (prefers-color-scheme: dark) { .logo-rings { fill: var(--accent); } }
 /* after sign-up, when the account waits for its email confirmation */
 
 /* invite a friend (home, participants card) */

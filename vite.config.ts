@@ -19,6 +19,8 @@ function precacheList(): Plugin {
         'media.json',
         'manifest.webmanifest',
         'icon.svg',
+        'favicon.svg',
+        'favicon.ico',
         'icon-192.png',
         'icon-512.png',
         'icon-maskable-512.png',
