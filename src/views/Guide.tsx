@@ -5,8 +5,8 @@ import '../styles/guide.css'
 // remembered on this device once the guide has been watched or skipped, so it opens by itself only the first time
 const SEEN_KEY = 'guideSeen'
 const OPEN_EVENT = 'guide:open'
-// off until the guide videos are in public/guide/; the first-open guide and the ☰ row appear only once this is true
-export const GUIDE_READY = false
+// the guide videos are in public/guide/ (guide-he.mp4, guide-en.mp4); false hides the first-open guide and the ☰ row
+export const GUIDE_READY = true
 
 /** The guide has not been shown on this device yet. */
 export function guideUnseen() {

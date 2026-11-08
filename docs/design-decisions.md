@@ -244,3 +244,14 @@ changed Hebrew wording gets its English text in the same change. Check each scre
   "חזרה לטוקיו" ("Back to Tokyo"). The Home hero uses the same colour.
 - **79. One circle, two couples: done** with 57. On a "כל זוג לעצמו" item your circle ticks your couple; the line under
   it reads "הסימון שלכם · אלמוג ושניר: עוד לא" ("סימנו ✓" once they have). Checked on the simulator.
+- **74. A guide for new users: a video, the first time the app opens.** The user wanted it on the very first open (not
+  after the taste questions) and as a video in the promo's design that explains the app, not just shows it. A 36 s
+  explainer (brand/toogo/kit/motion/guide/, Hebrew and English, mirrored): swipe on places → a match goes into the plan
+  by itself → paste a TikTok link to add a place → everything else in ☰ → paste a booking confirmation. It plays once
+  per device after the opening rings and before sign-in (`guideSeen` in localStorage), with "דלג", then "מתחילים" /
+  "שוב"; ☰ › "מדריך" plays it again. App copies in public/guide/ (720x1280, ~1.4 MB).
+- **Video look for the app.** The user asked for the app to look like the promo video's app: the itinerary day is a
+  city photo banner with simple grey rows (time, title, one grey line, red tick), places are rows with photo, name,
+  "area · category" and a heart (details in the place sheet), bookings are rows with a red icon tile and the code in a
+  chip (boarding pass in the booking sheet). The bottom bar is the video's flat iOS bar; search moved to the top bar.
+  The day strip is already small the moment it pins under the bar.
