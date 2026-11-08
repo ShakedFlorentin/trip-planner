@@ -131,21 +131,6 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--c
 #fab{position:absolute;bottom:196px;inset-inline-end:44px;width:124px;height:124px;border-radius:50%;background:var(--red);
   box-shadow:0 14px 30px rgba(188,0,45,.35);display:flex;align-items:center;justify-content:center;z-index:5}
 #fab svg{width:58px;height:58px}
-/* menu */
-#menuBack{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;z-index:28}
-#menu{position:absolute;top:0;bottom:0;inset-inline-end:0;width:600px;background:#f2f2f7;z-index:29;padding:130px 34px 0;
-  box-shadow:0 0 50px rgba(0,0,0,.2)}
-.me{display:flex;gap:22px;align-items:center;margin:0 6px 34px}
-.me .av{width:100px;height:100px;font-size:44px;margin:0;border:none;background:var(--red)}
-.me b{font-size:42px;display:block}
-.me span{font-size:28px;color:var(--red);font-weight:700}
-.grp{background:#fff;border-radius:30px;overflow:hidden;margin-bottom:28px}
-.mrow{display:flex;align-items:center;gap:22px;padding:22px 26px;border-bottom:1px solid #e5e5ea}
-.mrow:last-child{border-bottom:0}
-.tile{width:68px;height:68px;border-radius:18px;display:flex;align-items:center;justify-content:center;flex:none}
-.tile svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.mrow .k{font-size:36px;font-weight:700}
-.mrow .s{display:block;font-size:26px;color:var(--muted);font-weight:500;margin-top:2px}
 #tap{position:absolute;width:140px;height:140px;margin:-70px 0 0 -70px;border-radius:50%;background:rgba(31,26,23,.22);
   z-index:50;opacity:0;left:0;top:0}
 /* the phone's shadow would stop hard at the frame's bottom edge; in the app the cream continues below the video */
@@ -201,8 +186,6 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--c
   <div class="sheet" id="addSheet"></div>
   <div class="backdrop" id="mailBack"></div>
   <div class="sheet" id="mailSheet"></div>
-  <div id="menuBack"></div>
-  <div id="menu"></div>
   <div id="match"></div>
   <div id="tap"></div>
 </div></div>
@@ -234,16 +217,13 @@ const LANG = q.get('lang') === 'en' ? 'en' : 'he';
 const HE = LANG === 'he';
 document.documentElement.lang = LANG; document.documentElement.dir = HE ? 'rtl' : 'ltr';
 
-const MENU_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="#bc002d" stroke-width="2.6" stroke-linecap="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>';
 const S = {
   he: {
-    cap: ['ככה <em>Toogo</em> עובד', 'מחליקים<br>על מקומות', 'מאצ׳ נכנס<br>למסלול לבד', 'ראיתם מקום<br>בטיקטוק?',
-          'כל השאר ב־' + MENU_ICON, 'אישור הזמנה?<br>מדביקים, וזהו'],
+    cap: ['ככה <em>Toogo</em> עובד', 'מחליקים<br>על מקומות', 'מאצ׳ נכנס<br>למסלול לבד', 'ראיתם מקום<br>בטיקטוק?', 'אישור הזמנה?<br>מדביקים, וזהו'],
     sub: ['מתכננים טיול עם חברים, בלי בלגן',
           'ימינה אהבתי, שמאלה דלג.<br>מה שכולם בקבוצה אהבו הופך ל<em>מאצ׳</em>',
           'המסלול מסתדר לבד לפי הימים,<br>שעות הפתיחה ואיפה שישנים',
           'מדביקים את הקישור ב״הוספת מקום״,<br>והמקום נכנס לרשימה עם תמונה',
-          'כסף, רשימות, חירום ותרגום,<br>מכל מסך באפליקציה',
           'מייל אישור או PDF של טיסה, מלון או רכבת,<br>וההזמנה נכנסת לבד'],
     tabs: ['בית', 'גילוי', 'מסלול', 'הזמנות', 'מקומות'],
     disc: 'גילוי',
@@ -265,10 +245,6 @@ const S = {
     addTitle: 'הוספת מקום', addHelp: 'הדביקו קישור מאינסטגרם, טיקטוק או גוגל מפות, או כתבו שם של מקום.',
     addPh: 'קישור או שם של מקום', link: 'tiktok.com/@japan.trips/video/7351…', paste: 'הדבקה',
     addBtn: 'הוספה', addBusy: 'קוראים את הסרטון…', src: 'סרטון בטיקטוק', rating: '★ 4.7', addDone: '✓ נוסף לרשימה',
-    me: 'מאור', prefs: 'ההעדפות שלי ›',
-    tools: [['כסף', 'מי שילם ומי חייב למי'], ['רשימות', 'ציוד, קניות ומשימות'], ['חירום', 'מספרים, שגרירות וביטוח'],
-            ['תרגום', 'משפטים ביפנית, בקול']],
-    more: ['הגדרות', 'מעבר לטיול אחר', 'מדריך'],
     bookTitle: 'הזמנות', secBtn: 'הוספה מאישור הזמנה',
     books: [['✈', 'טיסה לטוקיו', 'תל אביב ← נריטה · 12.3', 'LY091'], ['▬', 'שינקנסן', 'טוקיו ← קיוטו · 14.3', 'N7-14']],
     newBook: ['⌂', 'מלון בקיוטו', '3 לילות · צ׳ק־אין 15.3', 'HX72Q'],
@@ -277,13 +253,11 @@ const S = {
     tag: 'מתכננים את הטיול ביחד', tag2: 'עכשיו תורכם',
   },
   en: {
-    cap: ['How <em>Toogo</em> works', 'Swipe<br>through places', 'A match joins<br>the plan by itself', 'Saw a place<br>on TikTok?',
-          'Everything else: ' + MENU_ICON, 'Got a booking?<br>Just paste it'],
+    cap: ['How <em>Toogo</em> works', 'Swipe<br>through places', 'A match joins<br>the plan by itself', 'Saw a place<br>on TikTok?', 'Got a booking?<br>Just paste it'],
     sub: ['Plan a trip with friends, minus the mess',
           'Right means like, left means skip.<br>What the whole group likes is a <em>match</em>',
           'The plan sorts itself by day,<br>opening hours and where you sleep',
           'Paste the link in “Add place” and it<br>joins your list, photo and all',
-          'Money, lists, emergency and translate,<br>from any screen in the app',
           'A flight, hotel or train confirmation,<br>email or PDF: the booking adds itself'],
     tabs: ['Home', 'Discover', 'Plan', 'Bookings', 'Places'],
     disc: 'Discover',
@@ -305,10 +279,6 @@ const S = {
     addTitle: 'Add place', addHelp: 'Paste a link from Instagram, TikTok or Google Maps, or type a place’s name.',
     addPh: 'A link or a place’s name', link: 'tiktok.com/@japan.trips/video/7351…', paste: 'Paste',
     addBtn: 'Add', addBusy: 'Reading the video…', src: 'TikTok video', rating: '★ 4.7', addDone: '✓ Added to the list',
-    me: 'Maor', prefs: 'My preferences ›',
-    tools: [['Money', 'Who paid and who owes whom'], ['Lists', 'Packing, shopping and to-dos'], ['Emergency', 'Numbers, embassy, insurance'],
-            ['Translate', 'Japanese phrases, out loud']],
-    more: ['Settings', 'Switch trip', 'Guide'],
     bookTitle: 'Bookings', secBtn: 'Add from a confirmation',
     books: [['✈', 'Flight to Tokyo', 'Tel Aviv → Narita · Mar 12', 'LY091'], ['▬', 'Shinkansen', 'Tokyo → Kyoto · Mar 14', 'N7-14']],
     newBook: ['⌂', 'Hotel in Kyoto', '3 nights · check-in Mar 15', 'HX72Q'],
@@ -323,7 +293,7 @@ const $ = (id) => document.getElementById(id);
 const N = S.cap.length;
 $('cap').innerHTML = S.cap.map((c, i) => `<div class="cap" id="c${i}"><span>${c}</span></div>`).join('');
 $('subs').innerHTML = S.sub.map((c, i) => `<div class="sub" id="s${i}"><span>${c}</span></div>`).join('');
-$('dots').innerHTML = [1, 2, 3, 4, 5].map((i) => `<i class="dot" id="d${i}"></i>`).join('');
+$('dots').innerHTML = [1, 2, 3, 4].map((i) => `<i class="dot" id="d${i}"></i>`).join('');
 
 // the app's tab glyphs (App.tsx TABS), in the promo's flat bar
 const TAB_D = [
@@ -382,21 +352,6 @@ $('addSheet').innerHTML = `<div class="grab"></div><h4>${S.addTitle}</h4><p clas
   <div class="found" id="found"><div class="row"><span class="thumb"><img src="fuji.webp"></span><span class="what">${S.newPlace[1]}<span class="sub2">${S.newPlace[2]} · <bdi dir="ltr">${S.rating}</bdi></span>
   <span class="srcb">♪ ${S.src}</span></span></div></div><div class="added" id="added">${S.addDone}</div>`;
 
-// menu
-const ICO = {
-  money: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
-  lists: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
-  info: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
-  say: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
-  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
-  switch: '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
-  guide: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
-};
-const TOOL = [['money', '#34a853'], ['lists', '#f0a020'], ['info', '#e5484d'], ['say', '#3b82f6']];
-$('menu').innerHTML = `<div class="me"><div class="av">${S.names[2]}</div><div><b>${S.me}</b><span>${S.prefs}</span></div></div>
-  <div class="grp">${TOOL.map(([k, c], i) => `<div class="mrow" id="mr${i}"><span class="tile" style="background:${c}"><svg viewBox="0 0 24 24">${ICO[k]}</svg></span><span class="k">${S.tools[i][0]}<span class="s">${S.tools[i][1]}</span></span></div>`).join('')}</div>
-  <div class="grp">${['settings', 'switch', 'guide'].map((k, i) => `<div class="mrow"><span class="tile" style="background:#8e8e93"><svg viewBox="0 0 24 24">${ICO[k]}</svg></span><span class="k">${S.more[i]}</span></div>`).join('')}</div>`;
-
 // bookings
 const MAIL = '<svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
 $('secBtn').innerHTML = MAIL + `<span>${S.secBtn}</span>`;
@@ -422,11 +377,14 @@ function draw(el, p) {
   el.setAttribute('stroke-dasharray', C); el.setAttribute('stroke-dashoffset', C * (1 - p));
   el.style.opacity = p > 0 ? 1 : 0;
 }
-const t = T;
+// the ☰ menu step that stood at 22.75–27.0 s was cut: from the cut on, the timeline jumps 4.25 s ahead, so the
+// bookings step follows the TikTok step with the same slide (every time below is on the original timeline)
+const CUT = 22.75, GAP = 4.25;
+const t = T < CUT ? T : T + GAP;
 
 // ---------- captions, sub-lines and the step dots ----------
 const CAPS = [[0.1, 0.5, 2.3, 2.6], [2.8, 3.2, 9.0, 9.3], [9.45, 9.85, 15.45, 15.75], [15.9, 16.3, 22.4, 22.7],
-              [22.85, 23.25, 26.75, 27.05], [27.2, 27.6, 31.15, 31.45]];
+              [27.2, 27.6, 31.15, 31.45]];
 CAPS.forEach((w, i) => {
   const v = inOutWin(t, ...w); const el = $('c' + i);
   el.style.opacity = v; el.style.transform = `translateY(${(1 - outCubic(seg(t, w[0], w[1]))) * 40}px)`;
@@ -435,7 +393,7 @@ CAPS.forEach((w, i) => {
   se.style.opacity = sv; se.style.transform = `translateY(${(1 - outCubic(seg(t, sw[0], sw[1]))) * 30}px)`;
 });
 const step = CAPS.reduce((k, w, i) => (i > 0 && t >= w[0] - 0.15 ? i : k), 0);
-for (let i = 1; i <= 5; i++) $('d' + i).classList.toggle('on', i === step);
+for (let i = 1; i <= 4; i++) $('d' + i).classList.toggle('on', i === step);
 $('dots').style.opacity = inOutWin(t, 2.8, 3.2, 31.15, 31.45);
 
 // ---------- opening: two rings draw, one steps up, then they make way for the phone ----------
@@ -466,7 +424,7 @@ for (let i = 0; i < 5; i++) $('tab' + i).classList.toggle('on', i === activeTab)
 
 // a finger tap: a soft circle where the tap lands
 const screenBox = $('screen').getBoundingClientRect();
-const TAPS = [[4.35, 'vLike'], [5.85, 'vNope'], [16.9, 'fab'], [18.55, 'paste'], [19.2, 'addBtn'], [23.25, 'hPlacesm'],
+const TAPS = [[4.35, 'vLike'], [5.85, 'vNope'], [16.9, 'fab'], [18.55, 'paste'], [19.2, 'addBtn'],
               [27.9, 'secBtn'], [28.75, 'paste2'], [29.35, 'mailBtn']];
 const tap = TAPS.find(([a]) => t >= a && t < a + 0.45);
 if (tap) {
@@ -540,20 +498,9 @@ const proom = inOut(seg(t, 21.5, 21.95));
 [0, 1, 2].forEach((i) => $('pl' + i).style.transform = `translateY(${-pgap * (1 - proom)}px)`);
 const pni = outCubic(seg(t, 21.8, 22.25));
 plNew.style.opacity = pni; plNew.style.transform = `scale(${0.92 + 0.08 * pni})`;
-plNew.style.boxShadow = `0 0 0 ${5 * (1 - seg(t, 23.4, 24.2))}px #bc002d`;
+plNew.style.boxShadow = `0 0 0 ${5 * (1 - seg(t, 27.5, 27.6))}px #bc002d`;
 
-// ---------- step 4: ☰ opens the menu; the tools light up one by one ----------
-const mo = inOut(seg(t, 23.4, 23.85)) - inOut(seg(t, 26.55, 27.0));
-$('menu').style.transform = `translateX(${(1 - mo) * 650 * DIR}px)`;
-$('menu').style.visibility = mo <= 0 ? 'hidden' : 'visible';
-$('menuBack').style.opacity = mo;
-[24.15, 24.75, 25.35, 25.95].forEach((a, i) => {
-  const on = inOutWin(t, a, a + 0.15, a + 0.55, a + 0.75);
-  $('mr' + i).style.background = `rgba(188,0,45,${0.08 * on})`;
-  $('mr' + i).querySelector('.tile').style.transform = `scale(${1 + 0.12 * Math.sin(Math.PI * seg(t, a, a + 0.35))})`;
-});
-
-// ---------- step 5: a confirmation email pasted → the hotel joins the bookings ----------
+// ---------- step 4: a confirmation email pasted → the hotel joins the bookings ----------
 $('secBtn').style.transform = `scale(${press(t, 27.9)})`;
 const ms = inOut(seg(t, 28.05, 28.5)) - inOut(seg(t, 30.0, 30.45));
 $('mailSheet').style.transform = `translateY(${(1 - ms) * 120}%)`;

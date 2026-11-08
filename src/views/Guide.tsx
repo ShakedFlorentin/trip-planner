@@ -65,8 +65,8 @@ function afterIntro(f: () => void) {
 }
 
 /**
- * The guide: a 36-second video of how the app works (swipe, the plan, adding from a link, the ☰ menu, bookings from
- * an email), full screen on the video's own cream, muted and with no player controls. "Skip" sits at the top all
+ * The guide: a 32-second video of how the app works (swipe, the plan, adding from a link, bookings from an
+ * email), full screen on the video's own cream, muted and with no player controls. "Skip" sits at the top all
  * along; at the end "Let's go" closes it and "Again" plays it once more. The video's language follows the app's.
  */
 export default function Guide({ onClose }: { onClose: () => void }) {
