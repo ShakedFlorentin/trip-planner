@@ -892,13 +892,18 @@ function useStripShrink(ref: React.RefObject<HTMLDivElement | null>) {
     const el = ref.current
     if (!el) return
     let raf = 0
-    const top = () => el.getBoundingClientRect().top + window.scrollY
-    let start = top()
+    // a zero-height marker where the strip naturally sits: measured live on every frame, so photos or the legend
+    // loading above it later can't leave a stale starting point (the shrink used to begin long after it stuck)
+    const mark = document.createElement('div')
+    mark.setAttribute('aria-hidden', 'true')
+    // no box of its own: the stack's 12px gap it would add is taken back
+    mark.style.cssText = 'height:0;margin-bottom:-12px'
+    el.before(mark)
     const update = () => {
       raf = 0
-      // from the moment it sticks under the bar
       const stick = parseFloat(getComputedStyle(el).top) || 0
-      let p = Math.max(0, Math.min(1, (window.scrollY - (start - stick)) / 60))
+      // shrinks over the last 30px before it reaches the bar, so it is already small the moment it pins
+      let p = Math.max(0, Math.min(1, (stick + 30 - mark.getBoundingClientRect().top) / 30))
       if (reducedMotion()) p = p > 0.5 ? 1 : 0
       el.style.setProperty('--p', p.toFixed(3))
       el.classList.toggle('stuck', p > 0)
@@ -906,11 +911,7 @@ function useStripShrink(ref: React.RefObject<HTMLDivElement | null>) {
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update)
     }
-    const onResize = () => {
-      el.style.setProperty('--p', '0')
-      start = top()
-      update()
-    }
+    const onResize = () => update()
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
@@ -918,6 +919,7 @@ function useStripShrink(ref: React.RefObject<HTMLDivElement | null>) {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       cancelAnimationFrame(raf)
+      mark.remove()
     }
   }, [ref])
 }
