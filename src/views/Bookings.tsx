@@ -1,11 +1,14 @@
-import { Fragment, useEffect, useState } from 'react'
-import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Pencil, Plus, Users, Wand2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Plane, Plus, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
-import { BOOKING_KINDS, BOOKING_TABS, TOGETHER, type Booking, type Member, type Trip } from '../types'
+import { BOOKING_KINDS, BOOKING_TABS, type Booking, type Member, type Trip } from '../types'
 import { aiError, couplesOf, errorText, normName, fmtDateTime, fromInputDateTime, mapsUrl, mutate, replan, safeUrl, toInputDateTime, useTripTable } from '../lib'
 import { Empty, Field, LoadNote, Sheet, Tabs, useRemembered } from '../ui'
 import { BOOKING_ICON, Icon } from '../icons'
-import { isEn, t } from '../i18n'
+import { isEn, locale, t } from '../i18n'
+import { isNative, openExternal } from '../native'
+import { RingsIcon } from '../rings'
+import { WhoChips, shows, validWho, type Who } from '../who'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -16,9 +19,15 @@ export default function Bookings({ trip, members, userId }: Props) {
   const [edit, setEdit] = useState<Partial<Booking> | null>(null)
   const couples = couplesOf(members)
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
-  // '' = everything, 'group' = the whole group's bookings, or a couple's name (their own plus the group's)
-  const [whose, setWhose] = useState('')
-  const shown = rows.filter((b) => !whose || (whose === 'group' ? !b.who : !b.who || b.who === whose))
+  // the same "whose" filter as Plan and Places (7)
+  const [savedWho, setWhose] = useRemembered('bookingsWho', 'all')
+  const whose: Who = savedWho === 'all' ? 'all' : validWho(savedWho, couples, myCouple)
+  const shown = rows.filter((b) => shows(b.who, whose, myCouple))
+  // the form opens at the confirmation field when "+ הוספה" was tapped on a booking without one (39)
+  const [focusConf, setFocusConf] = useState(false)
+  // the booking open in its sheet (by id, so it shows live edits)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const opened = openId ? rows.find((b) => b.id === openId) : undefined
   const kindOf = (b: Booking) => (BOOKING_TABS[b.kind] ? b.kind : 'other')
   const count = (k: string) => shown.filter((b) => kindOf(b) === k).length
   const tabs = Object.keys(BOOKING_TABS).filter((k, i) => i < 4 || rows.some((b) => kindOf(b) === k))
@@ -41,76 +50,67 @@ export default function Bookings({ trip, members, userId }: Props) {
       <button className="secondary" onClick={() => setImporting(true)}>
         <Icon as={Mail} /> {t('הוספה מאישור הזמנה')}
       </button>
-      {couples.length > 1 && (
-        <div className="chips scroll">
-          <button className={'chip' + (!whose ? ' on' : '')} onClick={() => setWhose('')}>
-            {t('הכל')}
-          </button>
-          {couples.map((c) => (
-            <button key={c} className={'chip' + (whose === c ? ' on' : '')} onClick={() => setWhose(c)}>
-              {t(c)}
-            </button>
-          ))}
-          <button className={'chip' + (whose === 'group' ? ' on' : '')} onClick={() => setWhose('group')}>
-            <Icon as={Users} /> {t('של כולם')}
-          </button>
-        </div>
-      )}
+      {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
       {error && <LoadNote onRetry={reload} />}
       {!loading && !error && items.length === 0 && (
         <Empty>
           {isEn && current === 'other'
             ? t('אין הזמנות אחרות')
             : t('אין {kind}', { kind: isEn ? BOOKING_TABS[current].toLowerCase() : BOOKING_TABS[current] })}
-          {whose && ' ' + t('בסינון הזה')}. {t('אפשר להוסיף מאישור הזמנה או ידנית.')}
+          {whose !== 'all' && ' ' + t('בסינון הזה')}. {t('אפשר להוסיף מאישור הזמנה או ידנית.')}
         </Empty>
       )}
-      <div className="stack">
+      {/* the promo video's booking rows: a red tile with the kind's icon, the name in bold over one quiet line, and the
+          confirmation code in a small mono chip on the far side. A tap opens the booking (the boarding pass for flights) */}
+      <div className="stack bk-list">
         {items.map((b) => (
-          <Fragment key={b.id}>
-              <div className="card booking" onClick={() => setEdit(b)}>
-                <div className="row spread">
-                  <b>
-                    <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} /> {b.title}
-                  </b>
-                  {/* the whole card opens the editor; the pencil says so (the document has its own button below) */}
-                  <span className="muted booking-edit" aria-hidden="true">
-                    <Icon as={Pencil} />
-                  </span>
-                </div>
-                {couples.length > 1 && (
-                  <div className={'who-tag' + (b.who ? ' apart' : '')}>{b.who ? t(b.who) : <WhoAll />}</div>
-                )}
-                {b.starts_at && (
-                  <div className="muted small">
-                    {fmtDateTime(b.starts_at)}
-                    {b.ends_at && ` ${isEn ? '→' : '←'} ${fmtDateTime(b.ends_at)}`}
-                  </div>
-                )}
-                {b.confirmation && (
-                  <div className="small">
-                    {t('אישור:')} <b className="code" dir="ltr">{b.confirmation}</b>
-                  </div>
-                )}
-                {(b.location || safeUrl(b.url) || b.file_path) && (
-                <div className="row" onClick={(e) => e.stopPropagation()}>
-                  {b.location && (
-                    <a className="pill" href={mapsUrl(b.location)} target="_blank" rel="noreferrer">
-                      <Icon as={MapIcon} /> {t('מפה')}
-                    </a>
-                  )}
-                  {safeUrl(b.url) && (
-                    <a className="pill" href={safeUrl(b.url)} target="_blank" rel="noreferrer">
-                      <Icon as={LinkIcon} /> {t('קישור')}
-                    </a>
-                  )}
-                  {b.file_path && <DocButtons path={b.file_path} />}
-                </div>
-                )}
+          <div key={b.id} className="bk-row" role="button" tabIndex={0} onClick={() => setOpenId(b.id)} onKeyDown={(e) => e.key === 'Enter' && setOpenId(b.id)}>
+            <span className="bk-ic" aria-hidden="true">
+              <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+            </span>
+            <div className="bk-body">
+              <div className="bk-title" dir="auto">
+                {bookingTitle(b)}
               </div>
-          </Fragment>
+              <div className="bk-sub">
+                <span className="bk-line">{bookingLine(b)}</span>
+                {/* whose it is, while the list shows everyone's */}
+                {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill">{t(b.who)}</span>}
+              </div>
+            </div>
+            {b.file_path && <DocSaver path={b.file_path} />}
+            {b.confirmation ? (
+              <span className="bk-code" dir="ltr">
+                {b.confirmation}
+              </span>
+            ) : (
+              // no code yet: a way to add it (39)
+              <button
+                className="link bk-add"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setFocusConf(true)
+                  setEdit(b)
+                }}
+              >
+                + {t('הוספה')}
+              </button>
+            )}
+          </div>
         ))}
       </div>
+      {opened && (
+        <BookingSheet
+          b={opened}
+          who={couples.length > 1 ? opened.who : undefined}
+          onClose={() => setOpenId(null)}
+          onEdit={(conf) => {
+            setOpenId(null)
+            setFocusConf(conf)
+            setEdit(opened)
+          }}
+        />
+      )}
       <button className="fab" aria-label={t('הזמנה חדשה')} onClick={() => setEdit({ kind: current, who: myCouple })}>
         <Plus size={28} strokeWidth={2} aria-hidden="true" />
       </button>
@@ -119,7 +119,11 @@ export default function Bookings({ trip, members, userId }: Props) {
           trip={trip}
           couples={couples}
           booking={edit}
-          onClose={() => setEdit(null)}
+          focusConfirmation={focusConf}
+          onClose={() => {
+            setEdit(null)
+            setFocusConf(false)
+          }}
           onImport={() => {
             setEdit(null)
             setImporting(true)
@@ -164,6 +168,13 @@ async function saveDoc(path: string) {
 }
 
 async function openFile(path: string) {
+  // iOS app: online, the signed link opens in the Safari sheet. The copy kept on the phone is a blob, which that
+  // sheet cannot show, so offline the app still says it cannot open it (not built yet).
+  if (isNative) {
+    const { data } = navigator.onLine ? await supabase.storage.from('docs').createSignedUrl(path, 600) : { data: null }
+    if (data) return openExternal(data.signedUrl)
+    return alert(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'))
+  }
   // open the tab synchronously so mobile popup blockers allow it
   const win = window.open('', '_blank')
   const go = (href: string) => (win ? (win.location.href = href) : (location.href = href))
@@ -180,6 +191,20 @@ async function openFile(path: string) {
     win?.close()
     alert(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'))
   } else go(data.signedUrl)
+}
+
+/** Keeps a booking's document on the phone (the list mounts one per booking, so documents are there offline). */
+function DocSaver({ path }: { path: string }) {
+  useEffect(() => {
+    let live = true
+    savedDoc(path).then((hit) => {
+      if (live && !hit && navigator.onLine) void saveDoc(path)
+    })
+    return () => {
+      live = false
+    }
+  }, [path])
+  return null
 }
 
 /** A booking's document: open it, and keep a copy on the phone (saved automatically when online). */
@@ -250,6 +275,7 @@ function BookingForm(props: {
   trip: Trip
   couples: string[]
   booking: Partial<Booking>
+  focusConfirmation?: boolean
   onClose: () => void
   onImport: () => void
 }) {
@@ -392,7 +418,7 @@ function BookingForm(props: {
         />
       </Field>
       <Field label={t('מספר אישור')}>
-        <input value={f.confirmation ?? ''} onChange={set('confirmation')} dir="ltr" />
+        <input value={f.confirmation ?? ''} onChange={set('confirmation')} dir="ltr" autoFocus={props.focusConfirmation} />
       </Field>
       <Field label={t('כתובת / מיקום')}>
         <input value={f.location ?? ''} onChange={set('location')} dir="auto" />
@@ -579,11 +605,154 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
   )
 }
 
+/** A booking's name in its row: a flight with a readable title is its airline and number, the rest their own title. */
+function bookingTitle(b: Booking) {
+  const f = b.kind === 'flight' ? flightParts(b) : null
+  return f ? [f.airline, f.number].filter(Boolean).join(' ') || b.title : b.title
+}
+
+/** The quiet line under a booking's name: the route and day of a flight, the nights of a hotel, else its day and hour. */
+function bookingLine(b: Booking) {
+  if (!b.starts_at) return BOOKING_KINDS[b.kind] ?? BOOKING_KINDS.other
+  const f = b.kind === 'flight' ? flightParts(b) : null
+  // kept left to right, or Hebrew turns "TLV → MUC" around
+  if (f) return [`\u2066${f.from} → ${f.to}\u2069`, dayMonth(b.starts_at)].join(' · ')
+  if (b.kind === 'hotel' && b.ends_at) {
+    const n = Math.round((Date.parse(b.ends_at.slice(0, 10)) - Date.parse(b.starts_at.slice(0, 10))) / 86400000)
+    const nights = n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''
+    return [dayMonth(b.starts_at), nights, hm(b.starts_at) && t('צ׳ק-אין {time}', { time: hm(b.starts_at) })].filter(Boolean).join(' · ')
+  }
+  return [dayMonth(b.starts_at), hm(b.starts_at)].filter(Boolean).join(' · ')
+}
+
+/** "12.12": the row's short date (the sheet has the weekday). */
+const dayMonth = (iso: string) => new Date(iso).toLocaleDateString(locale, { timeZone: 'UTC', day: 'numeric', month: 'numeric' })
+
+/**
+ * A booking opened from its row: the boarding pass for a flight (35), else its kind and dates; whose it is, the
+ * confirmation code, the map, link and document, and its notes. "עריכה" in the title row opens the form.
+ */
+function BookingSheet({ b, who, onClose, onEdit }: { b: Booking; who?: string | null; onClose: () => void; onEdit: (focusConfirmation: boolean) => void }) {
+  const pass = b.kind === 'flight' && flightParts(b)
+  return (
+    <Sheet title={bookingTitle(b)} onClose={onClose} action={{ label: t('עריכה'), onClick: () => onEdit(false) }}>
+      <div className="bk-sheet">
+        {pass ? (
+          <div className="card booking">
+            <BoardingPass b={b} who={who} />
+          </div>
+        ) : (
+          <div className="bk-sheet-head">
+            <span className="bk-ic" aria-hidden="true">
+              <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+            </span>
+            <div>
+              <div className="muted small">{BOOKING_KINDS[b.kind] ?? BOOKING_KINDS.other}</div>
+              {b.starts_at && (
+                <div>
+                  {/* a word between the two, not an arrow inside the text (37) */}
+                  {b.ends_at ? t('{from} עד {to}', { from: fmtDateTime(b.starts_at), to: fmtDateTime(b.ends_at) }) : fmtDateTime(b.starts_at)}
+                </div>
+              )}
+              {who !== undefined && <div className={'who-tag' + (who ? ' apart' : '')}>{who ? t(who) : <WhoAll />}</div>}
+            </div>
+          </div>
+        )}
+        {b.confirmation ? (
+          <div className="bk-conf">
+            <span className="muted small">{t('מספר אישור')}</span>
+            <b className="code" dir="ltr">
+              {b.confirmation}
+            </b>
+          </div>
+        ) : (
+          <div className="small muted no-conf">
+            {t('אין מספר אישור')}
+            <button className="link" onClick={() => onEdit(true)}>
+              + {t('הוספה')}
+            </button>
+          </div>
+        )}
+        {(b.location || safeUrl(b.url) || b.file_path) && (
+          <div className="row">
+            {b.location && (
+              <a className="pill" href={mapsUrl(b.location)} target="_blank" rel="noreferrer">
+                <Icon as={MapIcon} /> {t('מפה')}
+              </a>
+            )}
+            {safeUrl(b.url) && (
+              <a className="pill" href={safeUrl(b.url)} target="_blank" rel="noreferrer">
+                <Icon as={LinkIcon} /> {t('קישור')}
+              </a>
+            )}
+            {b.file_path && <DocButtons path={b.file_path} />}
+          </div>
+        )}
+        {b.notes && (
+          <p className="notes" dir="auto">
+            {b.notes}
+          </p>
+        )}
+      </div>
+    </Sheet>
+  )
+}
+
 function WhoAll() {
   return (
     <>
-      <Icon as={Users} /> {t(TOGETHER)}
+      <RingsIcon /> {t('ביחד')}
     </>
+  )
+}
+
+/** A flight's two airports, number and times, read from its title ("Lufthansa LH714 MUC → HND") and its dates. */
+function flightParts(b: Booking) {
+  const m = b.title.match(/\b([A-Z]{3})\s*(?:→|->|–|-|to)\s*([A-Z]{3})\b/)
+  if (!m || !b.starts_at) return null
+  const num = b.title.match(/\b([A-Z0-9]{2})\s?(\d{2,4})\b/)
+  const airline = b.title.slice(0, b.title.indexOf(m[0])).replace(num?.[0] ?? '', '').trim()
+  return { from: m[1], to: m[2], number: num ? num[1] + num[2] : '', airline }
+}
+
+const hm = (iso: string) => (iso.slice(11, 16) === '00:00' ? '' : iso.slice(11, 16))
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'numeric' })
+
+/**
+ * A flight as a boarding pass (35): departure on the start side with its big code, time and date, arrival on the
+ * other with "+1" in orange when it lands the next day, a dashed line with the plane pointing to the destination.
+ */
+function BoardingPass({ b, who }: { b: Booking; who?: string | null }) {
+  const f = flightParts(b)!
+  const next = b.ends_at && b.ends_at.slice(0, 10) > b.starts_at!.slice(0, 10)
+  return (
+    <div className="pass">
+      <div className="pass-top small">
+        <b dir="ltr">{[f.airline, f.number].filter(Boolean).join(' ')}</b>
+        {who !== undefined && <span className={'who-tag' + (who ? ' apart' : '')}>{who ? t(who) : <WhoAll />}</span>}
+      </div>
+      <div className="pass-row">
+        <div className="pass-end">
+          <span className="pass-code">{f.from}</span>
+          <span className="pass-time">{hm(b.starts_at!)}</span>
+          <span className="muted small">{shortDate(b.starts_at!)}</span>
+        </div>
+        <div className="pass-line" aria-hidden="true">
+          <span className="pass-dash" />
+          <Plane className="pass-plane" size={18} strokeWidth={1.9} />
+          <span className="pass-dash" />
+        </div>
+        <div className="pass-end to">
+          <span className="pass-code">{f.to}</span>
+          <span className="pass-time">
+            {b.ends_at ? hm(b.ends_at) : ''}
+            {next && <sup className="pass-plus">+1</sup>}
+          </span>
+          <span className="muted small">{b.ends_at ? shortDate(b.ends_at) : ''}</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -591,7 +760,7 @@ function WhoField(props: { value: string; couples: string[]; onChange: (who: str
   return (
     <Field label={t('של מי')}>
       <select value={props.value} onChange={(e) => props.onChange(e.target.value)}>
-        <option value="">{t('של כולם')}</option>
+        <option value="">{t('ביחד')}</option>
         {props.couples.map((c) => (
           <option key={c} value={c}>
             {t(c)}

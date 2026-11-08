@@ -1,0 +1,333 @@
+# Builds promo.html: a 25-second, 1080x1920 Toogo promo whose every frame is a pure function of the time in the URL
+# (promo.html#t=3.2&lang=he). render.sh screenshots it 30 times a second with headless Chrome and ffmpeg joins them.
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+LETTERS = open(os.path.join(HERE, "letters.txt")).read()
+
+HTML = r"""<!doctype html><html><head><meta charset="utf-8"><title>Toogo promo</title><style>
+:root{--red:#bc002d;--ink:#1f1a17;--cream:#faf7f2;--card:#f2f2f7;--muted:#636366;--ok:#1a6f2e}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--cream);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Hebrew',system-ui,sans-serif}
+.abs{position:absolute}
+#cap{left:60px;right:60px;top:150px;height:260px;text-align:center}
+.cap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:76px;font-weight:800;
+  line-height:1.12;letter-spacing:-.01em;opacity:0}
+.cap em{font-style:normal;color:var(--red)}
+.bubble{position:absolute;padding:30px 40px;border-radius:44px;font-size:44px;font-weight:600;background:#fff;
+  box-shadow:0 14px 40px rgba(0,0,0,.10);white-space:nowrap;opacity:0}
+.bubble.g{background:#dcf8c6}
+#phone{left:150px;top:470px;width:780px;height:1400px;border-radius:110px;background:#111;padding:16px;opacity:0;
+  box-shadow:0 40px 90px rgba(0,0,0,.25)}
+#screen{position:relative;width:100%;height:100%;border-radius:96px;background:#fff;overflow:hidden}
+.status{position:absolute;top:30px;left:70px;right:70px;display:flex;justify-content:space-between;font-size:30px;font-weight:600}
+.view{position:absolute;top:110px;left:0;right:0;bottom:160px;padding:0 40px}
+.title{font-size:58px;font-weight:800;margin:10px 0 24px}
+.banner{position:relative;height:270px;border-radius:36px;overflow:hidden;margin-bottom:26px}
+.banner img{width:100%;height:100%;object-fit:cover}
+.banner .lbl{position:absolute;bottom:22px;inset-inline-start:28px;color:#fff;font-size:44px;font-weight:800;
+  text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.row{display:flex;align-items:center;gap:24px;background:var(--card);border-radius:30px;padding:26px 30px;margin-bottom:18px}
+.row .time{font-size:32px;color:var(--muted);font-weight:600;min-width:100px;font-variant-numeric:tabular-nums}
+.row .what{flex:1;font-size:38px;font-weight:700}
+.row .sub{display:block;font-size:28px;color:var(--muted);font-weight:500;margin-top:4px}
+.chk{width:56px;height:56px;border-radius:50%;border:4px solid #c6c6c8;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:34px;font-weight:900}
+.thumb{width:120px;height:120px;border-radius:24px;overflow:hidden;flex:none}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.heart{width:64px;height:64px;flex:none}
+.badge{display:inline-block;margin-top:8px;padding:4px 16px;border-radius:20px;background:#e3f3e6;color:var(--ok);font-size:26px;font-weight:700}
+.chips{display:flex;gap:14px;margin-bottom:24px}
+.chip{padding:12px 28px;border-radius:30px;background:var(--card);font-size:32px;font-weight:700}
+.chip.on{background:var(--ink);color:#fff}
+.bk{background:var(--card);border-radius:30px;padding:28px 32px;margin-bottom:18px;display:flex;gap:26px;align-items:center}
+.bk .ic{width:84px;height:84px;border-radius:24px;background:var(--red);flex:none;display:flex;align-items:center;justify-content:center}
+.bk .t{font-size:38px;font-weight:800}
+.bk .s{font-size:28px;color:var(--muted);margin-top:4px}
+.bk .code{margin-inline-start:auto;font-size:28px;font-weight:700;font-family:ui-monospace,'SF Mono',monospace;
+  background:#fff;border-radius:14px;padding:8px 14px}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:160px;border-top:1px solid #e5e5ea;display:flex;justify-content:space-around;
+  padding:18px 20px 0;background:rgba(250,250,250,.95)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:24px;font-weight:600;color:#8e8e93;width:140px}
+.tab svg{width:52px;height:52px}
+.tab.on{color:var(--red)}
+.avs{display:flex;align-items:center;gap:0;margin:-6px 0 22px}
+.av{width:64px;height:64px;border-radius:50%;border:4px solid #fff;color:#fff;font-size:28px;font-weight:800;display:flex;
+  align-items:center;justify-content:center;margin-inline-end:-14px}
+.live{margin-inline-start:34px;font-size:28px;font-weight:700;color:var(--ok);display:flex;align-items:center;gap:10px}
+.live i{width:16px;height:16px;border-radius:50%;background:#30d158;display:inline-block}
+#toast{position:absolute;top:96px;left:50px;right:50px;background:rgba(30,30,32,.92);color:#fff;border-radius:36px;
+  padding:26px 32px;font-size:32px;font-weight:600;display:flex;gap:20px;align-items:center;opacity:0}
+#toast .av{border-color:transparent;margin:0}
+#logo{left:0;top:0}
+#tag{left:60px;right:60px;top:1330px;text-align:center;font-size:58px;font-weight:700;opacity:0}
+#tag2{left:60px;right:60px;top:1420px;text-align:center;font-size:40px;font-weight:500;color:var(--muted);opacity:0}
+</style></head><body>
+
+<div id="cap" class="abs">
+  <div class="cap" id="c1"></div><div class="cap" id="c2"></div><div class="cap" id="c3"></div>
+  <div class="cap" id="c4"></div><div class="cap" id="c5"></div><div class="cap" id="c6"></div>
+</div>
+<div id="bubbles"></div>
+
+<svg id="big" class="abs" width="1080" height="1920" viewBox="0 0 1080 1920" style="left:0;top:0;pointer-events:none">
+  <g id="bigrings">
+    <circle id="br1" cx="-56" cy="0" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+    <circle id="br2" cx="56" cy="0" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+  </g>
+</svg>
+
+<div id="phone" class="abs"><div id="screen">
+  <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+
+  <div class="view" id="vPlan">
+    <div class="title" id="planTitle"></div>
+    <div class="avs" id="avs"></div>
+    <div class="banner"><img src="kyoto.webp"><div class="lbl" id="planCity"></div></div>
+    <div id="planRows"></div>
+  </div>
+
+  <div class="view" id="vPlaces">
+    <div class="title" id="placesTitle"></div>
+    <div class="chips" id="chips"></div>
+    <div id="placeRows"></div>
+  </div>
+
+  <div class="view" id="vBook">
+    <div class="title" id="bookTitle"></div>
+    <div id="bookRows"></div>
+  </div>
+
+  <div id="toast"></div>
+  <div class="tabs" id="tabs"></div>
+</div></div>
+
+<svg id="logo" class="abs" width="1080" height="1920" viewBox="0 0 1080 1920" style="pointer-events:none">
+  <g transform="translate(108 520) scale(1.6)">
+    <g id="sym">
+      <circle id="r1" cx="214" cy="142" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+      <circle id="r2" cx="326" cy="142" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+    </g>
+    <g transform="translate(76.86 199.44) scale(0.74)">
+LETTERS
+    </g>
+  </g>
+</svg>
+<div id="tag" class="abs"></div>
+<div id="tag2" class="abs"></div>
+
+<script>
+const q = new URLSearchParams(location.hash.slice(1));
+const T = parseFloat(q.get('t') || '0');
+const LANG = q.get('lang') === 'en' ? 'en' : 'he';
+const HE = LANG === 'he';
+document.documentElement.lang = LANG; document.documentElement.dir = HE ? 'rtl' : 'ltr';
+
+const S = {
+  he: {
+    c1: 'מתכננים טיול<br>עם חברים?',
+    c2: '<em>Toogo</em> שם הכל<br>במקום אחד',
+    c3: 'מסלול,<br>יום אחרי יום',
+    c4: 'כל המקומות<br>שרציתם לראות',
+    c5: 'כל ההזמנות<br>בלחיצה אחת',
+    c6: 'כל שינוי מגיע<br>לכולם, <em>בזמן אמת</em>',
+    bubbles: ['מי הזמין את המלון?', 'תשלחו שוב את הקישור', 'איזה יום אנחנו בקיוטו?', 'איפה הכרטיס לרכבת?',
+              'חשבתי שסגרנו סושי?', 'זה היה בקבוצה, למעלה…'],
+    tabs: ['בית', 'מסלול', 'הזמנות', 'מקומות', 'רשימות'],
+    planTitle: 'יום 3', planCity: 'קיוטו',
+    plan: [['08:30', 'פושימי אינארי', 'שערי הטורי האדומים'], ['12:00', 'שוק ניקיסי', 'צהריים'],
+           ['15:00', 'קיומיזו-דרה', 'מקדש על הצוק'], ['19:00', 'טיול בגיון', 'רובע הגיישות']],
+    added: ['20:30', 'ארוחת סושי', 'נוסף עכשיו'],
+    toast: '<b>דן</b> הוסיף: ארוחת סושי · 20:30',
+    live: 'מחוברים עכשיו',
+    placesTitle: 'מקומות', chips: ['טוקיו', 'אוסקה', 'נארה'],
+    places: [['tokyo.webp', 'נקאנו ברודוויי', 'טוקיו · קניות'], ['osaka.webp', 'דוטונבורי', 'אוסקה · אוכל רחוב'],
+             ['nara.webp', 'פארק נארה', 'נארה · האיילים'], ['fuji.webp', 'קוואגוצ׳יקו', 'פוג׳י · נוף']],
+    been: 'היינו',
+    bookTitle: 'הזמנות',
+    books: [['✈', 'טיסה לטוקיו', 'תל אביב ← נריטה · 12.3', 'LY091'], ['⌂', 'מלון בקיוטו', '3 לילות · צ׳ק-אין 15:00', 'HX72Q'],
+            ['▬', 'שינקנסן', 'טוקיו ← קיוטו · 09:03', 'N7-14'], ['✚', 'ביטוח נסיעות', 'כל הקבוצה', 'P-2231']],
+    tag: 'מתכננים את הטיול ביחד', tag2: 'מתחילים ביפן. עוד מדינות בקרוב.',
+    names: ['נ', 'ד', 'מ'],
+  },
+  en: {
+    c1: 'Planning a trip<br>with friends?',
+    c2: '<em>Toogo</em> keeps it all<br>in one place',
+    c3: 'Your plan,<br>day by day',
+    c4: 'Every place<br>you want to see',
+    c5: 'Every booking,<br>one tap away',
+    c6: 'Every change, for<br>everyone, <em>live</em>',
+    bubbles: ['Who booked the hotel?', 'Send the link again', 'Which day is Kyoto?', 'Where’s the train ticket?',
+              'Didn’t we say sushi?', 'It’s somewhere up in the chat…'],
+    tabs: ['Home', 'Plan', 'Bookings', 'Places', 'Lists'],
+    planTitle: 'Day 3', planCity: 'Kyoto',
+    plan: [['08:30', 'Fushimi Inari', 'The red torii gates'], ['12:00', 'Nishiki Market', 'Lunch'],
+           ['15:00', 'Kiyomizu-dera', 'Temple on the cliff'], ['19:00', 'Gion walk', 'The geisha quarter']],
+    added: ['20:30', 'Sushi dinner', 'Just added'],
+    toast: '<b>Dan</b> added: Sushi dinner · 20:30',
+    live: 'Online now',
+    placesTitle: 'Places', chips: ['Tokyo', 'Osaka', 'Nara'],
+    places: [['tokyo.webp', 'Nakano Broadway', 'Tokyo · Shopping'], ['osaka.webp', 'Dotonbori', 'Osaka · Street food'],
+             ['nara.webp', 'Nara Park', 'Nara · The deer'], ['fuji.webp', 'Kawaguchiko', 'Fuji · Views']],
+    been: 'Been there',
+    bookTitle: 'Bookings',
+    books: [['✈', 'Flight to Tokyo', 'Tel Aviv → Narita · Mar 12', 'LY091'], ['⌂', 'Hotel in Kyoto', '3 nights · check-in 15:00', 'HX72Q'],
+            ['▬', 'Shinkansen', 'Tokyo → Kyoto · 09:03', 'N7-14'], ['✚', 'Travel insurance', 'The whole group', 'P-2231']],
+    tag: 'Plan the trip together', tag2: 'Japan first. More countries soon.',
+    names: ['N', 'D', 'M'],
+  },
+}[LANG];
+
+// ---------- build the DOM ----------
+const $ = (id) => document.getElementById(id);
+for (let i = 1; i <= 6; i++) $('c' + i).innerHTML = '<span>' + S['c' + i] + '</span>';
+const BUB = [[90, 470, -4], [430, 640, 3], [140, 820, 2], [380, 1000, -3], [110, 1180, 3], [300, 1360, -2]];
+S.bubbles.forEach((b, i) => {
+  const d = document.createElement('div'); d.className = 'bubble' + (i % 2 ? ' g' : ''); d.id = 'b' + i; d.textContent = b;
+  d.style.top = BUB[i][1] + 'px';
+  if (HE) d.style.right = BUB[i][0] + 'px'; else d.style.left = BUB[i][0] + 'px';
+  $('bubbles').appendChild(d);
+});
+const ICONS = [
+  '<path d="M6 24 26 8l20 16v22H32V32H20v14H6Z" fill="currentColor"/>',
+  '<rect x="7" y="10" width="38" height="36" rx="7" fill="none" stroke="currentColor" stroke-width="5"/><path d="M7 20h38M17 5v10M35 5v10" stroke="currentColor" stroke-width="5"/>',
+  '<path d="M6 14h40v8a5 5 0 0 0 0 10v8H6v-8a5 5 0 0 0 0-10Z" fill="currentColor"/>',
+  '<path d="M26 4a15 15 0 0 1 15 15c0 11-15 27-15 27S11 30 11 19A15 15 0 0 1 26 4Z" fill="currentColor"/><circle cx="26" cy="19" r="6" fill="#fff"/>',
+  '<path d="M18 13h26M18 26h26M18 39h26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="9" cy="13" r="3.5" fill="currentColor"/><circle cx="9" cy="26" r="3.5" fill="currentColor"/><circle cx="9" cy="39" r="3.5" fill="currentColor"/>',
+];
+S.tabs.forEach((n, i) => {
+  const d = document.createElement('div'); d.className = 'tab'; d.id = 'tab' + i;
+  d.innerHTML = `<svg viewBox="0 0 52 52">${ICONS[i]}</svg>${n}`; $('tabs').appendChild(d);
+});
+$('planTitle').textContent = S.planTitle; $('planCity').textContent = S.planCity;
+const COLORS = ['#bc002d', '#1f1a17', '#8e6c4a'];
+$('avs').innerHTML = S.names.map((n, i) => `<div class="av" style="background:${COLORS[i]}">${n}</div>`).join('') +
+  `<div class="live"><i></i>${S.live}</div>`;
+const rowHTML = (r, id) => `<div class="row" id="${id}"><span class="time">${r[0]}</span><span class="what">${r[1]}<span class="sub">${r[2]}</span></span><span class="chk" id="${id}c"></span></div>`;
+$('planRows').innerHTML = rowHTML(S.plan[0], 'p0') + rowHTML(S.plan[1], 'p1') + rowHTML(S.plan[2], 'p2') +
+  rowHTML(S.plan[3], 'p3') + rowHTML(S.added, 'pNew');
+$('placesTitle').textContent = S.placesTitle;
+$('chips').innerHTML = S.chips.map((c, i) => `<span class="chip${i ? '' : ' on'}">${c}</span>`).join('');
+const HEART = (id) => `<svg class="heart" viewBox="0 0 64 64"><path id="${id}" d="M32 54S8 39 8 22a12 12 0 0 1 24-4 12 12 0 0 1 24 4c0 17-24 32-24 32Z" fill="none" stroke="#bc002d" stroke-width="5"/></svg>`;
+$('placeRows').innerHTML = S.places.map((p, i) => `<div class="row" id="pl${i}"><span class="thumb"><img src="${p[0]}"></span><span class="what">${p[1]}<span class="sub">${p[2]}</span><span class="badge" id="been${i}">✓ ${S.been}</span></span>${HEART('h' + i)}</div>`).join('');
+$('bookTitle').textContent = S.bookTitle;
+$('bookRows').innerHTML = S.books.map((b, i) => `<div class="bk" id="bk${i}"><span class="ic"><span style="color:#fff;font-size:46px;font-weight:800">${b[0]}</span></span><span><div class="t">${b[1]}</div><div class="s">${b[2]}</div></span><span class="code">${b[3]}</span></div>`).join('');
+$('toast').innerHTML = `<div class="av" style="background:${COLORS[1]}">${S.names[1]}</div><span>${S.toast}</span>`;
+
+// ---------- motion helpers ----------
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const inOut = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const outBack = (x, s = 1.7) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
+const inOutWin = (t, a, b, c, d) => Math.min(seg(t, a, b), 1 - seg(t, c, d));   // fade in a→b, out c→d
+const DIR = HE ? -1 : 1;    // screens slide toward the reading direction
+const C = 2 * Math.PI * 38;
+function draw(el, p) {
+  el.setAttribute('stroke-dasharray', C); el.setAttribute('stroke-dashoffset', C * (1 - p));
+  el.style.opacity = p > 0 ? 1 : 0;
+}
+const t = T;
+
+// ---------- captions ----------
+const CAPS = [[0.15, 0.55, 2.85, 3.15], [3.75, 4.15, 5.15, 5.45], [5.85, 6.25, 9.55, 9.85],
+              [10.0, 10.4, 13.55, 13.85], [14.0, 14.4, 17.1, 17.4], [17.55, 17.95, 20.3, 20.6]];
+CAPS.forEach((w, i) => {
+  const v = inOutWin(t, ...w); const el = $('c' + (i + 1));
+  el.style.opacity = v; el.style.transform = `translateY(${(1 - outCubic(seg(t, w[0], w[1]))) * 40}px)`;
+});
+
+// ---------- scene 1: the group-chat mess ----------
+S.bubbles.forEach((_, i) => {
+  const el = $('b' + i);
+  const a = 0.45 + i * 0.32;
+  const pop = outBack(seg(t, a, a + 0.35));
+  const fly = inOut(seg(t, 2.85 + i * 0.03, 3.45 + i * 0.03));
+  const r = el.getBoundingClientRect();
+  const dx = (540 - (r.left + r.width / 2)) * fly, dy = (960 - (r.top + r.height / 2)) * fly;
+  el.style.opacity = Math.min(seg(t, a, a + 0.12), 1 - seg(t, 3.15, 3.45));
+  el.style.transform = `translate(${dx}px,${dy}px) rotate(${BUB[i][2] * (1 - fly)}deg) scale(${(0.6 + 0.4 * pop) * (1 - 0.8 * fly)})`;
+});
+
+// ---------- scene 2: the mess becomes two rings, one steps up ----------
+const bigOut = seg(t, 5.15, 5.6);
+draw($('br1'), inOut(seg(t, 3.3, 3.9))); draw($('br2'), inOut(seg(t, 3.5, 4.1)));
+const hop = outBack(seg(t, 4.25, 4.7), 2);
+const crouch = Math.sin(Math.PI * seg(t, 4.08, 4.27)) * (t < 4.27 ? 1 : 0);
+$('br2').setAttribute('transform', `translate(56 ${-28 * hop + 5 * crouch}) scale(${1 + .08 * crouch} ${1 - .1 * crouch}) translate(-56 0)`);
+$('bigrings').setAttribute('transform', `translate(540 ${960 - 300 * inOut(bigOut)}) scale(${3.2 * (1 - 0.5 * inOut(bigOut))})`);
+$('bigrings').style.opacity = 1 - seg(t, 5.3, 5.6);
+
+// ---------- the phone ----------
+const phIn = outCubic(seg(t, 5.3, 6.0)), phOut = inOut(seg(t, 20.35, 21.0));
+$('phone').style.opacity = t < 5.3 ? 0 : (t > 21 ? 0 : 1);
+$('phone').style.transform = `translateY(${(1 - phIn) * 1500 + phOut * 1600}px)`;
+
+// screens: plan → places → bookings → plan
+const V = { vPlan: 0, vPlaces: 0, vBook: 0 };
+const s1 = inOut(seg(t, 9.8, 10.3)), s2 = inOut(seg(t, 13.8, 14.3)), s3 = inOut(seg(t, 17.3, 17.8));
+const pos = { vPlan: -s1 + s3 * 1 + (t > 17.3 ? 0 : 0), vPlaces: 1 - s1 - s2, vBook: 1 - s2 - s3 };
+// vPlan goes out to the left at s1, comes back from the right at s3
+pos.vPlan = t < 17.3 ? -s1 : (1 - s3);
+pos.vBook = t < 17.3 ? 1 - s2 : -s3;
+for (const k in pos) $(k).style.transform = `translateX(${pos[k] * 820 * DIR}px)`;
+const activeTab = t < 9.95 ? 1 : t < 13.95 ? 3 : t < 17.45 ? 2 : 1;
+for (let i = 0; i < 5; i++) $('tab' + i).classList.toggle('on', i === activeTab);
+
+// plan: activities get ticked off
+[6.7, 7.3, 7.9].forEach((at, i) => {
+  const p = outBack(seg(t, at, at + 0.3));
+  const c = $('p' + i + 'c');
+  if (p > 0) { c.style.background = '#bc002d'; c.style.borderColor = '#bc002d'; c.textContent = '✓'; c.style.transform = `scale(${p})`; }
+});
+// the live change: a new row slides in, highlighted, while a toast drops in
+const nw = outCubic(seg(t, 18.55, 19.0));
+const pn = $('pNew');
+pn.style.display = t < 18.55 ? 'none' : 'flex';
+pn.style.opacity = nw; pn.style.transform = `translateY(${(1 - nw) * 40}px)`;
+pn.style.boxShadow = `0 0 0 ${5 * (1 - seg(t, 19.4, 20.2))}px #bc002d`;
+pn.style.background = '#fdf0f1';
+$('p0').style.display = t > 17 ? 'none' : 'flex';   // make room on the way back
+const toast = inOutWin(t, 18.2, 18.5, 19.9, 20.2);
+$('toast').style.opacity = toast; $('toast').style.transform = `translateY(${(1 - outCubic(seg(t, 18.2, 18.5))) * -60}px)`;
+$('avs').style.opacity = t > 17 ? 1 : 0;
+$('avs').style.display = t > 17 ? 'flex' : 'none';
+
+// places: hearts fill, one gets "been there"
+[11.0, 11.6, 12.2].forEach((at, i) => {
+  const p = outBack(seg(t, at, at + 0.3), 2.4);
+  const h = $('h' + i); h.setAttribute('fill', p > 0 ? '#bc002d' : 'none');
+  h.parentNode.style.transform = `scale(${p > 0 ? 0.7 + 0.3 * p : 1})`;
+});
+const been = outBack(seg(t, 12.7, 13.0));
+$('been0').style.opacity = clamp(been * 3); $('been0').style.transform = `scale(${0.6 + 0.4 * been})`;
+for (let i = 1; i < 4; i++) $('been' + i).style.display = 'none';
+
+// bookings: cards drop into place one after another
+for (let i = 0; i < 4; i++) {
+  const p = outCubic(seg(t, 14.3 + i * 0.25, 14.8 + i * 0.25));
+  $('bk' + i).style.opacity = p; $('bk' + i).style.transform = `translateY(${(1 - p) * 120}px)`;
+}
+
+// ---------- end card: the logo ----------
+draw($('r1'), inOut(seg(t, 20.9, 21.5))); draw($('r2'), inOut(seg(t, 21.1, 21.7)));
+const lh = outBack(seg(t, 21.95, 22.4), 1.9);
+const lc = Math.sin(Math.PI * seg(t, 21.75, 21.95)) * (t < 21.95 ? 1 : 0);
+$('r2').setAttribute('transform', `translate(326 ${142 - 28 * lh + 4 * lc}) scale(${1 + .08 * lc} ${1 - .1 * lc}) translate(-326 -142) rotate(90 326 142)`);
+$('r1').setAttribute('transform', 'rotate(90 214 142)');
+const rise = inOut(seg(t, 22.45, 23.1));
+$('sym').setAttribute('transform', `translate(0 ${93.75 * (1 - rise)})`);
+['t', 'o1', 'o2', 'g', 'o3'].forEach((id, i) => {
+  const p = outCubic(seg(t, 22.75 + i * 0.08, 23.25 + i * 0.08));
+  const el = $(id); let y = 40 * (1 - p);
+  if (id === 'o2') y -= 14 * outBack(seg(t, 23.45, 23.85), 2.2);
+  el.setAttribute('transform', `translate(0 ${y})`); el.style.opacity = p;
+});
+$('tag').textContent = S.tag; $('tag2').textContent = S.tag2;
+const tg = outCubic(seg(t, 23.6, 24.1)), tg2 = outCubic(seg(t, 23.9, 24.4));
+$('tag').style.opacity = tg; $('tag').style.transform = `translateY(${(1 - tg) * 30}px)`;
+$('tag2').style.opacity = tg2; $('tag2').style.transform = `translateY(${(1 - tg2) * 30}px)`;
+</script></body></html>"""
+
+open(os.path.join(HERE, "promo.html"), "w").write(HTML.replace("LETTERS", LETTERS))
+print("wrote promo.html")

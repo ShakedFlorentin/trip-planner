@@ -166,7 +166,9 @@ Offline: `public/sw.js` + localStorage cache in `useTripTable` (`src/lib.ts`).
     `place_base`); within 25 km only that base's couples (Yokohama → only שקד ומאור), a day trip further out →
     everyone within 150 km. The swipe deck only shows a card to its couples (`trip_place_couples` RPC) and puts cards
     the other couple liked first ("X אהבו").
-  - A couple votes yes when one partner liked and the other didn't skip. All its couples yes → everyone's (or the one
+  - A couple votes yes when one partner liked and the other didn't skip. Exception: a place that is for ONE couple only
+    (Yokohama while the other couple is elsewhere) needs both partners' likes (`couple_both`,
+    `supabase/sql/2026-11-02-solo-couple-both-like.sql`, run by hand). All its couples yes → everyone's (or the one
     couple's). Some yes, some no → the yes couple's list. Some yes, some not voted → that couple's list, waiting.
   - Once every couple it's for has voted, the planner places it (`itinerary_items.auto`). match_place still drops it on
     a first day, the planner moves it within seconds. A person's edit to day/time/title/location/notes/who clears

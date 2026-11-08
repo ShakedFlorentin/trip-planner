@@ -405,7 +405,9 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   // the trip runs on Japan's calendar; a day that has passed takes no new plans, and what is on it stays (a place
   // nobody got to goes back to the planner only when someone says so in the app: "לא הגענו")
   const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10)
-  const past = (day: number) => dateOf(day) < today
+  // today counts as done too (41): a re-plan mid-trip rearranges from tomorrow on, so a place visited this morning but
+  // not ticked is never moved away
+  const past = (day: number) => dateOf(day) <= today
   const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, capOf, past })
   // each city's middle, from the hotels in it
   const basePt = new Map<string, Point>()
@@ -503,6 +505,12 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const p = i.place_id ? placeById.get(i.place_id) : null
     return factsOf(p ? candById.get(p.candidate_id) : undefined)
   }
+  // a full meal: by the place's card when it has one (a café is not a meal), else by the item's own category
+  const isMealItem = (i: Item) => {
+    const p = i.place_id ? placeById.get(i.place_id) : null
+    const c = p ? candById.get(p.candidate_id) : undefined
+    return c?.category ? c.category === 'food' : i.category === 'food'
+  }
   const pointOfItem = (i: Item): Point | null => {
     const m = i.location?.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/)
     if (m) return { lat: Number(m[1]), lng: Number(m[2]) }
@@ -523,6 +531,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       point: pointOfItem(i),
       start: mins(i.time),
       mins: visitMins(factsOfItem(i), null, i.category === 'food' ? 'food' : i.category === 'shopping' ? 'shopping' : 'sight'),
+      meal: isMealItem(i),
     })
   }
   for (const b of bookings) {
@@ -537,7 +546,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const known = places.find((p) => factKey(p.name) === factKey(b.title) || factKey(b.title).includes(factKey(p.name)))
     let point: Point | null = known?.lat != null ? { lat: known.lat, lng: known.lng! } : null
     if (!point && b.kind !== 'train' && b.location) point = await geocode(admin, b.location)
-    fixed.push({ day, couples: whoOf(b.who, day), point, start: s.min, mins: len })
+    // a booked table is a full meal: the planner adds no other meal around it
+    fixed.push({ day, couples: whoOf(b.who, day), point, start: s.min, mins: len, meal: b.kind === 'restaurant' })
   }
 
   const out = plan(days, units, fixed)
@@ -560,7 +570,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     return first ? (first.length > 90 ? first.slice(0, 88) + '…' : first) : null
   }
   const itemCategory = (cat: string) =>
-    cat === 'food' || cat === 'cafe' ? 'food' : cat === 'shopping' ? 'shopping' : cat === 'sight' || cat === 'experience' ? 'sight' : 'other'
+    cat === 'food' || cat === 'cafe' ? 'food' : cat === 'shopping' ? 'shopping' : cat === 'sight' || cat === 'experience' ? 'sight' : cat === 'nightlife' ? 'nightlife' : 'other'
   const desired: Row[] = []
   for (const [id, pl] of out.placed) {
     const u = unitPlace.get(id)!

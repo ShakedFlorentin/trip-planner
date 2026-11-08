@@ -63,16 +63,26 @@ export default function Search({
     // a place and its plan items are found by their card's search words too (what it sells, synonyms)
     const tagsOf = new Map(cards.map((c) => [c.id, c.tags ?? []]))
     const placeTags = new Map(places.map((p) => [p.id, (p.candidate_id && tagsOf.get(p.candidate_id)) || []]))
+    // a place on the list shows once: under places, with its plan date; its card and its plan stops don't repeat it
+    const planned = new Map<string, number>()
+    for (const i of items) if (i.place_id && !planned.has(i.place_id)) planned.set(i.place_id, i.day)
+    const foundPlaces = places.filter((p) => has(p.name, p.city, cityLabel(p.city), p.area, p.notes, ...(placeTags.get(p.id) ?? [])))
+    const shownPlaces = new Set(foundPlaces.map((p) => p.id))
+    const placeCards = new Set(places.map((p) => p.candidate_id).filter(Boolean))
     const out: { label: string; hits: Hit[] }[] = [
       {
         label: t('מקומות'),
-        hits: places
-          .filter((p) => has(p.name, p.city, cityLabel(p.city), p.area, p.notes, ...(placeTags.get(p.id) ?? [])))
-          .map((p) => ({ key: 'p' + p.id, title: p.name, sub: [cityLabel(p.city), p.area].filter(Boolean).join(' · '), icon: MapPin, to: { tab: 'places' } })),
+        hits: foundPlaces.map((p) => {
+          const day = planned.get(p.id)
+          const when = day ? fmtDay(dayDate(start, day)) : ''
+          const sub = [cityLabel(p.city), p.area, day && t('במסלול: {day}', { day: when || t('יום {day}', { day }) })].filter(Boolean).join(' · ')
+          return { key: 'p' + p.id, title: p.name, sub, icon: MapPin, to: { tab: 'places' } } satisfies Hit
+        }),
       },
       {
-        label: t('גילוי'),
+        label: t('עוד בגילוי'),
         hits: cards
+          .filter((c) => !placeCards.has(c.id))
           .filter((c) => has(c.name, c.name_ja, c.area, CITY_HE[c.city] ?? c.city, cityLabel(CITY_HE[c.city] ?? c.city), c.serves, c.todo, ...(c.dishes ?? []), ...(c.tags ?? [])))
           .map((c) => {
             // a card someone said no to says who; any card opens on its own, with the votes
@@ -104,6 +114,7 @@ export default function Search({
       {
         label: t('מסלול'),
         hits: items
+          .filter((i) => !(i.place_id && shownPlaces.has(i.place_id)))
           .filter((i) => has(i.title, i.location, i.notes, ...((i.place_id && placeTags.get(i.place_id)) || [])))
           .map((i) => ({ key: 'i' + i.id, title: i.title, sub: `${fmtDay(dayDate(start, i.day)) || t('יום {day}', { day: i.day })}${i.time ? ` · ${i.time.slice(0, 5)}` : ''}`, icon: CalendarDays, to: { tab: 'plan', day: i.day } })),
       },
@@ -115,7 +126,7 @@ export default function Search({
       },
     ]
     return out.filter((g) => g.hits.length)
-  }, [q, places, cards, swipes, members, bookings, items, todos])
+  }, [q, places, cards, swipes, members, bookings, items, todos, start])
 
   return (
     <Sheet title={t('חיפוש')} onClose={onClose}>
@@ -125,6 +136,9 @@ export default function Search({
           ref={input}
           type="search"
           enterKeyHint="search"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           placeholder={t('מקומות, הזמנות, מסלול ועוד')}
           aria-label={t('חיפוש בטיול')}
           value={q}

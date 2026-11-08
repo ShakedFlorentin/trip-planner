@@ -6,19 +6,36 @@ import { t } from '../i18n'
 import { balances, convert, coupleTotals, fmtMoney, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
 import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
-import { BedDouble, Check, Handshake, Package, Plus, ShoppingBag, Ticket, TrainFront, Users, Utensils } from 'lucide-react'
+import { BedDouble, Check, Handshake, Package, Pencil, Plane, Plus, Trash2, ShoppingBag, Ticket, TrainFront, Users, Utensils } from 'lucide-react'
 import '../styles/expenses.css'
+import { SwipeRow } from '../swipe'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
 const CATS: Record<string, { label: string; icon: LucideIcon }> = {
   food: { label: t('אוכל'), icon: Utensils },
+  flight: { label: t('טיסה'), icon: Plane },
   transport: { label: t('תחבורה'), icon: TrainFront },
   lodging: { label: t('לינה'), icon: BedDouble },
   sights: { label: t('אטרקציות'), icon: Ticket },
   shopping: { label: t('קניות'), icon: ShoppingBag },
   other: { label: t('אחר'), icon: Package },
 }
+// the category from what was typed in "על מה" (54): a plain word list, Hebrew and English, no AI. The first kind with a
+// word in the text wins; nothing matched and nothing picked saves as "אחר"
+const CAT_WORDS: [string, string[]][] = [
+  ['flight', ['טיסה', 'טיסות', 'flight', 'airline', 'lufthansa', 'swiss', 'el al', 'אל על']], // he-only
+  ['lodging', ['מלון', 'לינה', 'airbnb', 'אירביאנבי', 'hotel', 'hostel', 'ryokan', 'ריוקאן', 'דירה', 'apartment']], // he-only
+  ['transport', ['רכבת', 'מונית', 'אוטובוס', 'שינקנסן', 'סואיקה', 'מטרו', 'taxi', 'train', 'bus', 'shinkansen', 'suica', 'pasmo', 'jr', 'metro', 'subway', 'דלק', 'חניה']], // he-only
+  ['food', ['ראמן', 'מסעדה', 'אוכל', 'ארוחה', 'ארוחת', 'סושי', 'קפה', 'מאפה', 'גלידה', 'בירה', 'יאקיטורי', 'אודון', 'restaurant', 'ramen', 'sushi', 'lunch', 'dinner', 'breakfast', 'cafe', 'coffee', 'bar', 'beer', 'food', 'izakaya', 'konbini', 'סופר', '7-eleven', 'lawson']], // he-only
+  ['sights', ['כרטיס', 'כניסה', 'מוזיאון', 'מקדש', 'פארק', 'אטרקציה', 'סיור', 'ticket', 'museum', 'temple', 'shrine', 'park', 'tour', 'teamlab', 'disney', 'דיסני', 'usj']], // he-only
+  ['shopping', ['קניות', 'חנות', 'מתנה', 'מתנות', 'בגדים', 'shopping', 'shop', 'gift', 'uniqlo', 'don quijote', 'דון קיחוטה']], // he-only
+]
+const catFromWords = (text: string) => {
+  const s = text.toLowerCase()
+  return CAT_WORDS.find(([, words]) => words.some((w) => s.includes(w)))?.[0] ?? null
+}
+
 const flip = (c: Cur): Cur => (c === 'JPY' ? 'ILS' : 'JPY')
 const iconOf = (e: Expense): LucideIcon => (e.kind === 'settlement' ? Handshake : (CATS[e.category ?? '']?.icon ?? Package))
 
@@ -74,8 +91,6 @@ export default function Expenses({ trip, members, userId }: Props) {
   const toPay = transfers.filter((t) => t.from === mineKey)
   const toGet = transfers.filter((t) => t.to === mineKey)
   const others = transfers.filter((t) => t.from !== mineKey && t.to !== mineKey)
-  const owe = toPay.reduce((s, t) => s + t.amount, 0)
-  const owed = toGet.reduce((s, t) => s + t.amount, 0)
   const totals = coupleTotals(rows, members, bal, show, rate)
   // "we" for a couple, "you" for one person
   const we = byCouple && (partyOf(userId)?.ids.length ?? 0) > 1
@@ -117,28 +132,26 @@ export default function Expenses({ trip, members, userId }: Props) {
             ))}
           </div>
         </div>
-        <div className={'exp-big' + (owe ? ' minus' : owed ? ' plus' : '')}>
-          {owe ? (
-            <>{we ? t('עליכם להחזיר') : t('עליך להחזיר')} {money(owe)}</>
-          ) : owed ? (
-            <>{we ? t('מגיע לכם') : t('מגיע לך')} {money(owed)}</>
-          ) : (
-            t('הכול מאוזן')
-          )}
-        </div>
-        {/* my own payments, each with its button: the one thing this screen is for */}
+        {/* one plain sentence and one big amount per couple you owe or who owe you (53): orange when you owe, green
+            when you're owed, like Splitwise; red is for errors */}
+        {!toPay.length && !toGet.length && <div className="exp-big">{t('הכול מאוזן')}</div>}
         {[...toPay, ...toGet].map((tr) => {
           const paying = tr.from === mineKey
           const other = iso(labelOf(paying ? tr.to : tr.from))
           return (
-            <div key={tr.from + tr.to} className="exp-transfer">
-              <span className="exp-transfer-who">
-                <span>{paying ? t('ל{name}', { name: other }) : t('מ{name}', { name: other })}</span>
-                <b className="exp-num">{money(tr.amount)}</b>
+            <div key={tr.from + tr.to} className={'exp-owe ' + (paying ? 'minus' : 'plus')}>
+              <span className="exp-owe-line">
+                {paying
+                  ? we
+                    ? t('אתם מחזירים ל{name}', { name: other })
+                    : t('עליך להחזיר ל{name}', { name: other })
+                  : we
+                    ? t('{name} מחזירים לכם', { name: other })
+                    : t('מגיע לך מ{name}', { name: other })}
               </span>
-              <button className="pill" onClick={() => setSettle({ t: asPeople(tr) })}>
-                <Icon as={Check} />{' '}
-                {paying ? (we ? t('החזרנו') : t('החזרתי')) : (we ? t('קיבלנו') : t('קיבלתי'))}
+              <span className="exp-big">{money(tr.amount)}</span>
+              <button className="secondary" onClick={() => setSettle({ t: asPeople(tr) })}>
+                <Icon as={Check} /> {paying ? (we ? t('החזרנו') : t('החזרתי')) : we ? t('קיבלנו') : t('קיבלתי')}
               </button>
             </div>
           )
@@ -201,8 +214,18 @@ export default function Expenses({ trip, members, userId }: Props) {
                 settlement
                   ? setSettle({ t: { from: e.paid_by, to: e.split_among[0], amount: toMinor(Number(e.amount), e.currency) }, row: e })
                   : setEdit(e)
+              const remove = async () => {
+                if (confirm(t('למחוק את "{title}"?', { title: settlement ? t('החזר') : e.title }))) await mutate(supabase.from('expenses').delete().eq('id', e.id))
+              }
               return (
-                <button key={e.id} className="card exp-row" onClick={open}>
+                <SwipeRow
+                  key={e.id}
+                  end={[
+                    { label: t('עריכה'), icon: Pencil, tone: 'edit', onClick: open },
+                    { label: t('מחיקה'), icon: Trash2, tone: 'del', onClick: remove },
+                  ]}
+                >
+                <button className="card exp-row" onClick={open}>
                   <span className="exp-icon" aria-hidden="true">
                     <Icon as={iconOf(e)} size="1.25em" />
                   </span>
@@ -225,6 +248,7 @@ export default function Expenses({ trip, members, userId }: Props) {
                     </span>
                   </span>
                 </button>
+                </SwipeRow>
               )
             })}
         </div>
@@ -286,7 +310,10 @@ function ExpenseForm(props: {
   const [amount, setAmount] = useState(x.id ? String(x.amount) : '')
   const [currency, setCurrency] = useState<Cur>(x.currency ?? 'JPY')
   const [title, setTitle] = useState(x.title ?? '')
-  const [category, setCategory] = useState(x.category ?? 'food')
+  // nothing picked in advance: the words pick it, a tap overrides them
+  const [picked, setPicked] = useState<string | null>(x.category ?? null)
+  const guessed = x.category ? null : catFromWords(title)
+  const category = picked ?? guessed ?? 'other'
   const [paidBy, setPaidBy] = useState(x.paid_by ?? userId)
   const [split, setSplit] = useState<string[]>(x.split_among ?? members.map((m) => m.user_id))
   const [date, setDate] = useState(x.spent_on ?? japanToday())
@@ -383,11 +410,12 @@ function ExpenseForm(props: {
       </Field>
       <div className="chips">
         {Object.entries(CATS).map(([k, v]) => (
-          <button key={k} className={'chip' + (category === k ? ' on' : '')} onClick={() => setCategory(k)}>
+          <button key={k} className={'chip' + ((picked ?? guessed) === k ? ' on' : '')} onClick={() => setPicked(k)}>
             <Icon as={v.icon} /> {v.label}
           </button>
         ))}
       </div>
+      {!picked && guessed && <p className="muted small exp-guess">{t('נבחר לפי מה שכתבתם')}</p>}
       <Field label={t('מי שילם')}>
         <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
           {members.map((m) => (

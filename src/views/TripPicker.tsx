@@ -3,6 +3,7 @@ import { supabase } from '../supabase'
 import { Field } from '../ui'
 import { t } from '../i18n'
 import { forgetInvite } from './Login'
+import { Loading } from '../rings'
 
 // accounts this phone already joined to their invite's trip: someone who later leaves that trip isn't pulled back in
 const JOINED_KEY = 'inviteJoined'
@@ -81,7 +82,7 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
   }
 
   // the app's own loading look while checking, so people without an invite don't see a flash of anything else
-  if (auto === 'checking') return <div className="center" role="status">{t('טוען…')}</div>
+  if (auto === 'checking') return <Loading />
   if (auto === 'joining') return <div className="center" role="status">{t('מצטרפים לטיול…')}</div>
 
   return (

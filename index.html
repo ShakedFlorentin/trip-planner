@@ -25,6 +25,42 @@
     </script>
   </head>
   <body>
+    <!-- iOS app opening: picks up from the launch screen (same rings, same size and spot, colours from the phone's own
+         light or dark), the rings take one step, then it fades into the app. The website never shows it. -->
+    <div id="intro" hidden aria-hidden="true">
+      <svg viewBox="24 58 208 140">
+        <path class="a" d="M24 142A48 48 0 1 1 120 142A48 48 0 1 1 24 142ZM44 142A28 28 0 1 0 100 142A28 28 0 1 0 44 142Z" />
+        <path class="b" d="M136 114A48 48 0 1 1 232 114A48 48 0 1 1 136 114ZM156 114A28 28 0 1 0 212 114A28 28 0 1 0 156 114Z" />
+      </svg>
+    </div>
+    <style>
+      #intro { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; transition: opacity 0.3s ease; }
+      #intro[hidden] { display: none; }
+      #intro svg { width: 120px; height: auto; overflow: visible; }
+      #intro.go .a { animation: intro-a 0.8s ease-in-out 0.25s both; }
+      #intro.go .b { animation: intro-b 0.8s ease-in-out 0.25s both; }
+      #intro.out { opacity: 0; }
+      @keyframes intro-a { 50% { transform: translateY(-28px); } }
+      @keyframes intro-b { 50% { transform: translateY(28px); } }
+    </style>
+    <script>
+      ;(function () {
+        // the web app opens with the same rings as the iOS app (there the native launch screen shows them first)
+        var el = document.getElementById('intro')
+        var theme = document.documentElement.dataset.theme
+        var dark = theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        el.style.background = dark ? '#000000' : '#ffffff'
+        el.style.fill = dark ? '#ffffff' : '#bc002d'
+        el.hidden = false
+        // main.tsx calls this once the app has painted (in the iOS app, after hiding the native launch screen)
+        window.startIntro = function () {
+          var still = matchMedia('(prefers-reduced-motion: reduce)').matches
+          if (!still) el.classList.add('go')
+          setTimeout(function () { el.classList.add('out') }, still ? 300 : 1100)
+          setTimeout(function () { el.remove() }, still ? 650 : 1450)
+        }
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

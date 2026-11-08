@@ -3,15 +3,19 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './styles.css'
 import './styles/ltr.css'
+import { endLaunch, isNative } from './native'
+import { watchFades } from './fades'
 
 // relative path: the site lives under /<repo>/ on GitHub Pages; dev has no worker so it never serves stale files
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// the iOS app carries its files inside, so it has no worker
+if (import.meta.env.PROD && !isNative && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}))
 }
 
 // A phone keeps the app open in the background for days, so a deploy only showed after it was closed for real.
 // Back in front after a while: if the site has a newer build, load it. Unsent changes wait in localStorage (outbox).
-if (import.meta.env.PROD) {
+// the iOS app updates through the App Store / TestFlight, not by reloading
+if (import.meta.env.PROD && !isNative) {
   const BUILD = /assets\/index-[\w-]+\.js/
   const running = document.querySelector<HTMLScriptElement>('script[src*="assets/index-"]')?.src.match(BUILD)?.[0]
   let hiddenAt = 0
@@ -33,3 +37,6 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+endLaunch()
+watchFades()

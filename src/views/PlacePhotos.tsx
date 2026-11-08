@@ -3,7 +3,7 @@ import { supabase } from '../supabase'
 import { Empty, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
-import { Camera, ChevronLeft } from 'lucide-react'
+import { Camera } from 'lucide-react'
 
 const MAX_SIDE = 1600
 
@@ -86,7 +86,11 @@ export function AddPhoto({ name, tripId, libraryId, onClose }: { name: string; t
 type Waiting = { id: string; path: string; created_at: string; place_library: { name: string } | null; url?: string }
 
 /** The admin's entry on the More tab, shown only to app admins, with the count of photos waiting. */
-export function PhotoReviewEntry() {
+/**
+ * "תמונות לאישור" in the ☰ menu (52): only for the app builder (accounts in app_admins), and only while photos are
+ * waiting, with their count in red. Everyone else never sees it.
+ */
+export function PhotoReviewRow() {
   const [admin, setAdmin] = useState(false)
   const [open, setOpen] = useState(false)
   const [rows, setRows] = useState<Waiting[]>([])
@@ -120,16 +124,15 @@ export function PhotoReviewEntry() {
     setRows((r) => r.filter((x) => x.id !== id))
   }
 
-  if (!admin) return null
+  if (!admin || (!rows.length && !open)) return null
   return (
     <>
-      <button className="prefs-entry" onClick={() => setOpen(true)}>
-        <Icon as={Camera} size="1.375em" className="lead" />
-        <span className="prefs-entry-text">
-          <b>{t('תמונות לאישור')}</b>
-          <span className="muted small">{t('{n} ממתינות', { n: rows.length })}</span>
+      <button className="group-row" onClick={() => setOpen(true)}>
+        <span className="menu-tile" style={{ background: '#8e8e93' }}>
+          <Icon as={Camera} />
         </span>
-        <Icon as={ChevronLeft} className="flip-ltr muted" />
+        <span className="k">{t('תמונות לאישור')}</span>
+        <span className="badge">{rows.length}</span>
       </button>
       {open && (
         <Sheet title={t('תמונות לאישור')} onClose={() => setOpen(false)}>

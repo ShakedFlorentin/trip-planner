@@ -28,7 +28,7 @@ let keys = 0
 for (const f of files) {
   const text = readFileSync(f, 'utf8')
   for (const m of text.matchAll(CALL)) {
-    const key = m[2].replace(/\\(['"`\\])/g, '$1')
+    const key = m[2].replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\(['"`\\])/g, '$1')
     if (!HEB.test(key)) continue
     keys++
     if (!(key in EN)) missing.set(key, f)

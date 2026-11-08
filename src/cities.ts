@@ -23,3 +23,17 @@ export function cityPhoto(name: string | null | undefined) {
   const slug = citySlug(name)
   return slug && PHOTOS.has(slug) ? `${import.meta.env.BASE_URL}cities/${slug}.webp` : null
 }
+
+// each city keeps one tile colour wherever it shows (15): the known ones fixed, any other city by its name, so a city
+// seen twice on the route looks like the same city, on every trip, with nothing to set up
+const COLOR: Record<string, number> = { yokohama: 0, tokyo: 4, kyoto: 2, osaka: 3, nara: 6, fuji: 1 }
+
+/** The tile colour (c0-c6) of a city, the same every time it shows. */
+export function cityColor(name: string | null | undefined) {
+  const slug = citySlug(name)
+  if (slug && slug in COLOR) return COLOR[slug]
+  const key = (slug ?? name ?? '').trim().toLowerCase()
+  let h = 0
+  for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return h % 7
+}

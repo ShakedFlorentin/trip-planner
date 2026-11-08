@@ -7,6 +7,7 @@ import { isEn, t } from '../i18n'
 import { Icon } from '../icons'
 import { Sheet } from '../ui'
 import type { PlanItem } from './planUtils'
+import { appUrl } from '../native'
 
 // Opt-in public sharing of the itinerary. What gets published is a snapshot built here from the plan, and it holds
 // only the pieces below. Never put anything else in it: no bookings, files, confirmation numbers, hotels or
@@ -74,7 +75,7 @@ export function newSlug() {
   return Array.from(bytes, (b) => alphabet[b & 31]).join('')
 }
 
-export const shareUrl = (slug: string) => `${location.origin}${location.pathname}?share=${slug}`
+export const shareUrl = (slug: string) => `${appUrl()}?share=${slug}`
 
 export const stopLabel = (category: string) => CARD_STYLE[category]?.label ?? CATEGORIES[category] ?? category
 

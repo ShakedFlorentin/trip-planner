@@ -1,12 +1,16 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { BedDouble, Check, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
+import { BedDouble, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
 import { supabase } from '../supabase'
 import { CATEGORIES, CITY_HE, TOGETHER, whoOptions, type Booking, type Candidate, type DayInfo, type Member, type Place, type PlanSummary, type Trip } from '../types'
 import { cityLabel, couplesOf, currentDay, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
 import { Empty, Field, Sheet, useRemembered } from '../ui'
+import { WhoChips, validWho } from '../who'
+import { RingsIcon } from '../rings'
+import { cityColor, cityPhoto } from '../cities'
 import { CARD_ICON, Icon } from '../icons'
-import { project, reducedMotion, springTo } from '../spring'
+import { reducedMotion } from '../spring'
+import { SwipeRow } from '../swipe'
 import { CardFull } from './Swipe'
 import { ShareSheet } from './Share'
 import StaysSheet from './Stays'
@@ -29,8 +33,6 @@ import '../styles/plan.css'
 
 type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string }
 
-const MODES: Record<WhoMode, string> = { mine: t('שלנו'), group: t('של כולם'), all: t('הכל') }
-
 export default function Itinerary({ trip, day, setDay, members = [], userId }: Props) {
   const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
   const { rows: items } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
@@ -39,7 +41,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
   // "שלנו" always includes the group's items, so nothing everyone does is ever hidden
   const [saved, setMode] = useRemembered('planWho', 'mine')
-  const mode: WhoMode = saved === 'group' || saved === 'all' ? saved : 'mine'
+  const mode: WhoMode = validWho(saved, couples, myCouple)
   const [editItem, setEditItem] = useState<Partial<PlanItem> | null>(null)
   const [editDay, setEditDay] = useState(false)
   const [sharing, setSharing] = useState(false)
@@ -111,73 +113,126 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
     (u) => (u.reason === 'full' || u.reason === 'closed') && !!u.city && dayCities.includes(u.city) && visible(u.who, mode, myCouple),
   )
 
+  // the day's main city (34): where most of its stops are. A Yokohama night with a day of Tokyo stops reads
+  // "· טוקיו", with "לינה ביוקוהמה" on the bed line; only a stop in a third city keeps its city pill
+  const lodging = cityLabel(info?.city)
+  const awayCounts = new Map<string, number>()
+  let homeCount = 0
+  for (const e of entries) {
+    if (!e.item) continue
+    const c = awayCity(e.item)
+    if (c) awayCounts.set(c, (awayCounts.get(c) ?? 0) + 1)
+    else homeCount++
+  }
+  const topAway = [...awayCounts].sort((a, b) => b[1] - a[1])[0]
+  const mainCity = topAway && topAway[1] > homeCount ? topAway[0] : lodging
+  const sleepAway = !!lodging && mainCity !== lodging
+  // the city's photo for the day's banner (the same photos as Home's tiles), in colour
+  const dayPhoto = cityPhoto(mainCity || info?.city)
+  const nights = hotelNights(nightLines(info?.hotel ?? null, bookings, date, couples, stays, cities).filter((l) => visible(l.who, mode, myCouple)))
+  // the legend for the one-ring mark shows the first few times Plan opens on this phone
+  const [legend] = useState(() => {
+    try {
+      const n = Number(localStorage.getItem('apartLegend') ?? 0)
+      localStorage.setItem('apartLegend', String(n + 1))
+      return n < 3
+    } catch {
+      return false
+    }
+  })
+  useStripShrink(stripRef)
+
   return (
     <div className="stack">
       <div className="day-strip" ref={stripRef}>
         {Array.from({ length: trip.num_days }, (_, i) => i + 1).map((d) => {
           // the date and weekday lead; the trip's day number only stands in when there is no start date
           const parts = dayParts(dayDate(trip.start_date, d))
+          const apart = !!days.find((x) => x.day === d)?.who
           return (
-            <button
-              key={d}
-              className={'day-chip' + (d === day ? ' active' : '') + (days.find((x) => x.day === d)?.who ? ' apart' : '')}
-              onClick={() => setDay(d)}
-            >
+            <button key={d} className={'day-chip' + (d === day ? ' active' : '')} onClick={() => setDay(d)}>
+              {/* a day not everyone is together: the one-ring mark in the corner, not a dashed frame (31) */}
+              {apart && (
+                <span className="day-chip-apart" aria-label={t('יום שלא כולם ביחד')}>
+                  <RingsIcon one />
+                </span>
+              )}
               <span className="day-chip-weekday">{parts?.weekday ?? ''}</span>
               <b>{parts?.date ?? d}</b>
-              <span className="small">{cityLabel(days.find((x) => x.day === d)?.city)}</span>
+              <span className="small day-chip-city">{cityLabel(days.find((x) => x.day === d)?.city)}</span>
             </button>
           )
         })}
       </div>
-
-      <section className="card day-head" onClick={() => setEditDay(true)}>
-        <div className="row spread">
-          <h2>
-            {trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })} {info?.city ? `· ${cityLabel(info.city)}` : ''}
-          </h2>
-          <Icon className="muted" as={Pencil} />
-        </div>
-        <div className={'who-tag' + (info?.who ? ' apart' : '')}>{info?.who ? (
-            t('רק {who}', { who: t(info.who) })
-          ) : (
-            <>
-              <Icon as={Users} /> {t(TOGETHER)}
-            </>
-          )}
-        </div>
-        {hotelNights(nightLines(info?.hotel ?? null, bookings, date, couples, stays, cities).filter((l) => visible(l.who, mode, myCouple))).map((l) => (
-          <div key={l.text}>
-            <Icon as={BedDouble} /> {l.who && mode === 'all' && <span className="muted small">{t(l.who)}: </span>}
-            {l.text}
-            {l.proposed && <span className="muted small"> · {t('מוצע')}</span>}
-          </div>
-        ))}
-        {estimateDay && <div className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</div>}
-        <button
-          className="secondary stays-open"
-          onClick={(e) => {
-            e.stopPropagation()
-            setShowStays(true)
-          }}
-        >
-          <Icon as={BedDouble} /> {t('איפה ישנים')}
-        </button>
-        {info?.notes && <div className="notes">{keepRanges(info.notes)}</div>}
-      </section>
-
-      {couples.length > 1 && (
-        <div className="segmented" role="group" aria-label={t('של מי התוכנית')}>
-          {(Object.keys(MODES) as WhoMode[]).map((m) => (
-            <button key={m} className={mode === m ? 'on' : ''} aria-pressed={mode === m} onClick={() => setMode(m)}>
-              {MODES[m]}
-            </button>
-          ))}
-        </div>
+      {legend && days.some((x) => x.who) && (
+        <p className="strip-legend muted small">
+          <RingsIcon one /> {t('יום שלא כולם ביחד')}
+        </p>
       )}
 
+      {/* the day as in the promo video: its title, then a photo of the day's city with the name on it; whose day it is and
+          where you sleep sit small under the photo. The photo (or the pencil in its corner) opens the day's details */}
+      <section className="day-head">
+        <h2 className="day-title">{trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })}</h2>
+        {mainCity ? (
+          <button
+            className={'day-banner c' + cityColor(mainCity) + (dayPhoto ? ' has-photo' : '')}
+            aria-label={t('עריכת היום')}
+            onClick={() => setEditDay(true)}
+          >
+            {dayPhoto && <img src={dayPhoto} alt="" />}
+            <span className="day-banner-city">{mainCity}</span>
+            <span className="day-banner-edit" aria-hidden="true">
+              <Icon as={Pencil} />
+            </span>
+          </button>
+        ) : (
+          <button className="link day-edit" onClick={() => setEditDay(true)}>
+            <Icon as={Pencil} /> {t('עריכת היום')}
+          </button>
+        )}
+        <div className="day-meta">
+          <span className="day-who">
+            {info?.who ? (
+              <>
+                <RingsIcon one /> {t('רק {who}', { who: t(info.who) })}
+              </>
+            ) : (
+              <>
+                <RingsIcon /> {t('ביחד')}
+              </>
+            )}
+          </span>
+          {/* where you sleep: one quiet line; a tap opens the stays sheet */}
+          {nights.length > 0 ? (
+            nights.map((l) => (
+              <button key={l.text} className="day-bed" onClick={() => setShowStays(true)}>
+                <Icon as={BedDouble} />
+                <span>
+                  {l.who && mode === 'all' && <>{t(l.who)}: </>}
+                  {sleepAway && <>{t('לינה ב{city}', { city: lodging })} · </>}
+                  {l.text}
+                  {l.proposed && <> · {t('מוצע')}</>}
+                </span>
+                <Icon as={ChevronLeft} className="chev flip-ltr" />
+              </button>
+            ))
+          ) : (
+            <button className="day-bed" onClick={() => setShowStays(true)}>
+              <Icon as={BedDouble} />
+              <span>{t('איפה ישנים')}</span>
+              <Icon as={ChevronLeft} className="chev flip-ltr" />
+            </button>
+          )}
+        </div>
+        {estimateDay && <div className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</div>}
+        {info?.notes && <div className="notes day-notes">{keepRanges(info.notes)}</div>}
+      </section>
+
+      {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={mode} onChange={setMode} />}
+
       {arrivals.map((e) => (
-        <ArrivalCard key={e.key} entry={e} />
+        <ArrivalCard key={e.key} entry={e} dayWho={info?.who ?? null} checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null} />
       ))}
 
       {entries.length === 0 && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
@@ -202,11 +257,13 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                 {n > 0 && <Hop from={list[n - 1]} to={e} pointOf={pointOf} />}
                 <EntryRow
                   e={e}
+                  dayWho={info?.who ?? null}
+                  hint={n === 0 && owner === sections[0]}
                   kind={cardOf(placeOf(e.item))?.serves}
                   onOpen={(i) => setOpenId(i.id)}
                   onEdit={setEditItem}
                   onRemove={remove}
-                  away={awayCity(e.item)}
+                  away={((c) => (c && c !== mainCity && c !== lodging ? c : undefined))(awayCity(e.item))}
                   warning={e.item && (warnings.get(e.item.id) ?? (e.item.auto && e.item.place_id ? issues.get(e.item.place_id) : undefined))}
                   onMissed={past && e.item?.place_id && !e.item.done ? missed : undefined}
                 />
@@ -273,6 +330,10 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
 /** One line of the day: a plan item you can tick, open and edit, or a booking moment that is read-only here. */
 export function EntryRow(props: {
   e: Entry
+  /** whose day it is (null: everyone together): a stop shows its own tag only when it differs (28) */
+  dayWho?: string | null
+  /** the day's first stop: the first time Plan opens it slides open a little, to show that rows swipe (29) */
+  hint?: boolean
   /** what the card says it serves: "food" alone doesn't tell a cake shop from a ramen counter */
   kind?: string | null
   onOpen: (i: PlanItem) => void
@@ -283,81 +344,86 @@ export function EntryRow(props: {
   away?: string
   onMissed?: (i: PlanItem) => void
 }) {
-  const { e, kind, onOpen, onEdit, onRemove, warning, away, onMissed } = props
+  const { e, kind, onOpen, onEdit, onRemove, warning, away, onMissed, dayWho = null, hint } = props
+  const ownTag = e.who !== dayWho
   const i = e.item
+  // the promo video's row (a grey card): the time on the start side, the name in bold with one quiet line under it,
+  // and the round tick on the end side (red with a white check once done). The note, the card and the way there are
+  // in the stop's sheet; directions are also the swipe toward the start side
+  const sub = i ? [CATEGORIES[i.category] ?? i.category, kind && firstSentence(kind)].filter(Boolean).join(' · ') : e.sub || t('הזמנה')
   const body = (
-    <div className={'item card' + (i ? '' : ' plan-booking') + (e.done ? ' done' : '')}>
-      {i ? (
-        <button
-          className="check"
-          aria-label={t('בוצע')}
-          aria-pressed={i.done}
-          onClick={() => mutate(supabase.from('itinerary_items').update({ done: !i.done }).eq('id', i.id))}
-        >
-          {i.done && <Check size="1em" strokeWidth={3} aria-hidden="true" />}
-        </button>
-      ) : (
-        <span className="plan-icon" aria-hidden="true">
-          <Icon as={e.icon} size="1.375rem" />
-        </span>
-      )}
-      <div className="item-body" onClick={i ? () => onOpen(i) : undefined} style={i ? undefined : { cursor: 'default' }}>
-        <div className="item-title">
-          {/* the planner's time is a rough guess: it shows as such until someone sets one */}
-          {e.time && (i?.auto ? <span className="time approx" title={t('שעה משוערת')}>~{e.time}</span> : <span className="time">{e.time}</span>)}
-          {e.title}
-        </div>
-        <div className="muted small plan-meta">
-          <span className="plan-kind">
-            {i ? CATEGORIES[i.category] ?? i.category : t('הזמנה')}
-            {kind && <> · {keepRanges(firstSentence(kind))}</>}
-          </span>
-          {e.who && <span className="who-pill">{t(e.who)}</span>}
+    <div className={'plan-row' + (i ? '' : ' plan-booking') + (e.done ? ' done' : '')}>
+      {/* the planner's time is a rough guess: it shows as such until someone sets one */}
+      <span className={'plan-time' + (i?.auto ? ' approx' : '')} title={i?.auto ? t('שעה משוערת') : undefined}>
+        {e.time ? (i?.auto ? '~' + e.time : e.time) : ''}
+      </span>
+      <div className="plan-body" onClick={i ? () => onOpen(i) : undefined}>
+        <div className="plan-title">{e.title}</div>
+        <div className="plan-sub">
+          <span className="plan-kind">{keepRanges(sub)}</span>
+          {ownTag &&
+            (e.who ? (
+              <span className="who-pill">{t(e.who)}</span>
+            ) : (
+              <span className="who-pill">
+                <RingsIcon /> {t('ביחד')}
+              </span>
+            ))}
           {away && (
             <span className="who-pill away-pill" title={t('בעיר אחרת מזו שישנים בה היום')}>
               {t('ב{city}', { city: away })}
             </span>
           )}
         </div>
-        {/* the planner's notes are one short line (and a baby line when it matters); people's own notes can run long */}
-        {e.sub && <div className={'notes' + (i?.auto ? ' plan-auto-notes' : ' plan-notes')}>{keepRanges(e.sub)}</div>}
         {warning && (
           <div className="plan-warn">
             <Icon as={CircleAlert} /> {warning}
           </div>
         )}
-        {(e.location || i) && (
-          <div className="item-actions">
-            {e.location && <NavLink to={e.location} />}
-            {i && (
-              <button
-                className="action"
-                onClick={(ev) => {
-                  ev.stopPropagation()
-                  onEdit(i)
-                }}
-              >
-                <Icon as={Pencil} /> {t('עריכה')}
-              </button>
-            )}
-            {i && onMissed && (
-              <button
-                className="action"
-                onClick={(ev) => {
-                  ev.stopPropagation()
-                  onMissed(i)
-                }}
-              >
-                <Icon as={Undo2} /> {t('לא הגענו')}
-              </button>
-            )}
-          </div>
+        {i && onMissed && (
+          <button
+            className="action plan-missed"
+            onClick={(ev) => {
+              ev.stopPropagation()
+              onMissed(i)
+            }}
+          >
+            <Icon as={Undo2} /> {t('לא הגענו')}
+          </button>
         )}
       </div>
+      {i ? (
+        <button
+          className="check"
+          aria-label={t('בוצע')}
+          aria-pressed={i.done}
+          onClick={async () => {
+            const ok = await mutate(supabase.from('itinerary_items').update({ done: !i.done }).eq('id', i.id))
+            // ticking a stop also marks its place visited (48); unticking leaves the place as it is
+            if (ok && !i.done && i.place_id) await mutate(supabase.from('places').update({ visited: true }).eq('id', i.place_id))
+          }}
+        >
+          {i.done && <Check size="1em" strokeWidth={3.2} aria-hidden="true" />}
+        </button>
+      ) : e.location ? (
+        // a booking moment has no sheet: its round icon is the way there
+        <NavLink to={e.location} round icon={e.icon} />
+      ) : (
+        <span className="plan-icon" aria-hidden="true">
+          <Icon as={e.icon} />
+        </span>
+      )}
     </div>
   )
   return i ? (
-    <SwipeRow onEdit={() => onEdit(i)} onRemove={() => onRemove(i)}>
+    <SwipeRow
+      hint={hint}
+      start={e.location ? { label: t('ניווט'), icon: Navigation, tone: 'ok', onClick: () => openLink(navUrl(e.location!)) } : undefined}
+      end={[
+        { label: t('עריכה'), icon: Pencil, tone: 'edit', onClick: () => onEdit(i) },
+        { label: t('הסרה'), icon: Trash2, tone: 'del', onClick: () => onRemove(i) },
+      ]}
+    >
       {body}
     </SwipeRow>
   ) : (
@@ -365,153 +431,15 @@ export function EntryRow(props: {
   )
 }
 
-// the one row that is open: opening another (or tapping elsewhere, or scrolling) closes it
-let openRow: (() => void) | null = null
-const ACTS_W = 152
-
-/** A plan item that slides over Edit / Remove on its end side (right in Hebrew, left in English), like iOS lists. */
-function SwipeRow({ children, onEdit, onRemove }: { children: React.ReactNode; onEdit: () => void; onRemove: () => void }) {
-  const row = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
-  const pos = useRef(0)
-  const stop = useRef<(() => void) | null>(null)
-  const g = useRef<{ x: number; y: number; from: number; lock: 'h' | 'v' | null; trail: { t: number; x: number }[] } | null>(null)
-  const moved = useRef(false)
-  const sign = () => (document.documentElement.dir === 'rtl' ? 1 : -1) // which way the row slides
-  const show = (x: number) => {
-    pos.current = x
-    if (!row.current) return
-    const [card, acts] = [row.current.firstElementChild as HTMLElement, row.current.lastElementChild as HTMLElement]
-    card.style.transform = x ? `translateX(${x}px)` : ''
-    // the capsules grow and fade in with how far the row is open: the outer one (Remove) leads, Edit follows a little later
-    const px = Math.abs(x)
-    const p = Math.min(1, px / ACTS_W)
-    const still = reducedMotion()
-    const [edit, del] = acts.children as unknown as HTMLElement[]
-    // steeper than the row: a dot that grows and brightens while the row slides, and is gone just before the row is home
-    const c01 = (v: number) => Math.max(0, Math.min(1, v))
-    const grow = (b: HTMLElement, q: number, wide = 0) => {
-      const sc = c01((q - 0.1) / 0.6)
-      const op = c01((q - 0.05) / 0.5)
-      b.style.opacity = still ? (q > 0 ? '1' : '0') : String(op)
-      b.style.transform = still ? '' : `scale(${0.3 + 0.7 * sc})`
-      b.style.width = wide ? `${64 + wide}px` : ''
-    }
-    // dragged past the end: the outer capsule stretches by half the extra, up to 40px
-    grow(del, p, Math.min(40, Math.max(0, px - ACTS_W) / 2))
-    grow(edit, p - 0.15)
-    acts.style.visibility = x ? 'visible' : ''
-  }
-  const settle = (to: number, v = 0) => {
-    stop.current?.()
-    stop.current = null
-    setOpen(to !== 0)
-    if (to !== 0) {
-      openRow?.()
-      openRow = () => settle(0)
-    }
-    if (reducedMotion()) return show(to)
-    stop.current = springTo(pos.current, to, v, { damping: 0.62, response: 0.35 }, (x) => show(x), () => (stop.current = null))
-  }
-  useEffect(() => {
-    if (!open) return
-    const close = (ev: Event) => {
-      if (ev.type === 'pointerdown' && row.current?.contains(ev.target as Node)) return
-      settle(0)
-    }
-    document.addEventListener('pointerdown', close, true)
-    document.addEventListener('scroll', close, true)
-    return () => {
-      document.removeEventListener('pointerdown', close, true)
-      document.removeEventListener('scroll', close, true)
-    }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => () => stop.current?.(), [])
-
-  const down = (ev: React.PointerEvent) => {
-    if (ev.pointerType === 'mouse' && ev.button !== 0) return
-    if ((ev.target as HTMLElement).closest('.swipe-acts')) return
-    stop.current?.() // grabs the row mid-flight
-    stop.current = null
-    moved.current = false
-    g.current = { x: ev.clientX, y: ev.clientY, from: pos.current, lock: null, trail: [{ t: ev.timeStamp, x: ev.clientX }] }
-  }
-  const move = (ev: React.PointerEvent) => {
-    const s = g.current
-    if (!s) return
-    const dx = ev.clientX - s.x
-    const dy = ev.clientY - s.y
-    if (!s.lock) {
-      if (Math.hypot(dx, dy) < 8) return
-      s.lock = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
-      if (s.lock === 'h') row.current?.setPointerCapture(ev.pointerId)
-    }
-    if (s.lock !== 'h') return
-    moved.current = true
-    s.trail.push({ t: ev.timeStamp, x: ev.clientX })
-    if (s.trail.length > 6) s.trail.shift()
-    const k = sign()
-    // only toward the actions, never far past them
-    const along = Math.max(0, Math.min(ACTS_W * 1.6, (s.from + dx) * k))
-    show(along * k)
-  }
-  const up = () => {
-    const s = g.current
-    g.current = null
-    if (!s || s.lock !== 'h') return
-    const k = sign()
-    const a = s.trail[0]
-    const b = s.trail[s.trail.length - 1]
-    const v = b.t > a.t ? ((b.x - a.x) / (b.t - a.t)) * 1000 : 0
-    const rest = (pos.current + project(v)) * k
-    settle(rest > ACTS_W * 0.4 ? k * ACTS_W : 0, v)
-  }
-  // a drag (or a tap that only closes an open row) must not also click what is underneath
-  const click = (ev: React.MouseEvent) => {
-    if (moved.current || (open && !(ev.target as HTMLElement).closest('.swipe-acts'))) {
-      ev.stopPropagation()
-      ev.preventDefault()
-      moved.current = false
-    }
-  }
-
-  return (
-    <div
-      ref={row}
-      className={'swipe-row' + (open ? ' open' : '')}
-      onPointerDown={down}
-      onPointerMove={move}
-      onPointerUp={up}
-      onPointerCancel={up}
-      onClickCapture={click}
-    >
-      {children}
-      <div className="swipe-acts" aria-hidden={!open}>
-        <button
-          className="swipe-edit"
-          tabIndex={open ? 0 : -1}
-          aria-label={t('עריכה')}
-          onClick={() => {
-            settle(0)
-            onEdit()
-          }}
-        >
-          <Icon as={Pencil} size="1.375rem" aria-hidden="true" />
-        </button>
-        <button
-          className="swipe-del"
-          tabIndex={open ? 0 : -1}
-          aria-label={t('הסרה')}
-          onClick={() => {
-            settle(0)
-            onRemove()
-          }}
-        >
-          <Icon as={Trash2} size="1.375rem" aria-hidden="true" />
-        </button>
-      </div>
-    </div>
-  )
+/** Opens a link the way a tapped <a target="_blank"> does (in the iOS app: Google Maps or the Safari sheet). */
+function openLink(href: string) {
+  const a = document.createElement('a')
+  a.href = href
+  a.target = '_blank'
+  a.rel = 'noreferrer'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
 }
 
 type Point = { lat: number; lng: number }
@@ -539,8 +467,12 @@ function Hop({ from, to, pointOf }: { from: Entry; to: Entry; pointOf: (e: Entry
 }
 
 /** Directions to a plan item; a tap here leaves the row alone (the row opens its sheet). */
-function NavLink({ to }: { to: string }) {
-  return (
+function NavLink({ to, round, icon }: { to: string; round?: boolean; icon?: Entry['icon'] }) {
+  return round ? (
+    <a className="nav-round" href={navUrl(to)} target="_blank" rel="noreferrer" aria-label={t('ניווט')} onClick={(ev) => ev.stopPropagation()}>
+      <Icon as={icon ?? Navigation} />
+    </a>
+  ) : (
     <a className="action nav-btn" href={navUrl(to)} target="_blank" rel="noreferrer" onClick={(ev) => ev.stopPropagation()}>
       <Icon as={Navigation} /> {t('ניווט')}
     </a>
@@ -747,9 +679,9 @@ function Spare({ trip, day, spare, places }: { trip: Trip; day: number; spare: P
   return (
     <details className="card spare">
       <summary>
-        {spare.length === 1
-          ? t('עוד מקום אחד שאהבתם בעיר ולא נכנס למסלול')
-          : t('עוד {n} מקומות שאהבתם בעיר ולא נכנסו למסלול', { n: spare.length })}
+        <Icon as={Heart} className="lead" />
+        <span>{spare.length === 1 ? t('מקום אחד שאהבתם, לא במסלול') : t('{n} מקומות שאהבתם, לא במסלול', { n: spare.length })}</span>
+        <Icon as={ChevronDown} className="chev" />
       </summary>
       <ul>
         {spare.map((u) => (
@@ -769,22 +701,33 @@ function Spare({ trip, day, spare, places }: { trip: Trip; day: number; spare: P
   )
 }
 
-function ArrivalCard({ entry }: { entry: Entry }) {
+/** First steps after landing; the check-in line gives the day's hotel booking hour when there is one. */
+function ArrivalCard({ entry, checkin, dayWho }: { entry: Entry; checkin: string | null; dayWho: string | null }) {
   const b = entry.booking!
   const airport = tokyoArrival(b)
   if (!airport) return null
   const a = ARRIVAL[airport]
   return (
-    <details className="card arrival" open>
+    // closed to one row like the day's stops (the video's calm list); the first steps open under it
+    <details className="arrival">
       <summary>
-        <Icon as={PlaneLanding} /> {t('נחיתה ב{airport}', { airport: a.name })} · <span className="time">{entry.time}</span>
-        {b.who && <span className="who-pill">{t(b.who)}</span>}
+        <span className="plan-time">{entry.time}</span>
+        <span className="plan-body">
+          <span className="plan-title">
+            <Icon as={PlaneLanding} /> {t('נחיתה ב{airport}', { airport: a.name })}
+          </span>
+          <span className="plan-sub">
+            <span className="plan-kind">{t('{n} צעדים ראשונים אחרי הנחיתה', { n: a.steps.length })}</span>
+            {b.who && b.who !== dayWho && <span className="who-pill">{t(b.who)}</span>}
+          </span>
+        </span>
+        <Icon as={ChevronDown} className="chev" />
       </summary>
       <ul>
         {a.steps.map((s) => (
           <li key={s.text}>
             <Icon as={s.icon} />
-            <span>{s.text}</span>
+            <span>{s.checkin && checkin ? t('צ׳ק-אין מ-{time}, לפי ההזמנה. אפשר להשאיר מזוודות במלון לפני כן.', { time: checkin }) : s.text}</span>
           </li>
         ))}
       </ul>
@@ -938,4 +881,43 @@ function warningText(w: PlanSummary['warnings'][number]) {
   if (w.kind === 'closed_date') return 'Closed on this date'
   if (w.kind === 'closed_weekday') return `Closed on ${new Date(Date.UTC(2026, 10, 1 + (w.weekday ?? 0))).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })}s`
   return `Open only ${w.opens}–${w.closes}`
+}
+
+/**
+ * The day strip stays under the slim title bar (30) and shrinks with the scroll, following the finger: the weekday and
+ * city fade out over the first ~60pt and the date stays. It grows back the same way. With Reduce Motion it switches.
+ */
+function useStripShrink(ref: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let raf = 0
+    const top = () => el.getBoundingClientRect().top + window.scrollY
+    let start = top()
+    const update = () => {
+      raf = 0
+      // from the moment it sticks under the bar
+      const stick = parseFloat(getComputedStyle(el).top) || 0
+      let p = Math.max(0, Math.min(1, (window.scrollY - (start - stick)) / 60))
+      if (reducedMotion()) p = p > 0.5 ? 1 : 0
+      el.style.setProperty('--p', p.toFixed(3))
+      el.classList.toggle('stuck', p > 0)
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    const onResize = () => {
+      el.style.setProperty('--p', '0')
+      start = top()
+      update()
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      cancelAnimationFrame(raf)
+    }
+  }, [ref])
 }

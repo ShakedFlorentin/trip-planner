@@ -1,0 +1,210 @@
+{
+ "name": "meals-around-bookings",
+ "description": "A booked brunch at 10:00 on day 1 and a booked dinner at 19:30 on day 2: the planner's own meals keep 3 hours from them (and a café doesn't count as a meal).",
+ "days": [
+  {
+   "day": 1,
+   "date": "2026-12-12",
+   "weekday": 6,
+   "at": {
+    "A": {
+     "base": "tokyo",
+     "hotel": {
+      "lat": 35.69,
+      "lng": 139.7
+     },
+     "start": 540,
+     "end": 1260
+    },
+    "B": {
+     "base": "tokyo",
+     "hotel": {
+      "lat": 35.69,
+      "lng": 139.7
+     },
+     "start": 540,
+     "end": 1260
+    }
+   }
+  },
+  {
+   "day": 2,
+   "date": "2026-12-13",
+   "weekday": 0,
+   "at": {
+    "A": {
+     "base": "tokyo",
+     "hotel": {
+      "lat": 35.69,
+      "lng": 139.7
+     },
+     "start": 540,
+     "end": 1260
+    },
+    "B": {
+     "base": "tokyo",
+     "hotel": {
+      "lat": 35.69,
+      "lng": 139.7
+     },
+     "start": 540,
+     "end": 1260
+    }
+   }
+  }
+ ],
+ "units": [
+  {
+   "id": "ramen",
+   "couples": [
+    "A",
+    "B"
+   ],
+   "base": "tokyo",
+   "far": false,
+   "point": {
+    "lat": 35.659,
+    "lng": 139.7
+   },
+   "mins": 60,
+   "category": "food",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 4,
+   "current": null
+  },
+  {
+   "id": "sushi",
+   "couples": [
+    "A",
+    "B"
+   ],
+   "base": "tokyo",
+   "far": false,
+   "point": {
+    "lat": 35.665,
+    "lng": 139.77
+   },
+   "mins": 75,
+   "category": "food",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 4,
+   "current": null
+  },
+  {
+   "id": "izakaya",
+   "couples": [
+    "A",
+    "B"
+   ],
+   "base": "tokyo",
+   "far": false,
+   "point": {
+    "lat": 35.694,
+    "lng": 139.703
+   },
+   "mins": 90,
+   "category": "food",
+   "best": "evening",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 4,
+   "current": null
+  },
+  {
+   "id": "teamlab",
+   "couples": [
+    "A",
+    "B"
+   ],
+   "base": "tokyo",
+   "far": false,
+   "point": {
+    "lat": 35.649,
+    "lng": 139.789
+   },
+   "mins": 120,
+   "category": "sight",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 4,
+   "current": null
+  },
+  {
+   "id": "cafe",
+   "couples": [
+    "A",
+    "B"
+   ],
+   "base": "tokyo",
+   "far": false,
+   "point": {
+    "lat": 35.668,
+    "lng": 139.703
+   },
+   "mins": 45,
+   "category": "cafe",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 4,
+   "current": null
+  }
+ ],
+ "fixed": [
+  {
+   "day": 1,
+   "couples": [
+    "A",
+    "B"
+   ],
+   "point": {
+    "lat": 35.67,
+    "lng": 139.71
+   },
+   "start": 600,
+   "mins": 90,
+   "meal": true
+  },
+  {
+   "day": 2,
+   "couples": [
+    "A",
+    "B"
+   ],
+   "point": {
+    "lat": 35.67,
+    "lng": 139.71
+   },
+   "start": 1170,
+   "mins": 90,
+   "meal": true
+  }
+ ],
+ "expect": {
+  "mealGap": 180,
+  "noIssueKinds": [
+   "meals"
+  ],
+  "placedMin": 4
+ }
+}

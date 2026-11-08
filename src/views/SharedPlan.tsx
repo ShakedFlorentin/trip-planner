@@ -5,6 +5,7 @@ import { errorText } from '../lib'
 import { t } from '../i18n'
 import { Field } from '../ui'
 import { PlanList, type SharedSnapshot } from './Share'
+import { Loading } from '../rings'
 
 // The public, read-only page behind ?share=<slug>. It runs before the login gate and talks to the database only
 // through get_shared_plan, which hands back the published snapshot (or nothing once sharing was stopped).
@@ -82,7 +83,7 @@ export default function SharedPlan({ slug }: { slug: string }) {
     toApp()
   }
 
-  if (!state) return <div className="center" role="status">{t('טוען…')}</div>
+  if (!state) return <Loading />
   if (!state.snap)
     return (
       <div className="center stack" role="alert">
@@ -136,7 +137,7 @@ export function ImportShared(props: { slug: string; userId: string; snap?: Share
     if (snap?.name) setTripName((n) => (n === t('טיול חדש') ? snap.name! : n))
   }, [snap?.name])
 
-  if (snap === undefined) return <div className="center" role="status">{t('טוען…')}</div>
+  if (snap === undefined) return <Loading />
   if (!snap)
     return (
       <div className="center stack" role="alert">

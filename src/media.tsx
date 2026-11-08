@@ -50,7 +50,16 @@ export function VideoSheet({ media, title, onClose }: { media: NonNullable<Retur
 }
 
 /** Maps / website / video chips, then any extra chips the caller adds. Renders nothing when there is nothing to show. */
-export function MediaActions(props: { name: string; maps?: string | null; website?: string | null; m: Media; compact?: boolean; children?: ReactNode }) {
+export function MediaActions(props: {
+  name: string
+  maps?: string | null
+  website?: string | null
+  m: Media
+  compact?: boolean
+  /** small round icons (map, site, video) at the start and the caller's worded button at the other end, one row (43) */
+  round?: boolean
+  children?: ReactNode
+}) {
   const [open, setOpen] = useState(false)
   const website = safeUrl(props.website)
   // the saved Google Maps link, else a search for the address (or the name, for a place with a known spot)
@@ -58,6 +67,28 @@ export function MediaActions(props: { name: string; maps?: string | null; websit
     safeUrl(props.maps) || (props.m.address ? mapsUrl(props.m.address) : props.m.lat != null ? mapsUrl(props.name) : null)
   const video = videoEmbed(props.m)
   if (!maps && !website && !video && !props.children) return null
+  if (props.round)
+    return (
+      <div className="actions icon-row" onClick={(e) => e.stopPropagation()}>
+        {maps && (
+          <a className="round-icon" href={maps} target="_blank" rel="noreferrer" aria-label={t('מפה')}>
+            <Icon as={MapPin} />
+          </a>
+        )}
+        {website && (
+          <a className="round-icon" href={website} target="_blank" rel="noreferrer" aria-label={t('אתר')}>
+            <Icon as={Globe} />
+          </a>
+        )}
+        {video && (
+          <button className="round-icon" onClick={() => setOpen(true)} aria-label={t('סרטון')}>
+            <Icon as={Play} />
+          </button>
+        )}
+        {props.children && <span className="actions-end">{props.children}</span>}
+        {open && video && <VideoSheet media={video} title={props.name} onClose={() => setOpen(false)} />}
+      </div>
+    )
   return (
     // the chips sit inside tappable cards: a tap on a chip is only the chip's
     <div className={'actions' + (props.compact ? ' compact' : '')} onClick={(e) => e.stopPropagation()}>

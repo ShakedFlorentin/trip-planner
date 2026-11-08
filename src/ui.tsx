@@ -4,8 +4,19 @@ import { t } from './i18n'
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
 
-/** Bottom sheet: grabber, drag-down to dismiss, Escape, scroll lock, focus return. */
-export function Sheet(props: { title: string; onClose: () => void; children: ReactNode }) {
+/**
+ * Bottom sheet: grabber, drag-down to dismiss, Escape, scroll lock, focus return. An edit sheet passes `action`
+ * (its "שמירה") and `closeLabel` ("ביטול"): both sit in the title row, as on every iOS edit sheet. `tall` keeps it
+ * at full height, for a whole screen shown as a sheet.
+ */
+export function Sheet(props: {
+  title: string
+  onClose: () => void
+  children: ReactNode
+  action?: { label: string; onClick: () => void; disabled?: boolean }
+  closeLabel?: string
+  tall?: boolean
+}) {
   const { onClose } = props
   const ref = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
@@ -152,16 +163,22 @@ export function Sheet(props: { title: string; onClose: () => void; children: Rea
         role="dialog"
         aria-modal="true"
         aria-label={props.title}
-        className="sheet"
+        className={'sheet' + (props.tall ? ' tall' : '')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sheet-head">
           <span className="grabber" aria-hidden="true" />
           <button className="sheet-close" onClick={onClose}>
-            {t('סגירה')}
+            {props.closeLabel ?? t('סגירה')}
           </button>
           <h2 dir="auto">{props.title}</h2>
-          <span />
+          {props.action ? (
+            <button className="sheet-action" onClick={props.action.onClick} disabled={props.action.disabled}>
+              {props.action.label}
+            </button>
+          ) : (
+            <span />
+          )}
         </div>
         <div className="sheet-body">{props.children}</div>
       </div>
@@ -180,6 +197,22 @@ export function Field(props: { label: string; children: ReactNode }) {
 
 export function Empty(props: { children: ReactNode }) {
   return <p className="empty">{props.children}</p>
+}
+
+/** An empty screen, Apple style: a grey line icon that fits the case, a bold title, one line and one button. */
+export function EmptyState(props: { icon: LucideIcon; title: string; line?: string; action?: { label: string; onClick: () => void } }) {
+  return (
+    <div className="empty-state">
+      <Icon as={props.icon} size={50} className="empty-icon" />
+      <b>{props.title}</b>
+      {props.line && <p>{props.line}</p>}
+      {props.action && (
+        <button className="primary" onClick={props.action.onClick}>
+          {props.action.label}
+        </button>
+      )}
+    </div>
+  )
 }
 
 /** A row of tabs pinned under the top bar; `counts` adds a badge to tabs that have items. */

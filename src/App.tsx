@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { supabase } from './supabase'
 import { t } from './i18n'
 import type { Member, Trip } from './types'
-import { clearCache, currentDay, readCache, writeCache } from './lib'
+import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
+import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
 import Login from './views/Login'
 import TripPicker from './views/TripPicker'
@@ -10,12 +11,16 @@ import Home from './views/Home'
 import Itinerary from './views/Itinerary'
 import Bookings from './views/Bookings'
 import Places from './views/Places'
-import More, { MORE_TABS, type MoreTab } from './views/More'
-import { useRemembered } from './ui'
+import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
+import Menu from './views/Menu'
+import Settings from './views/Settings'
+import ReportSheet from './views/Report'
 import SwipeGame from './views/Swipe'
 import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
+import { Loading } from './rings'
+import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
 // The glyphs differ in width (the pin is narrow, the ticket wide), so `nudge` moves each one by a fraction of a pixel
@@ -26,17 +31,25 @@ const TABS = [
   { id: 'plan', label: t('מסלול'), d: 'M8 2.5a1 1 0 0 1 1 1V5h6V3.5a1 1 0 1 1 2 0V5h1.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H7V3.5a1 1 0 0 1 1-1ZM5 10v8.5c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5V10ZM7 12h2.5v2.5H7Zm3.75 0h2.5v2.5h-2.5Zm3.75 0H17v2.5h-2.5ZM7 15.5h2.5V18H7Zm3.75 0h2.5V18h-2.5Z', nudge: -0.7 },
   { id: 'bookings', label: t('הזמנות'), d: 'M4 5.5h16A1.5 1.5 0 0 1 21.5 7v2.6a.6.6 0 0 1-.5.6 1.8 1.8 0 0 0 0 3.6.6.6 0 0 1 .5.6V17a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 17v-2.6a.6.6 0 0 1 .5-.6 1.8 1.8 0 0 0 0-3.6.6.6 0 0 1-.5-.6V7A1.5 1.5 0 0 1 4 5.5ZM14.25 7.5h1.5v2h-1.5Zm0 3.5h1.5v2h-1.5Zm0 3.5h1.5v2h-1.5Z', nudge: 0.6 },
   { id: 'places', label: t('מקומות'), d: 'M12 2a7.5 7.5 0 0 1 7.5 7.5c0 5.6-6 11.1-6.8 11.8a1 1 0 0 1-1.4 0C10.5 20.6 4.5 15.1 4.5 9.5A7.5 7.5 0 0 1 12 2Zm0 4.6a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8Z', nudge: 0.3 },
-  { id: 'more', label: t('עוד'), d: 'M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19ZM7.5 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm4.5 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm4.5 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z', nudge: 0.1 },
 ] as const
 type Tab = (typeof TABS)[number]['id']
 
 // who was signed in, so the app still opens when an expired login can't be refreshed without a network
 const UID_KEY = 'userId'
 
-// a shared plan's link (?share=…) opens the read-only page for anyone, before the login gate
+// a shared plan's link (?share=…) opens the read-only page for anyone, before the login gate.
+// The guide video plays over everything the first time the app opens on this device (after the opening rings, before
+// signing in), and again whenever the ☰ menu asks for it; a shared plan's visitor is not shown it on their own.
 export default function App() {
   const [slug] = useState(slugInUrl)
-  return slug ? <SharedPlan slug={slug} /> : <AppMain />
+  const [guide, setGuide] = useState(() => GUIDE_READY && !slug && guideUnseen())
+  useEffect(() => onGuideOpen(() => setGuide(true)), [])
+  return (
+    <>
+      {slug ? <SharedPlan slug={slug} /> : <AppMain />}
+      {guide && <Guide onClose={() => setGuide(false)} />}
+    </>
+  )
 }
 
 function AppMain() {
@@ -72,7 +85,7 @@ function AppMain() {
     return () => data.subscription.unsubscribe()
   }, [])
 
-  if (userId === undefined) return <div className="center" role="status">{t('טוען…')}</div>
+  if (userId === undefined) return <Loading />
   if (!userId) return <Login />
   return invited ? <ProfileGate key={userId} userId={userId} /> : <TripGate userId={userId} />
 }
@@ -84,7 +97,7 @@ function AppMain() {
  */
 function ProfileGate({ userId }: { userId: string }) {
   const { profile, failed, saved } = useProfile(userId)
-  if (profile === undefined) return <div className="center" role="status">{t('טוען…')}</div>
+  if (profile === undefined) return <Loading />
   if (!profile?.completed_at && !(failed && !profile)) return <Onboarding userId={userId} initial={profile?.answers} onDone={saved} />
   return <TripGate userId={userId} />
 }
@@ -151,7 +164,7 @@ function TripGate({ userId }: { userId: string }) {
       />
     )
   if (failed) return <LoadError onRetry={() => setAttempt((a) => a + 1)} />
-  if (tripId === undefined) return <div className="center" role="status">{t('טוען…')}</div>
+  if (tripId === undefined) return <Loading />
   if (!tripId) return <TripPicker onPick={choose} />
   return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
 }
@@ -163,16 +176,31 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [trip, setTrip] = useState<Trip | null>(tripCache?.data ?? null)
   const [members, setMembers] = useState<Member[]>(() => readCache<Member[]>('members:' + tripId)?.data ?? [])
   const [tab, setTab] = useState<Tab>('home')
-  // the avatar asks Home to open trip settings; Home clears the request once it has opened them
-  const [settingsAsk, setSettingsAsk] = useState(false)
-  // the screen the avatar was tapped on, for a problem report sent from the settings
-  const [settingsFrom, setSettingsFrom] = useState(t('בית'))
+  // the ☰ menu and what it opens: each is a sheet over the current page, so closing it returns to the same place (5)
+  const [menu, setMenu] = useState(false)
+  const [tool, setTool] = useState<MoreTab | null>(null)
+  const [settings, setSettings] = useState(false)
+  const [prefs, setPrefs] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  // a short message at the bottom ("מעדכנים את המסלול…")
+  const [toast, setToast] = useState('')
   const [searching, setSearching] = useState(false)
   // a card picked in search, for Discover to open
   const [showCard, setShowCard] = useState<string | null>(null)
   const cardShown = useCallback(() => setShowCard(null), [])
   const [day, setDay] = useState(1)
-  const [moreSub, setMoreSub] = useRemembered('moreTab', 'money') as [MoreTab, (s: MoreTab) => void]
+  const hasBaby = useTripHasBaby(tripId)
+  // the large title scrolls away with the page and a small one shows in the slim bar (9)
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setCompact(window.scrollY > 34)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [tab])
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
@@ -218,16 +246,13 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (trip) setDay(currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
-  if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <div className="center" role="status">{t('טוען…')}</div>
+  if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <Loading />
   const me = members.find((m) => m.user_id === props.userId)?.display_name ?? ''
   const openDay = (d: number) => {
     setDay(d)
     setTab('plan')
   }
-  const openMore = (s: MoreTab) => {
-    setMoreSub(s)
-    setTab('more')
-  }
+  const openMore = (s: MoreTab) => setTool(s)
   const openResult = (to: SearchTarget) => {
     setSearching(false)
     if (to.tab === 'plan') openDay(to.day)
@@ -238,23 +263,38 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
 
   return (
     <div className="app">
-      <header className="topbar">
-        <h1>{TABS.find((t) => t.id === tab)?.label}</h1>
-        <button
-          className="avatar"
-          aria-label={t('הגדרות טיול, {me}', { me })}
-          onClick={() => {
-            const here = TABS.find((t) => t.id === tab)?.label ?? tab
-            setSettingsFrom(tab === 'more' ? `${here} › ${MORE_TABS.find((t) => t.id === moreSub)?.label ?? moreSub}` : here)
-            setTab('home')
-            setSettingsAsk(true)
-          }}
-        >
-          {initials(me)}
+      <header className={'topbar' + (compact ? ' compact' : '')}>
+        <span className="topbar-title" aria-hidden={!compact}>
+          {TABS.find((t) => t.id === tab)?.label}
+        </span>
+        {/* search lives in the top bar, beside the menu (the tab bar is the video's flat bar, with no room for it) */}
+        <button className="menu-btn" aria-label={t('חיפוש')} onClick={() => setSearching(true)}>
+          <svg className="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15ZM21 21l-5.2-5.2" />
+          </svg>
+        </button>
+        {/* re-plan (41): a button, never a pull, so a plan you like can't change by an accidental pull */}
+        {tab === 'plan' && (
+          <button
+            className="menu-btn"
+            aria-label={t('סידור המסלול מחדש')}
+            onClick={() => {
+              setToast(t('מעדכנים את המסלול, כמה שניות…'))
+              void replan(trip.id).then(() => setTimeout(() => setToast(''), 1200))
+            }}
+          >
+            <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
+          </button>
+        )}
+        <button className="menu-btn" aria-label={t('תפריט')} onClick={() => setMenu(true)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
         </button>
       </header>
       <OfflineBanner since={stale ? syncedAt : null} />
       <main className={'tab-' + tab}>
+        <h1 className="large-title">{TABS.find((t) => t.id === tab)?.label}</h1>
         {tab === 'home' && (
           <Home
             trip={trip}
@@ -264,19 +304,16 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
             onOpenDay={openDay}
             onOpenMore={openMore}
             onOpenPlaces={() => setTab('places')}
-            onLeave={props.onLeave}
-            settingsAsk={settingsAsk}
-            onSettingsShown={() => setSettingsAsk(false)}
-            settingsFrom={settingsFrom}
+            onOpenSettings={() => setSettings(true)}
           />
         )}
-        {tab === 'swipe' && <SwipeGame trip={trip} userId={props.userId} members={members} showCard={showCard} onCardShown={cardShown} />}
+        {tab === 'swipe' && <SwipeGame trip={trip} userId={props.userId} members={members} showCard={showCard} onCardShown={cardShown} onOpenPlaces={() => setTab('places')} />}
         {tab === 'plan' && <Itinerary trip={trip} day={day} setDay={setDay} members={members} userId={props.userId} />}
         {tab === 'bookings' && <Bookings trip={trip} members={members} userId={props.userId} />}
-        {tab === 'places' && <Places trip={trip} me={me} userId={props.userId} members={members} />}
-        {tab === 'more' && <More trip={trip} members={members} userId={props.userId} sub={moreSub} setSub={setMoreSub} />}
+        {tab === 'places' && <Places trip={trip} me={me} userId={props.userId} members={members} onOpenDay={openDay} />}
       </main>
-      <nav className="tabbar glass" aria-label={t('ניווט ראשי')}>
+      {/* a flat, full-width iOS tab bar, as in the promo video: icon over a small label, red when current */}
+      <nav className="tabbar" aria-label={t('ניווט ראשי')}>
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'active' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => setTab(t.id)}>
             <svg className="tab-icon" viewBox="0 0 24 24" aria-hidden="true" style={{ '--nudge': t.nudge } as CSSProperties}>
@@ -286,22 +323,36 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           </button>
         ))}
       </nav>
-      {/* Music keeps search as its own glass button beside the tab bar */}
-      <button className="search-fab glass" aria-label={t('חיפוש')} onClick={() => setSearching(true)}>
-        <svg className="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15ZM21 21l-5.2-5.2" />
-        </svg>
-      </button>
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
+      {menu && (
+        <Menu
+          me={me}
+          hasBaby={hasBaby}
+          onClose={() => setMenu(false)}
+          onTool={setTool}
+          onPrefs={() => setPrefs(true)}
+          onSettings={() => setSettings(true)}
+          onLeave={props.onLeave}
+          onReport={() => setReporting(true)}
+        />
+      )}
+      {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
+      {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}
+      {prefs && <PrefsSheet userId={props.userId} onClose={() => setPrefs(false)} />}
+      {reporting && (
+        <ReportSheet trip={trip} me={me} from={(tool && MORE_LABEL[tool]) || TABS.find((x) => x.id === tab)?.label || tab} onClose={() => setReporting(false)} />
+      )}
       {searching && <Search tripId={trip.id} start={trip.start_date} members={members} onClose={() => setSearching(false)} onPick={openResult} />}
     </div>
   )
 }
 
-/** Up to two initials, like the Music avatar: first letter of the first and last word */
-function initials(name: string) {
-  const words = name.trim().split(/\s+/).filter(Boolean)
-  return words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0]?.[0] ?? '')
-}
+const MORE_LABEL: Record<MoreTab, string> = { money: t('כסף'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
+
 
 function LoadError({ onRetry }: { onRetry: () => void }) {
   return (

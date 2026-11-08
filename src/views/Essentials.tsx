@@ -7,7 +7,7 @@ import { isEn, t } from '../i18n'
 import { Empty, Field, LoadNote, Sheet } from '../ui'
 import { PHRASES, type Phrase } from '../phrases'
 import { Icon, type LucideIcon } from '../icons'
-import { Baby, Car, Copy, Lightbulb, Luggage, MapPin, Snowflake, Utensils, ExternalLink, FileText, Hotel, Phone, Pin, Plus, ReceiptText, ShieldAlert, ShieldCheck, StickyNote, Users, X, Check } from 'lucide-react'
+import { Baby, Car, Copy, Lightbulb, Luggage, MapPin, Snowflake, Utensils, ExternalLink, FileText, Hotel, Phone, Pin, Plus, ReceiptText, ShieldAlert, ShieldCheck, StickyNote, Users, X, Check, Volume2, Maximize2 } from 'lucide-react'
 import '../styles/info.css'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
@@ -376,6 +376,13 @@ export function ShowFull(props: { small: string; big: string; sub?: string; onCl
       document.body.style.overflow = prev
     }
   }, [onClose])
+  // the screen stays on while it is held up (Wake Lock, where the phone has it)
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }
+    nav.wakeLock?.request('screen').then((l) => (lock = l)).catch(() => {})
+    return () => void lock?.release().catch(() => {})
+  }, [])
   // long addresses and sentences need a smaller size to stay on one screen
   const size = props.big.length > 60 ? 'xs' : props.big.length > 28 ? 's' : ''
   return (
@@ -384,7 +391,9 @@ export function ShowFull(props: { small: string; big: string; sub?: string; onCl
         <Icon as={X} size="1.25em" />
       </button>
       <div className={'show-big ' + size} lang="ja" dir="ltr">
-        {props.big}
+        {sentences(props.big).map((x, i) => (
+          <JaLine key={i} text={x} />
+        ))}
       </div>
       {props.sub && (
         <div className="show-sub" dir="auto">
@@ -398,22 +407,67 @@ export function ShowFull(props: { small: string; big: string; sub?: string; onCl
   )
 }
 
+/** Japanese split after each 。！？ so every sentence starts its own line (58). */
+export const sentences = (ja: string) => ja.match(/[^。！？]+[。！？]?/g)?.map((x) => x.trim()).filter(Boolean) ?? [ja]
+
+/** A Japanese sentence as words that never break inside themselves: lines break only between words (58). */
+export function JaLine({ text }: { text: string }) {
+  const Seg = (Intl as unknown as { Segmenter?: new (l: string, o: { granularity: 'word' }) => { segment: (s: string) => Iterable<{ segment: string }> } }).Segmenter
+  if (!Seg) return <span>{text}</span>
+  const words = [...new Seg('ja', { granularity: 'word' }).segment(text)].map((x) => x.segment)
+  return (
+    <span>
+      {words.map((w, i) => (
+        <span key={i} className="ja-w">
+          {w}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** Say the Japanese out loud with the iPhone's own Japanese voice: free, and it works offline. */
+function speak(ja: string) {
+  const synth = window.speechSynthesis
+  if (!synth) return
+  synth.cancel()
+  const u = new SpeechSynthesisUtterance(ja)
+  u.lang = 'ja-JP'
+  u.voice = synth.getVoices().find((v) => v.lang.startsWith('ja')) ?? null
+  u.rate = 0.9
+  synth.speak(u)
+}
+
+/**
+ * Phrase cards (58): the Japanese aligned left (it reads left to right), one sentence per line and never broken inside
+ * a word; the Hebrew stays right, the romaji left. Two buttons: speak it, or show it full screen.
+ */
 export function PhraseList({ phrases }: { phrases: Phrase[] }) {
   const [open, setOpen] = useState<Phrase | null>(null)
   return (
     <>
       {phrases.map((p) => (
-        <button key={p.id} className="card phrase" onClick={() => setOpen(p)}>
+        <div key={p.id} className="card phrase">
           <span className="phrase-he">{isEn ? p.en : p.he}</span>
           <span className="phrase-ja" lang="ja" dir="ltr">
-            {p.ja}
+            {sentences(p.ja).map((x, i) => (
+              <JaLine key={i} text={x} />
+            ))}
           </span>
           <span className="phrase-ro" dir="ltr">
             {p.romaji}
           </span>
-        </button>
+          <div className="phrase-acts">
+            <button className="secondary" onClick={() => speak(p.ja)}>
+              <Icon as={Volume2} /> {t('השמעה')}
+            </button>
+            <button className="secondary" onClick={() => setOpen(p)}>
+              <Icon as={Maximize2} /> {t('להראות במסך מלא')}
+            </button>
+          </div>
+        </div>
       ))}
-      {open && <ShowFull small={isEn ? open.en : open.he} big={open.ja} sub={open.romaji} onClose={() => setOpen(null)} />}
+      {open && <ShowFull small={isEn ? '' : open.he} big={open.ja} sub={open.en} onClose={() => setOpen(null)} />}
     </>
   )
 }

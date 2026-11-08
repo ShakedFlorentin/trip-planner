@@ -326,4 +326,16 @@ export const EN_C: Record<string, string> = {
   'אין תמונות שממתינות לאישור': 'No photos waiting for approval',
   'אישור': 'Approve',
   'דחייה': 'Reject',
+  // bookings (design decisions 35-39)
+  '{from} עד {to}': '{from} to {to}',
+  'אין מספר אישור': 'No confirmation number',
+  // money and emergency (design decisions 53, 54, 58)
+  'השמעה': 'Play',
+  'להראות במסך מלא': 'Show full screen',
+  'אתם מחזירים ל{name}': 'You owe {name}',
+  'עליך להחזיר ל{name}': 'You owe {name}',
+  '{name} מחזירים לכם': '{name} owe you',
+  'מגיע לך מ{name}': '{name} owes you',
+  'נבחר לפי מה שכתבתם': 'Picked from what you typed',
+  'צ׳ק-אין {time}': 'Check-in {time}',
 }

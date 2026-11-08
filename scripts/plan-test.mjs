@@ -85,6 +85,22 @@ const expectations = (f, out, run) => {
   const dayOfId = (id) => out.placed.get(id)?.day
   for (const k of x.noIssueKinds ?? []) for (const i of out.issues) if (i.kind === k) errs.push(`issue ${k}: ${i.id}`)
   for (const d of x.emptyDays ?? []) for (const [id, p] of out.placed) if (p.day === d) errs.push(`${id}: placed on day ${d}, expected none`)
+  // mealGap: no couple has two full meals (planned, or fixed with meal: true) less than `mealGap` minutes apart on a day
+  if (x.mealGap) {
+    const byId = new Map(f.units.map((u) => [u.id, u]))
+    const meals = new Map()
+    const add = (day, c, t, what) => meals.set(day + '|' + c, [...(meals.get(day + '|' + c) ?? []), [t, what]])
+    for (const fx of f.fixed ?? []) if (fx.meal && fx.start != null) for (const c of fx.couples) add(fx.day, c, fx.start, 'fixed meal')
+    for (const [id, p] of out.placed) {
+      const u = byId.get(id)
+      if (u.category === 'food') for (const c of u.couples) add(p.day, c, p.start, id)
+    }
+    for (const [k, ms] of meals) {
+      ms.sort((a, b) => a[0] - b[0])
+      for (let i = 1; i < ms.length; i++)
+        if (ms[i][0] - ms[i - 1][0] < x.mealGap) errs.push(`${k}: ${ms[i - 1][1]} at ${ms[i - 1][0]} and ${ms[i][1]} at ${ms[i][0]}, under ${x.mealGap} min apart`)
+    }
+  }
   for (const [id, days] of Object.entries(x.onlyDays ?? {})) {
     const d = dayOfId(id)
     if (d != null && !days.includes(d)) errs.push(`${id}: on day ${d}, allowed ${days.join(',')}`)

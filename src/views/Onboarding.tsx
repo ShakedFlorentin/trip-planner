@@ -290,7 +290,7 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
                 <Icon as={Check} size="2em" />
               </span>
               <p>{t('בגילוי נראה לכם רק מקומות שמתאימים, והמתאימים ביותר יופיעו ראשונים.')}</p>
-              <p className="muted">{t('אפשר לשנות את התשובות בכל רגע: עוד › ההעדפות שלי.')}</p>
+              <p className="muted">{t('אפשר לשנות את התשובות בכל רגע: ☰ › ההעדפות שלי.')}</p>
             </div>
           )}
         </div>

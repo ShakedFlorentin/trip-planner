@@ -38,9 +38,11 @@ button.pill, .info-card .pill { min-height: 44px; }
 /* phrase cards */
 .phrase { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: start; padding: 14px 16px; }
 .phrase-he { font-size: 0.9375rem; font-weight: 600; }
-.phrase-ja { text-align: right; font-size: 1.375rem; font-weight: 700; line-height: 1.35; }
-.phrase-ro { color: var(--muted); font-size: 0.8125rem; font-style: italic; text-align: right; }
-.phrase:active { transform: scale(0.98); }
+.phrase-ja { text-align: left; font-size: 1.375rem; font-weight: 700; line-height: 1.35; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.phrase-ro { color: var(--muted); font-size: 0.8125rem; font-style: italic; text-align: left; }
+.phrase-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.phrase-acts .secondary { min-height: 40px; font-size: 0.875rem; gap: 6px; }
+
 
 /* collapsible tips */
 .card.tip { padding: 0; }
@@ -71,7 +73,7 @@ button.pill, .info-card .pill { min-height: 44px; }
   cursor: pointer;
 }
 .show-close { display: grid; place-items: center; position: absolute; top: calc(10px + env(safe-area-inset-top)); inset-inline-start: 10px; width: 48px; height: 48px; font-size: 1.5rem; color: #555; }
-.show-big { text-wrap: balance;font-size: clamp(2rem, 11vw, 3.5rem); font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-wrap; }
+.show-big { text-wrap: balance;font-size: clamp(2rem, 11vw, 3.5rem); font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-wrap; display: flex; flex-direction: column; }
 .show-big.s { font-size: clamp(1.5rem, 8vw, 2.5rem); }
 .show-big.xs { font-size: clamp(1.125rem, 5.5vw, 1.75rem); }
 .show-sub { font-size: 1rem; color: #555; font-style: italic; overflow-wrap: anywhere; }
@@ -147,3 +149,6 @@ button.pill, .info-card .pill { min-height: 44px; }
 .report-reply { margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--fill); font-size: 0.9375rem; }
 .report-status { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; background: var(--fill); color: var(--muted); }
 .report-status.fixed { background: color-mix(in srgb, var(--ok) 16%, var(--card)); color: var(--ok); }
+
+/* a Japanese word stays whole: lines break between words (58); a word longer than the line still wraps */
+.ja-w { display: inline-block; max-width: 100%; }

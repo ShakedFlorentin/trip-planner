@@ -544,18 +544,22 @@ export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Pro
   return (
     <Sheet title={t('הצעת מקום')} onClose={onClose}>
       <p className="muted small">
-        {t('הדביקו קישור מאינסטגרם, טיקטוק או גוגל מפות, או כתבו שם של מקום. נבדוק דירוג, כתובת, מה יש בתפריט והתאמה לתינוק.')}
+        {hasBaby
+          ? t('הדביקו קישור מאינסטגרם, טיקטוק או גוגל מפות, או כתבו שם של מקום. נבדוק דירוג, כתובת, מה יש בתפריט והתאמה לתינוק.')
+          : t('הדביקו קישור מאינסטגרם, טיקטוק או גוגל מפות, או כתבו שם של מקום. נבדוק דירוג, כתובת ומה יש בתפריט.')}
       </p>
-      <Field label={t('קישור או שם של מקום')}>
+      <label className="field">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          dir="auto"
-          placeholder={t('קישור, או שם כמו Ichiran Shibuya')}
+          // empty, the hint reads in the app's direction; typed text finds its own (a link or a Latin name reads left to right)
+          dir={query ? 'auto' : undefined}
+          aria-label={t('קישור או שם של מקום')}
+          placeholder={t('קישור או שם, למשל Ichiran Shibuya')}
           enterKeyHint="search"
           onKeyDown={(e) => e.key === 'Enter' && query.trim() && !busy && lookUp()}
         />
-      </Field>
+      </label>
       {err && <p className="msg">{err}</p>}
       <button className="primary" onClick={lookUp} disabled={busy || !query.trim()}>
         {busy ? t('מחפש, עד דקה…') : (<><Icon as={Search} /> {t('זיהוי ובדיקה')}</>)}

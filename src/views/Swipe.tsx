@@ -5,14 +5,14 @@ import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type 
 import { cityLabel, couplesOf, keepRanges, mutate, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import AddPlace from './AddPlace'
 import { CardRatings, useRatings } from './Ratings'
-import { t } from '../i18n'
-import { Empty, Sheet } from '../ui'
+import { isEn, t } from '../i18n'
+import { EmptyState, Sheet } from '../ui'
 import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
-import { useProfile } from './Onboarding'
+import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { BATCH_SIZE, categoryMeans, learnTags, rankDeck } from '../rank'
-import { Camera, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, Plus, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
+import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, Plus, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
@@ -38,15 +38,18 @@ type Props = {
   /** a card picked in search: opened on its own, with everyone's votes */
   showCard?: string | null
   onCardShown?: () => void
+  /** the empty screen's button once everything is voted on: the matches, in Places */
+  onOpenPlaces?: () => void
 }
 
-export default function SwipeGame({ trip, userId, members, showCard, onCardShown }: Props) {
+export default function SwipeGame({ trip, userId, members, showCard, onCardShown, onOpenPlaces }: Props) {
   const { rows: rawCandidates, loading } = useTripTable<Candidate>('candidates', trip.id)
   const media = useMediaIndex()
   const candidates = useMemo(() => rawCandidates.map((c) => withMedia(c, media)), [rawCandidates, media])
   // this person's questionnaire: places that are no use to them stay out of everything here (deck, lists, counts),
   // and the best fits come first. No answers: everything, as before
-  const { profile } = useProfile(userId)
+  const { profile, saved } = useProfile(userId)
+  const [prefsOpen, setPrefsOpen] = useState(false)
   const answers = useMemo(() => answersOf(profile), [profile])
   const prefsLoading = profile === undefined
   const visible = useMemo(
@@ -148,6 +151,10 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const pool = visible.filter(
     (c) => !mine.has(c.id) && forMe(c) && (!city || c.city === city) && (!aud || c.audience === aud) && !sessionNotNow.has(c.id),
   )
+  // what is left to vote on before any filter: a filter is offered only when it would pick something out of it
+  const open = visible.filter((c) => !mine.has(c.id) && forMe(c) && !sessionNotNow.has(c.id))
+  const filterCities = cities.filter((c) => city === c || open.some((x) => x.city === c))
+  const showFilters = open.length > 0 || !!city || !!aud
   const batchLeft = Math.max(0, BATCH_SIZE - batchDone)
   const deck = useMemo(
     () =>
@@ -258,43 +265,71 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
           <span className="bar">
             <span style={{ width: `${levelPct}%` }} />
           </span>
+          <span className="hud-next">{nextLevel && meRow ? xpToNext(nextLevel.xp - meRow.xp, nextLevel.name) : t('הדרגה הכי גבוהה')}</span>
         </span>
         <span className="hud-stat">
-          <b>{meRow?.xp ?? 0}</b> XP
+          <b>
+            <bdi>{fmtNum(meRow?.xp ?? 0)}</bdi>
+          </b>
+          <small>XP</small>
         </span>
         <span className="hud-stat">
-          <Icon as={Heart} /> <b>{matchedIds.size}</b>
+          <b>{matchedIds.size}</b>
+          <small>
+            {t('מאצ׳ים')} <Icon as={Heart} />
+          </small>
         </span>
         <span className="hud-chevron" aria-hidden="true">
           <Icon as={ChevronLeft} size="1.3em" className="flip-ltr" />
         </span>
       </button>
 
-      <div className="chips scroll filters" role="group" aria-label={t('סינון')}>
-        <button className="chip add-chip" onClick={() => setAdding(true)}>
-          <Icon as={Plus} /> {t('הצעת מקום')}
-        </button>
-        <button className={'chip' + (!city && !aud ? ' on' : '')} aria-pressed={!city && !aud} onClick={() => (setCity(''), setAud(''))}>
-          {t('הכל')}
-        </button>
-        {vetoed.length > 0 && (
-          <button className="chip" onClick={() => setVetoOpen(true)}>
-            <Icon as={Ban} /> {t('נפסלו')} <bdi className="muted">{vetoed.length}</bdi>
-          </button>
-        )}
-        {Object.entries(AUDIENCES).map(([k, v]) => (
-          <button key={k} className={'chip' + (aud === k ? ' on' : '')} aria-pressed={aud === k} onClick={() => setAud(aud === k ? '' : k)}>
-            {AUDIENCE_ICON[k] && <Icon as={AUDIENCE_ICON[k]} />} {v}
-          </button>
-        ))}
-        <span className="chip-sep" aria-hidden="true" />
-        {cities.map((c) => (
-          <button key={c} className={'chip' + (city === c ? ' on' : '')} aria-pressed={city === c} onClick={() => setCity(city === c ? '' : c)}>
-            {cityLabel(CITY_HE[c])}
-          </button>
-        ))}
-      </div>
+      {(showFilters || vetoed.length > 0) && (
+        <div className="chips scroll filters" role="group" aria-label={t('סינון')}>
+          {showFilters && (
+            <button className={'chip' + (!city && !aud ? ' on' : '')} aria-pressed={!city && !aud} onClick={() => (setCity(''), setAud(''))}>
+              {t('הכל')}
+            </button>
+          )}
+          {vetoed.length > 0 && (
+            <button className="chip" onClick={() => setVetoOpen(true)}>
+              <Icon as={Ban} /> {t('נפסלו')} <bdi className="muted">{vetoed.length}</bdi>
+            </button>
+          )}
+          {showFilters &&
+            Object.entries(AUDIENCES)
+              .filter(([k]) => aud === k || open.some((c) => c.audience === k))
+              .map(([k, v]) => (
+                <button key={k} className={'chip' + (aud === k ? ' on' : '')} aria-pressed={aud === k} onClick={() => setAud(aud === k ? '' : k)}>
+                  {AUDIENCE_ICON[k] && <Icon as={AUDIENCE_ICON[k]} />} {v}
+                </button>
+              ))}
+          {showFilters && filterCities.length > 1 && <span className="chip-sep" aria-hidden="true" />}
+          {showFilters &&
+            filterCities.length > 1 &&
+            filterCities.map((c) => (
+              <button key={c} className={'chip' + (city === c ? ' on' : '')} aria-pressed={city === c} onClick={() => setCity(city === c ? '' : c)}>
+                {cityLabel(CITY_HE[c])}
+              </button>
+            ))}
+        </div>
+      )}
 
+      <button className="fab" aria-label={t('הצעת מקום')} onClick={() => setAdding(true)}>
+        <Icon as={Plus} size="1.5em" />
+      </button>
+
+      {prefsOpen && (
+        <Onboarding
+          userId={userId}
+          initial={answersOf(profile) ?? profile?.answers}
+          onDone={(p) => {
+            saved(p)
+            setPrefsOpen(false)
+          }}
+          onClose={() => setPrefsOpen(false)}
+        />
+      )}
       {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="deck" onClose={() => setAdding(false)} />}
 
       {vetoOpen && (
@@ -370,16 +405,17 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
                       {b.m.user_id === userId && ` ${t('(אני)')}`}
                     </b>
                     <span className="small muted">
-                      {b.level.name} · <bdi>{b.xp} XP</bdi>
+                      {b.level.name} · <bdi dir="ltr">{fmtNum(b.xp)} XP</bdi>
                     </span>
                   </div>
-                  <div className="bar">
-                    <span style={{ width: `${b.total ? (b.done / b.total) * 100 : 0}%` }} />
+                  <div className="votes-bar">
+                    <span className="bar">
+                      <span style={{ width: `${b.total ? (b.done / b.total) * 100 : 0}%` }} />
+                    </span>
+                    <span className="small muted">{t('הצבעות: {done} מתוך {total}', { done: b.done, total: b.total })}</span>
                   </div>
                   {b.m.user_id === userId && (
-                    <div className="small muted">
-                      {nextLevel ? t('עוד {xp} XP ל{level}', { xp: nextLevel.xp - b.xp, level: nextLevel.name }) : t('הדרגה הכי גבוהה')}
-                    </div>
+                    <div className="small muted">{nextLevel ? xpToNext(nextLevel.xp - b.xp, nextLevel.name) : t('הדרגה הכי גבוהה')}</div>
                   )}
                   {b.m.user_id !== userId && b.twin !== null && (
                     <div className="small muted">{t('טעם משותף איתך: {pct}%', { pct: b.twin })}</div>
@@ -388,23 +424,36 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
               </div>
             ))}
           </div>
+          <h3 className="how-title">{t('איך עובד מאצ׳')}</h3>
+          <ol className="how card">
+            <li>{t('כל זוג מצביע ביחד: מספיק שאחד אהב, אם השני לא דילג.')}</li>
+            <li>{t('על מקום שואלים רק את הזוגות שישנים בעיר שלו.')}</li>
+            <li>{t('כשכל הזוגות האלה אהבו, המקום נכנס למסלול ביום שכולם בעיר.')}</li>
+          </ol>
           <p className="small muted">
-            {t('כל זוג מצביע ביחד: מספיק שאחד אוהב, אלא אם השני דילג. שואלים על מקום רק את מי שישן לידו, והוא נכנס למסלול ביום שכולם בעיר, אם כל הזוגות האלה אהבו אותו. לייק או דילוג שווים 10 XP, מאצ׳ 50 XP.')}
+            {t('לייק או דילוג:')} <bdi dir="ltr">10 XP</bdi> · {t('מאצ׳:')} <bdi dir="ltr">50 XP</bdi>
           </p>
         </Sheet>
       )}
 
       <div className="deck">
         {!loading && !prefsLoading && deck.length === 0 && (
-          <Empty>
-            {!candidates.length
-              ? t('עוד אין מקומות בגילוי')
-              : !visible.length
-                ? t('אין מקומות שמתאימים להעדפות. אפשר לשנות אותן בעוד › ההעדפות שלי.')
-              : visible.some((c) => !mine.has(c.id) && forMe(c))
-                ? t('אין מקומות בסינון הזה')
-                : t('הצבעת על כל המקומות. מקום חדש שמישהו יוסיף יחכה לך כאן, ומה שקיבל מאצ׳ נמצא בלשונית מקומות.')}
-          </Empty>
+          <div className="empty">
+            {!candidates.length ? (
+              <EmptyState icon={Compass} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
+            ) : !visible.length ? (
+              <EmptyState icon={SlidersHorizontal} title={t('אף מקום לא מתאים להעדפות')} line={t('ההעדפות שלך מסתירות את כל המקומות.')} action={{ label: t('שינוי ההעדפות'), onClick: () => setPrefsOpen(true) }} />
+            ) : visible.some((c) => !mine.has(c.id) && forMe(c)) ? (
+              <EmptyState icon={SearchX} title={t('אין מקומות בסינון הזה')} line={t('הצבעת על כל מה שמתאים לסינון.')} action={{ label: t('הצגת הכל'), onClick: () => (setCity(''), setAud('')) }} />
+            ) : (
+              <EmptyState
+                icon={CircleCheck}
+                title={t('הצבעת על כל המקומות')}
+                line={t('מקום חדש שמישהו יוסיף יחכה לך כאן.')}
+                action={onOpenPlaces && { label: t('למאצ׳ים שלכם'), onClick: onOpenPlaces }}
+              />
+            )}
+          </div>
         )}
         {batchOver && (
           <div className="empty more-batch">
@@ -969,4 +1018,23 @@ function writeNotNow(tripId: string, userId: string, ids: Set<string>) {
   } catch {
     /* private mode or full: the card just isn't remembered */
   }
+}
+
+/** A number with thousands commas in every language (4,860), so XP reads the same in Hebrew and English. */
+function fmtNum(n: number) {
+  return n.toLocaleString('en-US')
+}
+
+/** "עוד 140 XP לקאמי", with the number and XP kept together and in order inside the Hebrew. */
+function xpToNext(xp: number, level: string) {
+  const n = <bdi dir="ltr">{fmtNum(xp)} XP</bdi>
+  return isEn ? (
+    <>
+      {n} to {level}
+    </>
+  ) : (
+    <>
+      עוד {n} ל{level} {/* he-only */}
+    </>
+  )
 }

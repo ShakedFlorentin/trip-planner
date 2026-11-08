@@ -1,4 +1,6 @@
+import { shows, type Who } from '../who'
 import {
+  Luggage,
   BadgeCheck,
   BedDouble,
   Banknote,
@@ -31,12 +33,8 @@ export type Entry = {
 }
 
 /** mine = my couple's items plus the group's, group = only the group's, all = everything */
-export type WhoMode = 'mine' | 'group' | 'all'
-
-export function visible(who: string | null | undefined, mode: WhoMode, mine: string | null) {
-  if (mode === 'all' || !who) return true
-  return mode === 'mine' && !!mine && who === mine
-}
+export type WhoMode = Who
+export const visible = shows
 
 export function ymd(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -143,9 +141,45 @@ const byEntryTime = (a: Entry, b: Entry) => (a.time ?? '99').localeCompare(b.tim
 /** A day as one timeline: plan items and bookings merged by time, filtered by whose they are. */
 export function dayEntries(items: PlanItem[], bookings: Booking[], day: number, date: string, mode: WhoMode, mine: string | null) {
   const own = items.filter((i) => i.day === day).sort((a, b) => a.sort - b.sort).map(itemEntry)
-  return [...own, ...bookingEntries(bookings, date)]
+  const list = [...own, ...bookingEntries(bookings, date)]
     .filter((e) => visible(e.who, mode, mine) || (mode === 'mine' && !!e.booking && staysWithUs(e.booking, bookings, mine)))
     .sort(byEntryTime)
+  return checkInFrom(list)
+}
+
+/**
+ * A hotel check-in is "from 14:00", not a meeting at 14:00 (71). When the day has stops after that hour, the
+ * check-in moves to the end of the day, for when the day comes back to the hotel, so it never sits between two stops
+ * in another city (Tokyo → the Yokohama hotel → Tokyo). On a landing day the hotel comes first, to leave the bags:
+ * hotels keep them until check-in.
+ */
+function checkInFrom(list: Entry[]) {
+  let out = list
+  for (const ci of list.filter((e) => e.key.endsWith(':in'))) {
+    const same = (e: Entry) => !e.who || !ci.who || e.who === ci.who
+    const later = out.some((e) => e.item && same(e) && !!e.time && !!ci.time && e.time > ci.time)
+    if (!later) continue
+    const from = ci.time
+    const moved: Entry = { ...ci, time: null, sub: t('אפשר מ-{time}, לפי ההזמנה', { time: from ?? '' }) }
+    out = [...out.filter((e) => e !== ci), moved]
+    const landing = out.find((e) => e.key.endsWith(':arr') && same(e))
+    if (landing && ci.booking) {
+      const bags: Entry = {
+        key: ci.booking.id + ':bags',
+        time: null,
+        icon: Luggage,
+        title: t('השארת מזוודות · {hotel}', { hotel: ci.booking.title }),
+        sub: t('המלון שומר אותן עד הצ׳ק-אין'),
+        location: ci.location,
+        who: ci.who,
+        done: false,
+        booking: ci.booking,
+      }
+      const at = out.indexOf(landing) + 1
+      out = [...out.slice(0, at), bags, ...out.slice(at)]
+    }
+  }
+  return out
 }
 
 const sameHotel = (a: Booking, b: Booking) => a.title.trim().toLowerCase() === b.title.trim().toLowerCase()
@@ -274,12 +308,13 @@ export function hop(a: Point, b: Point): { walk: boolean; from: number; to: numb
   return { walk: d < 1.2, from, to: Math.max(from + 5, Math.ceil(minutes(HIGH, d) / 5) * 5) }
 }
 
-export type ArrivalStep = { icon: LucideIcon; text: string }
+export type ArrivalStep = { icon: LucideIcon; text: string; /** the check-in line: the day's hotel booking gives the hour */ checkin?: boolean }
 
 const BORDER: ArrivalStep = { icon: BadgeCheck, text: t('ביקורת גבולות: Visit Japan Web (קודי QR) פתוח בטלפון.') }
 const CARD: ArrivalStep = { icon: CreditCard, text: t('Suica או PASMO בארנק הטלפון (iPhone), או כרטיס Welcome Suica מהמכונות בטרמינל.') }
-const CASH: ArrivalStep = { icon: Banknote, text: t('מזומן: למשוך ין בכספומט בשדה או בחנות נוחות (7-Eleven, Lawson).') }
-const CHECKIN: ArrivalStep = { icon: BedDouble, text: t('צ׳ק-אין בדרך כלל מ-15:00. אפשר להשאיר מזוודות במלון.') }
+// the brand names are isolated (U+2066 … U+2069): "7-Eleven" in Hebrew text otherwise comes out as "Eleven-7"
+const CASH: ArrivalStep = { icon: Banknote, text: t('מזומן: למשוך ין בכספומט בשדה או בחנות נוחות (\u20667-Eleven, Lawson\u2069).') }
+const CHECKIN: ArrivalStep = { icon: BedDouble, text: t('צ׳ק-אין בדרך כלל מ-15:00. אפשר להשאיר מזוודות במלון.'), checkin: true }
 
 /** First steps after landing, written per airport: Narita is far from Tokyo, Haneda is close. */
 export const ARRIVAL: Record<Airport, { name: string; steps: ArrivalStep[] }> = {

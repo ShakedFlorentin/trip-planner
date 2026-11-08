@@ -1,23 +1,18 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   BedDouble,
   Check,
   ChevronLeft,
   Clock,
+  Copy,
   Languages,
   Layers,
-  LogOut as LogOutIcon,
-  MessageSquareWarning,
-  Moon,
   ListChecks,
   Navigation,
   Share2,
   ShieldAlert,
-  Sun,
-  SunMoon,
   Ticket,
   UserPlus,
-  Users,
   Wallet,
 } from 'lucide-react'
 import { supabase } from '../supabase'
@@ -37,15 +32,16 @@ import {
   type Trip,
 } from '../types'
 import { cityLabel, couplesOf, currentDay, dayDate, dayParts, errorText, fmtDay, fmtDayLong, mutate, useTripTable } from '../lib'
-import { lang, locale, setLang, t } from '../i18n'
-import { Field, Sheet } from '../ui'
-import { cityPhoto } from '../cities'
+import { locale, t } from '../i18n'
+import { cityColor, cityPhoto } from '../cities'
 import { BOOKING_ICON, Icon } from '../icons'
 import type { MoreTab } from './More'
 import { useStays } from '../stays'
 import { dayEntries, fmtUntil, hotelFor, nightLines, stayInJapan, minutesOf, navUrl, ymd, type Entry, type PlanItem } from './planUtils'
-import ReportSheet from './Report'
 import ReviewCard from './Review'
+import { EveningRate } from './Places'
+import { appUrl } from '../native'
+import { RingsIcon } from '../rings'
 import '../styles/plan.css'
 
 type Props = {
@@ -54,18 +50,14 @@ type Props = {
   me: string
   userId: string
   onOpenDay: (d: number) => void
-  /** jump to a section of the "עוד" tab: money, lists, info or baby */
+  /** open one of the menu's screens (money, lists, emergency, translate) over Home */
   onOpenMore: (sub: MoreTab) => void
   onOpenPlaces: () => void
-  onLeave: () => void
-  /** the top bar's avatar asks for trip settings; Home opens them and clears the request */
-  settingsAsk: boolean
-  onSettingsShown: () => void
-  /** where the avatar was tapped, e.g. "עוד › כסף": a problem report says which screen it is about */
-  settingsFrom: string
+  /** the trip has no dates yet: open settings, where they are picked */
+  onOpenSettings: () => void
 }
 
-export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore, onOpenPlaces, onLeave, settingsAsk, onSettingsShown, settingsFrom }: Props) {
+export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onOpenPlaces, onOpenSettings }: Props) {
   const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
   const { rows: items } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
   const { rows: bookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
@@ -73,13 +65,6 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
   const { rows: todos } = useTripTable<ChecklistItem>('checklist_items', trip.id)
   const { rows: candidates } = useTripTable<Candidate>('candidates', trip.id)
   const { rows: swipes } = useTripTable<Swipe>('swipes', trip.id)
-  const [editing, setEditing] = useState(false)
-  const [reporting, setReporting] = useState(false)
-  useEffect(() => {
-    if (!settingsAsk) return
-    setEditing(true)
-    onSettingsShown()
-  }, [settingsAsk])
   const now = useNow()
 
   const today = currentDay(trip.start_date, trip.num_days)
@@ -104,43 +89,64 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
     candidates.reduce<Record<string, number>>((acc, c) => ((acc[c.city] = (acc[c.city] ?? 0) + 1), acc), {}),
   ).sort((a, b) => b[1] - a[1])
   const together = runs(days, 'who')
+  // the hero's city: today's during the trip, else the route's first
+  const firstRun = cities.find((c) => c.value)
+  const heroCity = (today ? todayInfo?.city : firstRun?.value)?.split(' / ')[0] ?? ''
+  const heroFrom = firstRun?.from ?? 1
+  const heroPhoto = heroCity ? cityPhoto(heroCity) : null
 
   return (
     <div className="stack">
-      <section className={'hero card' + (today ? ' trip-line' : '')}>
-        {today ? (
-          <>
-            <div className="muted hero-date">{t('היום')}</div>
-            <div className="big">
-              {fmtDayLong(dayDate(trip.start_date, today))}
-              {todayInfo?.city && ` · ${cityLabel(todayInfo.city)}`}
-            </div>
-          </>
-        ) : daysLeft !== null && daysLeft > 0 ? (
-          <>
-            <div className="big">{daysLabel(daysLeft)}</div>
-            <div className="muted">{t('להמראה')}</div>
-          </>
-        ) : daysLeft !== null ? (
-          <div className="big">{t('הטיול הסתיים')}</div>
-        ) : (
-          <>
-            <div className="muted">{t('עוד אין תאריך יציאה')}</div>
-            <button className="link" onClick={() => setEditing(true)}>
-              {t('קבעו תאריך התחלה')}
-            </button>
-          </>
-        )}
-        <div className="clock">
-          <Icon as={Clock} /> {t('עכשיו ביפן: {time}', { time: tokyoTime })}
-        </div>
-      </section>
+      {/* the top of Home is a large photo tile, Apple Music style (19): before the trip the first city, its country and the
+          countdown; during the trip the day's city and date. A city with no photo gets its plain colour tile */}
+      {heroCity ? (
+        <button className={'city-tile hero-tile c' + cityColor(heroCity) + (heroPhoto ? ' has-photo' : '')} onClick={() => onOpenDay(today ?? heroFrom)}>
+          {heroPhoto && <img src={heroPhoto} alt="" draggable={false} />}
+          <span className="hero-kicker small">{today ? t('היום') : t('יפן')}</span>
+          <b>{cityLabel(heroCity)}</b>
+          <span className="hero-line">
+            {today
+              ? fmtDayLong(dayDate(trip.start_date, today))
+              : daysLeft !== null && daysLeft > 0
+                ? t('עוד {days}', { days: daysLabel(daysLeft) })
+                : daysLeft !== null
+                  ? t('הטיול הסתיים')
+                  : ''}
+          </span>
+          <span className="hero-clock small">
+            <Icon as={Clock} /> {t('עכשיו ביפן: {time}', { time: tokyoTime })}
+          </span>
+        </button>
+      ) : (
+        <section className="hero card">
+          {daysLeft !== null && daysLeft > 0 ? (
+            <>
+              <div className="big">{daysLabel(daysLeft)}</div>
+              <div className="muted">{t('להמראה')}</div>
+            </>
+          ) : daysLeft !== null ? (
+            <div className="big">{t('הטיול הסתיים')}</div>
+          ) : (
+            <>
+              <div className="muted">{t('עוד אין תאריך יציאה')}</div>
+              <button className="link" onClick={onOpenSettings}>
+                {t('קבעו תאריך התחלה')}
+              </button>
+            </>
+          )}
+          <div className="clock">
+            <Icon as={Clock} /> {t('עכשיו ביפן: {time}', { time: tokyoTime })}
+          </div>
+        </section>
+      )}
 
       <ReviewCard tripId={trip.id} userId={userId} />
 
       {today && (
         <>
           <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />
+
+          {nowHM >= '18:00' && <EveningRate trip={trip} userId={userId} />}
 
           {tonight.length > 0 && (
             <section className="card">
@@ -210,10 +216,12 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
               <button key={run.from} className={'route-stop' + (run.value ? ' apart' : ' together')} onClick={() => onOpenDay(run.from)}>
                 <b>
                   {run.value ? (
-                    t('רק {who}', { who: t(run.value) })
+                    <>
+                      <RingsIcon one /> {t('רק {who}', { who: t(run.value) })}
+                    </>
                   ) : (
                     <>
-                      <Icon as={Users} /> {t(TOGETHER)}
+                      <RingsIcon /> {t(TOGETHER)}
                     </>
                   )}
                 </b>
@@ -232,7 +240,13 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
           <h3 className="shelf-title">{t('המסלול')}</h3>
           <div className="city-grid">
             {cities.map((c, i) => (
-              <CityTile key={c.from} name={cityLabel(c.value) || '—'} slug={c.value} i={i} onClick={() => onOpenDay(c.from)}>
+              <CityTile
+                key={c.from}
+                // a city already on the route earlier: "חזרה לטוקיו" (15)
+                name={cities.slice(0, i).some((p) => p.value === c.value) && c.value ? t('חזרה ל{city}', { city: cityLabel(c.value) }) : cityLabel(c.value) || '—'}
+                slug={c.value}
+                onClick={() => onOpenDay(c.from)}
+              >
                 {c.from === c.to ? (
                   fmtDay(dayDate(trip.start_date, c.from)) || t('יום {day}', { day: c.from })
                 ) : trip.start_date ? (
@@ -254,8 +268,8 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
           <section>
             <h3 className="shelf-title">{t('היעדים')}</h3>
             <div className="city-grid">
-              {destinations.map(([city, n], i) => (
-                <CityTile key={city} name={cityLabel(CITY_HE[city] ?? city)} slug={city} i={i} onClick={onOpenPlaces}>
+              {destinations.map(([city, n]) => (
+                <CityTile key={city} name={cityLabel(CITY_HE[city] ?? city)} slug={city} onClick={onOpenPlaces}>
                   {n === 1 ? t('מקום אחד') : t('{n} מקומות', { n })}
                 </CityTile>
               ))}
@@ -277,20 +291,6 @@ export default function Home({ trip, members, me, userId, onOpenDay, onOpenMore,
         <InviteFriend trip={trip} />
       </section>
 
-      {editing && (
-        <Settings
-          trip={trip}
-          me={me}
-          userId={userId}
-          onClose={() => setEditing(false)}
-          onLeave={onLeave}
-          onReport={() => {
-            setEditing(false)
-            setReporting(true)
-          }}
-        />
-      )}
-      {reporting && <ReportSheet trip={trip} me={me} from={settingsFrom} onClose={() => setReporting(false)} />}
     </div>
   )
 }
@@ -303,9 +303,10 @@ function InviteFriend({ trip }: { trip: Trip }) {
   const [link, setLink] = useState('')
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const send = async (url: string) => {
-    const text = `${t('הצטרפו לתכנון הטיול ליפן')}\n${url}`
+    const text = `${t('הצטרפו לתכנון הטיול שלנו ב-Toogo')}\n${url}`
     if (navigator.share) {
       try {
         await navigator.share({ text })
@@ -334,7 +335,7 @@ function InviteFriend({ trip }: { trip: Trip }) {
     setBusy(false)
     const code = (data as { code?: string } | null)?.code
     if (error || !code) return setNote(error ? errorText(error.message) : t('אין אינטרנט. נסו שוב כשיש קליטה.'))
-    const url = `${location.origin}${location.pathname}?invite=${encodeURIComponent(code)}`
+    const url = `${appUrl()}?invite=${encodeURIComponent(code)}`
     setLink(url)
     send(url)
   }
@@ -360,8 +361,19 @@ function InviteFriend({ trip }: { trip: Trip }) {
       )}
       <p className="muted small">
         {t('למי שכבר יש חשבון: קוד הטיול')}{' '}
-        <button className="code invite-code" dir="ltr" onClick={() => copy(trip.join_code, t('הקוד הועתק'))} aria-label={t('העתקת קוד הטיול')}>
-          {trip.join_code}
+        <button
+          className="invite-code"
+          onClick={() => {
+            copy(trip.join_code, t('הקוד הועתק'))
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+          }}
+          aria-label={t('העתקת קוד הטיול')}
+        >
+          <span className="code" dir="ltr">
+            {trip.join_code}
+          </span>
+          <Icon as={copied ? Check : Copy} />
         </button>
       </p>
     </div>
@@ -369,10 +381,10 @@ function InviteFriend({ trip }: { trip: Trip }) {
 }
 
 /** A Music Search-style tile: the destination's photo washed in one colour, or plain colour until it has one. */
-function CityTile(props: { name: string; slug?: string; i: number; onClick: () => void; children: ReactNode }) {
+function CityTile(props: { name: string; slug?: string; onClick: () => void; children: ReactNode }) {
   const photo = cityPhoto(props.slug ?? props.name)
   return (
-    <button className={'city-tile c' + (props.i % 7) + (photo ? ' has-photo' : '')} onClick={props.onClick}>
+    <button className={'city-tile c' + cityColor(props.slug ?? props.name) + (photo ? ' has-photo' : '')} onClick={props.onClick}>
       {photo && <img src={photo} alt="" loading="lazy" draggable={false} />}
       <b dir="auto">{props.name}</b>
       <span className="small">{props.children}</span>
@@ -449,6 +461,8 @@ function BeforeTrip(props: {
   const todo = props.todos.filter((t) => t.list === 'todo')
   const left = todo.filter((t) => !itemDone(t, props.myCouple)).length
   const counts = ['flight', 'hotel', 'restaurant', 'activity'].map((k) => ({ k, n: bookings.filter((b) => b.kind === k).length }))
+  // only the kinds that have bookings: "0 מסעדות" says nothing
+  const shown = counts.filter((c) => c.n > 0)
   const mine = props.myCouple
 
   // each couple needs a roof for its own nights in Japan: from landing to the night before its flight out. Without
@@ -478,31 +492,43 @@ function BeforeTrip(props: {
       <h3>{t('לפני הטיול')}</h3>
       {todo.length > 0 && (
         <button className="todo-row" onClick={props.open}>
-          <span className="tile orange"><Icon as={ListChecks} /></span>
-          <span>
-            <b>{left ? (left === 1 ? t('משימה אחת לפני הטיסה') : t('{n} משימות לפני הטיסה', { n: left })) : t('כל המשימות הושלמו')}</b>
-            <span className="muted small">
-              {t('{done}/{total} הושלמו', { done: todo.length - left, total: todo.length })}
-            </span>
+          <span className="tile neutral"><Icon as={ListChecks} /></span>
+          <span className="todo-grow">
+            <b>
+              {!left
+                ? t('הכל מוכן לטיסה ✓')
+                : left === 1
+                  ? t('לפני הטיסה: נותרה משימה אחת מתוך {total}', { total: todo.length })
+                  : t('לפני הטיסה: נותרו {n} מתוך {total} משימות', { n: left, total: todo.length })}
+            </b>
+            {left > 0 && (
+              <span className="bar thin">
+                <span style={{ width: `${((todo.length - left) / todo.length) * 100}%` }} />
+              </span>
+            )}
           </span>
         </button>
       )}
       <div className="todo-row">
-        <span className="tile indigo"><Icon as={Ticket} /></span>
+        <span className="tile neutral"><Icon as={Ticket} /></span>
         <span>
-          <b className="count-chips">
-            {counts.map(({ k, n }) => (
-              <span key={k} className="count-chip">
-                <Icon as={BOOKING_ICON[k]} /> {n} {n === 1 ? (k === 'activity' ? t('אטרקציה') : BOOKING_KINDS[k]) : BOOKING_TABS[k]}
-              </span>
-            ))}
-          </b>
-          <span className="muted small">{gaps.length ? gaps.join(' · ') : t('טיסות ולינה סגורות')}</span>
+          {shown.length ? (
+            <b className="count-chips">
+              {shown.map(({ k, n }) => (
+                <span key={k} className="count-chip">
+                  <Icon as={BOOKING_ICON[k]} /> {n} {n === 1 ? (k === 'activity' ? t('אטרקציה') : BOOKING_KINDS[k]) : BOOKING_TABS[k]}
+                </span>
+              ))}
+            </b>
+          ) : (
+            <b>{t('עוד אין הזמנות')}</b>
+          )}
+          <span className="muted small">{gaps.length ? gaps.join(' · ') : shown.length ? t('טיסות ולינה סגורות') : t('אפשר להוסיף מאישור הזמנה, בלשונית הזמנות.')}</span>
         </span>
       </div>
       {props.swipesLeft > 0 && (
         <div className="todo-row">
-          <span className="tile red"><Icon as={Layers} /></span>
+          <span className="tile neutral"><Icon as={Layers} /></span>
           <span>
             <b>{props.swipesLeft === 1 ? t('עוד מקום אחד בגילוי') : t('עוד {n} מקומות בגילוי', { n: props.swipesLeft })}</b>
             <span className="muted small">{t('כל לייק או דילוג משנה את המאצ׳ים')}</span>
@@ -513,203 +539,6 @@ function BeforeTrip(props: {
   )
 }
 
-function Settings(props: { trip: Trip; me: string; userId: string; onClose: () => void; onLeave: () => void; onReport: () => void }) {
-  const [name, setName] = useState(props.trip.name)
-  const [start, setStart] = useState(props.trip.start_date ?? '')
-  const [numDays, setNumDays] = useState(props.trip.num_days)
-  const [myName, setMyName] = useState(props.me)
-
-  const save = async () => {
-    if (!Number.isInteger(numDays) || numDays < 1 || numDays > 60) {
-      alert(t('בחרו בין 1 ל-60 ימים'))
-      return
-    }
-    const ok = await mutate(
-      supabase.from('trips').update({ name: name.trim() || props.trip.name, start_date: start || null, num_days: numDays }).eq('id', props.trip.id),
-    )
-    if (ok && myName.trim() && myName !== props.me) {
-      await mutate(
-        supabase
-          .from('members')
-          .update({ display_name: myName.trim() })
-          .eq('trip_id', props.trip.id)
-          .eq('user_id', props.userId),
-      )
-    }
-    if (ok) props.onClose()
-  }
-
-  return (
-    <Sheet title={t('הגדרות טיול')} onClose={props.onClose}>
-      <Field label={t('שם הטיול')}>
-        <input value={name} onChange={(e) => setName(e.target.value)} />
-      </Field>
-      <Field label={t('תאריך יום 1')}>
-        <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-      </Field>
-      <Field label={t('מספר ימים')}>
-        <input type="number" min={1} max={60} value={numDays} onChange={(e) => setNumDays(+e.target.value)} />
-      </Field>
-      <p className="muted small">
-        {t('מאצ׳: כל זוג מצביע ביחד, ומספיק שאחד אוהב אם השני לא דילג. שואלים על מקום רק את הזוגות שישנים לידו, והוא נכנס למסלול כשכולם אהבו.')}
-      </p>
-      <Field label={t('השם שלי')}>
-        <input value={myName} onChange={(e) => setMyName(e.target.value)} />
-      </Field>
-      <p className="muted small">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
-      <button className="primary" onClick={save}>
-        {t('שמירה')}
-      </button>
-      <CreditWallet tripId={props.trip.id} />
-      <LangPicker />
-      <ThemePicker />
-      <button className="secondary" onClick={props.onReport}>
-        <Icon as={MessageSquareWarning} /> {t('דיווח על בעיה או טעות')}
-      </button>
-      <button className="link" onClick={props.onLeave}>
-        {t('מעבר לטיול אחר / הצטרפות בקוד')}
-      </button>
-      <button
-        className="secondary signout"
-        onClick={() => {
-          // this phone only: the others' devices, and this person's other devices, stay logged in
-          if (confirm(t('להתנתק מהטלפון הזה? כדי לחזור צריך שם וסיסמה.'))) supabase.auth.signOut({ scope: 'local' })
-        }}
-      >
-        <Icon as={LogOutIcon} /> {t('התנתקות')}
-      </button>
-    </Sheet>
-  )
-}
-
-/**
- * AI credits: the user's own and the trip's, and a way to give some to the trip. Shown only while credits are on
- * (my_credits says enabled); a new search costs credits, a repeat of one already done is free.
- */
-function CreditWallet({ tripId }: { tripId: string }) {
-  type Wallet = { enabled?: boolean; unlimited?: boolean; balance: number; free: number; paid: number; trip_balance: number | null }
-  const [w, setW] = useState<Wallet | null>(null)
-  const [give, setGive] = useState(1)
-  const [msg, setMsg] = useState('')
-  const [sending, setSending] = useState(false)
-  // one id per tap of a given amount: a double tap (or a retry) sends the same id, so credits move once
-  const tap = useRef<{ amount: number; op: string } | null>(null)
-  const load = async () => {
-    const { data, error } = await supabase.rpc('my_credits', { p_trip: tripId })
-    const d = data as Wallet | null
-    setW(error || !d || !d.enabled ? null : d)
-  }
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripId])
-  if (!w) return null
-  if (w.unlimited) {
-    return (
-      <section>
-        <h3>{t('ארנק קרדיטים')}</h3>
-        <p className="muted small">{t('בטיול הזה אין הגבלה: החיפושים, ההזמנות והתרגומים שלך לא עולים קרדיטים.')}</p>
-      </section>
-    )
-  }
-  const send = async () => {
-    if (sending) return
-    setSending(true)
-    setMsg('')
-    if (tap.current?.amount !== give) tap.current = { amount: give, op: crypto.randomUUID() }
-    const { data, error } = await supabase.rpc('give_to_trip', { p_trip: tripId, p_amount: give, p_op_id: tap.current.op })
-    if (error) setMsg(error.message)
-    else if (!(data as { ok?: boolean } | null)?.ok) setMsg(t('אין לך מספיק קרדיטים'))
-    else {
-      setMsg(t('הועברו {n} קרדיטים לטיול', { n: give }))
-      tap.current = null
-    }
-    await load()
-    setSending(false)
-  }
-  return (
-    <section>
-      <h3>{t('ארנק קרדיטים')}</h3>
-      <p className="muted small">
-        {t('הקרדיטים שלי: {n} (מתוכם {free} חינם להיום)', { n: w.balance, free: w.free })} · {t('קרדיטים של הטיול: {n}', { n: w.trip_balance ?? 0 })}
-      </p>
-      <p className="muted small">
-        {t('חיפוש מקום חדש, קריאת הזמנה ותרגום עולים קרדיטים. קודם משתמשים בקרדיטים של הטיול, ואז באישיים. כל יום מתווספים קרדיטים חינם. מקום שכבר חיפשו בעבר, ותכנון המסלול, בחינם.')}
-      </p>
-      <p className="muted small">{t('אפשר להעביר לטיול רק קרדיטים שלא ניתנו חינם: {n}.', { n: w.paid })}</p>
-      <Field label={t('להעביר לטיול')}>
-        <input type="number" min={1} max={Math.max(w.paid, 1)} value={give} onChange={(e) => setGive(Math.max(1, Math.floor(+e.target.value || 1)))} />
-      </Field>
-      <button className="secondary" disabled={sending || w.paid < 1 || give > w.paid} onClick={send}>
-        {t('העברה לטיול')}
-      </button>
-      {msg && <p className="msg">{msg}</p>}
-    </section>
-  )
-}
-
-const THEMES = [
-  { id: 'auto', label: t('כמו בטלפון'), icon: SunMoon },
-  { id: 'light', label: t('בהיר'), icon: Sun },
-  { id: 'dark', label: t('כהה'), icon: Moon },
-] as const
-
-/**
- * Light, dark, or following the phone. Kept on this phone only and applied at once: html[data-theme] switches the
- * dark styles (see themeOverride in vite.config.ts), and index.html applies it again before the next load paints.
- */
-function ThemePicker() {
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('theme') ?? 'auto'
-    } catch {
-      return 'auto'
-    }
-  })
-  const pick = (t: string) => {
-    setTheme(t)
-    if (t === 'auto') delete document.documentElement.dataset.theme
-    else document.documentElement.dataset.theme = t
-    try {
-      if (t === 'auto') localStorage.removeItem('theme')
-      else localStorage.setItem('theme', t)
-    } catch {
-      // private browsing: the choice holds until the app closes
-    }
-  }
-  return (
-    <div className="field">
-      <span id="theme-label">{t('מראה')}</span>
-      <div className="segmented theme-picker" role="radiogroup" aria-labelledby="theme-label">
-        {THEMES.map((t) => (
-          <button key={t.id} role="radio" aria-checked={theme === t.id} className={theme === t.id ? 'on' : ''} onClick={() => pick(t.id)}>
-            <Icon as={t.icon} /> {t.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/** Hebrew or English for the whole app, on this phone. Each option is written in its own language. */
-function LangPicker() {
-  return (
-    <div className="field">
-      <span id="lang-label">שפה · Language</span> {/* he-only: each language names itself */}
-      <div className="segmented" role="radiogroup" aria-labelledby="lang-label">
-        {LANGS.map((l) => (
-          <button key={l.id} role="radio" lang={l.id} aria-checked={lang === l.id} className={lang === l.id ? 'on' : ''} onClick={() => l.id !== lang && setLang(l.id)}>
-            {l.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-const LANGS = [
-  { id: 'he', label: 'עברית' }, // he-only
-  { id: 'en', label: 'English' },
-] as const
 
 /** "יום אחד" / "יומיים" / "5 ימים" */
 function daysLabel(n: number) {

@@ -184,6 +184,7 @@ export const CATEGORIES: Record<string, string> = {
   sight: t('אטרקציה'),
   food: t('אוכל'),
   shopping: t('קניות'),
+  nightlife: t('ברים ולילה'),
   transport: t('תחבורה'),
   other: t('אחר'),
 }
@@ -328,6 +329,7 @@ export type Swipe = { trip_id: string; candidate_id: string; user_id: string; li
 
 export const CITY_HE: Record<string, string> = {
   tokyo: 'טוקיו', // he-only
+  yokohama: 'יוקוהמה', // he-only
   kyoto: 'קיוטו', // he-only
   osaka: 'אוסקה', // he-only
   nara: 'נארה', // he-only

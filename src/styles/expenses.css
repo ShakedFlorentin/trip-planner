@@ -49,3 +49,13 @@
 /* everyone's balance, folded away: what to pay is already in the card above */
 .exp-details .exp-details-body { padding: 0 16px 6px; }
 .exp-settle-who { margin: 0; font-size: 1.125rem; }
+/* the balance (53): a sentence, one big amount, a plain full-width button; orange when you owe, green when owed */
+.exp-owe { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 4px; }
+.exp-owe + .exp-owe { border-top: 1px solid var(--line); padding-top: 12px; }
+.exp-owe-line { font-size: 1rem; font-weight: 600; }
+.exp-owe .exp-big { font-size: 2rem; }
+.exp-owe.minus .exp-big { color: #e07800; }
+.exp-owe.plus .exp-big { color: var(--ok); }
+.exp-owe .secondary { margin-top: 6px; width: 100%; }
+@media (prefers-color-scheme: dark) { .exp-owe.minus .exp-big { color: #ff9f0a; } }
+.exp-guess { margin: -4px 4px 0; }

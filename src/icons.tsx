@@ -40,6 +40,7 @@ export const CATEGORY_ICON: Record<string, LucideIcon> = {
   sight: Landmark,
   food: UtensilsCrossed,
   shopping: ShoppingBag,
+  nightlife: Wine,
   transport: TrainFront,
   other: MapPin,
 }
