@@ -7,6 +7,7 @@ import { Icon } from '../icons'
 import { t } from '../i18n'
 import { Check, Plus, Trash2 } from 'lucide-react'
 import { SwipeRow } from '../swipe'
+import { useQuickAdd } from '../quickAdd'
 
 const LISTS: { id: string; label: string }[] = [
   { id: 'todo', label: t('לפני הטיסה') },
@@ -21,6 +22,12 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
   const { rows } = useTripTable<ChecklistItem>('checklist_items', tripId)
   const [list, setList] = useState('todo')
   const [text, setText] = useState('')
+  const field = useRef<HTMLInputElement>(null)
+  // from the wheel on the +: the trip's to-do list, ready to type
+  useQuickAdd('list', () => {
+    setList((l) => (l === 'packing' ? 'todo' : l))
+    field.current?.focus()
+  })
   const [assignee, setAssignee] = useState('')
   const [each, setEach] = useState(false)
   // a deleted item waits a few seconds before it really goes, so "ביטול" can bring it back (55)
@@ -109,7 +116,7 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
       {perCouple && myCouple && <p className="muted small">{t('הציוד של {who}. לכל זוג רשימה משלו.', { who: t(myCouple) })}</p>}
 
       <form className="add-row" onSubmit={add}>
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={t('להוסיף…')} enterKeyHint="done" />
+        <input ref={field} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('להוסיף…')} enterKeyHint="done" />
         <button className="primary" aria-label={t('הוספה')} disabled={!typing}>
           <Icon as={Plus} size="1.25em" />
         </button>

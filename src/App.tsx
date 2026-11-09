@@ -20,6 +20,7 @@ import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
 import { Loading } from './rings'
+import { useQuickAddRoute } from './quickAdd'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
@@ -192,6 +193,14 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const hasBaby = useTripHasBaby(tripId)
   // the large title scrolls away with the page and a small one shows in the slim bar (9)
   const [compact, setCompact] = useState(false)
+  // the wheel on the + adds from anywhere: open the screen that adds it, and that screen opens its form
+  useQuickAddRoute((kind) => {
+    setMenu(false)
+    setSearching(false)
+    if (kind === 'expense' || kind === 'list') return setTool(kind === 'expense' ? 'money' : 'lists')
+    setTool(null)
+    setTab(kind === 'place' ? 'places' : 'bookings')
+  })
   useEffect(() => {
     const onScroll = () => setCompact(window.scrollY > 34)
     onScroll()

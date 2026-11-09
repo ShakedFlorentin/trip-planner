@@ -396,4 +396,11 @@ export const EN_A: Record<string, string> = {
   'מתחילים': "Let's go",
   'שוב': 'Again',
   'הפעלה': 'Play',
+  'מאצ׳!': 'Match!',
+  'מקום': 'Place',
+  'הוצאה': 'Expense',
+  'פריט לרשימה': 'List item',
+  'פעולות הוספה': 'Add actions',
+  'נבחר: {what}': 'Selected: {what}',
+  'נפתח גלגל פעולות': 'Action wheel open',
 }

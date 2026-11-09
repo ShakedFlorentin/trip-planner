@@ -15,8 +15,6 @@
   font-variant-numeric: tabular-nums;
 }
 .fact-label { display: inline-flex; align-items: center; gap: 5px; }
-.match-pop h2 { font-size: 1.75rem; }
-.match-pop .primary { margin-top: 6px; }
 .stamp { text-transform: none; }
 .more-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
 .scores span, .tags .verdict { display: inline-flex; align-items: center; gap: 4px; }

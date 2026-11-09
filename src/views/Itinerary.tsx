@@ -30,6 +30,7 @@ import {
   type WhoMode,
 } from './planUtils'
 import '../styles/plan.css'
+import QuickFab from './QuickFab'
 
 type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string }
 
@@ -280,9 +281,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
 
       {sharing && <ShareSheet trip={trip} days={days} items={items} places={places} cards={cards} onClose={() => setSharing(false)} />}
 
-      <button className="fab" aria-label={t('פעילות חדשה')} onClick={() => setEditItem({ day, category: 'sight', who: defaultWho })}>
-        <Plus size={28} strokeWidth={2} aria-hidden="true" />
-      </button>
+      <QuickFab label={t('פעילות חדשה')} onTap={() => setEditItem({ day, category: 'sight', who: defaultWho })} />
 
       {opened && (
         <ItemSheet

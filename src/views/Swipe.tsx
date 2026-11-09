@@ -1,9 +1,10 @@
-import { PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
 import { cityLabel, couplesOf, keepRanges, mutate, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import AddPlace from './AddPlace'
+import MatchPop, { type Match } from './MatchPop'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
 import { EmptyState, Sheet } from '../ui'
@@ -12,10 +13,11 @@ import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { BATCH_SIZE, categoryMeans, learnTags, rankDeck } from '../rank'
-import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, Plus, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
+import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
+import QuickFab from './QuickFab'
 
 const LEVELS = [
   { xp: 0, name: t('גאיג׳ין') },
@@ -70,7 +72,8 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const [sessionNotNow, setSessionNotNow] = useState<Set<string>>(() => new Set())
   const [city, setCity] = useState('')
   const [aud, setAud] = useState('')
-  const [match, setMatch] = useState<{ c: Candidate; names: string[]; who: string | null } | null>(null)
+  const [match, setMatch] = useState<Match | null>(null)
+  const closeMatch = useCallback(() => setMatch(null), [])
   const [history, setHistory] = useState<string[]>([])
   const knownMatches = useRef<Set<string> | null>(null)
   // who each card is for (the couples sleeping near it) and which of them said yes: the database's own rules
@@ -315,9 +318,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </div>
       )}
 
-      <button className="fab" aria-label={t('הצעת מקום')} onClick={() => setAdding(true)}>
-        <Icon as={Plus} size="1.5em" />
-      </button>
+      <QuickFab label={t('הצעת מקום')} onTap={() => setAdding(true)} />
 
       {prefsOpen && (
         <Onboarding
@@ -490,22 +491,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </div>
       )}
 
-      {match && (
-        <div className="backdrop center-modal" onClick={() => setMatch(null)}>
-          <div className="match-pop" role="dialog" aria-modal="true" aria-label={t('מאצ׳')} onClick={(e) => e.stopPropagation()}>
-            <h2>{t('מאצ׳')}</h2>
-            <p>
-              <b dir="auto">{match.c.name}</b>{' '}
-              {match.who ? t('נכנס לרשימה של {who}', { who: match.who.split(' + ').map((w) => t(w)).join(' + ') }) : t('נכנס לרשימה של כולם')}
-            </p>
-            <p className="muted small">{t('נכנס למסלול ביום פנוי בעיר שלו. טיול יום יחכה עד שתבחרו לו יום.')}</p>
-            <p className="muted">{t('{names} אהבו את המקום', { names: match.names.join(' · ') })}</p>
-            <button className="primary" onClick={() => setMatch(null)}>
-              {t('המשך')}
-            </button>
-          </div>
-        </div>
-      )}
+      {match && <MatchPop match={match} onClose={closeMatch} />}
     </div>
   )
 }

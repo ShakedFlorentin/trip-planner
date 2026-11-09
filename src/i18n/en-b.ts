@@ -391,4 +391,9 @@ export const EN_B: Record<string, string> = {
   'עריכת היום': 'Edit the day',
   '{n} צעדים ראשונים אחרי הנחיתה': '{n} first steps after landing',
   'אהבתם': 'You liked it',
+  // the sign-in screen's carousel (LoginCarousel)
+  'מחליקים ובוחרים ביחד': 'Swipe and pick together',
+  'המסלול, יום אחרי יום': 'The plan, day by day',
+  'כל ההזמנות בכיס': 'Every booking in your pocket',
+  'מסכים מ-Toogo: גילוי, מסלול והזמנות': 'Toogo screens: Discover, Plan and Bookings',
 }

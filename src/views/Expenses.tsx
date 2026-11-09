@@ -6,9 +6,11 @@ import { t } from '../i18n'
 import { balances, convert, coupleTotals, fmtMoney, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
 import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
-import { BedDouble, Check, Handshake, Package, Pencil, Plane, Plus, Trash2, ShoppingBag, Ticket, TrainFront, Users, Utensils } from 'lucide-react'
+import { BedDouble, Check, Handshake, Package, Pencil, Plane, Trash2, ShoppingBag, Ticket, TrainFront, Users, Utensils } from 'lucide-react'
 import '../styles/expenses.css'
 import { SwipeRow } from '../swipe'
+import QuickFab from './QuickFab'
+import { useQuickAdd } from '../quickAdd'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -61,6 +63,7 @@ export default function Expenses({ trip, members, userId }: Props) {
   const { rows, loading, error, reload } = useTripTable<Expense>('expenses', trip.id, 'spent_on')
   const [cur, setCur] = useRemembered('expensesCurrency', 'ILS')
   const [edit, setEdit] = useState<Partial<Expense> | null>(null)
+  useQuickAdd('expense', () => setEdit({}))
   const [settle, setSettle] = useState<{ t: Transfer; row?: Expense } | null>(null)
   const [editingRate, setEditingRate] = useState(false)
   // the trip row only refreshes through realtime, so show a saved rate right away
@@ -254,9 +257,7 @@ export default function Expenses({ trip, members, userId }: Props) {
         </div>
       ))}
 
-      <button className="fab" aria-label={t('הוצאה חדשה')} onClick={() => setEdit({})}>
-        <Icon as={Plus} size="1.5em" />
-      </button>
+      <QuickFab label={t('הוצאה חדשה')} onTap={() => setEdit({})} />
       {edit && <ExpenseForm trip={trip} members={members} couples={couples} userId={userId} expense={edit} onClose={() => setEdit(null)} />}
       {settle && (
         <SettleSheet

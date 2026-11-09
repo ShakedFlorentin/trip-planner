@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { t } from '../i18n'
+import LoginCarousel from './LoginCarousel'
 
 // Accounts are created for the group up front; each logs in with just their name, in Hebrew or English.
 const ACCOUNTS: Record<string, string> = {
@@ -159,6 +160,7 @@ export default function Login() {
       <p className="muted">
         {mode === 'signup' ? t('הוזמנתם לטיול. יוצרים חשבון ומצטרפים.') : t('מסלול, הזמנות והוצאות במקום אחד')}
       </p>
+      <LoginCarousel />
       {mode === 'signup' ? (
         <form onSubmit={signUp} className="card">
           <input

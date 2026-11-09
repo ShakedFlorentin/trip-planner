@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Plane, Plus, Wand2 } from 'lucide-react'
+import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Plane, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { BOOKING_KINDS, BOOKING_TABS, type Booking, type Member, type Trip } from '../types'
 import { aiError, couplesOf, errorText, normName, fmtDateTime, fromInputDateTime, mapsUrl, mutate, replan, safeUrl, toInputDateTime, useTripTable } from '../lib'
@@ -9,6 +9,8 @@ import { isEn, locale, t } from '../i18n'
 import { isNative, openExternal } from '../native'
 import { RingsIcon } from '../rings'
 import { WhoChips, shows, validWho, type Who } from '../who'
+import QuickFab from './QuickFab'
+import { useQuickAdd } from '../quickAdd'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -33,6 +35,7 @@ export default function Bookings({ trip, members, userId }: Props) {
   const tabs = Object.keys(BOOKING_TABS).filter((k, i) => i < 4 || rows.some((b) => kindOf(b) === k))
   const [tab, pick] = useRemembered('bookingsTab', 'flight')
   const current = tabs.includes(tab) ? tab : 'flight'
+  useQuickAdd('booking', () => setEdit({ kind: current, who: myCouple }))
   // by date, then whose; bookings with no date go last
   const items = shown
     .filter((b) => kindOf(b) === current)
@@ -111,9 +114,7 @@ export default function Bookings({ trip, members, userId }: Props) {
           }}
         />
       )}
-      <button className="fab" aria-label={t('הזמנה חדשה')} onClick={() => setEdit({ kind: current, who: myCouple })}>
-        <Plus size={28} strokeWidth={2} aria-hidden="true" />
-      </button>
+      <QuickFab label={t('הזמנה חדשה')} onTap={() => setEdit({ kind: current, who: myCouple })} />
       {edit && (
         <BookingForm
           trip={trip}
