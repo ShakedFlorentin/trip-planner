@@ -15,6 +15,8 @@ const cors = {
 const MODEL = 'claude-haiku-5-5'
 // Claude calls per user per function in 24 hours; each place lookup costs a few cents
 const DAILY_LIMIT = 30
+// and for everyone together, so more accounts can't multiply what the Claude key spends
+const ALL_USERS_LIMIT = 300
 
 // Structured outputs allow at most 16 nullable/union fields, so text fields come back as "" when there is nothing to
 // say (turned into null below); only numbers and enums stay nullable
@@ -266,15 +268,9 @@ async function signedIn(req: Request, json: (body: unknown, status?: number) => 
 
 /** Lets the user spend the Claude key only under today's cap, and records the call; or the response to send instead. */
 async function charge(admin: SupabaseClient, userId: string, fn: string, json: (body: unknown, status?: number) => Response) {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { count: used } = await admin
-    .from('ai_usage')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('fn', fn)
-    .gte('at', since)
-  if ((used ?? 0) >= DAILY_LIMIT) return json({ error: 'daily limit reached' }, 429)
-  await admin.from('ai_usage').insert({ user_id: userId, fn })
+  // counts and records the call in one locked step, so parallel requests can't slip past the caps
+  const { data: took } = await admin.rpc('ai_take', { uid: userId, fn, per_user: DAILY_LIMIT, all_users: ALL_USERS_LIMIT })
+  if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
   return null
 }
 

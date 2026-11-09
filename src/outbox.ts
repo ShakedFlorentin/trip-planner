@@ -13,6 +13,8 @@ type Pending = {
   prefer: string | null
   body: string | null
   at: number
+  /** who made the change: only that account sends it or sees it */
+  uid?: string
 }
 
 const KEY = 'outbox'
@@ -43,9 +45,21 @@ function write(list: Pending[]) {
   changed()
 }
 let memory: Pending[] = read()
+// the signed-in account; changes another account left on this device stay put until it is back
+let owner: string | null = null
+const mine = () => (owner ? memory.filter((p) => p.uid === owner) : [])
 
 /** The changes still waiting for a connection. */
-export const pending = () => memory
+export const pending = mine
+
+/** Who is signed in (null once signed out). Changes left from before accounts were remembered go to the first one. */
+export function setOutboxUser(uid: string | null) {
+  if (uid === owner) return
+  owner = uid
+  if (uid && memory.some((p) => !p.uid)) write(memory.map((p) => (p.uid ? p : { ...p, uid })))
+  else changed()
+  if (uid && navigator.onLine) flush()
+}
 
 /** Calls back whenever the waiting changes do (queued, sent). */
 export function onOutbox(f: () => void) {
@@ -82,6 +96,7 @@ function enqueue(url: URL, method: string, init: RequestInit, headers: Headers) 
     prefer: headers.get('Prefer'),
     body,
     at: Date.now(),
+    uid: owner ?? undefined,
   }
   write([...memory, item])
   return madeUp(method, body, item.prefer, headers.get('Accept'))
@@ -99,12 +114,14 @@ let flushing: Promise<void> | null = null
  * one the server refuses (a duplicate, a row deleted meanwhile) is dropped so it can't block the rest.
  */
 export function flush() {
-  if (flushing || !memory.length || !base) return flushing ?? Promise.resolve()
+  if (flushing || !mine().length || !base) return flushing ?? Promise.resolve()
   flushing = (async () => {
     let sent = 0
-    while (memory.length) {
-      const item = memory[0]
+    while (mine().length) {
+      const item = mine()[0]
       const auth = await token()
+      // only ever with the token of the account that made the change
+      if (!auth || subOf(auth) !== item.uid) break
       const headers: Record<string, string> = { apikey: apiKey, 'Content-Type': 'application/json' }
       if (auth) headers.Authorization = `Bearer ${auth}`
       if (item.prefer) headers.Prefer = item.prefer.replace('return=representation', 'return=minimal')
@@ -118,7 +135,7 @@ export function flush() {
       if (res.status === 401) break
       if (res.status >= 500) break
       if (!res.ok) console.warn('outbox: dropped', item.table, item.method, res.status, await res.text().catch(() => ''))
-      write(memory.slice(1))
+      write(memory.filter((p) => p.id !== item.id))
       sent++
     }
     if (sent) window.dispatchEvent(new Event('outbox-sent'))
@@ -126,6 +143,15 @@ export function flush() {
     flushing = null
   })
   return flushing
+}
+
+/** The account a session token belongs to. */
+function subOf(jwt: string) {
+  try {
+    return (JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub as string) ?? null
+  } catch {
+    return null
+  }
 }
 
 const realFetch: typeof fetch = (...args) => fetch(...args)
@@ -137,8 +163,8 @@ export const outboxFetch: typeof fetch = async (input, init = {}) => {
   if (!WRITES.has(method) || !tableOf(url)) return realFetch(input, init)
   const headers = new Headers(init.headers)
   // a change made after others that are still waiting goes after them
-  if (memory.length && navigator.onLine) await flush()
-  if (!navigator.onLine || memory.length) return enqueue(url, method, init, headers)
+  if (mine().length && navigator.onLine) await flush()
+  if (!navigator.onLine || mine().length) return enqueue(url, method, init, headers)
   try {
     return await realFetch(input, init)
   } catch (e) {
@@ -180,10 +206,10 @@ function matcher(search: string) {
 
 /** The rows of a table as they will be once the waiting changes are sent. */
 export function withPending<T>(table: string, rows: T[]): T[] {
-  const mine = memory.filter((p) => p.table === table)
-  if (!mine.length) return rows
+  const waiting = mine().filter((p) => p.table === table)
+  if (!waiting.length) return rows
   let out = rows as Record<string, unknown>[]
-  for (const p of mine) {
+  for (const p of waiting) {
     const q = p.path.includes('?') ? p.path.slice(p.path.indexOf('?')) : ''
     if (p.method === 'DELETE') {
       const hit = matcher(q)

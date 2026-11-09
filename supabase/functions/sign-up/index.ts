@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     .select('code')
     .eq('code', invite)
     .is('used_by', null)
+    .is('used_at', null)
     .gt('expires_at', new Date().toISOString())
     .maybeSingle()
   if (!inv) return reply(410, 'invite_invalid')

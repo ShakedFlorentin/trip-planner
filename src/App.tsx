@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { supabase } from './supabase'
+import { setOutboxUser } from './outbox'
 import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
@@ -65,6 +66,7 @@ function AppMain() {
       // a refresh that failed for lack of network is not a sign-out: carry on as the same user
       const offlineId = !id && error?.name === 'AuthRetryableFetchError' ? readCache<string>(UID_KEY)?.data : null
       setInvited(!!data.session?.user.user_metadata?.invite)
+      setOutboxUser(id ?? offlineId ?? null)
       setUserId(id ?? offlineId ?? null)
     })
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
@@ -73,14 +75,17 @@ function AppMain() {
       if (e === 'SIGNED_OUT') {
         clearCache()
         window.caches?.delete('docs').catch(() => {})
+        // nothing of this account is left for whoever signs in next on this device
+        forgetPendingShare()
         try {
-          localStorage.removeItem('tripId')
+          for (const k of ['tripId', 'invite', 'translator-turns']) localStorage.removeItem(k)
         } catch {
           // nothing remembered to forget
         }
       }
       if (s) writeCache(UID_KEY, s.user.id)
       setInvited(!!s?.user.user_metadata?.invite)
+      setOutboxUser(s?.user.id ?? null)
       setUserId(s?.user.id ?? null)
     })
     return () => data.subscription.unsubscribe()

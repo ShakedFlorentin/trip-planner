@@ -334,6 +334,7 @@ function InviteFriend({ trip }: { trip: Trip }) {
     const { data, error } = await supabase.from('invites').insert({ trip_id: trip.id }).select('code').single()
     setBusy(false)
     const code = (data as { code?: string } | null)?.code
+    if (error?.message.includes('invite limit reached')) return setNote(t('שלחתם 10 הזמנות השבוע. אפשר להזמין עוד בשבוע הבא.'))
     if (error || !code) return setNote(error ? errorText(error.message) : t('אין אינטרנט. נסו שוב כשיש קליטה.'))
     const url = `${appUrl()}?invite=${encodeURIComponent(code)}`
     setLink(url)

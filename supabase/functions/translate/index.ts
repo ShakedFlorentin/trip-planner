@@ -35,6 +35,8 @@ const MODEL = 'claude-haiku-5-5'
 const MAX_CHARS = 600
 // Claude calls per user per 24 hours; translation is a conversation, so it gets more room than the other tools
 const DAILY_LIMIT = 200
+// and for everyone together, so more accounts can't multiply what the Claude key spends
+const ALL_USERS_LIMIT = 2000
 
 /** The Claude key: a function secret if one is set, otherwise the copy kept in Supabase Vault. */
 async function anthropicKey(admin: SupabaseClient) {
@@ -69,16 +71,17 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
     global: { headers: { Authorization: authorization } },
   })
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const [{ data: auth }, { count: trips }, { count: used }, key] = await Promise.all([
+  const [{ data: auth }, { count: trips }, key] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from('members').select('trip_id', { count: 'exact', head: true }).eq('user_id', claimed),
-    admin.from('ai_usage').select('*', { count: 'exact', head: true }).eq('user_id', claimed).eq('fn', fn).gte('at', since),
     anthropicKey(admin),
   ])
   if (!auth.user || auth.user.id !== claimed) return json({ error: 'not signed in' }, 401)
   if (!trips) return json({ error: 'not a trip member' }, 403)
-  if ((used ?? 0) >= DAILY_LIMIT) return json({ error: 'daily limit reached' }, 429)
+  // only once the user is confirmed: counts and records the call in one locked step, so parallel requests can't slip
+  // past the caps
+  const { data: took } = await admin.rpc('ai_take', { uid: claimed, fn, per_user: DAILY_LIMIT, all_users: ALL_USERS_LIMIT })
+  if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
   // credits (behind CREDITS_ON): hold the price first; the caller settles or refunds it
   let creditOp: string | null = null
   if (credits && await creditsOn(admin)) {
@@ -86,9 +89,7 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
     if (!h.ok) return json(h.body, h.status)
     creditOp = h.opId
   }
-  // recorded alongside the Claude call rather than before it; the caller awaits it with the call
-  const record = admin.from('ai_usage').insert({ user_id: claimed, fn })
-  return { key, record, admin, userId: claimed, creditOp }
+  return { key, admin, userId: claimed, creditOp }
 }
 
 Deno.serve(async (req) => {
@@ -114,7 +115,7 @@ Deno.serve(async (req) => {
 
   const client = new Anthropic({ apiKey: admitted.key })
   try {
-    const [response] = await Promise.all([client.messages.create({
+    const response = await client.messages.create({
       model: MODEL,
       max_tokens: 1000,
       // a translation needs no reasoning: thinking off keeps it fast and cheap (Haiku allows it at effort low)
@@ -122,7 +123,7 @@ Deno.serve(async (req) => {
       output_config: { effort: 'low' },
       system: SYSTEM,
       messages: [{ role: 'user', content: `${from === 'ja' ? `Japanese to ${home}` : `${home} to Japanese`}:\n${text}` }],
-    }), admitted.record])
+    })
     const t2 = performance.now()
     logCall(admitted.admin, { fn: 'translate', step: from, userId: admitted.userId, model: MODEL, usage: response.usage, ms: t2 - t1, stopReason: response.stop_reason })
     const reply = response.content.map((b) => (b.type === 'text' ? b.text : '')).join('')

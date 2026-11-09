@@ -403,4 +403,5 @@ export const EN_A: Record<string, string> = {
   'פעולות הוספה': 'Add actions',
   'נבחר: {what}': 'Selected: {what}',
   'נפתח גלגל פעולות': 'Action wheel open',
+  'שלחתם 10 הזמנות השבוע. אפשר להזמין עוד בשבוע הבא.': "You've sent 10 invites this week. You can send more next week.",
 }

@@ -42,6 +42,8 @@ const MODEL = 'claude-haiku-5-5'
 const MAX_BYTES = 15 * 1024 * 1024
 // Claude calls per user per function in 24 hours
 const DAILY_LIMIT = 30
+// and for everyone together, so more accounts can't multiply what the Claude key spends
+const ALL_USERS_LIMIT = 150
 
 /** The Claude key: a function secret if one is set, otherwise the copy kept in Supabase Vault. */
 async function anthropicKey(admin: SupabaseClient) {
@@ -69,14 +71,9 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
   if (!trips) return json({ error: 'not a trip member' }, 403)
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { count: used } = await admin
-    .from('ai_usage')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', auth.user.id)
-    .eq('fn', fn)
-    .gte('at', since)
-  if ((used ?? 0) >= DAILY_LIMIT) return json({ error: 'daily limit reached' }, 429)
+  // counts and records the call in one locked step, so parallel requests can't slip past the caps
+  const { data: took } = await admin.rpc('ai_take', { uid: auth.user.id, fn, per_user: DAILY_LIMIT, all_users: ALL_USERS_LIMIT })
+  if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
   // credits (behind CREDITS_ON): hold the price first; the caller settles or refunds it
   let creditOp: string | null = null
   if (credits && await creditsOn(admin)) {
@@ -84,7 +81,6 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
     if (!h.ok) return json(h.body, h.status)
     creditOp = h.opId
   }
-  await admin.from('ai_usage').insert({ user_id: auth.user.id, fn })
   return { admin, userId: auth.user.id, creditOp }
 }
 
