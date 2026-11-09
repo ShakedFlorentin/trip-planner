@@ -214,17 +214,9 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
           <div className="route">
             {together.map((run) => (
               <button key={run.from} className={'route-stop' + (run.value ? ' apart' : ' together')} onClick={() => onOpenDay(run.from)}>
-                <b>
-                  {run.value ? (
-                    <>
-                      <RingsIcon one /> {t('רק {who}', { who: t(run.value) })}
-                    </>
-                  ) : (
-                    <>
-                      <RingsIcon /> {t(TOGETHER)}
-                    </>
-                  )}
-                </b>
+                {/* the rings get a column of their own, so every name and date starts at the same line */}
+                <span className="route-ic">{run.value ? <RingsIcon one /> : <RingsIcon />}</span>
+                <b>{run.value ? t('רק {who}', { who: t(run.value) }) : t(TOGETHER)}</b>
                 <span className="muted small">
                   {fmtDay(dayDate(trip.start_date, run.from))}
                   {run.to !== run.from && ` – ${fmtDay(dayDate(trip.start_date, run.to))}`} · {daysLabel(run.to - run.from + 1)}

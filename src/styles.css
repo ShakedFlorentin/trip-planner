@@ -379,8 +379,10 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 24px + env
 /* stacked, full width: rows of different text lengths still line up */
 .route { display: flex; flex-direction: column; gap: 8px; }
 .route-stop {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  align-items: center;
   width: 100%;
   min-height: 52px;
   padding: 8px 14px;
@@ -388,6 +390,9 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 24px + env
   background: var(--fill);
   text-align: start;
 }
+/* as wide as the two rings in every row, so the text column starts at the same line; spans the name and the dates */
+.route-ic { grid-row: span 2; display: flex; justify-content: center; width: 1.82em; font-size: 1.2rem; }
+.route-stop > b, .route-stop > span:not(.route-ic) { grid-column: 2; }
 .route-stop.together { background: color-mix(in srgb, var(--ok) 14%, var(--card)); }
 .route-stop.apart { background: var(--fill); }
 .who-tag { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.875rem; font-weight: 600; color: var(--ok); }
