@@ -5,7 +5,7 @@ import { couplesOf, keepRanges, mutate, useTripTable } from '../lib'
 import { Empty } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
-import { Check, Plus, Trash2 } from 'lucide-react'
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { SwipeRow } from '../swipe'
 import { useQuickAdd } from '../quickAdd'
 
@@ -33,6 +33,9 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
   // a deleted item waits a few seconds before it really goes, so "ביטול" can bring it back (55)
   const [gone, setGone] = useState<ChecklistItem | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // the item whose words are being changed, and what is typed so far
+  const [editing, setEditing] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
   const couples = couplesOf(members)
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
   const others = couples.filter((c) => c !== myCouple)
@@ -69,6 +72,18 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
     const was = i.done_couples ?? []
     const next = was.includes(myCouple) ? was.filter((c) => c !== myCouple) : [...was, myCouple]
     return mutate(supabase.from('checklist_items').update({ done_couples: next }).eq('id', i.id))
+  }
+
+  const startEdit = (i: ChecklistItem) => {
+    setEditing(i.id)
+    setDraft(i.text)
+  }
+  const saveEdit = async (e: FormEvent, i: ChecklistItem) => {
+    e.preventDefault()
+    const next = draft.trim()
+    // nothing typed or nothing changed: keep the old words
+    if (next && next !== i.text) await mutate(supabase.from('checklist_items').update({ text: next }).eq('id', i.id))
+    setEditing(null)
   }
 
   const finish = (i: ChecklistItem | null) => {
@@ -159,7 +174,13 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
       {items.map((i) => {
         const isDone = done(i)
         return (
-          <SwipeRow key={i.id} end={[{ label: t('מחיקה'), icon: Trash2, tone: 'del', onClick: () => remove(i) }]}>
+          <SwipeRow
+            key={i.id}
+            end={[
+              { label: t('עריכה'), icon: Pencil, tone: 'edit', onClick: () => startEdit(i) },
+              { label: t('מחיקה'), icon: Trash2, tone: 'del', onClick: () => remove(i) },
+            ]}
+          >
             <div className={'item card slim' + (isDone ? ' done' : '')}>
               <button
                 className="check"
@@ -170,21 +191,40 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
               >
                 {isDone ? <Icon as={Check} size="1em" strokeWidth={3} /> : null}
               </button>
-              <div className="item-body">
-                {keepRanges(i.text)}
-                {i.assignee && <span className="chip tiny">{i.assignee}</span>}
-                {i.each && others.length > 0 && (
-                  <div className="muted small">
-                    {t('הסימון שלכם')}
-                    {others.map((c) => (
-                      <span key={c} className="couple-mark">
-                        {' · '}
-                        {(i.done_couples ?? []).includes(c) ? t('{who}: סימנו ✓', { who: t(c) }) : t('{who}: עוד לא', { who: t(c) })}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {editing === i.id ? (
+                <form className="add-row item-edit" onSubmit={(e) => saveEdit(e, i)}>
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Escape' && setEditing(null)}
+                    autoFocus
+                    aria-label={t('עריכה')}
+                    enterKeyHint="done"
+                  />
+                  <button className="primary" aria-label={t('שמירה')} disabled={!draft.trim()}>
+                    <Icon as={Check} size="1.25em" />
+                  </button>
+                  <button type="button" className="link" onClick={() => setEditing(null)}>
+                    {t('ביטול')}
+                  </button>
+                </form>
+              ) : (
+                <div className="item-body" onClick={() => startEdit(i)}>
+                  {keepRanges(i.text)}
+                  {i.assignee && <span className="chip tiny">{i.assignee}</span>}
+                  {i.each && others.length > 0 && (
+                    <div className="muted small">
+                      {t('הסימון שלכם')}
+                      {others.map((c) => (
+                        <span key={c} className="couple-mark">
+                          {' · '}
+                          {(i.done_couples ?? []).includes(c) ? t('{who}: סימנו ✓', { who: t(c) }) : t('{who}: עוד לא', { who: t(c) })}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </SwipeRow>
         )

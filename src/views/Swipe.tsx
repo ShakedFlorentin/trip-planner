@@ -585,14 +585,20 @@ function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: boolean;
   }
   const move = (e: PointerEvent) => {
     if (grab.current === null) return
+    const ax = Math.abs(e.clientX - downX.current)
+    const ay = Math.abs(e.clientY - downY.current)
     if (!axis.current) {
-      const ax = Math.abs(e.clientX - downX.current)
-      const ay = Math.abs(e.clientY - downY.current)
       // a resting thumb or a small wobble is not a swipe; up and down is reading, not voting
       if (Math.max(ax, ay) < 10) return
-      axis.current = ax > ay * 1.2 ? 'x' : 'y'
+      // a thumb swiping a card seldom goes in a straight line: only a clearly vertical start is not a swipe (a report from
+      // a phone: "the swipe is cancelled when my finger moves up or down")
+      axis.current = ax > ay * 0.7 ? 'x' : 'y'
       moved.current = true
       // start from here, so the card doesn't jump by the 10px it took to decide
+      grab.current = e.clientX - pos.current
+    } else if (axis.current === 'y' && ax > 32 && ax > ay) {
+      // it began upward or downward but is now plainly sideways: a slow start, not a scroll
+      axis.current = 'x'
       grab.current = e.clientX - pos.current
     }
     if (axis.current === 'y') return
