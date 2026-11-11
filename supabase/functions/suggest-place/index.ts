@@ -141,7 +141,7 @@ If the post names several places (a list or roundup), identify each one (up to 1
 - honest verdict: hidden gem, worth it, overhyped, or tourist trap
 - opening hours, weekly closing days, closures between 12 and 31 December 2026 (year-end holidays), for a market or event the dates it runs in that period, whether to book, how long a visit takes and the best time of day
 If you only have a link with no caption, search for the post itself (its URL, its code and the account) to find which places it shows.
-Each search costs money, so search as little as the job allows. A sight, a shop or an experience usually needs one search. A restaurant, cafe or bar usually needs two: one for the place and one for its Tabelog page (its name with 食べログ). Search again only if you still cannot tell which place it is or where it is, or when the post lists several places. Leave a small detail out rather than search again for it.
+Each search costs money and fetching a page is free, so run one search: the place's name exactly as the member or the post writes it (Japanese characters only if they give them, never guess them), its area, and for a restaurant, cafe or bar the word tabelog. Then, instead of searching again, fetch one page for the facts still missing (score, full address, opening hours, closing days): for a restaurant, cafe or bar a page of its own on Tabelog, otherwise its official page. Only an address that appears in the search results can be fetched, copied character for character: never shorten it, never add or remove /en/, never build one. If the results show several of the place's Tabelog addresses, take one under tabelog.com/en/, and a review, menu or photo page of the place is fine when its main page is not listed. If the fetch fails, go on without it. Search again only if the search did not find the place itself, or when the post lists several places: then name every place the post lists, and research as many as your searches allow. Leave a small detail out rather than search again for it.
 Write the notes as plain facts (what, where, when, how much), not as what blogs, reviewers or sites say, and state each fact once.
 Be concise. If you can't identify any specific place, say so.`
 
@@ -607,7 +607,11 @@ async function research(
           output_config: { effort: 'low' },
           system: RESEARCH,
           // what is left of the lookup's searches; a round that continues a paused one still gets one, so it can finish
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: Math.max(1, MAX_SEARCHES - searches) }],
+          tools: [
+            { type: 'web_search_20250305', name: 'web_search', max_uses: Math.max(1, MAX_SEARCHES - searches) },
+            // reading one page costs no fee, only its tokens: the place's Tabelog page stands in for a second search
+            { type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 2, max_content_tokens: 10000 },
+          ],
           messages,
         })
         .on('contentBlock', searched)
