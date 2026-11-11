@@ -129,7 +129,8 @@ Deno.serve(async (req) => {
     const client = new Anthropic({ apiKey: await anthropicKey(admin) })
     const response = await client.messages.parse({
       model: MODEL,
-      max_tokens: 4000,
+      // thinking counts toward this: a long confirmation with several bookings must not be cut off mid-answer
+      max_tokens: 8000,
       output_config: { effort: 'low', format: zodOutputFormat(BookingList) },
       system: SYSTEM,
       messages: [{ role: 'user', content }],

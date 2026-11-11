@@ -358,9 +358,11 @@ function dimensions(b: Uint8Array): { w: number; h: number } | null {
 
 const Pick = z.object({ keep: z.array(z.number().int()) })
 
-/** Which images show the place itself, best first; without Claude, the first ones found. */
+/**
+ * Which images show the place itself, best first. With no answer from Claude (an error, or a reply cut off) none is
+ * kept: an unchecked image can be a logo or another place, and a card without photos is tried again on the next run.
+ */
 async function pick(admin: SupabaseClient, c: Card, images: Image[]): Promise<number[]> {
-  const fallback = images.map((_, i) => i).slice(0, KEEP)
   const key = Deno.env.get('ANTHROPIC_API_KEY') || ((await admin.rpc('get_anthropic_key')).data as string | null) || undefined
   const t = performance.now()
   try {
@@ -374,7 +376,8 @@ async function pick(admin: SupabaseClient, c: Card, images: Image[]): Promise<nu
     ]
     const r = await new Anthropic({ apiKey: key }).messages.parse({
       model: MODEL,
-      max_tokens: 200,
+      // the model's thinking counts toward this too: at 200, one call in ten was cut off before it answered
+      max_tokens: 2000,
       output_config: { effort: 'low', format: zodOutputFormat(Pick) },
       system:
         `These images were found for a place card in a trip app. Return the numbers of up to ${KEEP} images that are real photos of this place: its food or drinks, the interior, the building or street, or the view, ` +
@@ -386,11 +389,12 @@ async function pick(admin: SupabaseClient, c: Card, images: Image[]): Promise<nu
     })
     logCall(admin, { fn: 'card-photos', step: 'pick', userId: null, model: MODEL, usage: r.usage, ms: performance.now() - t, stopReason: r.stop_reason })
     const keep = (r.parsed_output?.keep as number[] | undefined)?.filter((i) => i >= 0 && i < images.length)
-    return keep ? [...new Set(keep)] : fallback
+    if (!keep) console.error('pick gave no answer', c.name, r.stop_reason)
+    return keep ? [...new Set(keep)] : []
   } catch (error) {
     console.error('pick failed', c.name, error instanceof Error ? error.message : error)
     logCall(admin, { fn: 'card-photos', step: 'pick', userId: null, model: MODEL, ms: performance.now() - t, error: String(error instanceof Error ? error.message : error) })
-    return fallback
+    return []
   }
 }
 

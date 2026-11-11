@@ -113,6 +113,10 @@ const planColumns = (p: Plan) => {
   }
 }
 const MAX_PLACES = 10
+// web searches per lookup, over all its rounds. Each one costs a cent and makes Claude read every earlier result
+// again: 2 searches read about 23K tokens, 3 about 43K, 6 about 137K, and past 100K the whole request is billed at
+// five times the price. Nearly every lookup needs 2 or 3.
+const MAX_SEARCHES = 3
 // slides of a carousel sent along with the caption: roundups often name their places only on the pictures
 const MAX_SLIDES = 8
 
@@ -137,6 +141,7 @@ If the post names several places (a list or roundup), identify each one (up to 1
 - honest verdict: hidden gem, worth it, overhyped, or tourist trap
 - opening hours, weekly closing days, closures between 12 and 31 December 2026 (year-end holidays), for a market or event the dates it runs in that period, whether to book, how long a visit takes and the best time of day
 If you only have a link with no caption, search for the post itself (its URL, its code and the account) to find which places it shows.
+Each search costs money, so search as little as the job allows. A sight, a shop or an experience usually needs one search. A restaurant, cafe or bar usually needs two: one for the place and one for its Tabelog page (its name with 食べログ). Search again only if you still cannot tell which place it is or where it is, or when the post lists several places. Leave a small detail out rather than search again for it.
 Write the notes as plain facts (what, where, when, how much), not as what blogs, reviewers or sites say, and state each fact once.
 Be concise. If you can't identify any specific place, say so.`
 
@@ -329,6 +334,8 @@ async function unshorten(u: URL) {
 }
 // a saved answer is good for a month; places don't move, but scores and hours do
 const CACHE_DAYS = 30
+// how long a lookup may still be searching; past this a row left on "running" is one whose search died
+const RUNNING_MS = 10 * 60 * 1000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Supabase's runtime keeps a promise running after the response is sent, or after the client has gone
@@ -419,8 +426,14 @@ Deno.serve(async (req) => {
   // caller's own; someone else's id is never used.
   let id = crypto.randomUUID()
   if (typeof body?.id === 'string' && UUID.test(body.id)) {
-    const { data: owner } = await admin.from('place_lookups').select('user_id').eq('id', body.id).maybeSingle()
+    const { data: owner } = await admin.from('place_lookups').select('user_id,status,created_at').eq('id', body.id).maybeSingle()
     if (!owner || owner.user_id === userId) id = body.id
+    // the app sent this lookup twice (the first request lost its answer, or the sheet was closed mid-search): the first
+    // one is still searching and saves its result under this id, so a second paid search would only repeat it. The app
+    // reads the saved result on a 409. A row still running after ten minutes is a search that died: that one may rerun.
+    if (owner?.user_id === userId && owner.status === 'running' && Date.now() - new Date(owner.created_at).getTime() < RUNNING_MS) {
+      return json({ error: 'lookup already running' }, 409)
+    }
   }
   const track = async (row: Record<string, unknown>) => {
     const { error } = await admin.from('place_lookups').insert({ id, user_id: userId, lookup_key: key, ...row })
@@ -454,7 +467,11 @@ Deno.serve(async (req) => {
       .maybeSingle()
     // a name (typed, or a Maps link's) may be a place researched already for another lookup, a roundup's among them
     const saved = hit?.places as unknown[] | null
-    const places = saved?.length ? saved : key.startsWith('q:') ? await knownPlace(admin, key.slice(2), since) : null
+    const places = saved?.length
+      ? saved
+      : key.startsWith('q:')
+        ? ((await knownPlace(admin, key.slice(2), since)) ?? (await libraryPlace(admin, key.slice(2))))
+        : null
     if (places?.length) {
       console.log('cached', key, places.length)
       await track({ status: 'done', places, finished_at: new Date().toISOString() })
@@ -589,7 +606,8 @@ async function research(
           max_tokens: 8000,
           output_config: { effort: 'low' },
           system: RESEARCH,
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 10 }],
+          // what is left of the lookup's searches; a round that continues a paused one still gets one, so it can finish
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: Math.max(1, MAX_SEARCHES - searches) }],
           messages,
         })
         .on('contentBlock', searched)
@@ -624,7 +642,8 @@ async function research(
     const listed = await timed('list', () =>
       client.messages.parse({
         model: MODEL,
-        max_tokens: 1000,
+        // thinking counts toward this: a list cut off here would read as "nothing found" after a paid search
+        max_tokens: 4000,
         output_config: { effort: 'low', format: zodOutputFormat(Names) },
         system: LIST,
         messages: [{ role: 'user', content: material }],
@@ -768,6 +787,29 @@ async function knownPlace(admin: SupabaseClient, name: string, since: string) {
     }
   }
   return found.size === 1 ? [...found.values()] : null
+}
+
+// what a library card gives a lookup: the fields a researched card has
+const LIBRARY_COLUMNS =
+  'name,name_ja,city,area,category,lat,lng,hype,reality,verdict,tabelog_score,google_score,price,tip,audience,baby_notes,serves,dishes,todo,special,highlights,time_needed,kosher,kosher_note,sources,address,opens,closes,closed_weekdays,closed_dates,open_dates,best_time,visit_mins,booking,plan_line,baby_block,facts_at,facts_sure,en,tags'
+/**
+ * The shared library's card for a typed name (or a Maps link's name), when exactly one live card fits, by the same rule
+ * as knownPlace. It was researched once already, so this lookup costs nothing. Live cards only: a card still private
+ * to the trip that added it is never given to another trip.
+ */
+async function libraryPlace(admin: SupabaseClient, name: string) {
+  const want = [...new Set(distinctive(name))]
+  if (!want.length) return null
+  const city = CITIES.find((c) => name.toLowerCase().split(/[^a-z]+/).includes(c))
+  const { data } = await admin.from('place_library').select('id,name,city').eq('active', true)
+  const fits = ((data ?? []) as { id: string; name: string | null; city: string | null }[]).filter((card) => {
+    const words = new Set(distinctive(card.name ?? ''))
+    if (!want.every((w) => words.has(w)) || (want.length < 2 && words.size > 1)) return false
+    return !city || card.city === city
+  })
+  if (fits.length !== 1) return null
+  const { data: card } = await admin.from('place_library').select(LIBRARY_COLUMNS).eq('id', fits[0].id).maybeSingle()
+  return card ? [card as Record<string, unknown>] : null
 }
 
 /** The post's pictures as image blocks for Claude: JPEG, PNG or WebP under 5 MB; the others are left out. */

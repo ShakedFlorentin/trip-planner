@@ -65,7 +65,7 @@ export type PlaceInfo = {
 export const factKey = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 
 const RESEARCH = `You check practical visiting facts for a place in Japan for travellers there between 12 and 31 December 2026.
-Search briefly (in English and Japanese) and report:
+Each search costs money: one search is usually enough (use the Japanese name when you have it); search a second time only if the opening hours or the December closures are still missing. Report:
 - regular opening hours (as of late 2026) and weekly closing days
 - closures between 12 and 31 December 2026, especially the year-end holidays (usually from 28-31 December); say clearly when the place is open on those days if you find it
 - for a market, a festival or an event that runs on certain dates only: the dates it runs between 12 and 31 December 2026
@@ -117,7 +117,8 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
       t = performance.now()
       research = await client.messages.create({
         model: MODEL,
-        max_tokens: 3000,
+        // thinking counts toward this; at 3000 one lookup in 55 was cut off
+        max_tokens: 6000,
         output_config: { effort: 'low' },
         system: RESEARCH,
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
@@ -137,7 +138,8 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
     t = performance.now()
     const r = await client.messages.parse({
       model: MODEL,
-      max_tokens: 1500,
+      // thinking counts toward this: cut off here, the paid search before it is thrown away
+      max_tokens: 4000,
       output_config: { effort: 'low', format: zodOutputFormat(FactsSchema) },
       system: EXTRACT,
       messages: [{ role: 'user', content: `${known}\n\nNotes:\n${notes}` }],
