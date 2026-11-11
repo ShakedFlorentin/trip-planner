@@ -516,3 +516,19 @@ Version 37 changes three things:
 Tested on the test function with the same settings: the 9-place post read about 60,000 tokens in total and cost $0.041 with no page read; Yakiniku Hanamichi $0.019 with the page read; Kyoto Gyoza enen $0.017, where the single page read failed and the Tabelog score is missing again. That is the price of the one-read limit: when the first read fails there is no second try.
 
 Real lookup on version 37 (added in the app, 11 Nov 08:32 UTC): an Instagram post about Wagyu Yakiniku Mow Mow Minami Horie. One search, 58,558 tokens read in the research step, 33 seconds, $0.0196 in the app's log. The card has the area, Tabelog 3.34, verdict, kosher level, hours 17:00 to 00:00, the street address and the Hebrew descriptions. The same kind of link cost $0.027 to $0.040 (average $0.034) before, with 2 or 3 searches. This is one lookup; the average over real use will show in `ai_calls`.
+
+### The 10-place link, and version 38
+
+The first real lookup on version 36 (ig:DfWoA-jsOFR) lists 10 places. What came back:
+
+- 3 full cards (Kusaka Curry Honten, Onigiri Gorichan, wad omotenashi cafe): the three the searches went to.
+- 3 name-only cards (Udon Kyutaro, Wagyu IDATEN, Takoyaki Wanaka) and 3 with a short text but no address (Rikuro's Cheese Cake, Grenier, Gyukatsu Motomura).
+- The 10th place was lost: Claude returned a value the card format does not allow, and the card was discarded with no second attempt.
+- The app added 7 cards. It did not add Grenier and Gyukatsu Motomura, which matched cards already on the list. Onigiri Gorichan was added as a second card ("Namba", address in Minamisenba) next to the existing Shinsekai branch.
+- Known places are only filtered when saving: the lookup writes a card for every place first.
+
+Version 38 (deployed 11 Nov, byte-identical to disk):
+- A card that says nothing beyond its name (no description, nothing to do there, no address) is left out.
+- A card whose answer does not fit the format is asked for once more before it is given up.
+
+Not yet seen on a real lookup: version 38 itself, and how the app's progress view shows a place that was left out (the lookup reports it the same way as a card that failed).

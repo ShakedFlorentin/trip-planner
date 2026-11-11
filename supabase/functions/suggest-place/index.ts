@@ -692,11 +692,26 @@ async function research(
       }) as Promise<{ parsed_output: { places: (Draft & Partial<Plan> & { en?: En })[] } | null }>
     }
     let failure: unknown = null
+    let bare = 0
     const [cards, tags] = await Promise.all([
       Promise.all(
         names.map((name, i) =>
           write(name)
-            .then((r) => r.parsed_output?.places[0] ?? null)
+            // an answer that did not fit the card's format is asked for once more before the card is given up
+            .catch((error) => {
+              if (!(error instanceof Error) || !/parse structured output/i.test(error.message)) throw error
+              console.error('card did not parse, asking again', name)
+              return write(name)
+            })
+            .then((r) => {
+              const card = r.parsed_output?.places[0] ?? null
+              // a place the research never reached comes back as a name alone: that is not a card
+              if (card && !says(card)) {
+                bare++
+                return null
+              }
+              return card
+            })
             .catch((error) => {
               failure ??= error
               console.error('card failed', name, error instanceof Error ? error.message : error)
@@ -714,7 +729,7 @@ async function research(
     // every card failed: report why, as one call failing used to
     if (!cards.some(Boolean)) {
       if (failure) throw failure
-      return { error: 'could not read the research', status: 422 }
+      return bare ? { places: [] } : { error: 'could not read the research', status: 422 }
     }
     // the notes are prose, so take the sources from the search itself: cited pages first, then results
     const cited = research.content.flatMap((b) =>
@@ -762,6 +777,10 @@ async function research(
     return { error: 'lookup failed', status: 500 }
   }
 }
+
+/** Whether a card says anything beyond its name: a description, what to do there, or an address. */
+const says = (c: { hype?: string; reality?: string; serves?: string; todo?: string; special?: string; address?: string }) =>
+  [c.hype, c.reality, c.serves, c.todo, c.special, c.address].some((x) => typeof x === 'string' && x.trim() !== '')
 
 // words that say what kind of place it is, not which one
 const GENERIC = new Set(
