@@ -544,3 +544,29 @@ Reported with a screen recording (11 Nov): on the "is this the place?" sheet, sw
 - Pull-to-close did not start from an input, a select or a note field, and this sheet is mostly fields. It now starts from any field that is not being typed in.
 
 Committed (df2e53d). Type-checks; not tested on a phone or in the preview, because every sheet is behind sign-in. It goes live when the app is next published.
+
+### Is a place already in the database free? (11 Nov)
+
+| How it's added | Already in the database | Cost |
+|---|---|---|
+| Same Instagram/TikTok link again, within 30 days | Saved answer reused | Free |
+| Typed name or Google Maps link | Exactly one researched place or one live library card fits | Free |
+| A new link whose places are already known | Researched again; duplicates are dropped only when saving | Paid |
+
+In the last 30 days 3 lookups were answered free and 18 were paid. The library has 1,642 cards, of which 237 are live and reused; the rest stay private to the trip that added them.
+
+### Tested and not put live (11 Nov)
+
+Both in the test function `lookup-free-test` only; the live lookup stays at version 39.
+
+**Known places checked before researching a new link.** On the 10-place link it found 1 of 10 places known, saved no search (the other 9 still needed the 3), and added a call of about $0.002 to every lookup. Its one match was wrong: the post's Gyukatsu Motomura in Osaka was matched to the Shinjuku (Tokyo) card, because the post did not say where the shop is. Not worth putting live.
+
+**The server reads the Tabelog page itself.** Tabelog's English restaurant pages answer the server (its Japanese pages and search pages refuse it). Findings over 4 rounds on up to 6 links:
+- The page match must require every word of the place's own name in the page title. Looser rules used a closed izakaya and an Italian bar in Umeda for a sushi bar there, and another gyoza shop in Gion for Kyoto Gyoza enen.
+- With the strict match, the last round gave full cards (score, hours, address) on 5 of 5 single-place links, and the page was read on 4.
+- It did not save money: 2 of the 5 used a second search, so the average was $0.021 against about $0.019 live.
+- A same-name shop can still pass: for Coffee Shop Pinocchio it read a page from another Tokyo area (A130202), so the hours may be another shop's.
+
+Not put live: it makes cards more complete but not cheaper, and same-name shops still slip through.
+
+Test runs today cost about $1.40 of Claude credit in total.
