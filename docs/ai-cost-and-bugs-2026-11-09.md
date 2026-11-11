@@ -532,3 +532,15 @@ Version 38 (deployed 11 Nov, byte-identical to disk):
 - A card whose answer does not fit the format is asked for once more before it is given up.
 
 Not yet seen on a real lookup: version 38 itself, and how the app's progress view shows a place that was left out (the lookup reports it the same way as a card that failed).
+
+### Version 39: a card that is not good enough is not added
+
+Rule from the owner (11 Nov): a card that is not good enough is not added. The lookup now adds a card only when it says what the place is (a description, what it serves or what to do there) and where it is (an address or a neighbourhood). On the 10-place link this also leaves out Rikuro's Cheese Cake and Gyukatsu Motomura, which had a line of text but no address or neighbourhood. Deployed as `suggest-place` version 39, byte-identical to disk. Not yet seen on a real lookup.
+
+### Sheets: swiping down scrolled the page behind
+
+Reported with a screen recording (11 Nov): on the "is this the place?" sheet, swiping down scrolled the Discover page behind it. Two causes, both in `src/ui.tsx`:
+- iOS ignores `overflow: hidden` on the body, and a sheet whose content fits has nothing of its own to scroll, so the move passed to the page behind. The sheet now stops a vertical move unless something inside it can scroll that way, also for a finger on the dimmed page above the sheet.
+- Pull-to-close did not start from an input, a select or a note field, and this sheet is mostly fields. It now starts from any field that is not being typed in.
+
+Committed (df2e53d). Type-checks; not tested on a phone or in the preview, because every sheet is behind sign-in. It goes live when the app is next published.

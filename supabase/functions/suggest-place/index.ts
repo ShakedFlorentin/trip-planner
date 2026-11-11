@@ -705,7 +705,7 @@ async function research(
             })
             .then((r) => {
               const card = r.parsed_output?.places[0] ?? null
-              // a place the research never reached comes back as a name alone: that is not a card
+              // a place the research never reached comes back as a name, or a line with no place to go to: not a card
               if (card && !says(card)) {
                 bare++
                 return null
@@ -778,9 +778,14 @@ async function research(
   }
 }
 
-/** Whether a card says anything beyond its name: a description, what to do there, or an address. */
-const says = (c: { hype?: string; reality?: string; serves?: string; todo?: string; special?: string; address?: string }) =>
-  [c.hype, c.reality, c.serves, c.todo, c.special, c.address].some((x) => typeof x === 'string' && x.trim() !== '')
+/**
+ * Whether a card is good enough to add: it says what the place is (a description, what it serves, what to do there)
+ * and where it is (an address or a neighbourhood). A weak card is worse than no card.
+ */
+const says = (c: { hype?: string; reality?: string; serves?: string; todo?: string; special?: string; address?: string; area?: string }) => {
+  const has = (...xs: (string | undefined)[]) => xs.some((x) => typeof x === 'string' && x.trim() !== '')
+  return has(c.hype, c.reality, c.serves, c.todo, c.special) && has(c.address, c.area)
+}
 
 // words that say what kind of place it is, not which one
 const GENERIC = new Set(
