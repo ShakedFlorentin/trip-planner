@@ -67,8 +67,12 @@ export function Sheet(props: {
   useEffect(() => {
     const sheet = ref.current
     const body = sheet?.querySelector<HTMLElement>('.sheet-body')
-    if (!sheet || !body) return
+    const backdrop = sheet?.parentElement
+    if (!sheet || !body || !backdrop) return
     let y0 = 0
+    // where the finger came down, for the page lock below (y0 moves once a pull starts)
+    let fx = 0
+    let fy = 0
     let t0 = 0
     let dy = 0
     let dragging = false
@@ -88,7 +92,11 @@ export function Sheet(props: {
     }
     const start = (y: number, target: EventTarget | null) => {
       const el = target as HTMLElement
-      canDrag = !el.closest('input, textarea, select, .leaflet-container') && (!!el.closest('.sheet-head') || body.scrollTop <= 0)
+      // a field being typed in keeps its own gestures (caret, selection), and a long note scrolls itself; any other
+      // field is as good a place to pull from as the text around it, and some sheets are mostly fields
+      const field = el.closest<HTMLElement>('input, textarea, select')
+      const busy = !!field && (field === document.activeElement || field.scrollHeight > field.clientHeight + 1)
+      canDrag = sheet.contains(el) && !busy && !el.closest('.leaflet-container') && (!!el.closest('.sheet-head') || body.scrollTop <= 0)
       y0 = y
       dy = 0
       dragging = false
@@ -114,9 +122,33 @@ export function Sheet(props: {
       return true
     }
 
-    const ts = (e: TouchEvent) => start(e.touches[0].clientY, e.target)
+    /** Whether something under the finger, inside the sheet, has room to scroll the way the finger is going. */
+    const scrolls = (from: HTMLElement, down: boolean) => {
+      for (let n: HTMLElement | null = from; n && n !== backdrop; n = n.parentElement) {
+        if (n.scrollHeight <= n.clientHeight + 1 || !/auto|scroll/.test(getComputedStyle(n).overflowY)) continue
+        if (down ? n.scrollTop > 0 : n.scrollTop + n.clientHeight < n.scrollHeight - 1) return true
+      }
+      return false
+    }
+    const ts = (e: TouchEvent) => {
+      fx = e.touches[0].clientX
+      fy = e.touches[0].clientY
+      start(fy, e.target)
+    }
     const tm = (e: TouchEvent) => {
-      if (move(e.touches[0].clientY) && e.cancelable) e.preventDefault()
+      const t = e.touches[0]
+      if (move(t.clientY)) {
+        if (e.cancelable) e.preventDefault()
+        return
+      }
+      // The page behind must not scroll. iOS ignores overflow:hidden on the body, and a sheet whose content fits has
+      // nothing of its own to scroll, so a finger moving on it (or on the dimmed page above it) scrolled the page.
+      // A move goes through only when it is sideways (a row of chips, a map) or something in the sheet can scroll.
+      const el = e.target as HTMLElement
+      const dx = t.clientX - fx
+      const dy = t.clientY - fy
+      if (Math.abs(dx) > Math.abs(dy) || el.closest('.leaflet-container')) return
+      if (!scrolls(el, dy > 0) && e.cancelable) e.preventDefault()
     }
     // mouse: only from the header, like a window title bar
     const md = (e: MouseEvent) => {
@@ -131,16 +163,17 @@ export function Sheet(props: {
       window.addEventListener('mousemove', mm)
       window.addEventListener('mouseup', mu)
     }
-    sheet.addEventListener('touchstart', ts, { passive: true })
-    sheet.addEventListener('touchmove', tm, { passive: false })
-    sheet.addEventListener('touchend', release)
-    sheet.addEventListener('touchcancel', release)
+    // on the backdrop, not the sheet: a finger on the dimmed page above the sheet must not scroll the page either
+    backdrop.addEventListener('touchstart', ts, { passive: true })
+    backdrop.addEventListener('touchmove', tm, { passive: false })
+    backdrop.addEventListener('touchend', release)
+    backdrop.addEventListener('touchcancel', release)
     sheet.addEventListener('mousedown', md)
     return () => {
-      sheet.removeEventListener('touchstart', ts)
-      sheet.removeEventListener('touchmove', tm)
-      sheet.removeEventListener('touchend', release)
-      sheet.removeEventListener('touchcancel', release)
+      backdrop.removeEventListener('touchstart', ts)
+      backdrop.removeEventListener('touchmove', tm)
+      backdrop.removeEventListener('touchend', release)
+      backdrop.removeEventListener('touchcancel', release)
       sheet.removeEventListener('mousedown', md)
     }
   }, [])
