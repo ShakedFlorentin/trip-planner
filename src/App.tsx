@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { supabase } from './supabase'
 import { setOutboxUser } from './outbox'
 import { t } from './i18n'
@@ -190,6 +190,61 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [reporting, setReporting] = useState(false)
   // a short message at the bottom ("מעדכנים את המסלול…")
   const [toast, setToast] = useState('')
+  // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
+  const wandRun = useRef<{ stop: () => void } | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(
+    () => () => {
+      wandRun.current?.stop()
+      clearTimeout(toastTimer.current)
+    },
+    [tripId],
+  )
+  const wand = () => {
+    if (wandRun.current) return
+    clearTimeout(toastTimer.current)
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const run = {
+      stop: () => {
+        stopped = true
+        clearTimeout(timer)
+        if (wandRun.current === run) wandRun.current = null
+      },
+    }
+    wandRun.current = run
+    const finish = (msg: string) => {
+      run.stop()
+      setToast(msg)
+      toastTimer.current = setTimeout(() => setToast(''), 2000)
+    }
+    setToast(t('מעדכנים את המסלול, כמה שניות…'))
+    const read = async () => {
+      try {
+        const { data } = await supabase.from('plan_state').select('ran_at, dirty, error').eq('trip_id', tripId).maybeSingle()
+        return data
+      } catch {
+        return null
+      }
+    }
+    void (async () => {
+      // what the row says before the tap, so an old error or run time is not taken for the answer (and no clock skew)
+      const before = await read()
+      if (stopped) return
+      await replan(tripId)
+      const deadline = Date.now() + 30_000
+      const poll = async () => {
+        if (stopped) return
+        const row = await read()
+        if (stopped) return
+        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) return finish(t('המסלול עודכן'))
+        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        timer = setTimeout(poll, 1000)
+      }
+      timer = setTimeout(poll, 1000)
+    })()
+  }
   const [searching, setSearching] = useState(false)
   // a card picked in search, for Discover to open
   const [showCard, setShowCard] = useState<string | null>(null)
@@ -292,10 +347,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
-            onClick={() => {
-              setToast(t('מעדכנים את המסלול, כמה שניות…'))
-              void replan(trip.id).then(() => setTimeout(() => setToast(''), 1200))
-            }}
+            onClick={wand}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
           </button>
