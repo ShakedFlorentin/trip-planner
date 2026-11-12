@@ -31,12 +31,21 @@ const SYSTEM = `You extract travel bookings from confirmation emails, PDFs and s
 Return one entry per separate booking (e.g. an outbound and a return flight are two entries; one hotel stay is one entry).
 - kind: flight, hotel, restaurant (a table reservation), train, activity, insurance or other.
 - title: short and recognisable, e.g. the hotel name, or "El Al LY91 TLV → NRT".
-- starts_at / ends_at: local wall-clock time at the place, formatted YYYY-MM-DDTHH:mm (no timezone). Hotel: check-in and check-out; if only dates are given use 15:00 and 11:00. Restaurant: the reservation time as starts_at, ends_at null. Flight: departure and arrival in their own local times. null when unknown.
+- starts_at / ends_at: local wall-clock time at the place, formatted YYYY-MM-DDTHH:mm (no timezone). Hotel: check-in and check-out; if only dates are given use 15:00 and 11:00. Restaurant: the reservation time as starts_at, ends_at null. Flight: departure and arrival in their own local times. A ticket, pass or activity that is valid on a date with no time (e.g. a one-day park ticket): starts_at is that date at 00:00 (YYYY-MM-DDT00:00), ends_at null. A date that is known must never be left only in the notes. null when unknown.
 - confirmation: the booking/confirmation/PNR number exactly as written.
 - location: full street address (hotel, restaurant) or departure airport/station.
 - url: a link to manage the booking if present.
 - notes: a short Hebrew summary of what matters on the trip: room type or table/course, number of guests, breakfast, cancellation deadline, total price and currency, baggage. Max 3 lines, plain text, no emoji.
 Only use information that is in the document. If it is not a booking, return an empty list.`
+
+/** The trip's first and last date for the prompt: a date written without a year is read in the trip's year. */
+function tripDatesNote(start: string, numDays: number) {
+  const first = new Date(`${start}T00:00:00Z`)
+  if (Number.isNaN(first.getTime()) || !(numDays >= 1)) return ''
+  const last = new Date(first.getTime() + (numDays - 1) * 86_400_000)
+  const ymd = (d: Date) => d.toISOString().slice(0, 10)
+  return `\nThe trip runs from ${ymd(first)} to ${ymd(last)}. A date written without a year takes its year from the trip.`
+}
 
 const MODEL = 'claude-haiku-5-5'
 const MAX_BYTES = 15 * 1024 * 1024
@@ -123,6 +132,19 @@ Deno.serve(async (req) => {
   }
   content.push({ type: 'text', text: text?.trim() ? text : 'Extract the bookings from the attached document.' })
 
+  // the trip's dates tell the model the year of a date written without one; only a member's trip is read, and a failed read adds nothing
+  let datesNote = ''
+  const tid = tripIdOf(body?.trip_id)
+  if (tid) {
+    try {
+      const { count } = await admin.from('members').select('trip_id', { count: 'exact', head: true }).eq('trip_id', tid).eq('user_id', userId)
+      if (count) {
+        const { data: trip } = await admin.from('trips').select('start_date,num_days').eq('id', tid).maybeSingle<{ start_date: string | null; num_days: number }>()
+        if (trip?.start_date) datesNote = tripDatesNote(trip.start_date, trip.num_days)
+      }
+    } catch { /* no dates: the prompt stays as it was */ }
+  }
+
   const t = performance.now()
   try {
     // inside the try: if the key lookup throws, the hold is refunded below
@@ -132,7 +154,7 @@ Deno.serve(async (req) => {
       // thinking counts toward this: a long confirmation with several bookings must not be cut off mid-answer
       max_tokens: 8000,
       output_config: { effort: 'low', format: zodOutputFormat(BookingList) },
-      system: SYSTEM,
+      system: SYSTEM + datesNote,
       messages: [{ role: 'user', content }],
     })
     logCall(admin, { fn: 'parse-booking', step, userId, model: MODEL, usage: response.usage, ms: performance.now() - t, stopReason: response.stop_reason })
