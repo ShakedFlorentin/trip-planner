@@ -175,3 +175,162 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
     return null
   }
 }
+
+// ---- the re-check: a card whose facts are older than six months, when its place is matched into a trip ----
+// Only what ages is asked for: is the place still in business, its opening hours and its weekly closing days. One
+// call; a card that knows its own Tabelog page reads that page (no fee) instead of searching, any other card gets
+// one search. Nothing else on the card is written again.
+
+/** What the re-check found; a null field was not found and the card keeps what it has. */
+export type Recheck = {
+  status: 'open' | 'closed' | 'unknown'
+  opens: string | null
+  closes: string | null
+  closed_weekdays: number[] | null
+  searches: number
+}
+export type RecheckInfo = PlaceInfo & {
+  address?: string | null
+  sources?: string[] | null
+  opens?: string | null
+  closes?: string | null
+  closed_weekdays?: number[] | null
+}
+
+// The card's own hours go in with the question and stay unless what is found clearly says otherwise: on cards two
+// weeks old, asking with no card to compare against changed the hours or closing days of 5 of the 9 that were
+// searched, and gave a street opening hours. With the card in the question, 2 of the same 9 changed.
+const ENDING = `The message says what the card has now. That was researched with more care than this check: keep it ("same") unless what you read clearly states different regular hours or closing days for this very place, at this branch. One store inside a complex, holiday or seasonal hours, last-order times and a page that does not mention the hours are not a reason to change anything.
+Report nothing else. End your answer with exactly these three lines and nothing after them:
+STATUS: open | closed_for_good | unknown
+HOURS: same | HH:MM-HH:MM
+CLOSED_DAYS: same | none | weekday numbers separated by commas, 0 = Sunday ... 6 = Saturday
+STATUS is closed_for_good only when a source says the place has permanently closed; "unknown" when you could not tell that it is still in business.
+HOURS is the first opening and the last closing of a regular day in 24h time (lunch 11:30-14:00 and dinner 17:00-22:00 is 11:30-22:00; a bar open until 2 am is 18:00-02:00). Never guess: anything not clearly stated is "same".`
+
+const RECHECK_SEARCH = `You re-check one place in Japan whose card was written months ago. Find only this, as it is today:
+- whether the place is still in business or has closed for good (permanently closed, 閉店)
+- its regular opening time and closing time
+- its weekly closing days
+Each search costs money: run exactly one search (the place's name as given, its area, and "opening hours"), and answer from its results. Never search a second time.
+${ENDING}`
+
+const RECHECK_PAGE = `You re-check one restaurant, cafe or bar in Japan whose card was written months ago. Find only this, as it is today:
+- whether the place is still in business or has closed for good (permanently closed, 閉店)
+- its regular opening time and closing time
+- its weekly closing days
+The message gives the place's own Tabelog page. Read that page with web_fetch, the address exactly as written. Fetching it costs nothing. It is the right page only when its name and area match the place.
+Each search costs money: search (once, the place's name as given, its area, and "opening hours") only if the page could not be read, is another place's, or does not say the hours.
+${ENDING}`
+
+/**
+ * The card's own Tabelog page, if its sources name one restaurant page more than any other: the English page of that
+ * restaurant, whatever sub-page or host (ssl., o., s.) the source was.
+ */
+export function tabelogPage(sources: string[] | null | undefined) {
+  const seen = new Map<string, number>()
+  for (const s of sources ?? []) {
+    const m = typeof s === 'string' && s.match(/^https:\/\/(?:[a-z]+\.)?tabelog\.com\/(?:en\/)?([a-z]+\/A\d{4}\/A\d{6}\/\d{6,10})(?:\/|$)/)
+    if (m) seen.set(m[1], (seen.get(m[1]) ?? 0) + 1)
+  }
+  const ranked = [...seen.entries()].sort((a, b) => b[1] - a[1])
+  // two restaurants named equally often: no telling which is the card's
+  if (!ranked.length || (ranked[1] && ranked[1][1] === ranked[0][1])) return null
+  return `https://tabelog.com/en/${ranked[0][0]}/`
+}
+
+/** Reads the three closing lines of a re-check answer; null when they are not there. */
+export function readRecheck(text: string): Omit<Recheck, 'searches'> | null {
+  // the last such line: an answer that repeats the format first, then gives its own lines, is read by its own
+  const line = (label: string) => [...text.matchAll(new RegExp(`^\\s*\\**${label}\\**\\s*:\\s*\\**\\s*(.+?)\\s*\\**\\s*$`, 'gim'))].pop()?.[1]?.toLowerCase() ?? null
+  const status = line('STATUS')
+  const hours = line('HOURS')
+  const days = line('CLOSED_DAYS')
+  if (!status || !hours || !days) return null
+  const time = (s: string) => {
+    const m = s.match(/^(\d{1,2}):(\d{2})$/)
+    if (!m || +m[1] > 29 || +m[2] > 59) return null
+    return `${String(+m[1] % 24).padStart(2, '0')}:${m[2]}`
+  }
+  const span = hours.match(/^(\d{1,2}:\d{2})\s*[-–~]\s*(\d{1,2}:\d{2})$/)
+  const opens = span ? time(span[1]) : null
+  const closes = span ? time(span[2]) : null
+  // 00:00-00:00 and the like is "always open" written as hours: not hours
+  const real = opens && closes && opens !== closes
+  let closed_weekdays = /^none\b/.test(days)
+    ? []
+    : /^[0-6](\s*,\s*[0-6])*$/.test(days)
+      ? [...new Set(days.split(',').map((d) => +d.trim()))].sort()
+      : null
+  // closed on all seven days is not a weekly closing day: a place closed for good is STATUS closed_for_good, not this
+  if (closed_weekdays?.length === 7) closed_weekdays = null
+  return {
+    status: /^closed/.test(status) ? 'closed' : /^open/.test(status) ? 'open' : 'unknown',
+    opens: real ? opens : null,
+    closes: real ? closes : null,
+    closed_weekdays,
+  }
+}
+
+/** Re-checks a place's hours; null when the call failed or was refused (nothing is changed then). An answer that could not be read is "unknown" with nothing found: the check ran and was paid for. */
+export async function recheck(admin: SupabaseClient, client: Anthropic, p: RecheckInfo): Promise<Recheck | null> {
+  const page = tabelogPage(p.sources)
+  const known = [
+    `Place: ${p.name}${p.name_ja ? ` (${p.name_ja})` : ''}`,
+    p.area || p.city ? `Where: ${[p.area, p.city].filter(Boolean).join(', ')}` : '',
+    p.address ? `Address on the card: ${p.address}` : '',
+    p.category ? `Kind: ${p.category}` : '',
+    `The card's hours now: ${p.opens && p.closes ? `${p.opens}-${p.closes}` : 'none on the card'}`,
+    `The card's weekly closing days now: ${p.closed_weekdays?.length ? p.closed_weekdays.join(', ') : 'none'}`,
+    page ? `Its Tabelog page: ${page}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const step = page ? 'recheck-page' : 'recheck-search'
+  let t = performance.now()
+  try {
+    const messages: Anthropic.MessageParam[] = [{ role: 'user', content: known }]
+    let answer: Anthropic.Message | null = null
+    let searches = 0
+    let fetches = 0
+    for (let i = 0; i < 3; i++) {
+      t = performance.now()
+      answer = await client.messages.create({
+        model: MODEL,
+        // thinking counts toward this
+        max_tokens: 2000,
+        output_config: { effort: 'low' },
+        system: page ? RECHECK_PAGE : RECHECK_SEARCH,
+        tools: [
+          // declared in every round, as the rounds that continue a paused one still hold its search results; one
+          // search is allowed in each, and the prompt says to search once
+          { type: 'web_search_20250305' as const, name: 'web_search' as const, max_uses: 1 },
+          // Tabelog only: the address comes from the card's sources, which a post's text once chose. The hours sit
+          // far down a Tabelog page: at 8,000 tokens two of three pages were cut off before them
+          ...(page && !fetches
+            ? [{ type: 'web_fetch_20250910' as const, name: 'web_fetch' as const, max_uses: 1, max_content_tokens: 16000, allowed_domains: ['tabelog.com'] }]
+            : []),
+        ],
+        messages,
+      })
+      logCall(admin, { fn: 'card-facts', step, userId: null, model: MODEL, usage: answer.usage, ms: performance.now() - t, stopReason: answer.stop_reason })
+      const used = answer.usage.server_tool_use as { web_search_requests?: number | null; web_fetch_requests?: number | null } | null | undefined
+      searches += used?.web_search_requests ?? 0
+      fetches += used?.web_fetch_requests ?? 0
+      if (answer.stop_reason !== 'pause_turn') break
+      messages.push({ role: 'assistant', content: answer.content })
+    }
+    if (!answer || answer.stop_reason === 'refusal') return null
+    const text = answer.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+    const read = readRecheck(text)
+    if (!read) console.error('re-check answer not readable', p.name, text.slice(-300))
+    return { ...(read ?? { status: 'unknown' as const, opens: null, closes: null, closed_weekdays: null }), searches }
+  } catch (error) {
+    console.error('re-check failed', p.name, error instanceof Error ? error.message : error)
+    logCall(admin, { fn: 'card-facts', step, userId: null, model: MODEL, ms: performance.now() - t, error: String(error instanceof Error ? error.message : error) })
+    return null
+  }
+}

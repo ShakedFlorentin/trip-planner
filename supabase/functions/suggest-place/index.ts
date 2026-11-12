@@ -334,8 +334,9 @@ async function unshorten(u: URL) {
     return u
   }
 }
-// a saved answer is good for a month; places don't move, but scores and hours do
-const CACHE_DAYS = 30
+// A saved answer never expires: the same link always names the same places, and what a card says about a place does
+// not age. Only its opening hours can (or the place closes): every card carries the day those were checked
+// (facts_at), and card-facts re-checks them when a card older than six months is matched into a trip.
 // how long a lookup may still be searching; past this a row left on "running" is one whose search died
 const RUNNING_MS = 10 * 60 * 1000
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -457,22 +458,28 @@ Deno.serve(async (req) => {
   }
 
   if (key) {
-    const since = new Date(Date.now() - CACHE_DAYS * 24 * 60 * 60 * 1000).toISOString()
-    const { data: hit } = await admin
+    // the newest few: an empty newest answer must not hide an older good one for good
+    const { data: hits } = await admin
       .from('place_lookups')
       .select('places')
       .eq('lookup_key', key)
       .eq('status', 'done')
-      .gte('finished_at', since)
       .order('finished_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .limit(5)
+    // a saved card that would not be added today (no description, or no address or neighbourhood) is not served
+    let saved: unknown[] | null = null
+    for (const h of hits ?? []) {
+      const cards = Array.isArray(h.places) ? (h.places as Parameters<typeof says>[0][]).filter((c) => c && says(c)) : []
+      if (cards.length) {
+        saved = cards
+        break
+      }
+    }
     // a name (typed, or a Maps link's) may be a place researched already for another lookup, a roundup's among them
-    const saved = hit?.places as unknown[] | null
     const places = saved?.length
       ? saved
       : key.startsWith('q:')
-        ? ((await knownPlace(admin, key.slice(2), since)) ?? (await libraryPlace(admin, key.slice(2))))
+        ? ((await knownPlace(admin, key.slice(2))) ?? (await libraryPlace(admin, key.slice(2))))
         : null
     if (places?.length) {
       console.log('cached', key, places.length)
@@ -801,15 +808,15 @@ const CITIES = ['tokyo', 'kyoto', 'osaka', 'nara']
  * tells it apart is in the card's name (one word alone only when it is the whole name, so "starbucks" doesn't pick a
  * branch), in the city named if one is, and only one place fits. Null otherwise, and the name is searched.
  */
-async function knownPlace(admin: SupabaseClient, name: string, since: string) {
+async function knownPlace(admin: SupabaseClient, name: string) {
   const want = [...new Set(distinctive(name))]
   if (!want.length) return null
   const city = CITIES.find((c) => name.toLowerCase().split(/[^a-z]+/).includes(c))
+  // the newest 300 lookups, of any age
   const { data } = await admin
     .from('place_lookups')
     .select('places')
     .eq('status', 'done')
-    .gte('finished_at', since)
     .order('finished_at', { ascending: false })
     .limit(300)
   const found = new Map<string, unknown>()
