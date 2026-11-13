@@ -45,7 +45,7 @@ const ASAKUSA = [pl('sensoji', 'tokyo', 35.7148, 139.7967), pl('ueno', 'tokyo', 
 const cases = {
   'every area has a centre and a station, and the app and the planner read one table'() {
     for (const [city, list] of Object.entries(A.AREAS)) for (const a of list) {
-      ok(typeof a.lat === 'number' && typeof a.lng === 'number' && a.lat > 30 && a.lat < 37 && a.lng > 129 && a.lng < 141, `${city}/${a.key}: centre ${a.lat},${a.lng} not in Japan`)
+      ok(typeof a.lat === 'number' && typeof a.lng === 'number' && a.lat > 24 && a.lat < 46 && a.lng > 122 && a.lng < 146, `${city}/${a.key}: centre ${a.lat},${a.lng} not in Japan`)
       ok(!!a.station && !!a.search, `${city}/${a.key}: no station or search`)
       // a place the table files under an area sits near that area's centre (catches a swapped or mistyped coordinate)
     }
