@@ -63,6 +63,16 @@ const CITIES: Opt<Answers['cities'][number]>[] = [
   { id: 'kyoto', label: t('קיוטו') },
   { id: 'osaka', label: t('אוסקה') },
   { id: 'nara', label: t('נארה') },
+  { id: 'hakone', label: t('הקונה') },
+  { id: 'nikko', label: t('ניקו') },
+  { id: 'kobe', label: t('קובה') },
+  { id: 'nagoya', label: t('נגויה') },
+  { id: 'kanazawa', label: t('קנאזאווה') },
+  { id: 'takayama', label: t('טקאיאמה') },
+  { id: 'hiroshima', label: t('הירושימה') },
+  { id: 'fukuoka', label: t('פוקואוקה') },
+  { id: 'sapporo', label: t('סאפורו') },
+  { id: 'okinawa', label: t('אוקינאווה') },
   { id: 'daytrip', label: t('טיולי יום מחוץ לערים') },
 ]
 const KINDS: Opt<InterestKind>[] = [

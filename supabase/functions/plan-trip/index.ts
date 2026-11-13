@@ -25,9 +25,26 @@ const BASE_POINT: Record<string, Point> = {
   kyoto: { lat: 35.003, lng: 135.759 },
   osaka: { lat: 34.686, lng: 135.502 },
   nara: { lat: 34.685, lng: 135.805 },
+  hakone: { lat: 35.233, lng: 139.105 },
+  nikko: { lat: 36.75, lng: 139.6 },
+  kobe: { lat: 34.69, lng: 135.196 },
+  hiroshima: { lat: 34.397, lng: 132.475 },
+  kanazawa: { lat: 36.578, lng: 136.648 },
+  takayama: { lat: 36.141, lng: 137.252 },
+  fukuoka: { lat: 33.59, lng: 130.421 },
+  nagoya: { lat: 35.171, lng: 136.882 },
+  sapporo: { lat: 43.069, lng: 141.351 },
+  okinawa: { lat: 26.212, lng: 127.681 },
 }
-const CITY_EN: Record<string, string> = { tokyo: 'Tokyo', kyoto: 'Kyoto', osaka: 'Osaka', nara: 'Nara', yokohama: 'Yokohama' }
-const CITY_HE: Record<string, string> = { tokyo: 'טוקיו', yokohama: 'יוקוהמה', kyoto: 'קיוטו', osaka: 'אוסקה', nara: 'נארה' }
+const CITY_EN: Record<string, string> = {
+  tokyo: 'Tokyo', kyoto: 'Kyoto', osaka: 'Osaka', nara: 'Nara', yokohama: 'Yokohama', hakone: 'Hakone', nikko: 'Nikko', kobe: 'Kobe',
+  hiroshima: 'Hiroshima', kanazawa: 'Kanazawa', takayama: 'Takayama', fukuoka: 'Fukuoka', nagoya: 'Nagoya', sapporo: 'Sapporo', okinawa: 'Okinawa',
+}
+const CITY_HE: Record<string, string> = {
+  tokyo: 'טוקיו', yokohama: 'יוקוהמה', kyoto: 'קיוטו', osaka: 'אוסקה', nara: 'נארה', hakone: 'הקונה', nikko: 'ניקו', kobe: 'קובה', // he-only
+  hiroshima: 'הירושימה', kanazawa: 'קנאזאווה', takayama: 'טקאיאמה', fukuoka: 'פוקואוקה', nagoya: 'נגויה', sapporo: 'סאפורו', // he-only
+  okinawa: 'אוקינאווה', // he-only
+}
 
 /** The city a hotel is in, from its name and address (same rules as hotel_base in the database). */
 function hotelBase(t: string) {
@@ -35,6 +52,16 @@ function hotelBase(t: string) {
   if (/kyoto/i.test(t)) return 'kyoto'
   if (/yokohama|kanagawa/i.test(t)) return 'yokohama'
   if (/\bnara\b/i.test(t)) return 'nara'
+  if (/hakone/i.test(t)) return 'hakone'
+  if (/nikko/i.test(t)) return 'nikko'
+  if (/kobe|himeji/i.test(t)) return 'kobe'
+  if (/hiroshima|miyajima|hatsukaichi/i.test(t)) return 'hiroshima'
+  if (/kanazawa|ishikawa/i.test(t)) return 'kanazawa'
+  if (/takayama|shirakawa/i.test(t)) return 'takayama'
+  if (/fukuoka|hakata|tenjin/i.test(t)) return 'fukuoka'
+  if (/nagoya|aichi/i.test(t)) return 'nagoya'
+  if (/sapporo|hokkaido/i.test(t)) return 'sapporo'
+  if (/okinawa|naha/i.test(t)) return 'okinawa'
   if (/tokyo|shinjuku|minato|shibuya|chiyoda|taito|shimbashi|ginza|ikebukuro|asakusa|ueno/i.test(t)) return 'tokyo'
   return null
 }

@@ -44,7 +44,11 @@ type Found = { url: string; from: string }
 type Image = Found & { bytes: Uint8Array; type: string; w: number; h: number }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const CITY = { tokyo: 'Tokyo', kyoto: 'Kyoto', osaka: 'Osaka', nara: 'Nara', daytrip: 'Japan' } as Record<string, string>
+const CITY = {
+  tokyo: 'Tokyo', kyoto: 'Kyoto', osaka: 'Osaka', nara: 'Nara', yokohama: 'Yokohama', hakone: 'Hakone', nikko: 'Nikko', kobe: 'Kobe',
+  hiroshima: 'Hiroshima', kanazawa: 'Kanazawa', takayama: 'Takayama', fukuoka: 'Fukuoka', nagoya: 'Nagoya', sapporo: 'Sapporo',
+  okinawa: 'Okinawa', daytrip: 'Japan',
+} as Record<string, string>
 const edge = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime
 
 Deno.serve(async (req) => {

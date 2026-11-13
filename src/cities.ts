@@ -11,7 +11,17 @@ const SLUGS: [RegExp, string][] = [
   [/kyoto|קיוטו/i, 'kyoto'], // he-only
   [/osaka|או?סקה|אוסאקה/i, 'osaka'], // he-only
   [/nara|נארה/i, 'nara'], // he-only
-  [/daytrip|טיולי יום|פוג׳?י|הקונה|קוואגוצ׳?יקו|hakone|fuji/i, 'fuji'], // he-only
+  [/hakone|הקונה/i, 'hakone'], // he-only
+  [/nikko|ניקו/i, 'nikko'], // he-only
+  [/kobe|קובה|himeji|הימג׳?י/i, 'kobe'], // he-only
+  [/hiroshima|הירושימה|miyajima|מיאג׳?ימה/i, 'hiroshima'], // he-only
+  [/kanazawa|קנאזאווה/i, 'kanazawa'], // he-only
+  [/takayama|טקאיאמה|shirakawa|שירקאווה/i, 'takayama'], // he-only
+  [/fukuoka|פוקואוקה|hakata|הקאטה/i, 'fukuoka'], // he-only
+  [/nagoya|נגויה/i, 'nagoya'], // he-only
+  [/sapporo|סאפורו|hokkaido|הוקאידו/i, 'sapporo'], // he-only
+  [/okinawa|אוקינאווה|naha|נאהה/i, 'okinawa'], // he-only
+  [/daytrip|טיולי יום|פוג׳?י|קוואגוצ׳?יקו|fuji/i, 'fuji'], // he-only
 ]
 
 export function citySlug(name: string | null | undefined) {

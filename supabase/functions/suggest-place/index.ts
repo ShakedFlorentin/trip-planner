@@ -23,7 +23,7 @@ const ALL_USERS_LIMIT = 300
 const PlaceDraft = z.object({
   name: z.string(),
   name_ja: z.string(),
-  city: z.enum(['tokyo', 'kyoto', 'osaka', 'nara', 'daytrip']),
+  city: z.enum(['tokyo', 'kyoto', 'osaka', 'nara', 'hakone', 'nikko', 'kobe', 'hiroshima', 'kanazawa', 'takayama', 'fukuoka', 'nagoya', 'sapporo', 'okinawa', 'daytrip']),
   area: z.string(),
   category: z.enum(['food', 'sight', 'shopping', 'nightlife', 'cafe', 'experience']),
   lat: z.number().nullable(),
@@ -148,7 +148,7 @@ Write the notes as plain facts (what, where, when, how much), not as what blogs,
 Be concise. If you can't identify any specific place, say so.`
 
 const EXTRACT = `Turn the research notes into place cards, one per real place the notes identified, in the order the post lists them (at most 10). Return an empty list if no specific real place was identified. Rules for each card:
-- city: tokyo, kyoto, osaka, nara, or daytrip for anywhere else.
+- city: tokyo, kyoto, osaka, nara, hakone, nikko, kobe (also Himeji), hiroshima (also Miyajima), kanazawa, takayama (also Shirakawa-go), fukuoka, nagoya, sapporo, okinawa, or daytrip for anywhere else.
 - hype, reality, tip, baby_notes, price: one short sentence each in natural, casual Hebrew; keep place names, brand names (Tabelog, Google) and numbers as they are.
 - serves: for a restaurant, cafe or bar, one or two short Hebrew sentences on what it serves, explaining Japanese dish names in plain words (e.g. "אוקונומיאקי (פנקייק כרוב על הפלנצ׳ה)"); "" for other places. dishes: 2-4 signature items as short Hebrew labels, or [].
 - todo / special / highlights / time_needed: for sights, experiences and shopping ("" / [] for restaurants, cafes and bars). todo: 2-3 Hebrew sentences on what you actually do there, as a visit plays out. special: 1-2 Hebrew sentences on what sets it apart, specific rather than generic praise. highlights: 2-4 short Hebrew labels of what not to miss. time_needed: e.g. "שעה-שעתיים" or "חצי יום".
@@ -796,13 +796,13 @@ const says = (c: { hype?: string; reality?: string; serves?: string; todo?: stri
 
 // words that say what kind of place it is, not which one
 const GENERIC = new Set(
-  'the and main store shop branch honten restaurant cafe coffee bar izakaya yakiniku ramen sushi tempura temple shrine street market tokyo kyoto osaka nara kobe japan'.split(' '),
+  'the and main store shop branch honten restaurant cafe coffee bar izakaya yakiniku ramen sushi tempura temple shrine street market tokyo kyoto osaka nara kobe hakone nikko hiroshima kanazawa takayama fukuoka nagoya sapporo okinawa japan'.split(' '),
 )
 /** The words of a name that tell this place from others. */
 const distinctive = (s: string) =>
   s.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, ' ').split(' ').filter((w) => w.length > 2 && !GENERIC.has(w))
 
-const CITIES = ['tokyo', 'kyoto', 'osaka', 'nara']
+const CITIES = ['tokyo', 'kyoto', 'osaka', 'nara', 'hakone', 'nikko', 'kobe', 'hiroshima', 'kanazawa', 'takayama', 'fukuoka', 'nagoya', 'sapporo', 'okinawa']
 /**
  * The card of a place some earlier lookup already researched, when the name asked for is that place's: every word that
  * tells it apart is in the card's name (one word alone only when it is the whole name, so "starbucks" doesn't pick a
