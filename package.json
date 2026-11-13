@@ -10,7 +10,8 @@
     "test:plan": "node scripts/plan-test.mjs",
     "test:split": "node scripts/split-test.mjs",
     "test:stay": "node scripts/stay-test.mjs",
-    "test:recheck": "node scripts/recheck-test.mjs"
+    "test:recheck": "node scripts/recheck-test.mjs",
+    "test:rating": "node scripts/rating-test.mjs"
   },
   "dependencies": {
     "@capacitor/app-launcher": "^8.0.1",
