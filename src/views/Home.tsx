@@ -16,6 +16,8 @@ import {
   Wallet,
 } from 'lucide-react'
 import { supabase } from '../supabase'
+import QuickFab from './QuickFab'
+import { requestAdd } from '../quickAdd'
 import {
   BOOKING_KINDS,
   BOOKING_TABS,
@@ -283,6 +285,8 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
         <InviteFriend trip={trip} />
       </section>
 
+      {/* a tap adds a place (as on Places); press and drag for the wheel: expense, list item or booking */}
+      <QuickFab label={t('הוספת מקום')} onTap={() => requestAdd('place')} />
     </div>
   )
 }
