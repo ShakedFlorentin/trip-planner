@@ -33,6 +33,12 @@ export type SplitAlt = {
     coveredPlaces: number
     totalPlaces: number
     dayTrips: { city: string; from: string; places: number }[]
+    /** the split leans on what each city is usually worth, not yet on what the group liked (few or no liked places) */
+    typical?: boolean
+    /** cities in the split that nobody picked or liked */
+    added?: string[]
+    /** cities in the split that are out of season on the trip's dates */
+    offSeason?: string[]
   }
 }
 

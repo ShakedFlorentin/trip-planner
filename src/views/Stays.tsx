@@ -199,6 +199,12 @@ function StayRecCard({ rec, cities, people }: { rec: StayAreaRec; cities: City[]
 function reasonText(r: SplitAlt['reason']) {
   const places = t('{n} מתוך {total} המקומות שאהבתם', { n: r.coveredPlaces, total: r.totalPlaces })
   const moves = r.moves === 0 ? t('בלי החלפת מלון') : r.moves === 1 ? t('החלפת מלון אחת') : t('{n} החלפות מלון', { n: r.moves })
+  // nothing liked yet: the split comes from what each city is usually worth, so there are no places to count
+  if (!r.totalPlaces) {
+    if (r.kind === 'fewer_moves') return t('הכי פחות החלפות מלון: {moves}.', { moves })
+    if (r.kind === 'more_places') return t('יותר ערים באותו טיול: {moves}.', { moves })
+    return t('חלוקה מקובלת לטיול באורך הזה: {moves}.', { moves })
+  }
   if (r.kind === 'fewer_moves') return t('הכי פחות החלפות מלון: {moves}. {places}.', { moves, places })
   if (r.kind === 'more_places') return t('מכסה הכי הרבה ממה שאהבתם: {places}. {moves}.', { moves, places })
   return t('איזון בין מקומות להחלפות: {places}. {moves}.', { moves, places })
@@ -251,6 +257,12 @@ function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays:
               </div>
             ))}
             <div className="small muted">{reasonText(a.reason)}</div>
+            {!!a.reason.added?.length && (
+              <div className="small muted">{t('כולל את {cities}, שלא בחרתם.', { cities: a.reason.added.map((c) => cityName(c, cities)).join(', ') })}</div>
+            )}
+            {!!a.reason.offSeason?.length && (
+              <div className="small muted">{t('{cities}: פחות מומלץ בעונה הזו.', { cities: a.reason.offSeason.map((c) => cityName(c, cities)).join(', ') })}</div>
+            )}
             {a.reason.dayTrips.map((d) => (
               <div key={d.city} className="small muted">
                 {t('טיול יום ל{city} מ{from}: {n} מקומות', { city: cityName(d.city, cities), from: cityName(d.from, cities), n: d.places })}
@@ -261,6 +273,9 @@ function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays:
             </button>
           </div>
         ))}
+      {Array.isArray(alts) && alts.some((a) => a.reason.typical) && (
+        <div className="small muted">{t('ההצעה מתבססת על מה שמקובל בכל עיר. ככל שתאהבו עוד מקומות בגילוי, היא תתאים לכם יותר.')}</div>
+      )}
       {Array.isArray(alts) && alts.length > 0 && <div className="small muted">{t('נשמר כהצעה בלבד, רק בלילות הפנויים. לינות מאושרות ונעולות לא משתנות.')}</div>}
     </Sheet>
   )

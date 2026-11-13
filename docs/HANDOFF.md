@@ -3,6 +3,26 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Night split: starting values, seasons, route rules (2026-11-13, built, NOT deployed)
+- `supabase/functions/plan-trip/split.ts` ("Suggest a split") now works on a trip with only flights. A night in a city
+  is worth the places liked there plus a starting value per city (`route-data.ts`: least and ideal nights, more Tokyo
+  on a first visit, a season level per month) that fades as the group likes places (half at 15 liked places).
+- Route rules are hard, not costs (`rules()`): one direction along the line kanto → chubu → kansai → chugoku → kyushu
+  with each region once (the last stop may be the departure airport's region); a chosen base lasts 2 nights, 1 after a
+  ride of up to 100 minutes, 3 on an island; an island is the first or last stop (at most 2 nights by the departure
+  airport after it) next to a city near an airport; about one base per 3 nights; a far, unpicked or off-classic city
+  only once the nearer chosen ones have their minimum. Booked and typed stays are never judged.
+- Only "more places" may add a city off the classic line (`reason.added`); the classic three join any split whose picked
+  cities don't fill the trip. `reason.offSeason` and `reason.typical` feed three new lines in the split sheet.
+- Inputs added in `index.ts`: the members' questionnaire cities (`answers.cities`), `answers.been_to_japan` (not asked
+  yet: everyone counts as a first visit), late landing (18:00 or later) and morning flight (before 13:00) from the
+  flight times, airports for Nagoya, Sapporo, Fukuoka, Okinawa, Kobe, Hiroshima, Kanazawa.
+- Tests: `npm run test:split` (the old cases, 9 route cases, and 2,000 random trips checked by rules written a second
+  time in the test; about 40 s). Slowest trip 0.3 s, average 20 ms.
+- To go live: deploy `plan-trip`, then run `supabase/sql/2026-11-13-city-route.sql` (adds the route columns to `cities`
+  and fills them; until then the values in `route-data.ts` are used, so the order doesn't matter).
+- Next: the "been to Japan?" question, nights per city as a rule with a + / − screen, a starting card on the Plan tab.
+
 ## Reviews and plan sharing (2026-11-02, built, SQL not applied)
 - `supabase/sql/2026-11-02-reviews-sharing.sql` must be run by hand first: places.visited_at (trigger), place_ratings.answers,
   table shared_plans (members only) and rpc get_shared_plan(slug) for anon. The app works without it (visited_at is sent only
