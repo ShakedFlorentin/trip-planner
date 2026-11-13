@@ -5,6 +5,7 @@ import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type 
 import { cityLabel, couplesOf, keepRanges, mutate, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
+import { askForRating } from '../rating'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
 import { EmptyState, Sheet } from '../ui'
@@ -73,7 +74,11 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const [city, setCity] = useState('')
   const [aud, setAud] = useState('')
   const [match, setMatch] = useState<Match | null>(null)
-  const closeMatch = useCallback(() => setMatch(null), [])
+  // a match is a happy moment: once its pop-up is closed, the app may ask for a rating (src/rating.ts decides)
+  const closeMatch = useCallback(() => {
+    setMatch(null)
+    askForRating()
+  }, [])
   const [history, setHistory] = useState<string[]>([])
   const knownMatches = useRef<Set<string> | null>(null)
   // who each card is for (the couples sleeping near it) and which of them said yes: the database's own rules

@@ -35,9 +35,10 @@ public class ShareInboxPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
-/// The app's web view, with Toogo's own plugin added to the ones Capacitor finds by itself.
+/// The app's web view, with Toogo's own plugins (share inbox, rating prompt) added to the ones Capacitor finds by itself.
 class ToogoBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(ShareInboxPlugin())
+        bridge?.registerPluginInstance(AppReviewPlugin())
     }
 }

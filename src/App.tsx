@@ -22,6 +22,7 @@ import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
 import { Loading } from './rings'
 import { useQuickAddRoute } from './quickAdd'
+import { askForRating } from './rating'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
@@ -238,7 +239,11 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         const row = await read()
         if (stopped) return
         if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
-        if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) return finish(t('המסלול עודכן'))
+        if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
+          finish(t('המסלול עודכן'))
+          // a finished plan is a good moment: after the message, the app may ask for a rating (src/rating.ts)
+          return askForRating(2400)
+        }
         if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
         timer = setTimeout(poll, 1000)
       }
