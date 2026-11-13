@@ -29,7 +29,7 @@ export function privacyPage(lang) {
 
 <h2>What we keep</h2>
 <ul>
-<li><b>Your account:</b> your email address and the name you show to your group. A password is kept only as a one-way hash: nobody can read it. If you sign in with Google, Google also passes us the name and profile photo on your Google account.</li>
+<li><b>Your account:</b> your email address and the name you show to your group. A password is kept only as a one-way hash: nobody can read it. If you sign in with Google, Google also passes us your Google account ID and the name and profile photo on it.</li>
 <li><b>The questionnaire:</b> who you travel with (including whether a baby is coming), which cities, what interests you, what you don't eat, your budget for a meal, your pace, and whether you've been to Japan.</li>
 <li><b>The trip:</b> the places you added, what you liked and rated, the plan, the hotels, the bookings (flights, hotels and so on) and the documents you attach to them, the expenses and the packing lists. Booking documents can include passport or ticket numbers: they are stored privately, for your trip's members only.</li>
 <li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo. We save every photo as a new image file, which drops the location data phones add to photos.</li>
@@ -43,6 +43,7 @@ export function privacyPage(lang) {
 
 <h2>Why we use it, and whether you must give it</h2>
 <p>Only to run Toogo for you: to choose your cards and build the plan, to let your group plan together, to keep the app working offline, to fix problems and to improve the app. No law requires you to give us any of it. Without an account or the questionnaire some things won't work, such as saving a trip or a plan that fits you.</p>
+<p>For visitors from the EU, the legal grounds are: providing the service you asked for (your account and trips); your choice (signing in with Google, photos you send); our legitimate interest in keeping the app working and improving it (problem reports, and usage counting, which you can turn off); and legal duties.</p>
 
 <h2>What we don't do</h2>
 <ul>
@@ -52,6 +53,15 @@ export function privacyPage(lang) {
 <li>We don't use your content to train AI models.</li>
 <li>We don't send marketing emails unless you choose to get them.</li>
 </ul>
+
+<h2>Cookies</h2>
+<p>Toogo doesn't use cookies. The app keeps your sign-in, your settings, the offline copy of your trip and the random device code in your browser's own storage on your device. Clearing this site's data in your browser removes them.</p>
+
+<h2>Who at Toogo looks at your information</h2>
+<p>Nobody reads your trips, bookings or documents as a matter of routine. We look only when you ask us to (for example, the part of your trip a problem report is about), to investigate a security problem or abuse, or when the law requires it. Photos you send for a place are checked by us before anyone else sees them.</p>
+
+<h2>Keeping it safe</h2>
+<p>Everything travels encrypted (HTTPS) and is stored encrypted by our database provider. Database rules let only a trip's members read that trip. If a breach puts your information at risk, we will tell you, and report it to the Privacy Protection Authority as the law requires.</p>
 
 <h2>Who sees your trip</h2>
 <p>Only the trip's members: whoever started it and whoever they invited. Members see what each of them added, the likes, and the trip's bookings, documents and expenses. If you make a share link for the plan, anyone with the link sees a copy of the day-by-day plan (with the trip's name only if you chose to include it), until you stop sharing. People who already opened it may have kept a copy.</p>
@@ -67,6 +77,7 @@ export function privacyPage(lang) {
 <li><b>Speech recognition:</b> when you speak to the translator, your browser recognises the speech. Depending on the browser, your voice may be sent to Google or Apple for that.</li>
 <li><b>Sites you open:</b> when you tap a link to a hotel (Booking.com), a map or a place's website, you go to them and their terms apply. A hotel link may tell the hotel site that you came from Toogo, and may earn us a commission, at no extra cost to you.</li>
 </ul>
+<p>Like any online service, these providers keep short technical logs: IP address, browser type and time.</p>
 
 <h2>How long we keep it</h2>
 <ul>
@@ -78,13 +89,13 @@ export function privacyPage(lang) {
 </ul>
 
 <h2>Your rights</h2>
-<p>You can ask to see your information, to get a copy of it, to correct it or to delete it, and you can turn off usage counting in Settings. Write to us ${c}. If you're unhappy with our answer, you can complain to Israel's Privacy Protection Authority or, in the EU, to your local data protection authority.</p>
+<p>You can ask to see your information, to get a copy of it, to correct it or to delete it, to limit how we use it or object to it, and to take back a consent you gave. You can turn off usage counting in Settings yourself. Write to us ${c}. If you're unhappy with our answer, you can complain to Israel's Privacy Protection Authority or, in the EU, to your local data protection authority.</p>
 
 <h2>Deleting your account</h2>
 <p>Write to us ${c} and we will delete your account and your information within 30 days. What stays: places you added to a shared trip stay with its other members, and approved photos stay on place cards, unless you ask us to remove those too. Usage counting already sent stays without your account attached, until its 12 months end. Backups expire on their own.</p>
 
 <h2>Age</h2>
-<p>Toogo is for people aged 18 and over. Information about a child or baby on the trip is only what their parents chose to enter.</p>
+<p>Toogo is for people aged 18 and over. Information about a child or baby on the trip is only what their parents chose to enter. If you think a child gave us information, tell us and we will delete it.</p>
 
 <h1 id="terms">Terms of use</h1>
 <p>By using Toogo you agree to these terms and to the privacy notice above. If you don't agree, please don't use the app, and tell us why.</p>
@@ -159,7 +170,7 @@ export function privacyPage(lang) {
 
 <h2>מה אנחנו שומרים</h2>
 <ul>
-<li><b>החשבון:</b> כתובת המייל והשם שאתם מציגים לקבוצה. סיסמה נשמרת רק כגיבוב חד-כיווני, ואף אחד לא יכול לקרוא אותה. אם נכנסתם עם Google, היא מעבירה לנו גם את השם ואת תמונת הפרופיל שבחשבון Google שלכם.</li>
+<li><b>החשבון:</b> כתובת המייל והשם שאתם מציגים לקבוצה. סיסמה נשמרת רק כגיבוב חד-כיווני, ואף אחד לא יכול לקרוא אותה. אם נכנסתם עם Google, היא מעבירה לנו גם את מזהה החשבון שלכם ב-Google, ואת השם ותמונת הפרופיל שבו.</li>
 <li><b>השאלון:</b> עם מי אתם נוסעים (כולל אם מגיע תינוק), אילו ערים, מה מעניין אתכם, מה אתם לא אוכלים, התקציב לארוחה, קצב הטיול והאם הייתם כבר ביפן.</li>
 <li><b>הטיול:</b> המקומות שהוספתם, מה אהבתם ודירגתם, התוכנית, המלונות, ההזמנות (טיסות, מלונות וכו') והמסמכים שצירפתם אליהן, ההוצאות ורשימות הציוד. במסמכי הזמנה יכולים להופיע מספרי דרכון או כרטיס: הם נשמרים באופן פרטי, רק לחברי הטיול שלכם.</li>
 <li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo. כל תמונה נשמרת כקובץ חדש, וכך נמחק ממנה המיקום שהטלפון מוסיף לתמונות.</li>
@@ -173,6 +184,7 @@ export function privacyPage(lang) {
 
 <h2>למה אנחנו משתמשים במידע, והאם חובה למסור אותו</h2>
 <p>רק כדי להפעיל בשבילכם את Toogo: לבחור את הכרטיסים ולבנות את התוכנית, לאפשר לקבוצה לתכנן ביחד, לשמור על האפליקציה עובדת גם בלי קליטה, לתקן תקלות ולשפר את האפליקציה. אין חובה לפי חוק למסור לנו את המידע. בלי חשבון או בלי השאלון חלק מהדברים לא יעבדו, למשל שמירת טיול או תוכנית שמתאימה לכם.</p>
+<p>למבקרים מהאיחוד האירופי, הבסיס החוקי הוא: מתן השירות שביקשתם (החשבון והטיולים); הבחירה שלכם (כניסה עם Google, תמונות ששלחתם); האינטרס הלגיטימי שלנו לשמור על האפליקציה תקינה ולשפר אותה (דיווחים על בעיות, והספירה, שאפשר לכבות); וחובות לפי חוק.</p>
 
 <h2>מה אנחנו לא עושים</h2>
 <ul>
@@ -182,6 +194,15 @@ export function privacyPage(lang) {
 <li>לא משתמשים בתוכן שלכם כדי לאמן מודלים של בינה מלאכותית.</li>
 <li>לא שולחים מיילים שיווקיים, אלא אם בחרתם לקבל אותם.</li>
 </ul>
+
+<h2>עוגיות (Cookies)</h2>
+<p>Toogo לא משתמשת בעוגיות. האפליקציה שומרת את הכניסה לחשבון, ההגדרות, העותק של הטיול לשימוש בלי קליטה והקוד האקראי של המכשיר באחסון של הדפדפן עצמו, במכשיר שלכם. ניקוי הנתונים של האתר בדפדפן מוחק אותם.</p>
+
+<h2>מי אצלנו מסתכל על המידע שלכם</h2>
+<p>אף אחד לא קורא את הטיולים, ההזמנות או המסמכים שלכם כדבר שבשגרה. אנחנו מסתכלים רק כשאתם מבקשים (למשל, החלק בטיול שדיווח על בעיה מתייחס אליו), כדי לבדוק בעיית אבטחה או שימוש לרעה, או כשהחוק מחייב. תמונות ששלחתם למקום נבדקות על ידינו לפני שמישהו אחר רואה אותן.</p>
+
+<h2>איך המידע מוגן</h2>
+<p>כל המידע עובר מוצפן (HTTPS) ונשמר מוצפן אצל ספק מסד הנתונים. כללי מסד הנתונים מאפשרים רק לחברי טיול לקרוא את הטיול שלהם. אם תהיה פריצה שמסכנת את המידע שלכם, נודיע לכם, ונדווח לרשות להגנת הפרטיות כפי שהחוק מחייב.</p>
 
 <h2>מי רואה את הטיול</h2>
 <p>רק חברי הטיול: מי שפתח אותו ומי שהוזמן אליו. חברי הטיול רואים מה כל אחד הוסיף, את הלייקים, ואת ההזמנות, המסמכים וההוצאות של הטיול. אם יצרתם קישור שיתוף לתוכנית, כל מי שיש לו את הקישור רואה עותק של התוכנית יום אחרי יום (עם שם הטיול רק אם בחרתם לצרף אותו), עד שתפסיקו לשתף. מי שכבר פתח את הקישור יכול היה לשמור עותק.</p>
@@ -197,6 +218,7 @@ export function privacyPage(lang) {
 <li><b>זיהוי דיבור:</b> כשאתם מדברים אל המתרגם, הדפדפן מזהה את הדיבור. בהתאם לדפדפן, הקול שלכם יכול להישלח לשם כך ל-Google או ל-Apple.</li>
 <li><b>אתרים שאתם פותחים:</b> כשאתם לוחצים על קישור למלון (Booking.com), למפות או לאתר של מקום, אתם עוברים אליהם והתנאים שלהם חלים. קישור למלון יכול לספר לאתר המלונות שהגעתם מ-Toogo, ואנחנו עשויים לקבל עליו עמלה, בלי שזה עולה לכם יותר.</li>
 </ul>
+<p>כמו כל שירות ברשת, הספקים האלה שומרים יומנים טכניים קצרים: כתובת IP, סוג הדפדפן ושעה.</p>
 
 <h2>כמה זמן שומרים</h2>
 <ul>
@@ -208,13 +230,13 @@ export function privacyPage(lang) {
 </ul>
 
 <h2>הזכויות שלכם</h2>
-<p>אפשר לבקש לראות את המידע שלכם, לקבל עותק שלו, לתקן אותו או למחוק אותו, ואפשר לכבות את הספירה בהגדרות. כתבו לנו ${c}. אם התשובה שלנו לא מספקת אתכם, אפשר להתלונן ברשות להגנת הפרטיות, ובאיחוד האירופי ברשות להגנת מידע של המדינה שלכם.</p>
+<p>אפשר לבקש לראות את המידע שלכם, לקבל עותק שלו, לתקן אותו או למחוק אותו, להגביל את השימוש בו או להתנגד לו, ולבטל הסכמה שנתתם. את הספירה אפשר לכבות לבד בהגדרות. כתבו לנו ${c}. אם התשובה שלנו לא מספקת אתכם, אפשר להתלונן ברשות להגנת הפרטיות, ובאיחוד האירופי ברשות להגנת מידע של המדינה שלכם.</p>
 
 <h2>מחיקת החשבון</h2>
 <p>כתבו לנו ${c}, ונמחק את החשבון ואת המידע שלכם תוך 30 יום. מה נשאר: מקומות שהוספתם לטיול משותף נשארים אצל שאר חברי הטיול, ותמונות שאושרו נשארות בכרטיסי המקומות, אלא אם תבקשו שנסיר גם אותם. ספירה שכבר נשלחה נשארת בלי קשר לחשבון שלכם, עד שעוברים 12 החודשים שלה. הגיבויים פגים מעצמם.</p>
 
 <h2>גיל</h2>
-<p>Toogo מיועדת לבני 18 ומעלה. מידע על ילד או תינוק בטיול הוא רק מה שההורים בחרו לכתוב.</p>
+<p>Toogo מיועדת לבני 18 ומעלה. מידע על ילד או תינוק בטיול הוא רק מה שההורים בחרו לכתוב. אם אתם חושבים שילד מסר לנו מידע, ספרו לנו ונמחק אותו.</p>
 
 <h1 id="terms">תנאי שימוש</h1>
 <p>השימוש ב-Toogo הוא הסכמה לתנאים האלה ולמדיניות הפרטיות שלמעלה. אם אתם לא מסכימים, אל תשתמשו באפליקציה, ונשמח לשמוע למה.</p>
