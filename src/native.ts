@@ -6,6 +6,7 @@ import { SplashScreen } from '@capacitor/splash-screen'
 import { Keyboard } from '@capacitor/keyboard'
 import { requestAddLink } from './quickAdd'
 import { settings } from './settings'
+import { isEn } from './i18n'
 
 /** Running inside the iOS app (Capacitor), not in a browser. */
 export const isNative = Capacitor.isNativePlatform()
@@ -15,6 +16,9 @@ const SITE = 'https://shakedflorentin.github.io/trip-planner/'
 
 /** The address of the app's start page that other people can open (invite and share links). */
 export const appUrl = () => (isNative ? SITE : location.origin + location.pathname)
+
+/** The privacy and terms page (scripts/pages/privacy.mjs) in the app's language, on the website. */
+export const privacyUrl = () => new URL((isEn ? 'en/' : '') + 'privacy/', appUrl()).href
 
 /** Open an outside page: a new tab on the web, an in-app Safari sheet in the iOS app. */
 export function openExternal(href: string) {

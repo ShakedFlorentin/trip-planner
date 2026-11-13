@@ -406,4 +406,7 @@ export const EN_A: Record<string, string> = {
   'נבחר: {what}': 'Selected: {what}',
   'נפתח גלגל פעולות': 'Action wheel open',
   'שלחתם 10 הזמנות השבוע. אפשר להזמין עוד בשבוע הבא.': "You've sent 10 invites this week. You can send more next week.",
+  'פרטיות ותנאי שימוש': 'Privacy and terms',
+  'בהמשך אתם מסכימים ל': 'By continuing you agree to the ',
+  'תנאי השימוש ומדיניות הפרטיות': 'terms of use and privacy policy',
 }

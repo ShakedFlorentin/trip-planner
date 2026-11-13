@@ -3,6 +3,7 @@ import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { t } from '../i18n'
 import LoginCarousel from './LoginCarousel'
+import { openExternal, privacyUrl } from '../native'
 
 // Accounts are created for the group up front; each logs in with just their name, in Hebrew or English.
 const ACCOUNTS: Record<string, string> = {
@@ -294,6 +295,12 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
             {t('קיבלתם הזמנה? יצירת חשבון')}
           </button>
         ))}
+      <p className="small muted login-legal">
+        {t('בהמשך אתם מסכימים ל')}
+        <button type="button" className="link" onClick={() => openExternal(privacyUrl())}>
+          {t('תנאי השימוש ומדיניות הפרטיות')}
+        </button>
+      </p>
     </div>
   )
 }

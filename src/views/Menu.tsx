@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
-import { ArrowLeftRight, BookOpen, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon } from 'lucide-react'
+import { ArrowLeftRight, BookOpen, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck } from 'lucide-react'
 import { Icon, type LucideIcon } from '../icons'
 import { t } from '../i18n'
 import { supabase } from '../supabase'
 import { MORE_TABS, type MoreTab } from './More'
 import { PhotoReviewRow } from './PlacePhotos'
 import { GUIDE_READY, openGuide } from './Guide'
+import { openExternal, privacyUrl } from '../native'
 
 // the tools' tile colours, like iOS Settings: one colour per tool, white glyph
 const TOOL_COLOR: Record<MoreTab, string> = { money: '#34a853', lists: '#f0a020', info: '#e5484d', say: '#3b82f6', baby: '#a259d9' }
@@ -72,6 +73,7 @@ export default function Menu(props: Props) {
           <MenuRow icon={ArrowLeftRight} color="#8e8e93" label={t('מעבר לטיול אחר')} onClick={go(props.onLeave)} />
           {GUIDE_READY && <MenuRow icon={BookOpen} color="#8e8e93" label={t('מדריך')} onClick={go(openGuide)} />}
           <MenuRow icon={MessageSquareWarning} color="#8e8e93" label={t('דיווח על בעיה')} onClick={go(props.onReport)} />
+          <MenuRow icon={ShieldCheck} color="#8e8e93" label={t('פרטיות ותנאי שימוש')} onClick={go(() => openExternal(privacyUrl()))} />
           <PhotoReviewRow />
         </div>
         <div className="group">

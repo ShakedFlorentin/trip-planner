@@ -19,6 +19,7 @@ const load = async (file) => {
 }
 const { AREAS, areaOf } = await load('supabase/functions/_shared/areas.ts')
 const { AFFILIATE_ID } = await load('src/affiliate.ts')
+const { privacyPage } = await import('./privacy.mjs')
 const { exported, cards } = JSON.parse(readFileSync(join(root, 'data/pages/cards.json'), 'utf8'))
 
 // id → names, the AREAS key (Hebrew), and the tile photo (public/cities/<photo>.webp)
@@ -84,7 +85,8 @@ h1{font-size:30px;line-height:1.2;margin:18px 0 6px}h2{font-size:22px;margin:30p
 .city small{display:block;font-size:13px;font-weight:400}
 .area{background:var(--card);border-radius:18px;padding:14px 16px;margin:10px 0}.area h3{margin:0 0 4px}
 .note{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:32px;padding-top:12px}
-footer{font-size:13px;color:var(--muted);padding-bottom:40px}
+footer{font-size:13px;color:var(--muted);padding-bottom:40px}footer a{color:var(--muted)}
+.legal h1{margin-top:40px}.legal li{margin:6px 0}.legal ul{padding-inline-start:22px}
 `
 
 const T = {
@@ -94,6 +96,7 @@ const T = {
     home: 'יפן', maps: 'במפות', site: 'אתר', all: 'כל המקומות', food: 'בלי חזיר ופירות ים', stay: 'איפה לישון',
     note: 'המידע נאסף ונבדק בזהירות, אבל שעות, מחירים ופרטי תפריט משתנים. כדאי לבדוק לפני שיוצאים. "בלי חזיר ופירות ים" הוא לא כשרות ולא תעודה: הוא עוזר למי שלא אוכל חזיר ופירות ים.',
     updated: 'עודכן',
+    privacy: 'פרטיות ותנאי שימוש',
   },
   en: {
     dir: 'ltr', lang: 'en', other: 'he', otherLabel: 'עברית',
@@ -101,13 +104,15 @@ const T = {
     home: 'Japan', maps: 'Maps', site: 'Website', all: 'All places', food: 'No pork or seafood', stay: 'Where to stay',
     note: 'Collected and checked with care, but hours, prices and menus change: check before you go. "No pork or seafood" is not kosher certification; it helps people who don\'t eat pork or seafood.',
     updated: 'Updated',
+    privacy: 'Privacy and terms',
   },
 }
 
 const pathOf = (lang, ...parts) => (lang === 'en' ? 'en/' : '') + ['japan', ...parts].join('/') + '/'
 const rel = (fromDepth) => '../'.repeat(fromDepth)
 
-function page({ lang, path, title, description, h1, lead, body, crumbs, alt, jsonld, city }) {
+// legal: the privacy page, with no "plan your trip" button and no note about places
+function page({ lang, path, title, description, h1, lead, body, crumbs, alt, jsonld, city, legal = false }) {
   const t = T[lang]
   const depth = path.split('/').filter(Boolean).length
   const up = rel(depth)
@@ -137,15 +142,15 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 <a class="brand" href="${up}${pathOf(lang)}"><img src="${up}icon.svg" alt="" width="30" height="30">Toogo</a>
 <a class="lang" href="${up}${otherPath}" hreflang="${t.other}">${t.otherLabel}</a>
 </header>
-<main>
+<main${legal ? ' class="legal"' : ''}>
 ${crumbs ? `<div class="crumbs">${crumbs}</div>` : ''}
 <h1>${esc(h1)}</h1>
 ${lead ? `<p class="lead">${esc(lead)}</p>` : ''}
-<a class="cta" href="${up}?${city && city !== 'daytrip' ? `city=${city}&` : ''}lang=${lang}">${t.cta}</a>
+${legal ? '' : `<a class="cta" href="${up}?${city && city !== 'daytrip' ? `city=${city}&` : ''}lang=${lang}">${t.cta}</a>`}
 ${body}
-<p class="note">${esc(t.note)} ${t.updated}: ${exported}.</p>
+${legal ? '' : `<p class="note">${esc(t.note)} ${t.updated}: ${exported}.</p>`}
 </main>
-<footer>© Toogo</footer>
+<footer>© Toogo · <a href="${up}${lang === 'en' ? 'en/' : ''}privacy/">${t.privacy}</a></footer>
 </body>
 </html>
 `
@@ -343,6 +348,12 @@ for (const lang of ['he', 'en']) {
       )
     }
   }
+}
+
+// privacy and terms (scripts/pages/privacy.mjs), in both languages
+for (const lang of ['he', 'en']) {
+  const path = (lang === 'en' ? 'en/' : '') + 'privacy/'
+  write(path, page({ lang, path, legal: true, ...privacyPage(lang) }))
 }
 
 // the cards a visitor swipes before signing in (src/guest.ts): one file per city, the same public fields as the pages

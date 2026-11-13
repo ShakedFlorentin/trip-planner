@@ -37,8 +37,8 @@ self.addEventListener('fetch', (e) => {
   if (u.hostname.endsWith('tile.openstreetmap.org') || (u.hostname === 'server.arcgisonline.com' && u.pathname.includes('/tile/')))
     e.respondWith(tile(req))
   else if (u.origin !== self.location.origin) return
-  // the guide pages (japan/…, en/japan/…, built by scripts/pages) are plain pages: the network serves them as is
-  else if (req.mode === 'navigate' && /\/(en\/)?japan(\/|$)/.test(u.pathname)) return
+  // the guide pages (japan/…, en/japan/…) and privacy/ (built by scripts/pages) are plain pages: the network serves them as is
+  else if (req.mode === 'navigate' && /\/(en\/)?(japan|privacy)(\/|$)/.test(u.pathname)) return
   else if (req.mode === 'navigate') e.respondWith(page(req))
   else e.respondWith(asset(e, req, u))
 })
