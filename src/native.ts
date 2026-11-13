@@ -1,9 +1,10 @@
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { Share } from '@capacitor/share'
 import { AppLauncher } from '@capacitor/app-launcher'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { Keyboard } from '@capacitor/keyboard'
+import { requestAddLink } from './quickAdd'
 
 /** Running inside the iOS app (Capacitor), not in a browser. */
 export const isNative = Capacitor.isNativePlatform()
@@ -39,7 +40,26 @@ async function openMaps(href: string) {
   location.href = href
 }
 
+/** The app's own plugin (ios/App/App/ShareInbox.swift): the link Toogo's share extension left for the page. */
+const ShareInbox = registerPlugin<{
+  take(): Promise<{ url?: string }>
+  addListener(event: 'shared', cb: () => void): Promise<PluginListenerHandle>
+}>('ShareInbox')
+
+/** A link shared into Toogo from Instagram, TikTok or Maps opens the add-place sheet with it filled in. */
+async function takeShared() {
+  try {
+    const { url } = await ShareInbox.take()
+    if (url) requestAddLink(url)
+  } catch {
+    // an app build from before the share extension has no such plugin
+  }
+}
+
 if (isNative) {
+  void takeShared()
+  void ShareInbox.addListener('shared', () => void takeShared()).catch(() => {})
+
   // no web form bar (✓ ∨ ∧) above the keyboard: it made the app look like a website
   void Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {})
 

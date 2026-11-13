@@ -17,7 +17,7 @@ import { RingsIcon } from '../rings'
 import { AREAS, areaOf } from '../areas'
 import { shows, validWho, whoChoices, whoLabel, type Who } from '../who'
 import QuickFab from './QuickFab'
-import { useQuickAdd } from '../quickAdd'
+import { takeSharedLink, useQuickAdd } from '../quickAdd'
 
 const PLACE_TABS: Record<string, string> = {
   '': t('הכל'),
@@ -68,7 +68,12 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   const whoOk = (p: Place) => !p.who || p.who.split(' + ').some((w) => shows(w, whose, myCouple)) || shows(null, whose, myCouple)
   const [edit, setEdit] = useState<Partial<Place> | null>(null)
   const [adding, setAdding] = useState(false)
-  useQuickAdd('place', () => setAdding(true))
+  // the link shared into the app from another app's Share menu, filled in on the add-place sheet
+  const [sharedLink, setSharedLink] = useState('')
+  useQuickAdd('place', () => {
+    setSharedLink(takeSharedLink())
+    setAdding(true)
+  })
   const [planning, setPlanning] = useState<Place | null>(null)
   // keep ids, not rows, so the open sheets show live data (visited, edits, deletion)
   const [readId, setReadId] = useState<string | null>(null)
@@ -223,8 +228,14 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
       <button className="view-toggle glass" onClick={() => setView(view === 'map' ? 'list' : 'map')}>
         <Icon as={view === 'map' ? List : MapIcon} /> {view === 'map' ? t('רשימה') : t('מפה')}
       </button>
-      <QuickFab label={t('הוספת מקום')} onTap={() => setAdding(true)} />
-      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="list" onClose={() => setAdding(false)} />}
+      <QuickFab
+        label={t('הוספת מקום')}
+        onTap={() => {
+          setSharedLink('')
+          setAdding(true)
+        }}
+      />
+      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="list" initial={sharedLink} onClose={() => setAdding(false)} />}
       {read && (
         <PlaceSheet
           p={read}

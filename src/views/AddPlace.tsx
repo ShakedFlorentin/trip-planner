@@ -26,7 +26,15 @@ function existingIn(trip: TripPlaces, d: Draft): Existing | null {
   return best
 }
 
-type Props = { tripId: string; userId: string; me: string; defaultTo: 'deck' | 'list'; onClose: () => void }
+type Props = {
+  tripId: string
+  userId: string
+  me: string
+  defaultTo: 'deck' | 'list'
+  /** a link shared into the app (iOS Share menu): filled in, not looked up until the person taps */
+  initial?: string
+  onClose: () => void
+}
 
 /**
  * The places a lookup found, read from place_lookups: the search keeps running when the phone stops waiting, so the
@@ -151,11 +159,11 @@ async function lookupLive(body: object, opened: () => void, on: (e: Step) => voi
  * Suggest a place from an Instagram/TikTok/Maps link or just its name; Claude finds it on the web and fills in the
  * card. Nobody types details by hand: when a link can't be read, the place's name is searched instead.
  */
-export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Props) {
+export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', onClose }: Props) {
   // one field: a link or a place's name
   const hasBaby = useTripHasBaby(tripId)
   const avoidsPork = useTripAvoidsPorkSeafood(tripId)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initial)
   // a link that couldn't be read: kept for the card, while the place's name is searched instead
   const [failedLink, setFailedLink] = useState('')
   const [name, setName] = useState('')
