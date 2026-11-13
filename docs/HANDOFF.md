@@ -3,7 +3,7 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
-## Night split: starting values, seasons, route rules (2026-11-13, built, NOT deployed)
+## Night split: starting values, seasons, route rules (2026-11-13, live: plan-trip v26, cities route columns filled)
 - `supabase/functions/plan-trip/split.ts` ("Suggest a split") now works on a trip with only flights. A night in a city
   is worth the places liked there plus a starting value per city (`route-data.ts`: least and ideal nights, more Tokyo
   on a first visit, a season level per month) that fades as the group likes places (half at 15 liked places).
@@ -19,8 +19,10 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
   flight times, airports for Nagoya, Sapporo, Fukuoka, Okinawa, Kobe, Hiroshima, Kanazawa.
 - Tests: `npm run test:split` (the old cases, 9 route cases, and 2,000 random trips checked by rules written a second
   time in the test; about 40 s). Slowest trip 0.3 s, average 20 ms.
-- To go live: deploy `plan-trip`, then run `supabase/sql/2026-11-13-city-route.sql` (adds the route columns to `cities`
-  and fills them; until then the values in `route-data.ts` are used, so the order doesn't matter).
+- Live since 13 Nov: `plan-trip` v26 (source equals the repo) and `supabase/sql/2026-11-13-city-route.sql` (the route
+  columns on `cities`, filled for all 15). The table now wins over `route-data.ts`: change a number there, e.g.
+  `update cities set ideal_nights = 3 where id = 'hiroshima'`. Checked live with one read-only call on the Japan trip
+  (200, no alternatives, as every night there is booked); no trip with open nights has run it live yet.
 - Next: the "been to Japan?" question, nights per city as a rule with a + / − screen, a starting card on the Plan tab.
 
 ## Reviews and plan sharing (2026-11-02, built, SQL not applied)
