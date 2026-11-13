@@ -26,7 +26,9 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
 - 13 Nov, later: "Have you been to Japan?" is the questionnaire's second question (answers.been_to_japan). Nights per
   city is live (plan-trip v27): `suggest_stays` with `nights: [{city, nights}]` keeps the counts and chooses the order;
   the answer always carries `openNights`. Screen: "Where we sleep" → "We know the nights per city".
-- Next: a starting card on the Plan tab with the three ways in (booked hotels / nights per city / only flights).
+- The first step on Plan (13 Nov, `SplitStart` in Stays.tsx): while some night has no stay at all, a card offers
+  "We booked hotels" (Bookings on Hotels with a new hotel booking, `requestAddBooking`), "We know the nights per city"
+  and "Only flights, suggest something". "Later" hides it per trip on the phone (localStorage `splitStartLater:<trip>`).
 
 ## Reviews and plan sharing (2026-11-02, built, SQL not applied)
 - `supabase/sql/2026-11-02-reviews-sharing.sql` must be run by hand first: places.visited_at (trigger), place_ratings.answers,
