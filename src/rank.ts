@@ -7,6 +7,7 @@ export const RATING_PRIOR_WEIGHT = 5
 /** The category average when nobody has rated anything in the category yet. */
 export const RATING_PRIOR_DEFAULT = 3.5
 /** Cards per batch in the swipe deck. */
+// the default batch; the live one is app_settings swipe_batch_size (src/settings.ts), passed in as ctx.size
 export const BATCH_SIZE = 20
 
 /** Bayesian mean: (C*m + sum) / (C + n). Three 5-star ratings come out near 4.1, not 5.0. */

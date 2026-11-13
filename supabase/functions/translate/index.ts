@@ -4,6 +4,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@1.1.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
 import { creditsOn, hold, refund, settle, tripIdOf } from '../_shared/credits.ts'
+import { settingInt } from '../_shared/settings.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -34,6 +35,7 @@ const MODEL = 'claude-haiku-5-5'
 // one utterance; a long one is a stuck recording, not a sentence
 const MAX_CHARS = 600
 // Claude calls per user per 24 hours; translation is a conversation, so it gets more room than the other tools
+// the live limits are app_settings translate_limit_person / translate_limit_all; these are the fallbacks
 const DAILY_LIMIT = 200
 // and for everyone together, so more accounts can't multiply what the Claude key spends
 const ALL_USERS_LIMIT = 2000
@@ -80,7 +82,10 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
   if (!trips) return json({ error: 'not a trip member' }, 403)
   // only once the user is confirmed: counts and records the call in one locked step, so parallel requests can't slip
   // past the caps
-  const { data: took } = await admin.rpc('ai_take', { uid: claimed, fn, per_user: DAILY_LIMIT, all_users: ALL_USERS_LIMIT })
+  const { data: took } = await admin.rpc('ai_take', { uid: claimed, fn,
+    per_user: await settingInt(admin, 'translate_limit_person', DAILY_LIMIT),
+    all_users: await settingInt(admin, 'translate_limit_all', ALL_USERS_LIMIT),
+  })
   if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
   // credits (behind CREDITS_ON): hold the price first; the caller settles or refunds it
   let creditOp: string | null = null

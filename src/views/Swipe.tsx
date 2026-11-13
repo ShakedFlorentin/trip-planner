@@ -13,7 +13,8 @@ import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
-import { BATCH_SIZE, categoryMeans, learnTags, rankDeck } from '../rank'
+import { categoryMeans, learnTags, rankDeck } from '../rank'
+import { useSettings } from '../settings'
 import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
@@ -167,7 +168,9 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const open = visible.filter((c) => !mine.has(c.id) && forMe(c) && !sessionNotNow.has(c.id))
   const filterCities = cities.filter((c) => city === c || open.some((x) => x.city === c))
   const showFilters = open.length > 0 || !!city || !!aud
-  const batchLeft = Math.max(0, BATCH_SIZE - batchDone)
+  // cards in one batch: app_settings swipe_batch_size (20 by default), changeable with no new version
+  const batchSize = useSettings().swipe_batch_size
+  const batchLeft = Math.max(0, batchSize - batchDone)
   const deck = useMemo(
     () =>
       rankDeck(pool, {
@@ -467,7 +470,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         )}
         {batchOver && (
           <div className="empty more-batch">
-            <p>{t('סיימת חבילה של {n} מקומות', { n: BATCH_SIZE })}</p>
+            <p>{t('סיימת חבילה של {n} מקומות', { n: batchSize })}</p>
             <button className="primary" onClick={() => setBatchDone(0)}>
               {t('עוד מקומות?')}
             </button>

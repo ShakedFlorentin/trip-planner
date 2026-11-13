@@ -5,6 +5,7 @@ import { AppLauncher } from '@capacitor/app-launcher'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { Keyboard } from '@capacitor/keyboard'
 import { requestAddLink } from './quickAdd'
+import { settings } from './settings'
 
 /** Running inside the iOS app (Capacitor), not in a browser. */
 export const isNative = Capacitor.isNativePlatform()
@@ -48,6 +49,8 @@ const ShareInbox = registerPlugin<{
 
 /** A link shared into Toogo from Instagram, TikTok or Maps opens the add-place sheet with it filled in. */
 async function takeShared() {
+  // switched off with app_settings features.share_extension = false; a link already shared then waits in the phone
+  if (!settings().features.share_extension) return
   try {
     const { url } = await ShareInbox.take()
     if (url) requestAddLink(url)

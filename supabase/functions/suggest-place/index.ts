@@ -6,6 +6,7 @@ import { z } from 'npm:zod@4'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
 import { creditsOn, hold, refund, settle, tripIdOf } from '../_shared/credits.ts'
+import { settingInt } from '../_shared/settings.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,7 @@ const cors = {
 
 const MODEL = 'claude-haiku-5-5'
 // Claude calls per user per function in 24 hours; each place lookup costs a few cents
+// the live limits are app_settings lookup_limit_person / lookup_limit_all; these are the fallbacks
 const DAILY_LIMIT = 30
 // and for everyone together, so more accounts can't multiply what the Claude key spends
 const ALL_USERS_LIMIT = 300
@@ -276,7 +278,10 @@ async function signedIn(req: Request, json: (body: unknown, status?: number) => 
 /** Lets the user spend the Claude key only under today's cap, and records the call; or the response to send instead. */
 async function charge(admin: SupabaseClient, userId: string, fn: string, json: (body: unknown, status?: number) => Response) {
   // counts and records the call in one locked step, so parallel requests can't slip past the caps
-  const { data: took } = await admin.rpc('ai_take', { uid: userId, fn, per_user: DAILY_LIMIT, all_users: ALL_USERS_LIMIT })
+  const { data: took } = await admin.rpc('ai_take', { uid: userId, fn,
+    per_user: await settingInt(admin, 'lookup_limit_person', DAILY_LIMIT),
+    all_users: await settingInt(admin, 'lookup_limit_all', ALL_USERS_LIMIT),
+  })
   if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
   return null
 }

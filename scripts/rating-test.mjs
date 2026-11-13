@@ -10,8 +10,11 @@ const load = async (native) => {
     plugins: [{ name: 'stubs', setup(b) {
       b.onResolve({ filter: /^\.\/native$/ }, () => ({ path: 'native', namespace: 'stub' }))
       b.onResolve({ filter: /^@capacitor\/core$/ }, () => ({ path: 'core', namespace: 'stub' }))
+      b.onResolve({ filter: /^\.\/settings$/ }, () => ({ path: 'settings', namespace: 'stub' }))
       b.onLoad({ filter: /.*/, namespace: 'stub' }, (a) => ({
-        contents: a.path === 'native' ? `export const isNative = ${native}` : 'export const registerPlugin = () => ({ request: async () => { globalThis.asked = (globalThis.asked ?? 0) + 1; return { asked: true } } })',
+        contents: a.path === 'native' ? `export const isNative = ${native}`
+          : a.path === 'settings' ? 'export const settings = () => ({ features: { rating_prompt: globalThis.ratingOn !== false } })'
+          : 'export const registerPlugin = () => ({ request: async () => { globalThis.asked = (globalThis.asked ?? 0) + 1; return { asked: true } } })',
       }))
     } }],
   })
@@ -32,6 +35,9 @@ const first = Number(store.get('firstOpen'))
 ok(first > 0, 'the first open is remembered')
 ok(!app.mayAskForRating(first + DAY), 'not in the first two days')
 ok(app.mayAskForRating(first + 2 * DAY), 'after two days, yes')
+globalThis.ratingOn = false
+ok(!app.mayAskForRating(first + 2 * DAY), 'switched off in app_settings: never')
+globalThis.ratingOn = true
 store.set('ratingAsks', JSON.stringify({ at: [first + 2 * DAY] }))
 ok(!app.mayAskForRating(first + 100 * DAY), 'not again within 120 days')
 ok(app.mayAskForRating(first + 123 * DAY), 'again after 120 days')

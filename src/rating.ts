@@ -1,11 +1,13 @@
 import { registerPlugin } from '@capacitor/core'
 import { isNative } from './native'
+import { settings } from './settings'
 
 /**
  * Apple's rating prompt at a good moment: right after a match pop-up is closed, or right after the plan was updated.
  * Only in the iOS app (ios/App/App/AppReview.swift), with Apple's own prompt and no question of ours before it
  * (Apple doesn't allow sorting people first). Apple shows it at most three times a year; on top of that we ask only
- * after two days of use, then at most once in 120 days and three times ever.
+ * after two days of use, then at most once in 120 days and three times ever. Switched off with app_settings
+ * features.rating_prompt = false.
  */
 const AppReview = registerPlugin<{ request(): Promise<{ asked: boolean }> }>('AppReview')
 
@@ -36,7 +38,7 @@ if (isNative && !read<number | null>(FIRST, null)) write(FIRST, Date.now())
 
 /** Whether this is a moment to ask: the app, two days in, not asked in 120 days, fewer than three asks. */
 export function mayAskForRating(now = Date.now()) {
-  if (!isNative) return false
+  if (!isNative || !settings().features.rating_prompt) return false
   const first = read<number | null>(FIRST, null)
   const { at } = read<Asks>(KEY, { at: [] })
   if (!first || now - first < 2 * DAY) return false
