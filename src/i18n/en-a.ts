@@ -409,4 +409,7 @@ export const EN_A: Record<string, string> = {
   'פרטיות ותנאי שימוש': 'Privacy and terms',
   'בהמשך אתם מסכימים ל': 'By continuing you agree to the ',
   'תנאי השימוש ומדיניות הפרטיות': 'terms of use and privacy policy',
+  'פרטיות': 'Privacy',
+  'עזרה בשיפור Toogo': 'Help improve Toogo',
+  'אנחנו סופרים אילו מסכים נפתחים ואיפה נתקעים, כדי לשפר את האפליקציה. בלי מה שאתם כותבים, ובלי כלים חיצוניים.': "We count which screens are opened and where people get stuck, to improve the app. Never what you type, and no outside tools.",
 }

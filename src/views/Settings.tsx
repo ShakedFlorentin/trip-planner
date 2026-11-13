@@ -7,6 +7,8 @@ import { ymd } from './planUtils'
 import { lang, locale, setLang, t } from '../i18n'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
+import { countingOn, setCounting } from '../track'
+import { openExternal, privacyUrl } from '../native'
 
 /**
  * Settings (62, 63): only what is saved, as iOS grouped rows. "הטיול" (its name and dates, seen by everyone in the
@@ -77,6 +79,16 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
       </div>
       <p className="group-foot">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
 
+      <div className="group-label">{t('פרטיות')}</div>
+      <div className="group">
+        <CountingRow />
+        <button className="group-row" onClick={() => openExternal(privacyUrl())}>
+          <span className="k">{t('פרטיות ותנאי שימוש')}</span>
+          <Icon as={ChevronLeft} className="chev flip-ltr" />
+        </button>
+      </div>
+      <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים ואיפה נתקעים, כדי לשפר את האפליקציה. בלי מה שאתם כותבים, ובלי כלים חיצוניים.')}</p>
+
       <WalletRow tripId={trip.id} onOpen={() => setWallet(true)} />
 
       {dates && (
@@ -97,6 +109,25 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
         </Sheet>
       )}
     </Sheet>
+  )
+}
+
+/** "Help improve Toogo": usage counting on this device (src/track.ts), on unless turned off. */
+function CountingRow() {
+  const [on, setOn] = useState(countingOn)
+  return (
+    <button
+      className="group-row"
+      role="switch"
+      aria-checked={on}
+      onClick={() => {
+        setCounting(!on)
+        setOn(!on)
+      }}
+    >
+      <span className="k">{t('עזרה בשיפור Toogo')}</span>
+      <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
+    </button>
   )
 }
 

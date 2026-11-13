@@ -3,7 +3,7 @@
 -- here. An event is a name ("open", "screen", "guest_swipes", "hotel_tap", "error"…) with a few plain values, a random
 -- id for the device (made on the phone, not tied to a person until they sign in), the open's id, and the account when
 -- someone is signed in. Nothing typed by a person is sent (no place names they wrote, no messages, no bookings).
--- Kept two years. Only app admins can read it. app_settings features.counting = false stops it on the server too.
+-- Kept 12 months. Only app admins can read it. Each person can turn it off in Settings (src/track.ts). app_settings features.counting = false stops it on the server too.
 -- Safe to run twice.
 
 create table if not exists public.events (
@@ -66,9 +66,9 @@ begin
     insert into public.events (at, visitor, session, user_id, name, props) values (t, v, s, auth.uid(), e->>'name', p);
     added := added + 1;
   end loop;
-  -- now and then, events older than two years go
+  -- now and then, events older than 12 months go
   if random() < 0.005 then
-    delete from public.events where at < now() - interval '2 years';
+    delete from public.events where at < now() - interval '12 months';
   end if;
   return added;
 end $function$;

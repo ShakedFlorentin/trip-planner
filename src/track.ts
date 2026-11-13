@@ -8,7 +8,8 @@ import { lang } from './i18n'
  * Our own table, no outside tool. An event is a name and a few plain values; never anything a person typed. A random
  * id for this device (made here, kept in localStorage) ties a visit before sign-in to the account made after it.
  * Events wait in memory and go in small batches every few seconds, and when the app goes to the background.
- * app_settings features.counting = false stops sending (and the server ignores them too).
+ * app_settings features.counting = false stops sending (and the server ignores them too); so does the person's own
+ * switch in Settings ("Help improve Toogo"), kept on this device.
  */
 
 type Props = Record<string, string | number | boolean | null>
@@ -44,8 +45,28 @@ const MAX = 100
 let queue: Ev[] = []
 let timer: ReturnType<typeof setTimeout> | undefined
 let sending = false
+/** The person's own choice in Settings: on unless they turned it off on this device. */
+export function countingOn(): boolean {
+  try {
+    return localStorage.getItem('counting') !== 'off'
+  } catch {
+    return true
+  }
+}
+
+export function setCounting(on: boolean) {
+  try {
+    if (on) localStorage.removeItem('counting')
+    else localStorage.setItem('counting', 'off')
+  } catch {
+    // private mode: the choice lasts until the app closes
+  }
+  // turned off: what was waiting is not sent either
+  if (!on) queue = []
+}
+
 // the app on a developer's machine counts nothing
-const off = () => import.meta.env.DEV || !settings().features.counting
+const off = () => import.meta.env.DEV || !settings().features.counting || !countingOn()
 
 /** Counts one event. Values are short plain facts (a screen's name, a number), never what someone wrote. */
 export function track(name: string, props: Props = {}) {
