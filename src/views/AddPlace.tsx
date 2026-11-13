@@ -165,7 +165,8 @@ export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Pro
   const [err, setErr] = useState('')
   // what was typed when the duplicate sheet opened, so going back to edit doesn't lose it
   const [typed, setTyped] = useState<Draft | null>(null)
-  const [existing, setExisting] = useState<{ found: Existing; draft: Draft } | null>(null)
+  // search: the typed name, when the match was found before the lookup ran (so "a different place" still has to search)
+  const [existing, setExisting] = useState<{ found: Existing; draft: Draft; search?: string } | null>(null)
   // a post that names several places: each with what's already in the trip, and whether it's ticked
   const [many, setMany] = useState<{ d: Draft; found: Existing | null; on: boolean }[] | null>(null)
   // the steps of the running lookup, as the function reports them; null until it answers with a stream
@@ -197,22 +198,34 @@ export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Pro
     onClose()
   }
 
-  /** Looks a place up by link or by name; a link that fails moves on to asking for the name. */
-  const research = async (by: { link?: string; name?: string }) => {
+  /**
+   * Looks a place up by link or by name; a link that fails moves on to asking for the name. A typed name that is
+   * already in the trip is offered first, before the paid search (`anyway` skips that: "it's a different place").
+   */
+  const research = async (by: { link?: string; name?: string }, anyway = false) => {
     const link = by.link?.trim() ?? ''
     const text = by.name?.trim() ?? ''
     if (!link && !text) return
     setBusy(true)
     setErr('')
     setProgress(null)
+    if (!link && !anyway) {
+      const found = await findExisting({ name: text })
+      if (found) {
+        setExisting({ found, draft: { name: text }, search: text })
+        setBusy(false)
+        return
+      }
+    }
     const id = crypto.randomUUID()
     const body = link ? { link, id, trip_id: tripId } : { text, id, trip_id: tripId }
     stop.current?.abort()
     const live = (stop.current = new AbortController())
-    // streamed when it can be, to show each step; otherwise (no session, no network) the plain call as before
-    const answer =
-      (await lookupLive(body, () => setProgress({ link: !!link, searches: [], cards: [] }), (e) => setProgress((p) => p && heard(p, e)), live.signal)) ??
-      (await supabase.functions.invoke('suggest-place', { body }))
+    // streamed when it can be, to show each step; otherwise (no session, no network) the plain call as before. A sheet
+    // closed meanwhile sends nothing more: the plain call would start the same paid search a second time
+    const streamed = await lookupLive(body, () => setProgress({ link: !!link, searches: [], cards: [] }), (e) => setProgress((p) => p && heard(p, e)), live.signal)
+    if (live.signal.aborted) return
+    const answer = streamed ?? (await supabase.functions.invoke('suggest-place', { body }))
     if (live.signal.aborted) return
     const { data, error } = answer
     const status = (error as { context?: Response } | null)?.context?.status
@@ -425,7 +438,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Pro
   )
 
   if (existing) {
-    const { found, draft: d } = existing
+    const { found, draft: d, search } = existing
     return (
       <Sheet title={t('כבר קיים בטיול')} onClose={onClose}>
         <p>
@@ -442,7 +455,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, onClose }: Pro
           )}
         </button>
         {!found.exact && (
-          <button className="secondary" onClick={() => (setExisting(null), save(d, true))} disabled={busy}>
+          <button className="secondary" onClick={() => (setExisting(null), search ? research({ name: search }, true) : save(d, true))} disabled={busy}>
             {t('זה מקום אחר, להוסיף בכל זאת')}
           </button>
         )}

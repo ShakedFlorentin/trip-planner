@@ -1,0 +1,237 @@
+{
+ "name": "stay-no-hotel-tokyo-fuji",
+ "description": "No hotel booked: one proposed Tokyo stay, nights 1-4, with no area and no coordinates. Liked places in Shinjuku, Shibuya and Harajuku, and three around Kawaguchiko (Fuji). stay.ts recommends Shinjuku (the Fuji buses and the Odakyu line leave from there), the planner sleeps at Shinjuku station (an estimate), and plans the three Fuji places as day trips (days of Fuji only, nothing back in town; the planner puts them on two days, at most two).",
+ "trip": {
+  "startDate": "2026-12-01",
+  "numDays": 5,
+  "couples": [
+   "A",
+   "B"
+  ],
+  "cities": {
+   "tokyo": {
+    "lat": 35.681,
+    "lng": 139.767,
+    "en": "Tokyo",
+    "he": "טוקיו"
+   },
+   "yokohama": {
+    "lat": 35.444,
+    "lng": 139.638,
+    "en": "Yokohama",
+    "he": "יוקוהמה"
+   },
+   "kyoto": {
+    "lat": 35.003,
+    "lng": 135.759,
+    "en": "Kyoto",
+    "he": "קיוטו"
+   },
+   "osaka": {
+    "lat": 34.686,
+    "lng": 135.502,
+    "en": "Osaka",
+    "he": "אוסקה"
+   },
+   "nara": {
+    "lat": 34.685,
+    "lng": 135.805,
+    "en": "Nara",
+    "he": "נארה"
+   }
+  },
+  "stays": [
+   {
+    "city": "tokyo",
+    "check_in": "2026-12-01",
+    "check_out": "2026-12-05"
+   }
+  ],
+  "places": [
+   {
+    "id": "shinjuku-gyoen",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6852,
+     "lng": 139.7101
+    },
+    "mins": 120,
+    "category": "sight",
+    "priority": 3.5
+   },
+   {
+    "id": "omoide-yokocho",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6929,
+     "lng": 139.6995
+    },
+    "mins": 75,
+    "category": "food",
+    "priority": 3.5
+   },
+   {
+    "id": "golden-gai",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.694,
+     "lng": 139.7046
+    },
+    "mins": 90,
+    "category": "nightlife",
+    "priority": 3.5,
+    "best": "night"
+   },
+   {
+    "id": "tocho-observatory",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6896,
+     "lng": 139.6917
+    },
+    "mins": 60,
+    "category": "sight",
+    "priority": 3
+   },
+   {
+    "id": "shibuya-sky",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6585,
+     "lng": 139.7022
+    },
+    "mins": 90,
+    "category": "sight",
+    "priority": 4
+   },
+   {
+    "id": "shibuya-crossing",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6595,
+     "lng": 139.7005
+    },
+    "mins": 30,
+    "category": "sight",
+    "priority": 3.5
+   },
+   {
+    "id": "ebisu-yokocho",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6467,
+     "lng": 139.7101
+    },
+    "mins": 75,
+    "category": "food",
+    "priority": 3.5
+   },
+   {
+    "id": "takeshita-street",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6716,
+     "lng": 139.703
+    },
+    "mins": 60,
+    "category": "shopping",
+    "priority": 3
+   },
+   {
+    "id": "meiji-jingu",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6764,
+     "lng": 139.6993
+    },
+    "mins": 90,
+    "category": "sight",
+    "priority": 4
+   },
+   {
+    "id": "omotesando",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6654,
+     "lng": 139.7121
+    },
+    "mins": 90,
+    "category": "shopping",
+    "priority": 3
+   },
+   {
+    "id": "chureito-pagoda",
+    "city": "daytrip",
+    "point": {
+     "lat": 35.5011,
+     "lng": 138.8013
+    },
+    "mins": 60,
+    "category": "sight",
+    "priority": 4.5
+   },
+   {
+    "id": "oishi-park",
+    "city": "daytrip",
+    "point": {
+     "lat": 35.5178,
+     "lng": 138.7514
+    },
+    "mins": 45,
+    "category": "sight",
+    "priority": 3.5
+   },
+   {
+    "id": "kawaguchiko-ropeway",
+    "city": "daytrip",
+    "point": {
+     "lat": 35.504,
+     "lng": 138.768
+    },
+    "mins": 45,
+    "category": "sight",
+    "priority": 3
+   }
+  ]
+ },
+ "fixed": [],
+ "expect": {
+  "recommend": {
+   "tokyo": "Shinjuku"
+  },
+  "dayTrips": [
+   "chureito-pagoda",
+   "oishi-park",
+   "kawaguchiko-ropeway"
+  ],
+  "notFar": [
+   "shinjuku-gyoen",
+   "shibuya-sky",
+   "meiji-jingu",
+   "omotesando",
+   "ebisu-yokocho"
+  ],
+  "oneBase": true,
+  "estimateDays": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "presence": {
+   "2": {
+    "A": {
+     "base": "tokyo",
+     "estimate": true
+    }
+   }
+  },
+  "placedMin": 12,
+  "noIssueKinds": [
+   "overlap",
+   "hours"
+  ],
+  "dayTripDays": 2
+ }
+}

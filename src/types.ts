@@ -87,6 +87,23 @@ export type PlanSummary = {
   facts_pending: number
   // per day the planner worked on: where each couple sleeps, and estimate:true when no hotel booking is behind it
   days?: { day: number; estimate?: boolean; hotels: Record<string, string | null> }[]
+  // where to sleep, for each stretch with no hotel (plan-trip/stay.ts): one area for all its nights, and up to two others
+  stay_areas?: StayAreaRec[]
+}
+
+/** One area as the planner scored it: near of total liked places within `within` minutes; hubs: day-trip lines next to it. */
+export type StayAreaPick = { key: string; near: number; total: number; within: number; hubs: string[] }
+/** The recommended area for one stretch with no hotel; areas_city is the AREAS key (the city's Hebrew name). */
+export type StayAreaRec = {
+  party: string | null
+  city: string
+  areas_city: string
+  check_in: string
+  check_out: string
+  nights: number
+  basis: 'places' | 'central'
+  best: StayAreaPick
+  alternatives: StayAreaPick[]
 }
 
 /** Must-have info: hotel addresses in Japanese, phone numbers, insurance, documents. */
@@ -333,6 +350,16 @@ export const CITY_HE: Record<string, string> = {
   kyoto: 'קיוטו', // he-only
   osaka: 'אוסקה', // he-only
   nara: 'נארה', // he-only
+  hiroshima: 'הירושימה', // he-only
+  fukuoka: 'פוקואוקה', // he-only
+  sapporo: 'סאפורו', // he-only
+  kanazawa: 'קנאזאווה', // he-only
+  nagoya: 'נגויה', // he-only
+  hakone: 'הקונה', // he-only
+  nikko: 'ניקו', // he-only
+  kobe: 'קובה', // he-only
+  takayama: 'טקאיאמה', // he-only
+  okinawa: 'אוקינאווה', // he-only
   daytrip: 'טיולי יום', // he-only
 }
 

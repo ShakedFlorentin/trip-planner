@@ -104,6 +104,31 @@ const cases = {
     ok(many.some((a) => a.rows.some((r) => r.city === 'yokohama' && r.nights >= 2)), 'Yokohama with a lot to do should get nights')
   },
 
+  'no hotel every night: five cities in six nights never get one night each'() {
+    // a naive split gives every city one night (each has one night of places); no alternative may hop like that
+    const ps = [...places('tokyo', 2, 165), ...places('yokohama', 2, 165), ...places('kyoto', 2, 165), ...places('osaka', 2, 165), ...places('nara', 2, 165)]
+    const alts = S.suggestSplit(base({ numDays: 7, places: ps }))
+    console.log('    ' + show(alts))
+    ok(alts.length >= 1, 'no alternatives')
+    for (const a of alts) {
+      const runs = []
+      for (const r of a.rows) {
+        const last = runs[runs.length - 1]
+        if (last && last.city === r.city && last.checkOut === r.checkIn) { last.nights += r.nights; last.checkOut = r.checkOut }
+        else runs.push({ ...r })
+      }
+      for (const r of runs) ok(r.nights >= 2, `${a.reason.kind}: a one-night stop in ${r.city} (${runs.map((x) => x.city + 'x' + x.nights).join(' > ')})`)
+      ok(runs.length <= 3, `${a.reason.kind}: ${runs.length} bases in six nights`)
+    }
+  },
+
+  'no hotel every night: a long trip keeps bases of three nights or more'() {
+    const ps = [...places('tokyo', 6, 180), ...places('kyoto', 5, 180), ...places('osaka', 3, 180), ...places('nara', 2, 120), ...places('yokohama', 2, 120)]
+    const alts = S.suggestSplit(base({ numDays: 12, places: ps }))
+    console.log('    ' + show(alts))
+    for (const a of alts) ok(a.rows.every((r) => r.nights >= 3), `${a.reason.kind} has a stop under three nights: ` + a.rows.map((r) => r.city + 'x' + r.nights).join(' > '))
+  },
+
   'flights: a party stretch and the airports'() {
     const r = S.partyStretch(
       [

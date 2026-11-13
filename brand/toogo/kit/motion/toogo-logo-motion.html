@@ -35,26 +35,30 @@ const t=T;
 // 1. the two rings draw themselves, side by side, level
 draw(document.getElementById('r1'), inOutCubic(seg(t,0.25,0.95)), 90);
 draw(document.getElementById('r2'), inOutCubic(seg(t,0.50,1.20)), 90);
-// 2. the step: the second ring crouches, then hops up 28 units with a little overshoot
+// 2. the step (version A): the second ring sinks 6 units and squashes, then springs up 28
 const r2=document.getElementById('r2');
-const crouch = Math.sin(Math.PI*seg(t,1.30,1.50))*(t<1.5?1:0);   // squash down before the jump
-const hop = outBack(seg(t,1.48,1.95));
-const lift = 28*hop;
-const sy = 1 - 0.10*crouch + 0.06*Math.sin(Math.PI*seg(t,1.48,1.75));
-const sx = 1 + 0.08*crouch - 0.04*Math.sin(Math.PI*seg(t,1.48,1.75));
-r2.setAttribute('transform', r2.getAttribute('transform') + ` translate(0 0)`);
-const g2 = `translate(326 ${142-lift+4*crouch}) scale(${sx} ${sy}) translate(-326 -142)`;
-r2.parentNode.querySelector('#r2').setAttribute('transform', g2 + ' ' + r2.getAttribute('transform'));
+const outQ=(x)=>1-(1-x)*(1-x);
+const down = outQ(seg(t,1.3,1.5));
+const go = seg(t,1.52,1.98);
+const hop = outBack(go,1.9);
+const crouch = down*(1-clamp(go*3));
+const lift = 28*hop - 6*crouch;
+const stretch = Math.sin(Math.PI*seg(t,1.52,1.78));
+const land = Math.sin(Math.PI*seg(t,1.88,2.12));
+const sy = 1 - 0.08*crouch + 0.08*stretch - 0*land;
+const sx = 1 + 0.060*crouch - 0.05*stretch + 0.000*land;
+const g2 = `translate(326 ${142-lift + 38*(1-sy)}) scale(${sx} ${sy}) translate(-326 -142)`;
+r2.setAttribute('transform', g2 + ' ' + r2.getAttribute('transform'));
 // the whole symbol starts centred in the frame, then rises to make room for the name
-const rise = inOutCubic(seg(t,2.05,2.75));
+const rise = inOutCubic(seg(t,2.08,2.78));
 document.getElementById('sym').setAttribute('transform', `translate(0 ${93.75*(1-rise)})`);
 // 3. the name rises in, letter by letter
 ['t','o1','o2','g','o3'].forEach((id,i)=>{
-  const p = outCubic(seg(t, 2.35+i*0.08, 2.35+i*0.08+0.5));
+  const p = outCubic(seg(t, 2.38+i*0.08, 2.38+i*0.08+0.5));
   const el=document.getElementById(id);
   let y = 40*(1-p);
   // the word's own second o echoes the step a beat later
-  if(id==='o2') y -= 14*outBack(seg(t,3.05,3.45),2.2);
+  if(id==='o2') y -= 14*outBack(seg(t,3.08,3.48),2.2);
   el.setAttribute('transform', `translate(0 ${y})`);
   el.style.opacity = p;
 });

@@ -8,6 +8,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
 import { partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
+import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -349,75 +350,12 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   const start = new Date(trip.start_date + 'T00:00:00Z')
   const dateOf = (day: number) => new Date(start.getTime() + (day - 1) * 86400000).toISOString().slice(0, 10)
 
-  // ---- where everyone sleeps, and the hours each couple has each day
-  const hotels = bookings.filter((b) => b.kind === 'hotel' && b.starts_at && b.ends_at)
-  const hotelPt = new Map<string, Point>()
-  for (const h of hotels) {
-    if (hotelPt.has(h.id)) continue
-    const base = hotelBase(h.title + ' ' + (h.location ?? ''))
-    const same = hotels.find((o) => o.id !== h.id && hotelPt.has(o.id) && o.title.trim().toLowerCase() === h.title.trim().toLowerCase())
-    const p =
-      (same && hotelPt.get(same.id)) ||
-      (await geocode(admin, h.title)) ||
-      (h.location ? await geocode(admin, h.location) : null)
-    // a geocode that lands outside the hotel's city is wrong; the city's middle is closer to the truth
-    hotelPt.set(h.id, p && base && BASE[base] && km(p, BASE[base]) < 40 ? p : base && BASE[base] ? BASE[base] : p ?? BASE.tokyo)
-  }
-  const bookingById = new Map(bookings.map((b) => [b.id, b]))
-  // the stays: the trip_stays table when it exists and has any, else the hotel bookings (today's way)
-  let sleeps: Sleep[]
-  if (stayRows?.length) {
-    sleeps = stayRows.map((s) => {
-      const b = s.booking_id ? bookingById.get(s.booking_id) : undefined
-      const booked = !!b && b.kind === 'hotel'
-      const point =
-        s.lat != null && s.lng != null
-          ? { lat: s.lat, lng: s.lng }
-          : (booked && hotelPt.get(b!.id)) || BASE[s.city] || BASE.tokyo
-      return {
-        party: s.party,
-        checkIn: s.check_in,
-        checkOut: s.check_out,
-        city: s.city,
-        point,
-        label: (booked && b!.title) || s.area || NAME_EN[s.city] || s.city,
-        key: booked ? b!.title : `${s.city}|${s.area ?? ''}`,
-        confirmed: s.status === 'confirmed',
-        booked,
-      }
-    })
-  } else {
-    sleeps = hotels.map((h) => ({
-      party: h.who,
-      checkIn: h.starts_at!.slice(0, 10),
-      checkOut: h.ends_at!.slice(0, 10),
-      city: hotelBase(h.title + ' ' + (h.location ?? '')),
-      point: hotelPt.get(h.id)!,
-      label: h.title,
-      key: h.title,
-      confirmed: true,
-      booked: true,
-    }))
-  }
-  const dayWho = new Map(dayInfo.map((d) => [d.day, d.who]))
-  const flights = bookings.filter((b) => b.kind === 'flight')
-
   // the trip runs on Japan's calendar; a day that has passed takes no new plans, and what is on it stays (a place
   // nobody got to goes back to the planner only when someone says so in the app: "לא הגענו")
   const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10)
   // today counts as done too (41): a re-plan mid-trip rearranges from tomorrow on, so a place visited this morning but
   // not ticked is never moved away
   const past = (day: number) => dateOf(day) <= today
-  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, capOf, past })
-  // each city's middle, from the hotels in it
-  const basePt = new Map<string, Point>()
-  for (const [b, pts] of groupBy(
-    days.flatMap((d) => [...d.at.values()]),
-    (p) => p.base,
-  )) {
-    basePt.set(b, { lat: pts.reduce((s, p) => s + p.hotel.lat, 0) / pts.length, lng: pts.reduce((s, p) => s + p.hotel.lng, 0) / pts.length })
-  }
-
   const tipOf = (c: Cand) => c.tip
   const fixedItems = items.filter((i) => !i.auto || i.done || past(i.day))
   const autoItems = items.filter((i) => i.auto && !i.done && !past(i.day))
@@ -443,37 +381,109 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     want.push({ p, c })
   }
 
+  // how much a liked place matters (verdict, a local pick, both couples said yes, a high Tabelog score)
+  const priorityOf = (c: Cand) => {
+    const v = voteById.get(c.id)!
+    return (VERDICT[c.verdict ?? ''] ?? 2.5) + (c.local_pick ? 0.5 : 0) + (v.yes.length > 1 ? 1 : 0) + ((c.tabelog_score ?? 0) >= 3.6 ? 0.3 : 0)
+  }
+  // where a card is: its media point, else its own coordinates
+  const ownPoint = (c: Cand): Point | null => {
+    const m = mediaIdx[c.name]
+    return m?.lat != null ? { lat: m.lat, lng: m.lng! } : c.lat != null ? { lat: c.lat, lng: c.lng! } : null
+  }
+
+  // ---- where everyone sleeps, and the hours each couple has each day
+  const hotels = bookings.filter((b) => b.kind === 'hotel' && b.starts_at && b.ends_at)
+  const hotelPt = new Map<string, Point>()
+  for (const h of hotels) {
+    if (hotelPt.has(h.id)) continue
+    const base = hotelBase(h.title + ' ' + (h.location ?? ''))
+    const same = hotels.find((o) => o.id !== h.id && hotelPt.has(o.id) && o.title.trim().toLowerCase() === h.title.trim().toLowerCase())
+    const p =
+      (same && hotelPt.get(same.id)) ||
+      (await geocode(admin, h.title)) ||
+      (h.location ? await geocode(admin, h.location) : null)
+    // a geocode that lands outside the hotel's city is wrong; the city's middle is closer to the truth
+    hotelPt.set(h.id, p && base && BASE[base] && km(p, BASE[base]) < 40 ? p : base && BASE[base] ? BASE[base] : p ?? BASE.tokyo)
+  }
+  const bookingById = new Map(bookings.map((b) => [b.id, b]))
+  // the liked places, for where to sleep before a hotel is booked (stay.ts)
+  const stayCtx: StayCtx = {
+    base: BASE,
+    nameEn: NAME_EN,
+    nameHe: NAME_HE,
+    places: want.map(({ p, c }): StayPlace => ({
+      id: p.id,
+      point: ownPoint(c),
+      city: c.city,
+      weight: priorityOf(c),
+      mins: Math.min(visitMins(factsOf(c), c.time_needed, c.category ?? 'sight'), 420),
+      parties: p.who ? p.who.split(' + ') : null,
+    })),
+  }
+  // the stays: the trip_stays table when it exists and has any, else the hotel bookings (today's way), else the city
+  // written on each day. A stay with no hotel sleeps at its recommended area (stayRecs), an estimate
+  let sleeps: Sleep[]
+  let stayRecs: StayRec[] = []
+  if (stayRows?.length) {
+    const r = sleepsFromStays(
+      stayRows.map((s) => {
+        const b = s.booking_id ? bookingById.get(s.booking_id) : undefined
+        const booked = !!b && b.kind === 'hotel'
+        return { ...s, booked, hotelPoint: (booked && hotelPt.get(b!.id)) || null, hotelTitle: booked ? b!.title : null }
+      }),
+      stayCtx,
+    )
+    sleeps = r.sleeps
+    stayRecs = r.recs
+  } else if (!hotels.length) {
+    const r = sleepsFromDays(
+      Array.from({ length: trip.num_days }, (_, i) => cityIdOf(dayInfo.find((d) => d.day === i + 1)?.city, stayCtx)),
+      trip.num_days,
+      dateOf,
+      stayCtx,
+    )
+    sleeps = r.sleeps
+    stayRecs = r.recs
+  } else {
+    sleeps = hotels.map((h) => ({
+      party: h.who,
+      checkIn: h.starts_at!.slice(0, 10),
+      checkOut: h.ends_at!.slice(0, 10),
+      city: hotelBase(h.title + ' ' + (h.location ?? '')),
+      point: hotelPt.get(h.id)!,
+      label: h.title,
+      key: h.title,
+      confirmed: true,
+      booked: true,
+    }))
+  }
+  const dayWho = new Map(dayInfo.map((d) => [d.day, d.who]))
+  const flights = bookings.filter((b) => b.kind === 'flight')
+
+  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, capOf, past })
+  // each city's middle, from the hotels in it
+  const basePt = basePoints(days)
+
   // ---- the places to plan
   const units: Unit[] = []
   const unitPlace = new Map<string, { p: Place; c: Cand; f?: Facts; point: Point | null; base: string }>()
   for (const { p, c } of want) {
     const f = factsOf(c)
-    const m = mediaIdx[c.name]
-    const own = m?.lat != null ? { lat: m.lat, lng: m.lng! } : c.lat != null ? { lat: c.lat, lng: c.lng! } : null
+    const own = ownPoint(c)
     const unitCouples = p.who ? p.who.split(' + ') : couples
     // the nearest city its couples sleep in
     const bases = [...new Set(days.flatMap((d) => unitCouples.map((x) => d.at.get(x)?.base).filter((b): b is string => !!b)))]
     const point = own ?? (c.city && BASE[c.city] ? BASE[c.city] : null)
-    let base: string | null = null
-    let dist = Infinity
-    for (const b of bases) {
-      const bp = basePt.get(b) ?? BASE[b]
-      const dd = point ? km(point, bp) : c.city === b ? 0 : Infinity
-      if (dd < dist) {
-        dist = dd
-        base = b
-      }
-    }
+    const { base, far } = baseFor(point, c.city, bases, basePt, BASE)
     if (!base) {
       unplanned.push({ place_id: p.id, name: p.name, reason: 'no_day', who: p.who })
       continue
     }
-    const far = dist > 25
     const category = c.category ?? 'sight'
     let opens = mins(f?.opens)
     let closes = mins(f?.closes)
     if (opens != null && closes != null && closes <= opens) closes = 24 * 60
-    const v = voteById.get(p.candidate_id)!
     units.push({
       id: p.id,
       couples: unitCouples,
@@ -488,11 +498,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       closedWeekdays: f?.closed_weekdays ?? [],
       closedDates: (f?.closed_dates ?? []).map((d) => d.slice(0, 10)),
       openDates: (f?.open_dates ?? []).map((d) => d.slice(0, 10)),
-      priority:
-        (VERDICT[c.verdict ?? ''] ?? 2.5) +
-        (c.local_pick ? 0.5 : 0) +
-        (v.yes.length > 1 ? 1 : 0) +
-        ((c.tabelog_score ?? 0) >= 3.6 ? 0.3 : 0),
+      priority: priorityOf(c),
       current: autoByPlace.get(p.id)?.[0]?.day ?? null,
     })
     unitPlace.set(p.id, { p, c, f, point: own, base })
@@ -665,6 +671,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
         ...([...d.at.values()].some((p) => (p as { estimate?: boolean }).estimate) ? { estimate: true } : {}),
         hotels: Object.fromEntries([...d.at].map(([c, p]) => [c, (p as { label?: string }).label ?? null])),
       })),
+    // where to sleep, for each stretch with no hotel: the recommended area and up to two others (stay.ts)
+    stay_areas: stayRecs,
   }
   const stats = {
     placed: out.placed.size,

@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1080px;height:1080px;overflow:hidden;background:#faf7f2}
+svg{display:block}
+</style></head><body>
+<svg id="s" width="1080" height="1080" viewBox="0 0 1080 1080">
+ <g id="logo" transform="translate(108 185.6) scale(1.6)">
+  <g id="sym">
+   <circle id="r1" cx="214" cy="142" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+   <circle id="r2" cx="326" cy="142" r="38" fill="none" stroke="#bc002d" stroke-width="20"/>
+  </g>
+  <g transform="translate(76.86 199.44) scale(0.74)">
+<path id="t" fill="#1f1a17" d="M20 44H40V126A30 30 0 0 0 70 156V176A50 50 0 0 1 20 126ZM4 78H70V98H4Z"/>
+<path id="o1" fill="#1f1a17" d="M82 126A50 50 0 1 1 182 126A50 50 0 1 1 82 126ZM102 126A30 30 0 1 0 162 126A30 30 0 1 0 102 126Z"/>
+<path id="o2" fill="#1f1a17" d="M194 126A50 50 0 1 1 294 126A50 50 0 1 1 194 126ZM214 126A30 30 0 1 0 274 126A30 30 0 1 0 214 126Z"/>
+<path id="g" fill="#1f1a17" d="M306 126A50 50 0 1 1 406 126A50 50 0 1 1 306 126ZM326 126A30 30 0 1 0 386 126A30 30 0 1 0 326 126ZM386 76H406V190A50 50 0 0 1 356 240H326V220H356A30 30 0 0 0 386 190Z"/>
+<path id="o3" fill="#1f1a17" d="M418 126A50 50 0 1 1 518 126A50 50 0 1 1 418 126ZM438 126A30 30 0 1 0 498 126A30 30 0 1 0 438 126Z"/>
+  </g>
+ </g>
+</svg>
+<script>
+const T = parseFloat((location.hash.match(/t=([\d.]+)/)||[0,0])[1]);
+const clamp=(x)=>Math.max(0,Math.min(1,x));
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+const outCubic=(x)=>1-Math.pow(1-x,3);
+const inOutCubic=(x)=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const outBack=(x,s=1.9)=>1+(s+1)*Math.pow(x-1,3)+s*Math.pow(x-1,2);
+const C=2*Math.PI*38;
+function draw(el,p,startDeg){ // trace the ring clockwise
+  el.setAttribute('stroke-dasharray', C);
+  el.setAttribute('stroke-dashoffset', C*(1-p));
+  el.setAttribute('transform', `rotate(${startDeg} ${el.getAttribute('cx')} ${el.getAttribute('cy')})`);
+  el.style.opacity = p>0?1:0;
+}
+const t=T;
+// 1. the two rings draw themselves, side by side, level
+draw(document.getElementById('r1'), inOutCubic(seg(t,0.25,0.95)), 90);
+draw(document.getElementById('r2'), inOutCubic(seg(t,0.50,1.20)), 90);
+// 2. the step (version A): the second ring sinks 6 units and squashes, then springs up 28
+const r2=document.getElementById('r2');
+const outQ=(x)=>1-(1-x)*(1-x);
+const down = outQ(seg(t,1.3,1.5));
+const go = seg(t,1.52,1.98);
+const hop = outBack(go,1.9);
+const crouch = down*(1-clamp(go*3));
+const lift = 28*hop - 6*crouch;
+const stretch = Math.sin(Math.PI*seg(t,1.52,1.78));
+const land = Math.sin(Math.PI*seg(t,1.88,2.12));
+const sy = 1 - 0.08*crouch + 0.08*stretch - 0*land;
+const sx = 1 + 0.060*crouch - 0.05*stretch + 0.000*land;
+const g2 = `translate(326 ${142-lift + 38*(1-sy)}) scale(${sx} ${sy}) translate(-326 -142)`;
+r2.setAttribute('transform', g2 + ' ' + r2.getAttribute('transform'));
+// the whole symbol starts centred in the frame, then rises to make room for the name
+const rise = inOutCubic(seg(t,2.08,2.78));
+document.getElementById('sym').setAttribute('transform', `translate(0 ${93.75*(1-rise)})`);
+// 3. the name rises in, letter by letter
+['t','o1','o2','g','o3'].forEach((id,i)=>{
+  const p = outCubic(seg(t, 2.38+i*0.08, 2.38+i*0.08+0.5));
+  const el=document.getElementById(id);
+  let y = 40*(1-p);
+  // the word's own second o echoes the step a beat later
+  if(id==='o2') y -= 14*outBack(seg(t,3.08,3.48),2.2);
+  el.setAttribute('transform', `translate(0 ${y})`);
+  el.style.opacity = p;
+});
+</script></body></html>

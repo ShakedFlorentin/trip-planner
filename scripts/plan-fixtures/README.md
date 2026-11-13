@@ -24,3 +24,16 @@ the same code `index.ts` runs: `presence: { startDate, numDays, couples, sleeps,
 `{ party|null, checkIn, checkOut, city, point, label, key, confirmed, booked }`. Extra `expect` keys: `presence`
 (`{ "<day>": { "<couple>": { base, start?, end?, estimate? } | null } }`) and `estimateDays` (the days whose times rest on a
 stay with no hotel booking). The `stays-*` fixtures cover no hotels, some booked, all booked, and different dates per party.
+
+## Where-to-sleep fixtures (no hotel)
+
+A fixture with `trip` starts one step before `presence`, the way `index.ts` runs with no hotel booked:
+`trip: { startDate, numDays, couples, cities: { <id>: { lat, lng, en, he } }, stays? | dayCities?, places }`. `stays` are
+trip_stays rows (`{ city, check_in, check_out, party?, area?, lat?, lng?, booked? }`); without them `dayCities`
+(`{ "<day>": "<city as written in day_info>" }`) stands in, as for a trip with no stays and no hotels at all. `places` are
+`{ id, city, point, mins, category, priority, best?, couples? }`. The harness runs `stay.ts` (recommended area per stretch,
+`sleepsFromStays` / `sleepsFromDays`), `buildDays`, then each place's base and day trip (`baseFor`), and plans. Extra
+`expect` keys: `recommend` (`{ <city id>: <area key> }`), `dayTrips` (ids that must be day trips, placed, on days with
+nothing back in town) with `dayTripDays` (at most that many days), `notFar`, and `oneBase` (each city's nights sleep at
+one point: no hotel change inside a city). The recommendation for each stretch prints under the fixture's line.
+Unit tests of `stay.ts` itself: `npm run test:stay`.

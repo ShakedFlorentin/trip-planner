@@ -132,9 +132,12 @@ export function pricePerPerson(price: string | null | undefined): number | null 
   return signs ? YEN_SIGNS[Math.min(signs, YEN_SIGNS.length - 1)] : null
 }
 
+// the cities the questionnaire asks about: a card anywhere else (Yokohama, Hiroshima) has no answer to be hidden by
+const ASKED_CITIES: readonly string[] = ['tokyo', 'kyoto', 'osaka', 'nara', 'daytrip'] satisfies Answers['cities']
+
 /** True when the card is no use to this person and stays out of everything Discover shows them. */
 export function hidden(card: Card, a: Answers): boolean {
-  if (a.cities.length && !a.cities.includes(card.city as Answers['cities'][number])) return true
+  if (a.cities.length && ASKED_CITIES.includes(card.city) && !a.cities.includes(card.city as Answers['cities'][number])) return true
   const kind = typeOf(card)
   if (kind && a.interest[kind] === 'no') return true
   for (const n of a.never) {

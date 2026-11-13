@@ -46,6 +46,12 @@ const DAY = 86400000
 const HOURS_PER_NIGHT = 5.5 // hours of visits a day holds
 const DAYTRIP_KM = 150
 const DAYTRIP_VALUE = 0.7 // a place seen on a day trip is worth less than one next to the bed
+// no hotel every night: a stop of one night costs this much (hours of places), whatever the profile, so it only wins
+// when nothing else makes sense; the last night by the departure airport is the one stop that is fine. On a long trip
+// (LONG_TRIP nights or more) a two-night stop costs a little too: three nights a base when the trip allows
+const ONE_NIGHT = 8
+const TWO_NIGHTS = 1.5
+const LONG_TRIP = 9
 const addDays = (d: string, n: number) => new Date(Date.parse(d + 'T00:00:00Z') + n * DAY).toISOString().slice(0, 10)
 
 /** Minutes between two cities by train, with the way to and from the stations. */
@@ -268,6 +274,8 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
       } else runLen++
     }
     for (const n of runs.values()) if (n > 1) moveCost += 6 * (n - 1)
+    const short = shortStops(seq)
+    const stops = ONE_NIGHT * short.one.length + (slots.length >= LONG_TRIP ? TWO_NIGHTS * short.two : 0)
     for (const p of inp.parties) {
       const mine = slots.map((s, i) => ({ s, i })).filter(({ s }) => s.occ.some((o) => o.party === p.id))
       if (!mine.length) continue
@@ -278,8 +286,64 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
       if (p.arrival && cities.has(p.arrival)) moveCost += (1.5 * mins(p.arrival, fc)) / 60
       if (p.departure && cities.has(p.departure)) moveCost += (1.5 * mins(p.departure, lc)) / 60
     }
-    const score = prof.place * (own + DAYTRIP_VALUE * trips) - prof.idle * idle - prof.move * moveCost
+    const score = prof.place * (own + DAYTRIP_VALUE * trips) - prof.idle * idle - prof.move * moveCost - stops
     return { score, moves, hours: own + trips, dt: detail ? dt : [] }
+  }
+
+  // the runs of nights in one city (open nights take their assigned city, the others their fixed one)
+  function runsOf(seq: string[]) {
+    const out: { city: string; from: number; len: number }[] = []
+    for (let i = 0; i < seq.length; i++) {
+      const last = out[out.length - 1]
+      if (last && last.city === seq[i] && slots[i].date === addDays(slots[i - 1].date, 1)) last.len++
+      else out.push({ city: seq[i], from: i, len: 1 })
+    }
+    return out
+  }
+  const departures = new Set(inp.parties.map((p) => p.departure).filter((c): c is string => !!c))
+  /**
+   * The one-night stops the split chose (a person's own one-night stay is theirs, and the last night in the departure
+   * city is fine), and how many two-night stops it has.
+   */
+  function shortStops(seq: string[]) {
+    const runs = runsOf(seq)
+    const one: number[] = []
+    let two = 0
+    runs.forEach((r, k) => {
+      const chosen = slots.slice(r.from, r.from + r.len).some((s) => s.free)
+      if (!chosen) return
+      if (r.len === 2) two++
+      if (r.len !== 1) return
+      if (k === runs.length - 1 && runs.length > 1 && departures.has(r.city)) return
+      one.push(k)
+    })
+    return { one, two, runs }
+  }
+  /**
+   * The rule behind the cost, made sure: a one-night stop the search still left joins the neighbouring run whose city
+   * is nearer, when that city is a day trip away (its places become a day trip instead of two hotel changes).
+   */
+  function consolidate(a: (string | null)[]) {
+    for (let guard = 0; guard < 50; guard++) {
+      const seq = slots.map((s, i) => (s.free ? a[i]! : s.main!))
+      const { one, runs } = shortStops(seq)
+      let done = false
+      for (const k of one) {
+        const r = runs[k]
+        if (!slots[r.from].free) continue
+        const options = [runs[k - 1], runs[k + 1]]
+          .filter((x): x is (typeof runs)[number] => !!x && cities.has(x.city) && cities.has(r.city))
+          .map((x) => ({ x, d: km(cities.get(x.city)!, cities.get(r.city)!) }))
+          .filter((o) => o.d <= DAYTRIP_KM)
+          .sort((p, q) => p.d - q.d)
+        if (!options.length) continue
+        a[r.from] = options[0].x.city
+        done = true
+        break
+      }
+      if (!done) return a
+    }
+    return a
   }
 
   // ---- search: from a few starting points, change a block of open nights to one city while that improves the score
@@ -353,9 +417,24 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
       .sort((x, y) => y.v - x.v)
       .slice(0, 4)
     for (const { s } of ranked) {
-      const a = climb(s, prof)
+      const a = consolidate(climb(s, prof))
       const sig = freeIdx.map((i) => a[i]).join('|')
       if (!found.has(sig)) found.set(sig, { assign: a, sig, ev: {}, place: 0 })
+    }
+  }
+  // the same splits with one night moved across a change of city: a real second choice now that one-night stops are out
+  for (const f of [...found.values()]) {
+    const seq = slots.map((x, i) => (x.free ? f.assign[i]! : x.main!))
+    for (let i = 0; i + 1 < slots.length; i++) {
+      if (seq[i] === seq[i + 1] || slots[i + 1].date !== addDays(slots[i].date, 1)) continue
+      for (const [to, city] of [[i, seq[i + 1]], [i + 1, seq[i]]] as const) {
+        if (!slots[to].free) continue
+        const a = [...f.assign]
+        a[to] = city
+        consolidate(a)
+        const sig = freeIdx.map((x) => a[x]).join('|')
+        if (!found.has(sig)) found.set(sig, { assign: a, sig, ev: {}, place: 0 })
+      }
     }
   }
   const pool = [...found.values()]

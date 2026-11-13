@@ -13,7 +13,7 @@ import { reducedMotion } from '../spring'
 import { SwipeRow } from '../swipe'
 import { CardFull } from './Swipe'
 import { ShareSheet } from './Share'
-import StaysSheet from './Stays'
+import StaysSheet, { recommendedArea } from './Stays'
 import { useStays } from '../stays'
 import {
   ARRIVAL,
@@ -85,9 +85,15 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
     await mutate(supabase.from('places').update({ auto_planned: false }).eq('id', i.place_id))
     replan(trip.id)
   }
-  // swipe-to-remove: the same as "didn't make it" (deleted, and the planner doesn't put the place back), after a confirm
+  // swipe-to-remove, after a confirm: the stop is deleted and its place is marked as one the planner already had
+  // (auto_planned). A place so marked with no stop is how the planner knows somebody took it out, so it leaves it out
+  // and plans the rest of the day again. "Didn't make it" above does the opposite on purpose.
   const remove = async (i: PlanItem) => {
-    if (confirm(t('להסיר מהמסלול?'))) await missed(i)
+    if (!confirm(t('להסיר מהמסלול?'))) return
+    if (!(await mutate(supabase.from('itinerary_items').delete().eq('id', i.id)))) return
+    if (!i.place_id) return
+    await mutate(supabase.from('places').update({ auto_planned: true }).eq('id', i.place_id))
+    replan(trip.id)
   }
   const date = trip.start_date ? ymd(dayDate(trip.start_date, day)!) : ''
   const entries = dayEntries(items, bookings, day, date, mode, myCouple)
@@ -221,7 +227,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
           ) : (
             <button className="day-bed" onClick={() => setShowStays(true)}>
               <Icon as={BedDouble} />
-              <span>{t('איפה ישנים')}</span>
+              <span>{((a) => (a ? t('מומלץ לישון ב{area}', { area: a }) : t('איפה ישנים')))(recommendedArea(summary?.stay_areas, date, info?.who ?? null))}</span>
               <Icon as={ChevronLeft} className="chev flip-ltr" />
             </button>
           )}
@@ -309,6 +315,12 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
           cities={cities}
           bookings={bookings}
           available={staysAvailable}
+          recs={summary?.stay_areas ?? []}
+          people={(party) =>
+            party
+              ? { adults: Math.max(2, members.filter((m) => m.couple === party).length), rooms: 1 }
+              : { adults: Math.max(members.length, couples.length * 2, 1), rooms: Math.max(1, couples.length) }
+          }
           onClose={() => setShowStays(false)}
         />
       )}

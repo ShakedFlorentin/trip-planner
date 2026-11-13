@@ -215,3 +215,20 @@
 .arrival ul { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--line); gap: 8px; font-size: 0.875rem; color: var(--muted); }
 .arrival li .ic { width: 16px; height: 16px; }
 .spare { border-radius: 16px; }
+
+/* where to sleep: the recommended area of a stretch with no hotel (plan-trip/stay.ts), with a hotel search there.
+   A grey card like the stay rows; the red stays on the mark, the day-trip line and the search button */
+.stay-rec { display: flex; flex-direction: column; gap: 12px; }
+.stay-rec-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.stay-rec-mark { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+.stay-rec-mark .ic { width: 20px; height: 20px; }
+.stay-rec-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stay-rec-text b { font-size: 1.0625rem; font-weight: 700; line-height: 1.3; }
+.stay-rec-why { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; line-height: 1.4; color: var(--muted); }
+.stay-rec-hub { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 500; }
+.stay-rec-hub .ic { width: 16px; height: 16px; }
+.stay-rec-alts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.stay-rec-alts .chip { min-height: 32px; padding: 4px 12px; font-size: 0.8125rem; }
+.stay-rec .primary { min-height: 46px; }
+/* one line, centred with its icon, whatever the area's name */
+.stay-rec .primary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

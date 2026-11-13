@@ -1,0 +1,3211 @@
+[
+ {
+  "topic": "season",
+  "city": "tokyo",
+  "fact_en": "Cherry blossom is late March to early April; autumn leaves from late October. Both seasons are extremely crowded and pricey. The author prefers January-February: cheapest flights and hotels, calm locals, best winter fish, cold (4-8C by day) but driest season.",
+  "fact_he": "פריחת הדובדבן סוף מרץ-תחילת אפריל, שלכת מסוף אוקטובר; שתי העונות עמוסות ויקרות. הכותב מעדיף ינואר-פברואר: זול, שקט, דגי חורף, יבש אך קר (4-8 מעלות).",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "Jan-Feb 4-8C day, ~0C night",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "season",
+  "city": "tokyo",
+  "fact_en": "Summer is hot, humid and the rainiest; August-September bring heavy rain and typhoon winds.",
+  "fact_he": "קיץ חם ולח וגשום; באוגוסט-ספטמבר גשמים ורוחות עזות.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "season",
+  "city": "kyoto",
+  "fact_en": "Cherry blossom, snow and autumn leaves each transform Kinkaku-ji; do not come in summer.",
+  "fact_he": "קינקאקו-ג'י משתנה עם העונות; לא להגיע בקיץ.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2023,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Tokyo has several separate rail companies (JR, Tokyo Metro, Toei, others) each with its own platforms and gates; changing between companies often means exiting and tapping again. Two letters in a square on the line icon means JR (green signs); a single letter in a coloured circle means Tokyo Metro or Toei.",
+  "fact_he": "בטוקיו כמה חברות רכבת נפרדות; במעבר בין חברות לפעמים צריך לצאת ולכרטס שוב. אייקון עם שתי אותיות בריבוע - JR; אות אחת בעיגול - Metro או Toei.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Rush hour is 7:30-9:00 on lines into big stations and a milder reverse peak 18:00-19:00.",
+  "fact_he": "שעות עומס 7:30-9:00 ו-18:00-19:00 בכיוון ההפוך.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "7:30-9:00; 18-19",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Pay with a Suica or PASMO IC card (500 yen deposit, refundable minus small fee) loaded with cash at machines; works on trains, buses, konbini, vending machines. Tourist options: Welcome Suica and Tourist PASMO (airport only), no deposit, valid 28 days, balance not refundable. iPhone users can create a digital Suica in Wallet (the author's recommendation), works with Apple Watch. Express/reserved/Green car need an extra ticket.",
+  "fact_he": "תשלום בכרטיס Suica או PASMO (פיקדון 500 ין); Welcome Suica ו-Tourist PASMO בלי פיקדון, תקפים 28 יום. אפשר Suica דיגיטלי באייפון. רכבות אקספרס דורשות כרטיס נוסף.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "500 yen deposit; 28 days",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Google Maps is the only navigation app needed; follow its platform and exit instructions exactly. Live View AR arrows work well in Japan. If it says skip the train that just arrived, it is probably an express that will not stop at your station.",
+  "fact_he": "גוגל מפס מספיק לניווט, לציית להוראות כולל רציף ויציאה; Live View עובד מצוין.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Taxis are expensive and best at night after trains stop or for remote spots; sit on the left and do not touch the door (it opens automatically); drivers are honest. Uber works; GoTaxi app combines Uber and local taxi companies, register and add a card beforehand.",
+  "fact_he": "מוניות יקרות, שימושיות בלילה; לא לגעת בדלת; Uber עובד ו-GoTaxi משלב כמה חברות.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Walk where you can: long walks between stations show neighbourhoods and shops you would miss underground.",
+  "fact_he": "לטייל ברגל בין תחנות מגלה שכונות שמפספסים ברכבת.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Japanese addresses do not follow streets; use Google Maps with the business name, phone number or address. Floor numbers are written F1, F2, or B1 for basement, many businesses are on upper floors or basements.",
+  "fact_he": "כתובות ביפן לא לפי רחובות; לחפש בגוגל מפס. קומות מסומנות F1,F2,B1.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Eating and drinking on public transport is strictly forbidden and talking on the phone on trains is not accepted. Stand to the left on escalators, let people exit before boarding.",
+  "fact_he": "אסור לאכול ולשתות בתחבורה ציבורית, לא מדברים בטלפון; במדרגות נעות לעמוד שמאלה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "kyoto",
+  "fact_en": "Kyoto attractions are spread out so plan by route, not by area; use buses and a basic metro, and consider renting a bicycle (safe, flat centre, little theft, drivers respect cyclists). Taxis are also acceptable.",
+  "fact_he": "אטרקציות קיוטו מפוזרות, לתכנן לפי מסלול; אוטובוסים ומטרו, ושכירות אופניים מומלצת.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2023,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "kyoto",
+  "fact_en": "Arrive in Kyoto first and end in Tokyo: fly into Kansai (Osaka), start in Kyoto, move north to Tokyo; the author says this saves time and money and moves from traditional to modern. Plan 3-4 days in Kyoto.",
+  "fact_he": "להתחיל בקיוטו (נחיתה בקנסאי) ולסיים בטוקיו; 3-4 ימים בקיוטו.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2023,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "kyoto",
+  "fact_en": "Sleep in a ryokan in Kyoto: futon on tatami, often with onsen and traditional meals; expensive but, in the author's view, worth it.",
+  "fact_he": "לישון בריוקאן בקיוטו, יקר אבל שווה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2023,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "tokyo",
+  "fact_en": "Tokyo has no centre; choose a hotel next to a mid-size train station, not at Tokyo, Shibuya or Shinjuku main stations (noisy, expensive). Test location by checking Google Maps routes from the hotel to 3 key destinations: if each needs one change and under 30 minutes it is good; being near the Yamanote line is ideal.",
+  "fact_he": "בחרו מלון ליד תחנה קטנה יותר ולא ליד התחנות הגדולות; לבדוק מסלולים ל-3 יעדים.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "tokyo",
+  "fact_en": "Safe areas to sleep: Shinjuku (especially Shinjuku-sanchome, recommended for first-timers), Shibuya/Harajuku/Ikebukuro (central but noisy), Ginza (luxury), Tokyo Station/Akihabara (convenient, cheap), Ueno/Asakusa (traditional, cheaper, ~30 minutes from new areas), Roppongi (nightlife). Avoid Odaiba and deep Kabukicho. Shimokitazawa is nice but has only two train lines.",
+  "fact_he": "אזורי לינה: שינג'וקו (Sanchome), שיבויה/הרג'וקו/איקבוקורו, גינזה, טוקיו/אקיהברה, אואנו/אסאקוסה, רופונגי. להימנע מאודאיבה ומקבוקיצ'ו.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "tokyo",
+  "fact_en": "Hotel rooms in Tokyo are very small; check size at booking, one room had no space to open a suitcase.",
+  "fact_he": "חדרים קטנים מאד בטוקיו.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book everything ahead in tourist season; hotels and restaurants at least two months before.",
+  "fact_he": "להזמין הכל מראש, מלונות ומסעדות חודשיים לפני.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "2 months",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "money",
+  "city": "japan",
+  "fact_en": "Cash is still widely used and some places take no cards (and vice versa). Bring tens of thousands of yen from Israel (budget ~3,000 yen per person per day) and always carry 10,000 yen. Refuse 2,000 yen notes; many Japanese do not know or accept them.",
+  "fact_he": "מזומן עדיין נפוץ; להביא כמה עשרות אלפי ין ולהחזיק 10,000 ין. לא לקבל שטר 2000 ין.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "3000 yen/person/day; carry 10,000 yen",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "money",
+  "city": "japan",
+  "fact_en": "Hand cash and cards over with two hands; money is usually put on a tray.",
+  "fact_he": "מוסרים כסף וכרטיס בשתי ידיים; בדרך כלל על מגש.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "money",
+  "city": "tokyo",
+  "fact_en": "Daily eating budget in Tokyo excluding flights, intercity transport, hotel: about 10,000 yen/person/day (breakfast 1,000, lunch 2,000, dinner 3,000, two coffee+pastry 2,000, snacks 1,000, 5 rides 1,000). A fun typical day costs about 7,900 yen. Fine dining 10,000-30,000 yen per person; street food 500-1,000 yen.",
+  "fact_he": "תקציב יומי באוכל ותחבורה בטוקיו כ-10,000 ין; יום טיפוסי כ-7,900 ין; ארוחה גבוהה 10-30 אלף ין.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "10,000 yen/day; 7,900 yen typical",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "No tipping, ever; it confuses or offends.",
+  "fact_he": "אין טיפים ביפן.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Izakayas and bars charge otoshi (a small table snack, about 500 yen/person, cannot be refused), sometimes a cover charge (usually under 1,000 yen), and often require one drink per person.",
+  "fact_he": "באיזקאיות גובים otoshi (כ-500 ין לאדם), לעיתים cover charge ודרישת משקה אחד.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "otoshi ~500 yen; cover <1000 yen",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Do not ask to modify a dish or return a dish; if something does not suit you, order something else or go elsewhere. Call the waiter with 'sumimasen'; waiters will not check on you.",
+  "fact_he": "אין לבקש שינויים במנה או להחזיר מנות; לקרוא למלצר 'סומימאסן'.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Take off shoes in traditional places (restaurants, temples, tea houses); wear socks without holes. Toilet slippers must be left in the toilet. Oshibori towel is for hands only. No perfume before a restaurant, do not blow your nose at the table.",
+  "fact_he": "מורידים נעלים במקומות מסורתיים; מגבת oshibori לידיים בלבד; לא בושם לפני מסעדה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Eating while walking is not customary, though not forbidden; find a corner. There are almost no public bins; carry rubbish to konbini or vending machine bins.",
+  "fact_he": "לא נהוג לאכול תוך כדי הליכה; אין פחים ברחוב.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Tokyo is very safe; lost wallets are usually returned. Each neighbourhood has a koban police box for lost items and directions.",
+  "fact_he": "טוקיו בטוחה מאד; בכל שכונה יש koban של משטרה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "sim",
+  "city": "japan",
+  "fact_en": "Do not rely on public WiFi. Best value is an eSIM (compare on esimdb); a physical SIM cannot receive SMS. Pocket WiFi routers suit families/groups (5-10 devices) and can be ordered to hotel or airport. Rent power banks at konbini via Chargespot. Bring a US-type adapter.",
+  "fact_he": "סים וירטואלי eSIM הוא הזול; ראוטר נייד למשפחות; Chargespot לשכירת סוללה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "airport",
+  "city": "japan",
+  "fact_en": "Delivery services exist: the author used a courier at Kappabashi to ship purchases to the hotel.",
+  "fact_he": "אפשר לשלוח קניות למלון בשירות משלוחים.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Packing method: bring empty shoe boxes; wrap fragile or crushable items in cling film inside the boxes. Fly with minimal gear; buy what you need there.",
+  "fact_he": "שיטת אריזה: קופסאות נעליים ריקות וניילון נצמד.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Buy electronics only if they suit European voltage; avoid buying phones (camera shutter sound can be forced on). Kitchen gear at Kappabashi; suribachi (grinding bowl); tea at Kanekichi or Sakurai; snacks at Donki/Muji; Pocky and quality sweets. Prefer small tight packs to luxury gift boxes full of air.",
+  "fact_he": "קניות: ציוד מטבח בקאפאבאשי, תה, חטיפים בדונקי; לא לקנות טלפונים.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "tokyo",
+  "fact_en": "Konbini (7-Eleven, FamilyMart, Lawson) are everywhere, open 24h; do not miss egg salad sandwich, onigiri (follow numbered opening instructions), karaage at the register, salted lychee drink (Lawson), frozen grape balls, puddings.",
+  "fact_he": "קונביני בכל מקום; סנדוויץ' סלט ביצים, אוניגירי, קרואגה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Drink vending machines are everywhere and cheap; red label means hot, blue means cold.",
+  "fact_he": "מכונות שתייה בכל פינה; אדום חם, כחול קר.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Souvenir cooking goods worth buying (dry and light): furikake (10 kinds), aonori, large katsuobushi flakes, kombu, goma oil for seasoning, shichimi togarashi, yuzu kosho, sansho pepper, ponzu, tonkatsu/okonomiyaki sauce, miso (pale ones are not available in Israel). Do not bother with mirin, Japanese mayo, plain soy; avoid heavy liquids.",
+  "fact_he": "מה לקנות למטבח: פוריקקה, אונורי, קצואובושי, קומבו, שמן שומשום, שיצ'ימי, יוזו קושו, סנשו, פונזו, מיסו בהיר.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "booking",
+  "city": "tokyo",
+  "fact_en": "Restaurants: check the tabelog.com page for a reservation option, then Google Maps booking button. Booking sites: TableCheck, Omakase, Pocket Concierge, JPNeazy, Tableall, Gurunavi, Autoreserve. Price at the end may differ (service fee, tax, seasonal extras). No-show or 15-minute lateness or late cancellation usually means paying the full price.",
+  "fact_he": "להזמין דרך tabelog וגוגל מפס; אתרי הזמנה: TableCheck, Omakase, Pocket Concierge ועוד. אי הגעה = תשלום מלא.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "booking",
+  "city": "tokyo",
+  "fact_en": "Tabelog scores: above 3.5 is very good, above 3.7 excellent, above 4.0 usually impossible to get in; Google reflects tourists' taste more. Tabelog Awards list gold/silver/bronze.",
+  "fact_he": "דירוג Tabelog: מעל 3.5 טוב מאד, 3.7 מצוין, 4.0 קשה להשיג מקום.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "numbers": "3.5 / 3.7 / 4.0",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "tokyo",
+  "fact_en": "Many restaurants close between lunch and dinner; many cafes open only after 10:30; many dinner places open 17:00; last order (LO) is usually 30-60 min before closing. Lunch menus are often far cheaper; queues are normal and a queue of locals is a good sign; arrive 30 minutes before opening for popular places.",
+  "fact_he": "שעות פתיחה: סגירה בין צהרים לערב, בתי קפה אחרי 10:30, LO חצי שעה לפני סגירה, תפריט צהרים זול יותר.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "etiquette",
+  "city": "tokyo",
+  "fact_en": "Ordering: plastic food models and photo menus are normal and not a sign of a tourist trap; ask 'Eigo no menu (arimasu ka)'; ask for recommendation 'O susume wa nan desu ka'; bill 'Okaikei o onegaishimasu'; many places now order via QR code or LINE. Some pay at a vending ticket machine first, others pay at the exit with a slip.",
+  "fact_he": "הזמנה: דגמי אוכל ותפריט תמונות נורמליים; QR קוד; לפעמים משלמים במכונה לפני.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2025,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "'Sake' in Japanese means any alcohol; to order rice wine ask for nihonshu. Nama biru is draft beer, 'remon sawa' is a lemon sour popular in izakayas. Hot or iced: hotto / aisu.",
+  "fact_he": "'סאקה' ביפנית היא כל אלכוהול; יין אורז הוא nihonshu; nama biru בירה מהחבית; remon sawa.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "No concept of kosher; Japanese consider something meat only when visible meat. Broths with meat, bonito shavings, egg-containing sauces are not seen as such. The author made printable illustrated food-restriction cards (pregnancy, vegan, vegetarian, pescatarian, kosher without pork, kosher no pork/seafood, gluten, dairy, mushroom, sesame, fish, shellfish, egg allergy) available on his page.",
+  "fact_he": "אין מושג כשרות ביפן; הכותב הכין כרטיסיות מאוירות להורדה למגבלות מזון.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2024,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Pork is everywhere; pork lard is extremely common, especially in cheap pastries and bread; shop staff often cannot tell. Halal restaurants (and Indian restaurants) help avoid pork. Ramen broth almost surely contains pork and cannot be changed. Fish is on the same boards/knives as other seafood.",
+  "fact_he": "חזיר שכיח מאד, גם שומן חזיר במאפים; מסעדות חלאל והודיות עוזרות; ציר ראמן כמעט תמיד חזיר.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Dashi (kombu + bonito flakes) is in almost every liquid, sauce, omelet and even egg salad; katsuobushi may top salads, tofu and veggies (ask for none); furikake often contains fish/egg even in vegan-looking onigiri; inari sushi and tamago nigiri contain dashi; tofu dishes often include meat or fish; shellac is used in sweets and on fruit. If there is a liquid, assume it has fish.",
+  "fact_he": "דאשי בכל נוזל, קצואובושי על סלטים וטופו, פוריקקה מכילה דג, אינארי וניגירי ביצה מכילים דאשי.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Dairy is rare in traditional Japanese food but butter appears in steaks, udon and ramen. Many cheeses use animal rennet. Soy sauce contains wheat (gluten); miso sometimes contains barley; soba usually contains wheat flour; barley tea (mugi) is free in many restaurants and has gluten; sake is rice-only only if labelled junmai. Sesame is in gyoza, ramen, tonkatsu shops and tempura oil.",
+  "fact_he": "גלוטן: סויה, מיסו כהה, סובה, תה שעורה; שומשום בגיוזה, ראמן וטונקצו.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Vegan options: Buddhist shojin ryori (more in Kyoto), HappyCow app, konbini salads and sandwiches in clear packaging, gluten-free map gfguidejapan.com. Coco Ichibanya has vegan and gluten-free options. Another Hebrew resource on kosher in Japan: zmanyapan.com.",
+  "fact_he": "אפשרויות טבעוניות: שוג'ין ריורי, HappyCow, קוקו איצ'יבאניה.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "The Payke app scans barcodes and gives English product info, useful for checking ingredients; Google Translate camera for menus; Kuli Kuli menu translation app.",
+  "fact_he": "אפליקציית Payke סורקת ברקוד ומציגה מידע באנגלית.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "baby",
+  "city": "tokyo",
+  "fact_en": "Public toilets are common, clean and easy to find on the map; Shibuya has a project of designer public toilets (tokyotoilet.jp). Few baby-specific tips: the author states he has no information on kids or Disneyland.",
+  "fact_he": "שירותים ציבוריים נפוצים ונקיים. הכותב אינו מכסה ילדים.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Sugamo's main street becomes a pedestrian market on days ending in 4 (4th, 14th, 24th).",
+  "fact_he": "סוגאמו: שוק מסורתי בימים שמסתיימים ב-4.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "Toshikoshi soba is the traditional New Year's Eve dish; hikkoshi soba is given to new neighbours.",
+  "fact_he": "סובה של ראש השנה היפני (toshikoshi).",
+  "source_url": "https://www.ptitim.com/udon_soba_ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "shopping",
+  "city": "tokyo",
+  "fact_en": "Oedo Antique Market is the author's favourite flea market (Sundays are the best day for flea markets); Yoyogi park has a Sunday flea market.",
+  "fact_he": "שוק פשפשים Oedo Antique הטוב; בימי ראשון שווקי פשפשים.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "booking",
+  "city": "tokyo",
+  "fact_en": "Closed days: Sundays many businesses closed; Kappabashi mostly closed Sundays; Shimokitazawa many closed Tuesdays; Ameyoko some closed Wednesdays. Check that places are open before travelling far; businesses close without warning.",
+  "fact_he": "ימי ראשון רבים סגורים, בשלישי בשימוקיטאזווה, ברביעי באמיוקו.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Tsukiji: visit early; many shops open before dawn and close around noon.",
+  "fact_he": "צוקיג'י: להגיע מוקדם.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "hokkaido",
+  "fact_en": "Hokkaido ramen is miso based; Sapporo soup curry is local and disappears outside the region; Hokkaido is famous for seafood, dairy, melon and lavender ice cream.",
+  "fact_he": "ראמן הוקאידו על מיסו, מרק קארי סאפורו, גלידות חלב.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "tohoku",
+  "fact_en": "Tohoku/Sendai specialities: kiritanpo (Akita grilled rice cylinders), gyutan (grilled beef tongue), zunda mochi (rice dumplings with sweet edamame paste), sasa kamaboko (fish cake grilled on bamboo leaf).",
+  "fact_he": "מאכלי טוהוקו: kiritanpo, gyutan, zunda mochi.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Soba-yu: after cold soba you receive a small pot of the noodle cooking water to pour into the leftover dipping sauce and drink.",
+  "fact_he": "בסוף סובה קרה מקבלים soba-yu - מים לשפוך לרוטב ולשתות.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Traditional Japanese breakfast sets (e.g. at Matsuya, served until 11): rice, miso soup, pickles, tofu and grilled salmon; Japanese silken tofu is soft enough to eat with a spoon.",
+  "fact_he": "ארוחת בוקר יפנית: אורז, מיסו, חמוצים, טופו, סלמון.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Donburi are rice bowls with changing toppings (gyudon beef, oyakodon chicken-egg, tendon tempura); Japanese curry (kare raisu) is eaten with a spoon, usually ordered with tonkatsu or cheese; add onsen tamago (soft egg) to udon and gyudon.",
+  "fact_he": "דונבורי הם קערות אורז; קארי יפני עם טונקצו; onsen tamago ביצה רכה.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Natto: fermented soybeans with sticky strings and strong smell; Japanese like to test foreigners with it. Taiyaki: fish-shaped cake filled with red bean paste.",
+  "fact_he": "נאטו - פולי סויה מותססים; טאייאקי - עוגה בצורת דג.",
+  "source_url": "https://www.ptitim.com/japan2014/",
+  "year_written": 2014,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Udon: thick, soft, chewy wheat noodles, boiled 12-17 minutes then rinsed in cold water; works hot or cold, in clear broths or curry; Sanuki udon (thick, square, hand-cut) is the favourite; somen is a very thin cousin eaten cold in summer.",
+  "fact_he": "אודון - אטריות חיטה עבות ורכות; סנוקי אודון הכי אהוב; סומן דקיקות.",
+  "source_url": "https://www.ptitim.com/udon_soba_ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Soba: buckwheat noodles, mostly mixed with wheat flour; best eaten plain, cold on a bamboo tray, lifted, smelled, tasted, then dipped lightly in sauce with wasabi and ginger on the side; biting through the noodle is rude, slurp a mouthful. Hot soba soups need a clean dashi; typical toppings: shrimp tempura, grated nagaimo (tororo), duck, smoked mackerel. Soba restaurants often show noodle-making in the window.",
+  "fact_he": "סובה - אטריות כוסמת, הכי טובה קרה על מגש עם רוטב טבילה; לא נוגסים באטריה.",
+  "source_url": "https://www.ptitim.com/udon_soba_ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Ramen is the noodle itself, not the soup: wheat noodles with kansui (alkaline salt) giving yellow colour, springy chew; they came from China (originally shina soba). Styles: soup ramen, tsukemen (dip), yakisoba (fried), abura soba (brothless with minced meat, garlic, raw yolk).",
+  "fact_he": "ראמן הוא האטריה (עם קנסוי), לא המרק. סגנונות: מרק, צוקמן, יאקיסובה, אבורה סובה.",
+  "source_url": "https://www.ptitim.com/udon_soba_ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "How to order ramen like a local: pick noodle firmness - barigane (very hard), barikata (al dente), yawamen (soft); kaedama is a second serving of noodles (mainly in the south); tsukemen serves noodles separately for dipping. Some ordering codes are not shown on menus.",
+  "fact_he": "הזמנת ראמן: barigane/barikata/yawamen קשיות; kaedama הוספת אטריות; tsukemen.",
+  "source_url": "https://www.ptitim.com/udon_soba_ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Ramen broth types: chintan (clear, simmered a few hours) and paitan (thick/cloudy, bones boiled for many hours or days, like tonkotsu). Shoyu ramen is clear broth with soy tare; miso ramen is Hokkaido style.",
+  "fact_he": "ציר ראמן: chintan צלול, paitan סמיך (טונקוטסו); shoyu ו-miso.",
+  "source_url": "https://www.ptitim.com/ramen/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Dashi is the base of Japanese cooking: infusion of kombu with katsuobushi (or dried sardines, or shiitake for vegan). Mizudashi is cold-steeped dashi (4+ hours). Instant dashi powder is widely used in Japan.",
+  "fact_he": "דאשי - ציר מקומבו וקצואובושי; mizudashi חליטה קרה; אבקת דאשי אינסטנט נפוצה.",
+  "source_url": "https://www.ptitim.com/dashi/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Rice is gohan, the word also means 'meal'; rice is the neutral centre while side dishes (okazu) are strongly seasoned; the Japanese rice types are mochi-mai (sticky, for sweets) and uruchi-mai (everyday rice, e.g. Koshihikari, Akitakomachi).",
+  "fact_he": "גוהן=אורז ו=ארוחה; okazu תוספות; mochi-mai ו-uruchi-mai.",
+  "source_url": "https://www.ptitim.com/japanese-rice/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Matcha is powdered shade-grown tea leaves (tencha ground by stone), whisked into water in a wide handleless bowl and drunk fully; taste is grassy, bitter and velvety; it is not the same as green tea infusion or the green powder served at sushi shops.",
+  "fact_he": "מאצ'ה - עלי תה טחונים שמוקצפים ושותים מקערה; לא אותו דבר כמו תה ירוק.",
+  "source_url": "https://www.ptitim.com/matcha/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Mitarashi dango: rice-flour dumplings on a skewer glazed with sweet soy; also soy flour, sesame and anko versions.",
+  "fact_he": "דנגו: כדורי קמח אורז בשיפוד עם קרמל סויה.",
+  "source_url": "https://www.ptitim.com/dango/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Koikuchi shoyu is the standard dark soy (~90% of sales); usukuchi is lighter in colour but saltier, used where colour matters; tamari is the thick liquid from miso making with little or no gluten; saishikomi is aged double-brewed premium soy for dipping. Look for water, soy, wheat, koji only; 'hydrolyzed/HVP' is a cheap chemical method.",
+  "fact_he": "סוגי סויה: koikuchi, usukuchi, tamari, saishikomi; לקרוא רכיבים.",
+  "source_url": "https://www.ptitim.com/the_japanese_pantry/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Mirin is sweet rice wine; hon mirin (本みりん) is real, mirin-style (みりん風調味料) is diluted with syrup, aji-mirin is just sweetener. Soy plus mirin is a base of Japanese seasoning; mentsuyu is dashi + 10% soy + 10% mirin.",
+  "fact_he": "מירין - יין אורז מתוק; hon mirin אמיתי; mentsuyu רוטב אטריות.",
+  "source_url": "https://www.ptitim.com/the_japanese_pantry/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Rice vinegar is the main sour: nihaizu (vinegar + soy) and sanbaizu (vinegar + soy + mirin) are classic dressings. Ponzu is citrus-seasoned vinegar (ponzu shoyu with soy). Shichimi togarashi is a 7-spice chili blend; yuzu kosho is yuzu peel and chili paste; sansho is citrusy green pepper good on grilled fish.",
+  "fact_he": "חומץ אורז; nihaizu/sanbaizu; פונזו; שיצ'ימי; יוזו קושו; סנשו.",
+  "source_url": "https://www.ptitim.com/the_japanese_pantry/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Seaweed: wakame (silky, in miso soup), nori (dried sheets for sushi/onigiri), kombu (for dashi, the key umami seaweed). Tofu: momen (firm 'cotton' block) for frying and stir-fry; kinugoshi (silken) soft and delicate.",
+  "fact_he": "אצות: וואקמה, נורי, קומבו; טופו: momen קשה, kinugoshi משי.",
+  "source_url": "https://www.ptitim.com/the_japanese_pantry/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Teriyaki is a cooking method (teri = shine, yaki = grilled), not a bottled sauce; furikake is a rice seasoning of seaweed, sesame and often fish/egg.",
+  "fact_he": "טריאקי היא שיטה ולא רוטב; פוריקקה תבלין לאורז.",
+  "source_url": "https://www.ptitim.com/the_japanese_pantry/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Miso is a fermented paste of soybeans, koji and salt. Main types: kome miso (rice koji, 80%+, shiro white ~6 months, aka red 12-18 months), mugi miso (barley koji, 'country' miso), mame miso (soybean koji, dry and heavy). Pale miso is the author's tip to buy in Japan.",
+  "fact_he": "מיסו מותסס מסויה, קוג'י ומלח: kome (אורז), mugi (שעורה), mame (סויה); shiro בהיר, aka אדום.",
+  "source_url": "https://www.ptitim.com/miso_guide/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "food-knowledge",
+  "city": "japan",
+  "fact_en": "Umami is the savory 'fifth taste' from glutamate (kombu, tomato, soy, parmesan), inosinate (fish, bonito) and guanylate (dried mushrooms); combinations multiply the effect, which is why dashi (kombu + bonito) is so powerful. Fermented/aged foods are umami-rich.",
+  "fact_he": "אומאמי - הטעם החמישי: גלוטמט, אינוזינט, גואנילט; שילובים מעצימים.",
+  "source_url": "https://www.ptitim.com/umami/",
+  "agent": "ptitim"
+ },
+ {
+  "topic": "lodging",
+  "city": "tokyo",
+  "fact_en": "Hebrew-speaking guides and planners recommended by the author include Noam (Tokyo tours), Miss Tokyo (Lilach), Yonatan Tsairi (Nihonbashi food tour), Omer in Japan, Anat Frances (sake sommelier tours), Liat Israpanit, Tal Zeus, Liat Inbar (tokyo2020explore), Shachar (blue-vagabond, vegan), Ella Mrom Amgar (Okinawa, Hokkaido), and for Kyoto/Osaka: Avi Beracha, Liran Levi (Osaka food tours), Sivan Levi Izawa, Shiri Liber Milo.",
+  "fact_he": "מדריכים ישראלים מומלצים: נועם, מיס טוקיו, יונתן צאירי, עומר ביפן, ענת פרנס, ליאת, טל זיאוס, ליאת ענבר, שחר; בקיוטו: אבי ברכה, לירן לוי, סיוון לוי איזאווה, שירי ליבר מילוא.",
+  "source_url": "https://www.ptitim.com/tokyoguide/",
+  "year_written": 2026,
+  "agent": "ptitim"
+ },
+ {
+  "topic": "transport",
+  "city": "koyasan",
+  "fact_en": "Nankai Koyasan World Heritage Ticket (2 consecutive days, not covered by JR Pass): round trip to Koyasan, unlimited local buses, discounts at Kongobuji, Reihokan, Kondo and Daito pagoda. Regular 3,080 yen, with Limited Express 3,630 yen; Limited Express surcharge 780 yen each way. Without pass about 4,460 yen. Saves ~15-30%.",
+  "fact_he": "פס Koyasan World Heritage של Nankai (יומיים, לא קשור ל-JR Pass): הלוך חזור, אוטובוסים בהר והנחות באתרים. 3,080 יין רגיל, 3,630 עם לימיטד אקספרס; בלי פס כ-4,460 יין. חוסך 15-30%.",
+  "numbers": "3,080 / 3,630 yen; +780 yen LTD EXP each way",
+  "source_url": "https://yapanit.com/יעדים/הר-קויה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "koyasan",
+  "fact_en": "Route: Nankai Namba - Gokurakubashi (Limited Express Koya, only 5 per day, ~80 min; or Express/Rapid Express via Hashimoto, every 20-30 min, ~100 min) - cable car 5 min - bus to town (~300 yen without pass). Walking the road from the cable car station is forbidden; use the bus. Suggested departure from Namba 10:00 arriving ~11:35.",
+  "fact_he": "נסיעה: נמבה - גוקורקובשי (לימיטד אקספרס רק 5 ביום, 80 דקות; או אקספרס דרך האשימוטו, 100 דקות) - כבל-קאר 5 דקות - אוטובוס למרכז. אסור ללכת ברגל מתחנת הכבל. יציאה מומלצת 10:00 מנמבה.",
+  "numbers": "80 min / 100 min; bus ~300 yen",
+  "source_url": "https://yapanit.com/יעדים/הר-קויה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "season",
+  "city": "koyasan",
+  "fact_en": "Koyasan is high and cool; bring warm clothes. Autumn foliage is striking. Plan about 24 hours including travel.",
+  "fact_he": "הר קויה גבוה וקריר, להביא בגדים חמים. בסתיו שלכת מרהיבה. כ-24 שעות כולל נסיעות.",
+  "source_url": "https://yapanit.com/יעדים/הר-קויה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "kosher",
+  "city": "koyasan",
+  "fact_en": "Temple lodging meals are vegan shojin ryori (miso soup, seaweed, rice, tofu, pickles), small portions.",
+  "fact_he": "ארוחות המקדש טבעוניות (שוג׳ין ריורי), מנות קטנות.",
+  "source_url": "https://yapanit.com/יעדים/הר-קויה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "osaka",
+  "fact_en": "Kansai airport to Namba: direct Nankai train, 43 min express or ~1h slow. Last express leaves airport 23:29, slow train 23:40 (arrives 00:40). Namba is a handy first night after late low-cost arrivals.",
+  "fact_he": "משדה התעופה קנסאי לנמבה: רכבת ישירה של Nankai, 43 דקות אקספרס או שעה ברכבת איטית. אקספרס אחרונה 23:29, איטית 23:40. נמבה נוחה ללילה ראשון אחרי נחיתה מאוחרת.",
+  "numbers": "43 min; last 23:29 / 23:40",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/רובע-נאמבה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "planning",
+  "city": "osaka",
+  "fact_en": "Author says skip Osaka on trips shorter than ~17 days since Tokyo covers the big-city feel; go if: late/early Kansai flight, long trip, event (festival, sumo, concert at Kyocera Dome), kabuki, sports race, kids wanting aquarium/Universal, or combining Koyasan.",
+  "fact_he": "לדעת הכותבת בטיול קצר מ-17 ימים אפשר לוותר על אוסקה. כדאי: טיסה מאוחרת/מוקדמת מקנסאי, טיול ארוך, אירוע, קבוקי, ילדים (אקווריום/יוניברסל), או שילוב הר קויה.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/מידע-כללי-על-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "lodging",
+  "city": "osaka",
+  "fact_en": "Namba is recommended as base: hotels in all price ranges, direct Nankai line to Kansai airport and to Koyasan.",
+  "fact_he": "נמבה מומלצת ללינה: מלונות בכל מחיר, רכבת ישירה לשדה התעופה ולהר קויה.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/מידע-כללי-על-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "food",
+  "city": "osaka",
+  "fact_en": "Signature Osaka dishes: okonomiyaki (Osaka style differs from Hiroshima) and takoyaki. Kansai cuisine considered the tastiest in Japan by the author.",
+  "fact_he": "מנות הדגל של אוסקה: אוקונומיאקי (שונה מהירושימה) וטאקויאקי.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/מידע-כללי-על-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "festival",
+  "city": "osaka",
+  "fact_en": "Expo 2025 Osaka ran 13 April to 13 October 2025 on Yumeshima island.",
+  "fact_he": "אקספו 2025 התקיים בין 13 באפריל ל-13 באוקטובר 2025 באי יומשימה.",
+  "year_written": "2024-2025",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/אקספו-2025-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "booking",
+  "city": "osaka",
+  "fact_en": "USJ: buy e-tickets ahead; Express Pass 4 rides ~4,200 yen, 7 rides ~6,700 yen; Harry Potter and Super Nintendo entry by lottery at peak.",
+  "fact_he": "USJ: לקנות כרטיס מראש; אקספרס פס 4 מתקנים ~4,200, 7 מתקנים ~6,700 יין.",
+  "numbers": "7,400 / 5,100 / 6,700 yen",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/יוניברסל-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "jewish",
+  "city": "kobe",
+  "fact_en": "Author once joined the Chabad rabbi of Kobe (Rabbi Geoni Matuf, as she names him) on a Rosh Hashana visit of Israelis in Osaka prisons; Japan is strict on illegal workers and drugs.",
+  "fact_he": "הכותבת הצטרפה לרב חב״ד בקובה לביקור ישראלים בבתי כלא באוסקה בראש השנה; יפן מחמירה מאוד עם סמים ועובדים לא חוקיים.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/מידע-כללי-על-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "kyoto",
+  "fact_en": "Kyoto Sightseeing Card: 1,200 yen for one day, 2,000 yen for two consecutive days; unlimited city buses and the 2 subway lines, activates at first use. Alternative: bus day pass 600 yen (buy from driver), worth it from 3 rides a day. Kyoto public transport is a bit complicated; pick up English maps at the JR station info desk.",
+  "fact_he": "כרטיס Kyoto Sightseeing: 1,200 יין ליום, 2,000 ליומיים; אוטובוסים וקווי התחתית. חלופה: כרטיס יומי לאוטובוס 600 יין (מהנהג), משתלם מ-3 נסיעות. כדאי לקחת מפות באנגלית בתחנת JR.",
+  "source_url": "https://yapanit.com/יעדים/קיוטו-kyoto",
+  "numbers": "1,200 / 2,000 / 600 yen",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "lodging",
+  "city": "kyoto",
+  "fact_en": "Best bases in Kyoto: Gion/Higashiyama (near Kiyomizudera), city centre Nakagyo/Shimogyo (nightlife), or Kyoto station Minami-ku. Families or friends can compare apartments but they are not always cheaper.",
+  "fact_he": "אזורים מומלצים ללינה בקיוטו: גיון/היגאשיאמה, מרכז העיר (נקאגיו/שימוגיו), או ליד תחנת קיוטו. למשפחות אפשר לבדוק דירות אך לא תמיד זול יותר.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקיוטו",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "planning",
+  "city": "kyoto",
+  "fact_en": "Suggested Kyoto order: half day arrival - Maruyama Park, Gion, Kiyomizudera; full day 1 - Kinkakuji, Ryoanji, Arashiyama; day 2 - Nara and Todaiji then Fushimi Inari on the way back; extra days - Nishiki Market, Ginkakuji, Philosopher's Path. Start early; Kyoto is big and spread out.",
+  "fact_he": "סדר מוצע: יום הגעה - מארויאמה, גיון, קיומיזודרה; יום 1 - קינקקוג׳י, ריואנג׳י, אראשייאמה; יום 2 - נארה וטודאיג׳י ואז פושימי אינארי; ימים נוספים - נישיקי, גינקקוג׳י, דרך הפילוסוף. להתחיל מוקדם.",
+  "source_url": "https://yapanit.com/יעדים/קיוטו-kyoto",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "etiquette",
+  "city": "kyoto",
+  "fact_en": "Temple names: ending -dera = Buddhist temple, -ji = Zen temple, Jingu/Jinja = Shinto shrine with torii gate. Omikuji fortune: about 100 yen at temple entrance; if you draw bad luck, tie it to a tree/rope.",
+  "fact_he": "סיומת -dera מקדש בודהיסטי, -ji מקדש זן, Jinja/Jingu מקדש שינטו עם שער טורי. אומיקוג׳י עולה כ-100 יין; אם יצא מזל רע קושרים לעץ או לחבל.",
+  "source_url": "https://yapanit.com/טיפים/קריאת-המזל-באומיקוג-י",
+  "numbers": "100 yen",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "season",
+  "city": "japan",
+  "fact_en": "Cherry blossom in central Honshu is usually the week before to the week after April 1, often overlapping Pesach. 2024 forecast full bloom: Tokyo 22 Mar-1 Apr, Kyoto 28 Mar-5 Apr, Osaka 25 Mar-2 Apr, Nara 26 Mar-3 Apr, Kobe 26 Mar-3 Apr, Hiroshima 28 Mar-5 Apr (page labels vary; some rows look misaligned).",
+  "fact_he": "פריחת הדובדבן במרכז הונשו: שבוע לפני ואחרי 1 באפריל, לרוב בחופשת פסח. תחזית 2024 לפריחה מלאה: קיוטו 28 מרץ-5 אפריל, אוסקה 25 מרץ-2 אפריל, הירושימה 28 מרץ-5 אפריל.",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "year_written": "2024",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Toji flea market runs on the 21st of each month, morning until 16:30.",
+  "fact_he": "שוק הפשפשים של טוג׳י ב-21 בכל חודש עד 16:30.",
+  "source_url": "https://yapanit.com/יעדים/קיוטו-kyoto/מקדש-טוג-י-ושוק-הפשפשים-שלו",
+  "numbers": "21st monthly",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Jidai Matsuri is held in October and Aoi Matsuri in May on the imperial palace grounds. Yasui Konpiragu main festival on the second Monday of October (Sports Day), starts 9:00, ~11:00 parade.",
+  "fact_he": "פסטיבל ג׳ידאי באוקטובר ופסטיבל אאוי במאי בשטח הארמון הקיסרי; הפסטיבל החשוב של יסוי קונפירגו ביום שני השני של אוקטובר.",
+  "source_url": "https://yapanit.com/יעדים/קיוטו-kyoto/הארמון-הקיסרי-של-קיוטו-kyoto-imperial-palace",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "festival",
+  "city": "hiroshima",
+  "fact_en": "Hiroshima Peace Memorial Ceremony on August 6: main ceremony 8:00, moment of silence 8:15, evening lantern floating (toro nagashi) on the Motoyasu river.",
+  "fact_he": "טקס הזיכרון ב-6 באוגוסט: טקס מרכזי ב-8:00, דקת דומייה ב-8:15, ובערב מנורות צפות בנהר מוטויאסו.",
+  "source_url": "https://yapanit.com/יעדים/הירושימה-ומייג-ימה/פארק-השלום-בהירושימה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "planning",
+  "city": "hiroshima",
+  "fact_en": "Plan at least 2 nights in Hiroshima: Peace Park + Miyajima in one day; Mazda tour is a morning option. Buses stop around 22:00. Walk-friendly hotels near Peace Park or Hiroshima station.",
+  "fact_he": "לתכנן לפחות 2 לילות בהירושימה: פארק השלום + מייג׳ימה ביום אחד; מאזדה אפשרות לבוקר. האוטובוסים נעצרים בסביבות 22:00.",
+  "source_url": "https://yapanit.com/יעדים/הירושימה-ומייג-ימה/הירושימה-כללי-hiroshima",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "hiroshima",
+  "fact_en": "Hiroshima Peace Park to JR Hiroshima station by bus ~15 min; to Miyajima take JR Sanyo line to Miyajima-guchi then JR ferry (included in JR Pass).",
+  "fact_he": "מפארק השלום לתחנה באוטובוס כ-15 דקות; למייג׳ימה ברכבת JR למיאג׳ימה-גוצ׳י ואז מעבורת JR (כלולה ב-JR Pass).",
+  "source_url": "https://yapanit.com/יעדים/הירושימה-ומייג-ימה/מייג-ימה-איצוקושימה-miyajima",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "osaka",
+  "fact_en": "JR Pass itinerary example: Hiroshima 8:45 Hikari to Himeji 9:49; Himeji to Kyoto Hikari 14:02-14:58. Luggage forwarding by courier about 2,000 yen per bag.",
+  "fact_he": "דוגמה למסלול עם JR Pass: הירושימה 8:45 להימג׳י 9:49; הימג׳י לקיוטו 14:02-14:58. שליחת מזוודות כ-2,000 יין.",
+  "source_url": "https://yapanit.com/יעדים/הימג-י-himeji",
+  "year_written": "2015",
+  "numbers": "2,000 yen per bag",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "kobe",
+  "fact_en": "Kobe Sannomiya is the main station: JR Kobe line (to Himeji and Osaka), Hankyu Kobe and Hanshin lines to Osaka, and Sanyo Shinkansen (via Shin-Kobe).",
+  "fact_he": "סאנומייה התחנה הראשית בקובה: JR (להימג׳י ואוסקה), הנקיו והנשין לאוסקה.",
+  "source_url": "https://yapanit.com/יעדים/קוֹבֶּה-kobe/קוֹבֶּה-kobe-מידע-כללי",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "lodging",
+  "city": "kobe",
+  "fact_en": "Travelers usually sleep in Kobe because of Shabbat or a Jewish holiday while touring Kansai; hotels around Sannomiya / Tor Road are walkable to the synagogue and Chabad house.",
+  "fact_he": "מטיילים לרוב לנים בקובה בגלל שבת או חג; מלונות ליד סאנומייה/טור רואד במרחק הליכה לבית הכנסת/חב״ד.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקובה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "jewish",
+  "city": "kobe",
+  "fact_en": "Kobe has an active Orthodox-Sephardi community at Ohel Shlomo synagogue with Chabad (Rabbi Shmulik Vishetsky), Shabbat meals free, mikveh. Phone 078-221-7236.",
+  "fact_he": "בקובה קהילה אורתודוקסית-ספרדית פעילה בבית הכנסת אוהל שלמה עם חב״ד; סעודות שבת חינם, מקווה.",
+  "source_url": "https://yapanit.com/יהדות-ביפן/רשימת-הקהילות-היהודיות-ביפן",
+  "numbers": "tel 078-221-7236",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "jewish",
+  "city": "kyoto",
+  "fact_en": "Chabad Kyoto at Okazaki Tenno-cho near Ginkakuji and Philosopher's Path, so it can be combined before Shabbat. Takayama has no Chabad but Rabbi Binyamin holds a yearly Seder and sends a mobile sukkah.",
+  "fact_he": "בית חב״ד קיוטו ליד גינקקוג׳י ודרך הפילוסוף; בטקיאמה אין בית חב״ד אך הרב בנימין עורך ליל סדר שנתי.",
+  "source_url": "https://yapanit.com/יהדות-ביפן/רשימת-הקהילות-היהודיות-ביפן",
+  "numbers": "tel 090-3684-7707",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "jewish",
+  "city": "tokyo",
+  "fact_en": "Tokyo Jewish: Chabad Takanawa (Rabbi Mendi Sudakevich) tel 03-5789-2846, free Shabbat meals, mikveh, kosher food sales; Chabad Ota-ku/Omori (Rabbi Binyamin Edery) 03-3772-7707, runs King Falafel and sells kosher Japanese beef; JCC Hiroo (American-Reform style, paid Friday dinner, 03-3400-2559).",
+  "fact_he": "יהדות בטוקיו: חב״ד טקנאווה (הרב מנדי), חב״ד אומורי (הרב בנימין אדרעי, King Falafel), JCC בהירו (רפורמי-אמריקאי, ארוחת שישי בתשלום).",
+  "source_url": "https://yapanit.com/יהדות-ביפן/רשימת-הקהילות-היהודיות-ביפן",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "About 1,000 Jews live in Japan; main active communities are Tokyo JCC (conservative) and Kobe (Orthodox) plus two Chabad houses in Tokyo. Most Israelis go to Chabad.",
+  "fact_he": "כ-1,000 יהודים ביפן; שתי קהילות פעילות: JCC טוקיו וקובה, ושני בתי חב״ד בטוקיו.",
+  "source_url": "https://yapanit.com/יהדות-ביפן/רשימת-הקהילות-היהודיות-ביפן",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Common non-kosher words to know: buta niku (pork), kai (shellfish), kaki (oysters), tako (octopus), ika (squid), kani (crab), ebi (shrimp), unagi (eel), ikura (salmon roe), same (shark), kujira (whale). Kosher-fish: sake/samon (salmon), maguro (tuna). Say \"Watashi wa ___ wo tabemasen\" for I do not eat ___. Vegetarian: bejitarian; vegan: bigan.",
+  "fact_he": "מילים חשובות לשומרי כשרות: בוטה ניקו (חזיר), קאי (רכיכות), טאקו (תמנון), איקה (דיונון), קאני (סרטן), אבי (שרימפס), אונאגי (צלופח), איקורה (ביצי סלמון), סאמה (כריש), קוג׳ירה (לווייתן). דגים כשרים: סאקה/סאמון, מגורו. ״Watashi wa ___ wo tabemasen״ = אני לא אוכל ___.",
+  "source_url": "https://yapanit.com/אוכל/אוכל-לשומרי-כשרות-צמחונים-טבעונים",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "food",
+  "city": "japan",
+  "fact_en": "Okonomiyaki recipe on the site: cabbage, flour, eggs, dashi, red pickled ginger; topped with sauce, Japanese mayo, katsuobushi and aonori; Hiroshima and Kansai styles differ. Buy okonomiyaki sauce in Tokyo before flying home (about 4x cheaper than in Israel, per the author).",
+  "fact_he": "מתכון אוקונומיאקי באתר; הסגנונות בהירושימה וקנסאי שונים. לקנות רוטב אוקונומיאקי ביפן (כפי שנכתב, זול פי 4).",
+  "source_url": "https://yapanit.com/אוכל/אוקונומיאקי-okonomiyaki",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "baby",
+  "city": "osaka",
+  "fact_en": "USJ child ticket applies to ages 4-11; Expo 2025 under 4 free; Kurashiki canal boat child 250 yen; Hozu River boat child 4-12 at 2,700 yen.",
+  "fact_he": "USJ כרטיס ילד 4-11; אקספו 2025 חינם עד גיל 3; שייט בקוראשיקי ילד 250 יין; שייט הוזו ילד 2,700 יין.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/יוניברסל-אוסקה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "kyoto",
+  "fact_en": "Kyoto to Fushimi Inari: JR Nara line from Kyoto station, 5 min, 140 yen to Inari (local trains only). Kyoto to Arashiyama: JR Sagano line 15 min, 240 yen. Nara from Kyoto less than an hour; JR Nara line (express then back 2 stops to Inari on return).",
+  "fact_he": "קיוטו לפושימי אינארי: קו JR Nara 5 דקות 140 יין (רק לוקאל). לאראשייאמה: JR Sagano 15 דקות 240 יין. נארה פחות משעה מקיוטו.",
+  "source_url": "https://yapanit.com/יעדים/קיוטו-kyoto",
+  "numbers": "140 / 240 yen",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Reserve ahead: Toyota plant tour (3 months), Mazda museum tour (up to a year ahead, mandatory), Sento Imperial Palace tour (free), USJ e-tickets, Koyasan temple lodging, Shimanami bike rental on weekends.",
+  "fact_he": "להזמין מראש: סיור טויוטה (3 חודשים), מאזדה (חובה, עד שנה), ארמון סנטו (חינם), USJ, לינה בקויה-סאן, אופניים בשימנאמי בסופ״ש.",
+  "source_url": "https://yapanit.com/יעדים/מפעל-טויוטה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "osaka",
+  "fact_en": "Nankai Namba is also the starting point for Koyasan; the Kansai airport line runs directly from Namba (43 min express). Shinsekai is 5 min from Namba by train.",
+  "fact_he": "נמבה גם נקודת היציאה להר קויה; קו Nankai ישיר לשדה התעופה קנסאי.",
+  "source_url": "https://yapanit.com/יעדים/אוסקה-osaka/רובע-נאמבה",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "transport",
+  "city": "hiroshima",
+  "fact_en": "Hiroshima Meipuru~pu loop bus: JR Pass valid; otherwise 200 yen single, 400 yen day pass, 9:00-20:00 every 15 min from the Shinkansen exit.",
+  "fact_he": "אוטובוס מעגלי: כלול ב-JR Pass; אחרת 200 יין לנסיעה, 400 יין ליום; כל 15 דקות מיציאת השינקנסן.",
+  "source_url": "https://yapanit.com/תחבורה/קו-אוטובוס-מעגלי-בהירושימה-jr",
+  "agent": "yap-kansai"
+ },
+ {
+  "topic": "food",
+  "fact_en": "Conveyor sushi plates cost 80-300 yen, colour shows price; green tea is free.",
+  "fact_he": "צלחות סושי במסוע 80-300 יין, הצבע מסמן מחיר, תה ירוק חינם.",
+  "numbers": "80-300 yen",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/shibuya-שיבויה",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "festival",
+  "fact_en": "Hachiko memorial ceremony at Shibuya station every 8 April.",
+  "fact_he": "טקס זיכרון להאצ'יקו בתחנת שיבויה ב-8 באפריל מדי שנה.",
+  "numbers": "8 April",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/shibuya-שיבויה",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "lodging",
+  "fact_en": "Ueno/Taito ward has cheaper lodging than Shinjuku or Shibuya.",
+  "fact_he": "באזור אואנו/טאיטו לינה זולה יותר מאשר בשינג'וקו או שיבויה.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אואנו-ueno",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Ueno, Okachimachi and Akihabara are three consecutive Yamanote stops and can be walked, so combine Ueno with Akihabara.",
+  "fact_he": "אואנו, אוקאצ'ימאצ'י ואקיהברה הן שלוש תחנות רצופות בקו ימאנוטה וניתן ללכת ביניהן.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אואנו-ueno",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "shopping",
+  "fact_en": "Most Ameyoko shops give tax-free for purchases over 5,000 or 10,000 yen; bring passport.",
+  "fact_he": "רוב החנויות נותנות Tax Free מעל 5,000 או 10,000 יין; הביאו דרכון.",
+  "numbers": "5,000/10,000 yen",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אואנו-ueno",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Odaiba is reached by JR Rinkai Line (get off Tokyo Teleport) or the driverless Yurikamome-style monorail; Shinjuku has a through service (Saikyo becomes Rinkai); buses and ferries also run. Plan about a full day.",
+  "fact_he": "לאודאיבה מגיעים בקו JR רינקאי (תחנת Tokyo Teleport) או במונורייל; גם אוטובוסים ומעבורות. כדאי להקדיש יום שלם.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אודאיבה-odaiba",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Ikebukuro is the 3rd busiest station in Japan (over a million passengers daily), on the Yamanote line, 3 subway lines plus suburban lines; ~9 min from Shinjuku, 15 from Ueno. Cheap base for lodging.",
+  "fact_he": "איקבוקורו היא התחנה השלישית בעומסה ביפן (מעל מיליון נוסעים ביום); 9 דקות משינג'וקו ורבע שעה מאואנו; בסיס לינה זול.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/איקבוקורו-ikebukuro",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "festival",
+  "fact_en": "Sanja Matsuri in Asakusa, third weekend of May (page also says 15-17 May), honouring Sensoji's three founders.",
+  "fact_he": "פסטיבל סאנג'ה באסאקוסה בסוף השבוע השלישי של מאי.",
+  "numbers": "3rd weekend May",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אסאקוסה-asakusa",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "festival",
+  "fact_en": "Sumida River fireworks (Hanabi) on the last Saturday of July (page also cites 25 July) near Asakusa.",
+  "fact_he": "זיקוקי די-נור על נהר סומידה בשבת האחרונה של יולי.",
+  "numbers": "last Sat July",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אסאקוסה-asakusa",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "festival",
+  "fact_en": "Kimono parade in Asakusa 11 April 13:30-15:00; Asakusa Samba Carnival 23 August with 500,000+ attendees.",
+  "fact_he": "מצעד קימונו 11 באפריל; קרנבל סמבה 23 באוגוסט.",
+  "numbers": "11 Apr; 23 Aug",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אסאקוסה-asakusa",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Tobu Asakusa station has trains to Nikko; Tokyo Skytree is ~20 min walk over the Sumida River.",
+  "fact_he": "מתחנת טובו אסאקוסה יוצאות רכבות לניקו; הסקייטרי במרחק 20 דקות הליכה.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אסאקוסה-asakusa",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "shopping",
+  "fact_en": "Japan mains power is 110V (Israel 220V): buy a voltage transformer or 220V-compatible models; large shops have English-speaking staff and 220V versions. Check refurbished vs new, international warranty, SIM-free phones; tax-free usually over 10,000 yen.",
+  "fact_he": "החשמל ביפן 110V; קנו ממיר מתח או דגם 220V; ודאו חדש, אחריות בינלאומית, SIM free; Tax Free מעל כ-10,000 יין.",
+  "numbers": "110V; 10,000 yen tax-free",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/אקיהברה-akihabara",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "booking",
+  "fact_en": "Free Imperial Palace tours need advance reservation (online or phone), passport required; Mon-Fri 10:00 & 13:30, closed 28 Dec-4 Jan and 21 Jul-31 Aug.",
+  "fact_he": "סיור חינם בארמון הקיסרי דורש הזמנה מראש, דרכון; שני-שישי 10:00 ו-13:30.",
+  "numbers": "10:00, 13:30",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/הארמון-הקיסרי",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Day trips from Tokyo that do not need a JR Pass: Hakone, Nikko, Kamakura, Fuji Five Lakes, Yokohama, Kusatsu Onsen, Izu/Atami, Fuji-Q Highland.",
+  "fact_he": "טיולי יום מטוקיו שלא דורשים JR Pass: האקונה, ניקו, קמאקורה, אגמי פוג'י, יוקוהמה, קוסאצו, איזו, פוג'י-קיו.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/כל-האטרקציות-המרכזיות-בטוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "shopping",
+  "fact_en": "Ochanomizu/London Sports outlets sell sports gear very cheaply.",
+  "fact_he": "אאוטלטי ספורט באוצ'נומיזו במחירים נמוכים.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/כל-האטרקציות-המרכזיות-בטוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "From the airport, if you activate JR Pass at the airport take the Narita Express; first stop suggestion: Shibuya via JR Yamanote Line. Tokyo transport is efficient and clean; trains/subway dominate, buses, monorail and trams are marginal. Yamanote is packed at rush hour.",
+  "fact_he": "אם הפעלתם JR Pass בשדה התעופה, הגיעו עם נריטה אקספרס; כדאי לפתוח בשיבויה בקו ימאנוטה; קו ימאנוטה דחוס בשעות העומס.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/מידע-חשוב-על-טוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "lodging",
+  "fact_en": "Author's Tokyo lodging recommendations range 2,000 to 10,000 yen per night (about $20-100).",
+  "fact_he": "המלצות הלינה של הכותבת נעות בין 2,000 ל-10,000 יין ללילה.",
+  "numbers": "2,000-10,000 yen",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/מידע-חשוב-על-טוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "season",
+  "fact_en": "Tokyo metro area ~34 million people, city proper 12 million; Ginza line (opened 1924) was Asia's first subway.",
+  "fact_he": "טוקיו רבתי כ-34 מיליון תושבים; קו גינזה הוא התחתית הראשונה באסיה (1924).",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/מידע-חשוב-על-טוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "etiquette",
+  "fact_en": "Inner Imperial Palace grounds open to the public only on 2 Jan and 23 Dec.",
+  "fact_he": "הארמון הפנימי פתוח רק ב-2 בינואר ו-23 בדצמבר.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/מידע-חשוב-על-טוקיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "festival",
+  "fact_en": "Yasukuni Shrine Mitama Matsuri 13-16 July: main approach lined with 29,000+ lanterns.",
+  "fact_he": "מיטאמה מאטסורי ביאסוקוני 13-16 ביולי עם 29,000 פנסים.",
+  "numbers": "13-16 July",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/מקדש-יאסוקוני",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Last trains end around midnight; first train ~5am. Walk, taxi, or party until morning in Roppongi.",
+  "fact_he": "הרכבת האחרונה בערך בחצות, הראשונה ב-5 בבוקר.",
+  "numbers": "~00:00 / ~05:00",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/רופונגי-roppongi",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "etiquette",
+  "fact_en": "Japan is very safe but watch bag, wallet and phone in Roppongi clubs with many foreigners; Roppongi has a 'sleazy' reputation.",
+  "fact_he": "יפן בטוחה אך שימו לב לתיק וארנק במועדוני רופונגי.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/רופונגי-roppongi",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "booking",
+  "fact_en": "Toyosu fish market is closed Sundays, holidays and some Wednesdays; check the official calendar. Auctions viewable from 5:00 deck, wholesale ends ~11:00.",
+  "fact_he": "שוק טויוסו סגור בימי ראשון, חגים וחלק מימי רביעי.",
+  "numbers": "04:30-17:00",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/שוק-הדגים-טויוסו-toyosu-fish-market",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Yurikamome driverless monorail from Shimbashi or Shiodome toward Odaiba serves Toyosu (Shijo-mae) and Odaiba.",
+  "fact_he": "היוריקמומה משימבשי או שיודומה לכיוון אודאיבה, תחנת Shijo-mae.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/שוק-הדגים-טויוסו-toyosu-fish-market",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "booking",
+  "fact_en": "Old Tsukiji tuna auction was capped at 120 visitors/day, queue from before 4:00; the inner market moved to Toyosu on 11 Oct 2018. Outer market remains.",
+  "fact_he": "מכירת הטונה בצוקיג'י הוגבלה ל-120 מבקרים; השוק עבר לטויוסו ב-11.10.2018.",
+  "numbers": "120/day",
+  "year_written": "2018",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/שוק-הדגים-צוקיג-י-tsukiji-fish-market",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "jewish",
+  "fact_en": "Israeli embassy in Japan is in Ichigaya, east Shinjuku.",
+  "fact_he": "שגרירות ישראל ביפן ממוקמת באיצ'יגאיה.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/שינג-וקו-shinjuku",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "etiquette",
+  "fact_en": "In Kabukicho watch for cover charges and drink minimums.",
+  "fact_he": "בקבוקיצ'ו שימו לב לדמי כניסה ולחובת הזמנת משקאות.",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/שינג-וקו-shinjuku",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "pass",
+  "fact_en": "Fuji-Q Toku Q-Pack: return highway bus from Shinjuku bus terminal (west of Shinjuku station, ~1h40) + entry + nearly all rides; reserve bus up to 30 days ahead online, buy pack at the counter.",
+  "fact_he": "פס Toku Q-Pack: אוטובוס הלוך ושוב משינג'וקו + כניסה + מתקנים; הזמנת אוטובוס עד 30 יום מראש.",
+  "numbers": "entry 1,500; with rides 5,100 yen",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/fuji-q-highland-פארק-השעשועים-פוג-י-קיו",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Tokyo (Shinagawa) to Atami: ordinary rapid train ~88 min / 1,940 yen vs Shinkansen 41 min / 4,190 yen.",
+  "fact_he": "משינגאווה לאטאמי: רכבת רגילה 88 דקות 1,940 יין, שינקנסן 41 דקות 4,190 יין.",
+  "numbers": "1,940 / 4,190 yen",
+  "city": "atami",
+  "source_url": "https://yapanit.com/יעדים/אטאמי-atami",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Shinjuku to Enoshima: Odakyu to Fujisawa then local to Katase-Enoshima 630 yen (~1h); Romancecar direct 1,250 yen; JR via Fujisawa 970 yen; from Shibuya cheapest via Tokyu Den-en-toshi to Chuo-Rinkan then Odakyu 640 yen.",
+  "fact_he": "משינג'וקו לאנושימה: אודקיו דרך פוג'יסאווה 630 יין; רומנסקאר ישיר 1,250 יין; מטוקיו דרך Chuo-Rinkan 640 יין.",
+  "numbers": "630/1,250/970/640 yen",
+  "city": "enoshima",
+  "source_url": "https://yapanit.com/יעדים/אנושימה-enoshima",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "pass",
+  "fact_en": "EnoPass from Odakyu: 1,000 yen one-day for Enoshima attractions.",
+  "fact_he": "אנו-פס 1,000 יין.",
+  "numbers": "1,000 yen",
+  "city": "enoshima",
+  "source_url": "https://yapanit.com/יעדים/אנושימה-enoshima",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Tokyo Disneyland is a 5 min walk from JR Maihama station (~35 min from Shibuya); DisneySea 20 min walk or Disney Resort monorail 260 yen.",
+  "fact_he": "דיסנילנד 5 דקות הליכה מתחנת מאיהאמה; דיסני סי 20 דקות או מונורייל 260 יין.",
+  "numbers": "260 yen",
+  "city": "urayasu",
+  "source_url": "https://yapanit.com/יעדים/דיסנילנד-טוקיו-tokyo-disneyland",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "season",
+  "fact_en": "Climbing Mt Fuji is allowed only 1 July to 14 September.",
+  "fact_he": "טיפוס על הר פוג'י מותר רק בין 1 ביולי ל-14 בספטמבר.",
+  "numbers": "1 Jul-14 Sep",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "lodging",
+  "fact_en": "Author recommends staying at least one night in Hakone (2-3 days), not a day trip; use the Hakone Freepass.",
+  "fact_he": "מומלץ ללון בהאקונה לפחות לילה, ולא טיול יום; להשתמש ב-Hakone Freepass.",
+  "city": "hakone",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "To Hakone from Tokyo: Yamanote to Shinjuku, Odakyu exit to buy the Hakone Freepass; from elsewhere/JR Pass last day take the Shinkansen to Odawara and buy the Freepass there.",
+  "fact_he": "להאקונה מטוקיו: מתחנת שינג'וקו אל אודקיו וקנו Hakone Freepass; ממקומות אחרים שינקנסן לאודווארה.",
+  "city": "hakone",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone/האקונה-hakone-יום-ראשון",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "etiquette",
+  "fact_en": "Onsen: usually gender-separated, fully nude; some places refuse tattoos; ryokan may have private onsen for couples.",
+  "fact_he": "באונסן הרחצה בעירום, מופרד לפי מין; חלק לא מכניסים קעקועים; בריוקנים יש אונסן פרטי.",
+  "city": "hakone",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone/האקונה-hakone-יום-ראשון",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "lodging",
+  "fact_en": "Recommended base area: near Miyanoshita station.",
+  "fact_he": "מומלץ ללון ליד תחנת מיינושיטה.",
+  "city": "hakone",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone/האקונה-hakone-יום-ראשון",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "pass",
+  "fact_en": "Hakone Freepass covers train, cable car, ropeway, ship and bus; onsen entry at your own hotel is free, other hotels charge 500-3,000 yen, with Freepass discounts at most.",
+  "fact_he": "Hakone Freepass מכסה רכבת, רכבל, אונייה ואוטובוס; כניסה לאונסנים 500-3,000 יין עם הנחה.",
+  "numbers": "500-3,000 yen onsen",
+  "city": "hakone",
+  "source_url": "https://yapanit.com/יעדים/האקונה-hakone/סיור-יום-מלא-בהאקונה-יום-שני",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "season",
+  "fact_en": "Mt Fuji official climbing season 2025: Yoshida trail 1 Jul-10 Sep, other trails 10 Jul-10 Sep. Peak crowds 20 Jul-end Aug and Obon mid-August. Off-season climbing is dangerous.",
+  "fact_he": "עונת הטיפוס על פוג'י 2025: יושידה 1 ביולי-10 בספטמבר, שאר המסלולים מ-10 ביולי; עומס שיא באובון.",
+  "numbers": "1 Jul-10 Sep",
+  "year_written": "2025",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/טיפוס-על-הר-פוג-י",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "booking",
+  "fact_en": "Mt Fuji 2025 rules: compulsory 4,000 yen climbing fee per person per trail, date-specific and non-refundable; huts must be booked for night entry (14:00-03:00).",
+  "fact_he": "דמי טיפוס חובה 4,000 יין לאדם, לתאריך מסוים וללא החזר; לטיפוס לילה חובה להזמין בקתה.",
+  "numbers": "4,000 yen",
+  "year_written": "2025",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/טיפוס-על-הר-פוג-י",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Shinjuku bus terminal to Fuji Yoshida trail 5th station: 2 buses per hour (Keio, Fujikyu), ~2.5 h, 2,700 yen, half for children, reserve ahead at highway-buses.jp. Alternatively Kawaguchiko by bus ~2,000 yen or train ~3,000 yen, then 1,540 yen to 5th station.",
+  "fact_he": "אוטובוס משינג'וקו לתחנה 5 של יושידה: 2,700 יין, כשעתיים וחצי; חצי מחיר לילדים; להזמין מראש.",
+  "numbers": "2,700 yen; 1,540 yen",
+  "year_written": "2025",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/טיפוס-על-הר-פוג-י",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "baby",
+  "fact_en": "Mt Fuji hut sleeping is shared futon halls; suited for kids/people who cannot do a continuous climb.",
+  "fact_he": "לינה בבקתות בפוג'י במעין אולם משותף עם פוטונים; מתאים לילדים ולמי שלא מסוגל לטיפוס רציף.",
+  "city": "fuji",
+  "source_url": "https://yapanit.com/יעדים/טיפוס-על-הר-פוג-י",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Shibuya to Yokohama: Tokyu Toyoko express ~29 min 270 yen; Shonan-Shinjuku Line 27 min 390 yen (from Shinjuku 35 min 550 yen).",
+  "fact_he": "משיבויה ליוקוהמה: טוקיו טויוקו אקספרס 29 דקות 270 יין; שונאן-שינג'וקו 390 יין.",
+  "numbers": "270/390/550 yen",
+  "city": "yokohama",
+  "source_url": "https://yapanit.com/יעדים/יוקוהמה-yokohama",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "pass",
+  "fact_en": "Nikko combined ticket 1,000 yen covers Toshogu, Rinnoji, Taiyuinbyo and Futarasan (extra for the Sleeping Cat). Temples open 8:00-17:00, 16:00 from Nov-Mar.",
+  "fact_he": "כרטיס משולב לניקו 1,000 יין: טושוגו, רינוג'י, טאיויינביו ופוטאראסאן; 8:00-17:00.",
+  "numbers": "1,000 yen",
+  "city": "nikko",
+  "source_url": "https://yapanit.com/יעדים/ניקו-nikko",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Nikko from Tokyo: Limited Express from Shinjuku or Ikebukuro 2,000 yen one way; temples 2.5 km from the stations, bus 10 min or 30 min walk.",
+  "fact_he": "לניקו מטוקיו: Limited Express משינג'וקו או איקבוקורו 2,000 יין לכיוון; המקדשים 2.5 ק\"מ מהתחנה.",
+  "numbers": "2,000 yen; bus 1,300 yen",
+  "city": "nikko",
+  "source_url": "https://yapanit.com/יעדים/ניקו-nikko",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "etiquette",
+  "fact_en": "Wild monkeys around Nikko snatch food from people; keep snacks away.",
+  "fact_he": "קופים בניקו חוטפים אוכל מבני אדם.",
+  "city": "nikko",
+  "source_url": "https://yapanit.com/יעדים/ניקו-nikko",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "transport",
+  "fact_en": "Tokyo (Shinjuku bus terminal) to Kusatsu Onsen: direct highway buses ~4 h, 3,300 yen one way; JR Pass does not cover the buses.",
+  "fact_he": "אוטובוס ישיר משינג'וקו לקוסאצו אונסן: כ-4 שעות, 3,300 יין; JR Pass לא תקף.",
+  "numbers": "3,300 yen",
+  "city": "kusatsu",
+  "source_url": "https://yapanit.com/יעדים/קוסאצו-אונסן-kusatsu-onsen",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "season",
+  "fact_en": "Skytree observation decks at 350 m and 450 m, ticket ~3,200 yen; other free viewpoints e.g. Shinjuku city hall.",
+  "fact_he": "תצפיות הסקייטרי ב-350 וב-450 מ', כרטיס כ-3,200 יין; תצפיות חינם בעירייה של שינג'וקו.",
+  "numbers": "3,200 yen",
+  "city": "tokyo",
+  "source_url": "https://yapanit.com/יעדים/טוקיו-2/טוקיו-סקייטרי",
+  "agent": "yap-kanto"
+ },
+ {
+  "topic": "season",
+  "city": "hokkaido",
+  "fact_en": "Best months May-October, ideally June-September; winter is for skiing (Niseko) and Sapporo Snow Festival early/mid February.",
+  "fact_he": "עונה מומלצת מאי-אוקטובר, בעיקר יוני-ספטמבר; בחורף סקי ופסטיבל שלג בסאפורו בפברואר.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "numbers": "Snow Festival Feb",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "season",
+  "city": "hokkaido",
+  "fact_en": "Cherry blossom in Hokkaido comes about a month later than central Japan - good for travellers arriving in early May.",
+  "fact_he": "פריחת הדובדבן בהוקאידו כחודש מאוחר יותר מאשר במרכז יפן.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "booking",
+  "city": "hokkaido",
+  "fact_en": "Peak season is summer, especially Obon (third week of August): hotels and rental cars are hard to find and prices rise.",
+  "fact_he": "שבוע האובון (שבוע שלישי של אוגוסט): קשה למצוא מלונות והשכרת רכב והמחירים גבוהים.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "hokkaido",
+  "fact_en": "Shinkansen reaches only Hakodate and is expensive unless covered by a pass; domestic flights from Tokyo/Osaka are often cheap (Japanese LCCs). Rent a car for several destinations; public transport is enough for Sapporo, Noboribetsu, Otaru, Hakodate.",
+  "fact_he": "שינקנסן מגיע רק להאקודאטה ויקר ללא פס; טיסות פנים זולות; לכמה יעדים - רכב, לסאפורו/אוטארו/נובוריבצו/האקודאטה תחב\"צ מספיקה.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "itinerary",
+  "city": "hokkaido",
+  "fact_en": "Suggested 3-5 days minimum in Hokkaido; best for repeat visitors; suits families.",
+  "fact_he": "מומלץ 3-5 ימים לפחות; מתאים למי שכבר ביקר ביעדים המרכזיים וגם למשפחות.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "numbers": "3-5 days",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "food",
+  "city": "hokkaido",
+  "fact_en": "Local specialties: jingisukan (grilled lamb), miso ramen, dairy, seafood; visit Sapporo brewery and Nikka whisky distillery.",
+  "fact_he": "מנות מקומיות: ג'ינגיסחאן (כבש בגריל), ראמן מיסו, חלב וגבינות, פירות ים.",
+  "source_url": "https://yapanit.com/יעדים/הוקאידו-hokkaido",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "festival",
+  "city": "takayama",
+  "fact_en": "Takayama Festival: April 14-15 (spring) and October 9-10 (autumn), among Japan's best; book lodging at least 9 months ahead and stay no more than ~40 km away.",
+  "fact_he": "פסטיבל טקיאמה 14-15 באפריל ו-9-10 באוקטובר; להזמין לינה לפחות 9 חודשים מראש.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "numbers": "Apr 14-15; Oct 9-10; 9 months ahead",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "festival",
+  "city": "takayama",
+  "fact_en": "Summer in Takayama: antique fair first Sunday of July and August; Tanabata Aug 6-7; Nakabashi bridge lit in the evening.",
+  "fact_he": "בקיץ: יריד עתיקות ביום ראשון הראשון של יולי ואוגוסט; טנבאטה 6-7 באוגוסט.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "takayama",
+  "fact_en": "Tokyo to Takayama ~5 hours via Nagoya, then Limited Express Hida (Wide View); the Hida line runs about every 2 hours so check timetables. Example: Shinjuku 08:00 arrives 13:10.",
+  "fact_he": "מטוקיו כ-5 שעות דרך נאגויה ורכבת הידה; בערך כל שעתיים.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "numbers": "~5h; every ~2h",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "takayama",
+  "fact_en": "Buses from Takayama (Nohi Bus) to Shirakawa-go, Kanazawa, Kamikochi, Matsumoto, Shinjuku are not covered by JR Pass; book online ~30 days ahead via JapanBusOnline for peak season/groups, cancellation costs 100 yen.",
+  "fact_he": "אוטובוסי נוהי ליעדים אינם ב-JR Pass; להזמין אונליין כ-30 יום מראש; ביטול 100 יין.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "numbers": "100 yen cancel",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "baggage",
+  "city": "takayama",
+  "fact_en": "Do not bring big luggage for a one-night stay; forward bags ahead and carry a small backpack.",
+  "fact_he": "לא להגיע עם מזוודות ללילה אחד - לשלוח מראש.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "jewish",
+  "city": "takayama",
+  "fact_en": "Takayama has a Chabad house with Shabbat/holiday meals and a kosher Israeli restaurant, a good place to spend Shabbat.",
+  "fact_he": "בטקיאמה בית חב\"ד עם ארוחות שבת וחג ומסעדה כשרה - מקום טוב לשבת.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "lodging",
+  "city": "takayama",
+  "fact_en": "Ryokan recommended; choose one within walking distance of the station.",
+  "fact_he": "מומלץ ריוקאן במרחק הליכה מהתחנה.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "shirakawago",
+  "fact_en": "Nohi bus fares (yen): Takayama-Shirakawago 2,470 one way / 4,420 round trip; Takayama-Kanazawa 3,390 / 6,070; Shirakawago-Kanazawa 1,850 / 3,290. Journey ~1h from Takayama, ~1.5h from Kanazawa; plan 3-4 hours on site.",
+  "fact_he": "מחירי אוטובוס בין טקיאמה/קנזאווה/שירקאווה-גו; 3-4 שעות במקום.",
+  "source_url": "https://yapanit.com/יעדים/טאקיאמה/שירקאווה-גו-shirakawa-gō",
+  "numbers": "see fact",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "kanazawa",
+  "fact_en": "Kanazawa day pass 800 yen (not valid on JR); Kenrokuen shuttle 200 yen (100 on weekends); Loop bus every 15 min, 200 yen; city bike share 200 yen a day, payable by card.",
+  "fact_he": "כרטיס יומי 800 יין; אוטובוס קנרוקואן 200 יין; לופ כל רבע שעה 200 יין; אופניים 200 יין ליום.",
+  "source_url": "https://yapanit.com/יעדים/קאנזאווה-kanazawa",
+  "numbers": "800; 200; 200",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "pass",
+  "city": "kanazawa",
+  "fact_en": "Kenrokuen Plus One ticket 500 yen (valid 2 consecutive days: Kenrokuen plus one other site); Kanazawa Cultural Attraction Passport 510 yen (1 day) or 820 yen (3 days) covers 16 sites.",
+  "fact_he": "כרטיס Kenrokuen Plus One 500 יין; Cultural Passport 510/820 יין.",
+  "source_url": "https://yapanit.com/יעדים/קאנזאווה-kanazawa",
+  "numbers": "500; 510; 820",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "booking",
+  "city": "kanazawa",
+  "fact_en": "Most Kanazawa sights close around 18:00. Ninja-dera needs phone booking weeks ahead.",
+  "fact_he": "רוב האתרים נסגרים בסביבות 18:00.",
+  "source_url": "https://yapanit.com/יעדים/קאנזאווה-kanazawa",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "matsumoto",
+  "fact_en": "Free bike loans exist in Matsumoto (Sui Sui Town) 9-17 return by 21.",
+  "fact_he": "השאלת אופניים חינם.",
+  "source_url": "https://yapanit.com/יעדים/מאצומוטו-matsumoto",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "kiso",
+  "fact_en": "Reach Magome via Nakatsugawa station (JR Shinano line from Nagoya ~45-70 min or from Matsumoto ~1h; covered by JR Pass), then ~20 min bus; Tsumago via Nagiso (5 min bus).",
+  "fact_he": "להגיע דרך תחנת Nakatsugawa (קו שינאנו) ואז אוטובוס כ-20 דקות; צומאגו דרך Nagiso.",
+  "source_url": "https://yapanit.com/יעדים/עמק-קיסו-נקסנדו",
+  "numbers": "45-70 min",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "kiso",
+  "fact_en": "Bus fares: Nakatsugawa-Magome 560 yen ~15 min (hourly), Magome-Tsumago 600 yen 28 min, Nagiso-Tsumago 300 yen 7 min, Nagiso-Magome 800 yen 35 min; roughly hourly to every 1.5 hours; taxi back about 3,000 yen.",
+  "fact_he": "מחירי אוטובוסים: 560/600/300/800 יין; מונית כ-3,000 יין.",
+  "source_url": "https://yapanit.com/יעדים/עמק-קיסו-נקסנדו",
+  "numbers": "560; 600; 300; 800",
+  "year_written": 2020,
+  "agent": "yap-other"
+ },
+ {
+  "topic": "baggage",
+  "city": "kiso",
+  "fact_en": "Send luggage ahead by TA-Q-BIN; carry only a day bag for the walk.",
+  "fact_he": "לשלוח מזוודות מראש ב-TAQBIN.",
+  "source_url": "https://yapanit.com/יעדים/עמק-קיסו-נקסנדו",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "safety",
+  "city": "kiso",
+  "fact_en": "Bear bells along the trail; a couple met a bear in May 2023. Watch for snakes in summer.",
+  "fact_he": "פעמוני דובים בדרך; דוב נצפה במאי 2023; נחשים בקיץ.",
+  "source_url": "https://yapanit.com/יעדים/עמק-קיסו-נקסנדו",
+  "year_written": 2023,
+  "agent": "yap-other"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "A religious guest author walked the Nakasendo and spent Shabbat in a tent near a rural station / Wada Pass.",
+  "fact_he": "מטייל דתי עשה שבת באוהל במהלך המסלול.",
+  "source_url": "https://yapanit.com/יעדים/דרך-הנקסנדו-nakasendo",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Tents can be pitched on rural railway platforms and in public parks on the Nakasendo; convenience stores are open 24h for food, water and toilets.",
+  "fact_he": "אפשר להקים אוהל ברציפי תחנות כפריות ובגנים ציבוריים; קומביני פתוח 24 שעות.",
+  "source_url": "https://yapanit.com/יעדים/דרך-הנקסנדו-nakasendo",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "yudanaka",
+  "fact_en": "Nagano Dentetsu line Nagano-Yudanaka ~1 hour, 1,260 yen, not JR Pass and no IC card (buy ticket at machine); bus to park 310 yen; direct bus from Nagano 1,400 yen but infrequent.",
+  "fact_he": "רכבת נגאנו-יודנאקה כשעה 1,260 יין לא ב-JR Pass; אוטובוס 310 יין.",
+  "source_url": "https://yapanit.com/יעדים/פארק-הקופים-ג-יגוקודני",
+  "numbers": "1,260; 310; 1,400",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "season",
+  "city": "yudanaka",
+  "fact_en": "Snow from early December to early April; park open all year, monkeys fed daily; feeding time ~12:00-13:00 is best.",
+  "fact_he": "שלג מתחילת דצמבר עד תחילת אפריל; האכלה 12:00-13:00.",
+  "source_url": "https://yapanit.com/יעדים/פארק-הקופים-ג-יגוקודני",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "festival",
+  "city": "sendai",
+  "fact_en": "Sendai Tanabata Aug 6-8, fireworks Aug 5; Aoba Matsuri end of May; half marathon early June.",
+  "fact_he": "טנבאטה סנדאי 6-8 באוגוסט; פסטיבל אאובה בסוף מאי.",
+  "source_url": "https://yapanit.com/יעדים/סנדאי-sendai",
+  "numbers": "Aug 6-8",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "sendai",
+  "fact_en": "Sendai is a main stop on the Hayabusa shinkansen Tokyo-Hakodate; city is walkable and no car needed; subway not very useful to tourists.",
+  "fact_he": "סנדאי תחנה על ה-Hayabusa; אין צורך ברכב.",
+  "source_url": "https://yapanit.com/יעדים/סנדאי-sendai",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "itinerary",
+  "city": "kagoshima",
+  "fact_en": "Kagoshima suits long trips (2+ weeks) with 7-day JR Pass; southern end of Kyushu shinkansen at Kagoshima-Chuo; route either Kyoto > Kagoshima > Hiroshima or ... > Hiroshima > Kagoshima > Kyoto > Tokyo (night bus back).",
+  "fact_he": "קגושימה מתאימה לטיול ארוך מ-JR PASS לשבוע; סוף קו הקיושו שינקנסן.",
+  "source_url": "https://yapanit.com/יעדים/קגושימה-kagoshima/קגושימה-kagoshima",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "ibusuki",
+  "fact_en": "Kagoshima Chuo to Ibusuki: Limited Express ~50 min 2,130 yen (3 a day) or local 70-80 min 1,000 yen; Saraku sand bath 15 min walk or bus 140 yen from station.",
+  "fact_he": "קגושימה-איבוסוקי: אקספרס 50 דקות 2,130 יין, רגילה 1,000 יין.",
+  "source_url": "https://yapanit.com/יעדים/קגושימה-kagoshima/איבוסוקי-ibusuki",
+  "numbers": "2,130; 1,000; 140",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "yakushima",
+  "fact_en": "Speedboat from Kagoshima 2-3h: 9,200 one way / 16,600 return (7 sailings 7:30-16:00 to Miyanoura/Anbo); car ferry Yaku2 ~4h once daily 08:30 -> 12:30, 5,000 one way / 9,500 return (return 13:30 -> 17:40); car transfer ~35,000 round trip; overnight Hibiscus ferry 18:00-07:00 3,900 yen the author's tester disliked.",
+  "fact_he": "מעבורת מהירה 2-3 שעות 9,200 יין; מעבורת רגילה Yaku2 5,000 יין; מעבורת לילה זולה אך רועשת.",
+  "source_url": "https://yapanit.com/יעדים/יקושימה",
+  "numbers": "9,200; 5,000; 3,900",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "yakushima",
+  "fact_en": "Flights: Kagoshima-Yakushima ~35 min ~10,000-16,000 yen; Osaka Itami ~27,000-39,000 yen; Fukuoka ~15,000-27,000 yen; one a day.",
+  "fact_he": "טיסות: קגושימה ~35 דקות, אוסקה ויקרה.",
+  "source_url": "https://yapanit.com/יעדים/יקושימה",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "yakushima",
+  "fact_en": "Renting a car is recommended: ring road ~3 hours around; small car from 4,250 yen, large van 15,000 yen; bus passes 2,000 yen/1 day, 3,000/2 days, 4,000/4 days (child half); the car-only forest road section shows wildlife.",
+  "fact_he": "רכב מומלץ: מ-4,250 יין; פס אוטובוס 2,000 ליום.",
+  "source_url": "https://yapanit.com/יעדים/יקושימה",
+  "numbers": "4,250; 2,000",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "season",
+  "city": "yakushima",
+  "fact_en": "Very rainy island (4,000-10,000 mm/yr), snow on peaks in winter; spring and summer rains bring mudslides. Recommended for trips of 24+ days; allow at least 4 days for the island plus 2 around Kagoshima.",
+  "fact_he": "אי גשום מאוד; מומלץ לטיולים ארוכים; 4 ימים לאי.",
+  "source_url": "https://yapanit.com/יעדים/יקושימה",
+  "numbers": "4 days",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "transport",
+  "city": "onomichi",
+  "fact_en": "Onomichi-Imabari direct bus ~1.5 h 2,250 yen every ~3 h; Onomichi ferry to Mukaishima 110 yen; Imabari terminal returns until 22:00; bridge cycling toll 500 yen suspended at least to March 2022.",
+  "fact_he": "אוטובוס אונומיצ'י-אימבארי 2,250 יין; מעבורת 110 יין; אגרת גשרים 500 יין לא נגבית עד מרץ 2022.",
+  "source_url": "https://yapanit.com/שימנאמי-קאידו",
+  "numbers": "2,250; 110; 500",
+  "year_written": 2022,
+  "agent": "yap-other"
+ },
+ {
+  "topic": "baby",
+  "city": "kiso",
+  "fact_en": "Kiso valley walk: kids 4+ OK, toddlers possible with stroller but with stairs, babies in carrier.",
+  "fact_he": "ילדים מגיל 4 בסדר, תינוקות במנשא.",
+  "source_url": "https://yapanit.com/שימנאמי-קאידו",
+  "agent": "yap-other"
+ },
+ {
+  "topic": "app",
+  "city": "japan",
+  "fact_en": "Yapanit sells a personal trip app plus a digital book per customer: airport-to-hotel routes, navigation to each sight, shinkansen timetable, daily schedule, restaurant/market/shopping picks, weather, offline mode; running since 2018; price depends on days and travellers; PDF print option for Shabbat observers.",
+  "fact_he": "\"יפנית\" מוכרת לכל לקוח אפליקציה אישית וספר דיגיטלי: הגעה משדה התעופה, ניווט לכל אתר, לוח שינקנסן, לו\"ז יומי, המלצות אוכל וקניות, מזג אוויר ומצב אופליין; פועלת מ-2018; המחיר לפי ימים ומטיילים; יש גם PDF להדפסה לשומרי שבת.",
+  "numbers": "longest app built: 90 days (max tourist visa)",
+  "source_url": "https://yapanit.com/about/japantripapp",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Non-kosher foods commonly met in Japan and their Japanese names: pork (butaniku), shellfish (kai), oysters (kaki), octopus (tako), squid (ika), crab (kani), shrimp (ebi), eel (unagi), scaleless fish, shark (same), whale (kujira), salmon roe (ikura is listed as not kosher by the author). Salmon (sake/samon) and tuna (maguro) are the common kosher fish; point at a dish and say the fish name plus OK.",
+  "fact_he": "מאכלים לא כשרים נפוצים ביפן ושמותיהם: חזיר (בוטה-ניקו), רכיכות (קאי), צדפות (קאקי), תמנון (טאקו), דיונון (איקה), סרטן (קאני), שרימפס (אבי), צלופח (אונאגי), דגים ללא קשקשים, כריש, לווייתן, ביצי סלמון (איקורה). דגים כשרים נפוצים: סלמון ושונה.",
+  "source_url": "https://yapanit.com/אוכל/אוכל-לשומרי-כשרות-צמחונים-טבעונים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "kosher",
+  "city": "japan",
+  "fact_en": "Useful phrase: \"Watashi wa ___ wo tabemasen\" = I do not eat ___; for vegetarians \"Watashi wa bejitarian desu\" (young people understand bejitarian/bigan, older ones saishoku-shugisha). Nearly all Japanese dishes use dashi fish stock, so vegetarian/vegan needs asking. Words: egg tamago, fish sakana, meat niku, beef gyuniku, chicken toriniku, vegetables yasai, tofu.",
+  "fact_he": "ביטויים שימושיים: \"ווטשי ווה ___ ו טאבמסן\" = אני לא אוכל ___; \"ווטשי ווה בג'יטריאן דסו\" = אני צמחוני. רוב המאכלים כוללים דאשי (ציר דגים), כך שצמחונים/טבעונים צריכים לשאול.",
+  "source_url": "https://yapanit.com/אוכל/אוכל-לשומרי-כשרות-צמחונים-טבעונים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "food",
+  "city": "japan",
+  "fact_en": "Typical meal prices (older figures): conveyor sushi ~150 yen/plate, noodles ~500, Japanese curry ~600, gyoza/nikuman ~500, gyudon ~300 (Yoshinoya, Matsuya), set-meal chain Ootoya ~700, fast food meal ~400, izakaya ~3000 per person with alcohol, lunch specials 1000-1500 yen.",
+  "fact_he": "מחירי ארוחות טיפוסיים (נתונים ישנים): סושי במסוע ~150 ¥ לצלחת, איטריות ~500, קארי ~600, גיוזה ~500, גיודון ~300, ארוחת סט באוטויה ~700, איזקאיה ~3000 כולל אלכוהול, עסקיות צהריים 1000-1500 ¥.",
+  "numbers": "yen",
+  "source_url": "https://yapanit.com/אוכל/מאכלים-יפניים-קטגוריות-ומחירים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "No tipping in Japan; price includes service. Many noodle/curry/gyudon chains use a pre-paid ticket machine at the door; plastic food models in the window show what you get; green tea is usually free.",
+  "fact_he": "אין טיפים ביפן. ברשתות נודלס/קארי/גיודון מזמינים ומשלמים במכונה בכניסה; דגמי פלסטיק בחלון מראים את המנה; תה ירוק לרוב חינם.",
+  "source_url": "https://yapanit.com/אוכל/מאכלים-יפניים-קטגוריות-ומחירים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "kosher",
+  "city": "tokyo",
+  "fact_en": "Few kosher places in Tokyo; the author points to koshertokyo.jp list of Jewish restaurants and to Chabad houses. Vegan: happycow.net lists the few vegan restaurants in Tokyo.",
+  "fact_he": "מעט מקומות כשרים בטוקיו; הכותבת מפנה לרשימה ב-koshertokyo.jp ולבתי חב\"ד. למסעדות טבעוניות: happycow.net.",
+  "source_url": "https://yapanit.com/אוכל/מאכלים-יפניים-קטגוריות-ומחירים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "nightlife",
+  "city": "tokyo",
+  "fact_en": "Karaoke costs about 200 yen/hour in the morning and 600-800 in the evening; street touts hand out discount coupons.",
+  "fact_he": "קריוקי: ~200 ¥ לשעה בבוקר, 600-800 ¥ בערב; מקדמי מכירות מחלקים קופונים.",
+  "numbers": "200; 600-800; night pack 2000 yen",
+  "source_url": "https://yapanit.com/טיפים/karaoke-קריוקי",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "sim",
+  "city": "japan",
+  "fact_en": "Japan has little free street WiFi; hotels and hostels have free WiFi. Options: home-country roaming (pricey, limited), eSIM (Airalo e.g. 5GB/30d about $11.50), Japanese prepaid data SIM from airport vending machines (~3,500 yen for 15 days, machines do not accept 10,000-yen notes or cards, bring a 5,000 note), pocket WiFi rental ~800-1,000 yen/day (best for families/groups of 3-4+).",
+  "fact_he": "ביפן כמעט אין WiFi חינם ברחוב; במלונות ואכסניות יש. אפשרויות: חבילה מהארץ (יקרה), eSIM, סים יפני ממכונה בשדה התעופה (~3,500 ¥ ל-15 יום; לא מקבלות שטר 10,000 ולא אשראי), פוקט WiFi ~800-1,000 ¥ ליום (למשפחה/קבוצה).",
+  "numbers": "eSIM 5GB 30d $11.50; SIM 3,500 yen/15d; pocket wifi 800-1000 yen/day",
+  "year_written": "2018",
+  "source_url": "https://yapanit.com/טיפים/אינטרנט-ותקשורת-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "itinerary",
+  "city": "tokyo",
+  "fact_en": "Suggested Saturday in Tokyo: Ueno park and Ameyoko market, walk Okachimachi to Akihabara (three consecutive Yamanote stations), maid cafe, optionally Ochanomizu for sports/music shopping, evening Roppongi.",
+  "fact_he": "יום שבת מומלץ בטוקיו: פארק אואנו ושוק אמיוקו, הליכה לאקיהברה, בית קפה מיידו, אוצ'נומיזו לקניות ספורט, ובערב רופונגי.",
+  "source_url": "https://yapanit.com/טיפים/המלצה-לשבת-בטוקיו",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "tokyo",
+  "fact_en": "Author's main recommendation for where to stay in Tokyo: the western side of the Yamanote loop, ideally Shibuya; Gotanda, Harajuku and Shinjuku also fine.",
+  "fact_he": "המלצת הכותבת ללון בטוקיו: הצד המערבי של קו ימנוטה, בעיקר שיבויה; גם גוטנדה, הרג'וקו ושינג'וקו.",
+  "source_url": "https://yapanit.com/טיפים/המלצות-כלליות-לטיול-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "airport",
+  "city": "tokyo",
+  "fact_en": "Two Tokyo airports: Narita (about 1.5 h by train) handles most international flights; Haneda is in the city. Author suggests landing in Osaka and leaving from Tokyo if possible.",
+  "fact_he": "שני נמלי תעופה: נאריטה (כשעה וחצי ברכבת, רוב הטיסות הבינלאומיות) והאנדה (בלב העיר). ממליצה לנחות באוסקה ולהמריא מטוקיו.",
+  "year_written": "2014",
+  "source_url": "https://yapanit.com/טיפים/המלצות-כלליות-לטיול-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "luggage",
+  "city": "japan",
+  "fact_en": "Travel light, buy souvenirs at the end in Tokyo, forward luggage between hotels.",
+  "fact_he": "לנסוע קל, לקנות בסוף בטוקיו, לשלוח מזוודות בין מלונות.",
+  "source_url": "https://yapanit.com/טיפים/המלצות-כלליות-לטיול-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "baby",
+  "city": "japan",
+  "fact_en": "Children under 6 ride trains free in Japan (on a parent's lap on shinkansen); under-2s fly free; sights are free for toddlers. Exceptions that refuse toddlers: Ninja Temple in Kanazawa and the Toyota plant tour.",
+  "fact_he": "ילדים מתחת לגיל 6 נוסעים ברכבות בחינם (על הברכיים בשינקנסן); מתחת לגיל 2 טסים בחינם; כניסה לאתרים חינם. מקומות שלא מכניסים פעוטות: מקדש הנינג'ות בקנזאווה וסיור מפעל טויוטה.",
+  "numbers": "free under 6",
+  "source_url": "https://yapanit.com/טיפים/טיול-יפן-תינוקות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "baby",
+  "city": "japan",
+  "fact_en": "Nearly every public toilet (hotel lobbies, restaurants, fast trains) has a changing table and a child seat; many subway stations have only one lift entrance, so be ready to lift the stroller on stairs; avoid rush-hour trains with a stroller; shinkansen are easy with a stroller.",
+  "fact_he": "כמעט בכל שירותים ציבוריים יש מתקן החתלה וכיסא לתינוק; בתחנות תחתית רבות רק כניסה אחת עם מעלית, לעיתים צריך להרים עגלה במדרגות; להימנע משעות עומס; בשינקנסן קל עם עגלה.",
+  "source_url": "https://yapanit.com/טיפים/טיול-יפן-תינוקות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "baby",
+  "city": "japan",
+  "fact_en": "Places not stroller-friendly (use a carrier): Kiso Valley Magome-Tsumago trail, Fushimi Inari gate path, Miyajima (cable car up, walk down). Send stroller one day ahead and bags two days ahead for carrier days. Few bikes with front child seat.",
+  "fact_he": "מקומות לא נגישים לעגלה (נדרש מנשא): מסלול עמק קיסו מאגומה-צומאגו, שערי פושימי אינארי, האי מייג'ימה. לשלוח עגלה יום קדימה ותיקים יומיים קדימה.",
+  "source_url": "https://yapanit.com/טיפים/טיול-יפן-תינוקות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "baby",
+  "city": "japan",
+  "fact_en": "Supplies: bring formula for short trips, fever medicine and thermometer; diapers and toiletries cheap in Japan (pull-up style only for bigger babies); pacifiers are rare, buy at Matsumoto Kiyoshi drugstore (~660 yen); bring two bottles. Many chain restaurants have kids' meals (Ootoya praised). Ryokan futons are roomy for toddlers but some luxury ryokan refuse babies. Book queen bed (160 cm) or twin beds joined; ask hotels for cribs.",
+  "fact_he": "ציוד: תמ\"ל לטיול קצר, תרופה למעלות חום ומד חום; חיתולים זולים ביפן; מוצצים נדירים - בסופרפארם מאצומוטו קיושי (~660 ¥); שני בקבוקים. מנות ילדים באוטויה. בריוקאן לנים על פוטונים; חלק מהריוקאנים היוקרתיים לא מקבלים תינוקות. להזמין מיטה 160 ס\"מ או שתי מיטות מחוברות.",
+  "year_written": "2018",
+  "source_url": "https://yapanit.com/טיפים/טיול-יפן-תינוקות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "baby",
+  "city": "japan",
+  "fact_en": "Onsen with babies: women's baths often have baby chairs and small bathing stands; toddlers may enter either side; never leave a toddler alone. Private/family baths at some hotels are best. Safety: escalators, ponds, bridges; wristband with phone number advised.",
+  "fact_he": "אונסן עם תינוקות: בעזרת נשים יש כיסאות לתינוקות ודרגשים קטנים; פעוטות יכולים להיכנס לשני הצדדים; לא להשאיר לבד. מומלץ אמבט משפחתי פרטי.",
+  "source_url": "https://yapanit.com/טיפים/טיול-יפן-תינוקות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "japan",
+  "fact_en": "Peak seasons: sakura (about two weeks either side of 1 April) and autumn leaves (about three weeks either side of 15 October). Winter trips can be 20-60% cheaper; author saw flights around $600-750 and 3-4 star hotels $50-110 (Dec 2018).",
+  "fact_he": "עונות שיא: סאקורה (שבועיים לפני ואחרי 1 באפריל) ושלכת (3 שבועות סביב 15 באוקטובר). טיול חורף זול ב-20%-60%: טיסות ~600-750$, מלונות 50-110$ (דצמבר 2018).",
+  "numbers": "-20% to -60%",
+  "year_written": "2018",
+  "source_url": "https://yapanit.com/טיפים/יפן-בחורף",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "japan",
+  "fact_en": "Winter highlights: Jigokudani snow monkey park, outdoor rotenburo onsen in snow, Nagano ski areas (cheap packages), Sapporo Snow Festival early February (about 250 snow sculptures, ~2 million visitors), Tokyo Marathon last Sunday of February, Imperial Palace open 23 Dec and 2 Jan, Coming of Age Day second Monday of January, sales mid-Dec to mid-Jan.",
+  "fact_he": "אטרקציות חורף: פארק קופי השלג ג'יגוקודני, אונסן בשלג, סקי בנגאנו, פסטיבל השלג בסאפורו (תחילת פברואר), מרתון טוקיו (יום ראשון האחרון של פברואר), הארמון הקיסרי פתוח ב-23 בדצמבר וב-2 בינואר, יום ההתבגרות (יום שני השני בינואר), סיילים מאמצע דצמבר עד אמצע ינואר.",
+  "numbers": "Marathon: last Sunday of Feb, ~36,000 runners; Sapporo snow fest early Feb",
+  "source_url": "https://yapanit.com/טיפים/יפן-בחורף",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "pregnancy",
+  "city": "japan",
+  "fact_en": "Pregnancy travel: second trimester is the safest window; airlines allow flying to about week 36 (single baby), insurers often cover only to week 30-32 (23 for multiples). Birth in Japan is expensive, no epidural usually, baby gets no citizenship.",
+  "fact_he": "נסיעה בהריון: השליש השני מומלץ; חברות תעופה מאפשרות עד שבוע 36, ביטוח לרוב עד שבוע 30-32; לידה ביפן יקרה, בלי אפידורל, והילד לא מקבל אזרחות.",
+  "numbers": "week 36 airline; week 30-32 insurance",
+  "source_url": "https://yapanit.com/טיפים/יפן-הריון",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "pregnancy",
+  "city": "japan",
+  "fact_en": "Sushi: Japanese women mostly avoid it in pregnancy; if eaten, only at fresh conveyor-belt sushi, not convenience store, and avoid high-mercury fish (tuna, shark, swordfish). Onsen: opinions differ, short dips up to 10 minutes then cool down, watch slippery floors; alcohol is taboo. Many smoking-allowed restaurants and izakaya; ask for non-smoking rooms. Hotel rooms and beds are small: book queen or bigger (APA hotels have larger rooms). Bring prescription meds with doctor letter; clothes sizes are small. Do not approach deer in Nara/Miyajima or monkeys at Jigokudani.",
+  "fact_he": "סושי: יפניות נמנעות בהריון; אם כן - במסעדת סושי טרייה, לא בקונביני, ולהימנע מדגים עם כספית. אונסן: עד 10 דקות כל פעם. הרבה מקומות מעשנים. מיטת קווין לפחות. תרופות עם מכתב רופא. לא להתקרב לאיילים בנארה/מייג'ימה ולקופים.",
+  "source_url": "https://yapanit.com/טיפים/יפן-הריון",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "bike",
+  "city": "tokyo",
+  "fact_en": "Bicycles: parking only in designated bike lots (free or 100-300 yen) or you get a fine/tow (~2,000 yen); rental 200-3,000 yen/day; Setagaya rental centre near Sangenjaya 200 yen/day; bikes sold at Don Quijote for 8,000-15,000 yen. Routes: Yoyogi Park, around Imperial Palace (5.3 km), Yamanote loop (35.5 km), Odaiba via Rainbow Bridge (push bike on 600 m walkway), Tamagawa.",
+  "fact_he": "אופניים בטוקיו: חניה רק במקומות ייעודיים (חינם או 100-300 ¥), אחרת קנס/גרירה (~2,000 ¥); השכרה 200-3,000 ¥ ליום. מסלולים: פארק יויוגי, סביב הארמון (5.3 ק\"מ), סביב קו ימנוטה (35.5 ק\"מ), אודאיבה דרך גשר הקשת, פארק טמאגאווה.",
+  "numbers": "5.3 km palace; 35.5 km Yamanote",
+  "source_url": "https://yapanit.com/טיפים/לגלות-את-טוקיו-על-אופניים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "accessibility",
+  "city": "japan",
+  "fact_en": "Wheelchair travel in Japan is practical: ramp staff meet you at every station and again at destination, buses have ramps, shinkansen toilets are spacious. Wheelchair spot on shinkansen guaranteed only if booked ~1 week ahead. Book Universal Rooms (accessible hotel rooms) well ahead; Japanese baths use a bath chair, no roll-in showers. Hotels in Kyoto may have tiny toilets with a step.",
+  "fact_he": "טיול בכסא גלגלים ביפן אפשרי: צוות רמפות בכל תחנה ובצד היעד, אוטובוסים עם רמפות, שירותים נגישים בשינקנסן. מקום לכס\"ג בשינקנסן מובטח רק בהזמנה כשבוע מראש. להזמין Universal Room זמן רב מראש; במקלחות יש כיסא באמבט.",
+  "source_url": "https://yapanit.com/טיפים/נגישות-ביפן-יפן-לבעלי-מוגבלויות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "accessibility",
+  "city": "japan",
+  "fact_en": "Accessibility notes from a 16-day trip (late April): Kinkakuji accessible path ends ~100 m after viewpoints, Ginkakuji has steps; Kiyomizudera reachable by a steep road; Himeji castle interior hard, Koko-en garden OK; Hiroshima tram line 3 and old trams have a high step, newer trams flat; Takayama train fits wheelchairs up to 56 cm; Shirakawa-go bus has 2-3 steps (taxi round trip cost 27,640 yen); Hakone trains, ropeway, boat and bus all accessible, Fujiya Hotel has a car pickup but onsen not accessible; Tokyo: use a list of accessible stations.",
+  "fact_he": "הערות נגישות מטיול של 16 יום: קינקקוג'י - המסלול הנגיש מסתיים ~100 מ' אחרי התצפיות; קיומיזודרה בכביש תלול; טירת הימג'י קשה, גן קוקו-אן בסדר; חשמליות ישנות בהירושימה עם מדרגה; אוטובוס לשירקאווה-גו עם 2-3 מדרגות (מונית 27,640 ¥); האקונה נגישה; בטוקיו כדאי לבדוק תחנות נגישות.",
+  "numbers": "luggage forwarding 1,290-1,690 yen per bag; taxi 890-1,100 yen",
+  "source_url": "https://yapanit.com/טיפים/נגישות-ביפן-יפן-לבעלי-מוגבלויות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "kobe",
+  "fact_en": "Kobe Chabad and synagogue (Rabbi Shmuli Wishetzky) sit on a hill in Kitano district; accessible except 4 steps; Shabbat meals; hosted wheelchair guests who arranged a driver for return.",
+  "fact_he": "בית חב\"ד קובה (הרב שמוליק וישצקי) והבית הכנסת על הר ברובע קיטאנו; נגיש מלבד 4 מדרגות; ארוחות שבת.",
+  "source_url": "https://yapanit.com/טיפים/נגישות-ביפן-יפן-לבעלי-מוגבלויות",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "japan",
+  "fact_en": "Summer is a good time: fewer tourists, cheaper hotels, long days (sunset late), light luggage; hot and humid, typhoons mostly August-September and usually last one day; Mt Fuji climbing season 1 July to 15 September; beaches near Tokyo: Atami, Izu, Shimoda, Enoshima; near Osaka: Suma, Tarui, Awaji, Shirahama.",
+  "fact_he": "קיץ ביפן: פחות תיירים, מלונות זולים, ימים ארוכים; חם ולח; טייפונים בעיקר באוגוסט-ספטמבר ולרוב ליום אחד; עונת טיפוס על הר פוג'י 1 ביולי עד 15 בספטמבר; חופים: אטאמי, איזו, שימודה, אנושימה; ליד אוסקה: סומה, טארוי, אווג'י, שיראהמה.",
+  "numbers": "Fuji season 1 Jul - 15 Sep",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Sanno Festival (Hie Shrine): 7-17 June, parade 15 June (every year). Festival at Hie Jinja in central Tokyo; nearby stations Tameike-sanno, Akasaka-mitsuke, Nagatacho.",
+  "fact_he": "פסטיבל סאנו במקדש היי בלב טוקיו; פסטיבל 7-17 ביוני, מצעד ב-15 ביוני.",
+  "numbers": "7-17 June, parade 15 June (every year)",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Sumidagawa Hanabi (Asakusa fireworks): last Saturday of July. Big fireworks over the Sumida river by Asakusa station.",
+  "fact_he": "זיקוקין על נהר סומידה באסאקוסה, יום שבת האחרון של יולי.",
+  "numbers": "last Saturday of July",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "chiba",
+  "fact_en": "Edogawa Hanabi: first Saturday of August. Fireworks with over 14,000 shells in Chiba; stations Shinozaki, Ichikawa, Ichikawamama, Sugano then 20-30 min walk.",
+  "fact_he": "זיקוקין על נהר אדו, שבת ראשונה של אוגוסט, מעל 14,000 זיקוקים.",
+  "numbers": "first Saturday of August",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "yokohama",
+  "fact_en": "Yokohama Hanabi: early August. Fireworks at Minato Mirai.",
+  "fact_he": "זיקוקין ביוקוהמה, תחילת אוגוסט, מינאטו מיראי.",
+  "numbers": "early August",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "Obon: 13-15 July (lunar) or 13-15 August. Buddhist festival of the dead with lanterns and street dances; date depends on region.",
+  "fact_he": "חג אובון, 13-15 ביולי או באוגוסט לפי האזור; פנסים וריקודים.",
+  "numbers": "13-15 July (lunar) or 13-15 August",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "Tanabata: 7 July (some regions 7 August). Star festival; Hiratsuka is a known venue.",
+  "fact_he": "טנבאטה, 7 ביולי (בחלק מהאזורים 7 באוגוסט).",
+  "numbers": "7 July (some regions 7 August)",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "niigata",
+  "fact_en": "Fuji Rock Festival: last weekend of July. Three-day music festival with camping.",
+  "fact_he": "פסטיבל מוזיקה בן 3 ימים בסוף יולי, עם קמפינג.",
+  "numbers": "last weekend of July",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Daimonji Gozan Okuribi: 16 August, 20:00. Five giant bonfires on the hills around Kyoto shaped like characters, burning about 30 minutes.",
+  "fact_he": "פסטיבל דאימונג'י, 16 באוגוסט בשעה 20:00; חמש מדורות על ההרים סביב העיר.",
+  "numbers": "16 August, 20:00",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Asakusa Samba Carnival: late August. About half a million visitors.",
+  "fact_he": "קרנבל סמבה באסאקוסה בסוף אוגוסט, כ-500 אלף מבקרים.",
+  "numbers": "late August",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Gion Matsuri: July (peaks 17 and 24 July). Month-long festival in Gion.",
+  "fact_he": "פסטיבל גיון, כל יולי, שיאים ב-17 וב-24.",
+  "numbers": "July (peaks 17 and 24 July)",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "osaka",
+  "fact_en": "Tenjin Matsuri: 24-25 July (peak 25). Osaka summer festival.",
+  "fact_he": "פסטיבל טנג'ין, 24-25 ביולי.",
+  "numbers": "24-25 July (peak 25)",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "festival",
+  "city": "hiroshima",
+  "fact_en": "Hiroshima Peace Day: 6 August. Ceremony morning and lantern floating on the river at night.",
+  "fact_he": "יום ההנצחה בהירושימה 6 באוגוסט; טקס והשטת פנסים בערב.",
+  "numbers": "6 August",
+  "source_url": "https://yapanit.com/טיפים/נסיעה-ליפן-בקיץ",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "tokyo",
+  "fact_en": "Sumo: six 15-day tournaments a year in odd months - Tokyo January, May, September; Osaka March; Nagoya July; Fukuoka November. Reserved seats (chair A 6,900 / B 5,600 / C 3,800 / D 3,100 yen; boxes of four 38,000-48,800 yen) go on sale at 10:00 Japan time on opening day and sell out in about an hour (weekends in minutes). Cheap trick: ~350 unreserved seats sold each day at Ryogoku Kokugikan box office from 8:00 for 2,100 yen adult. Sumo ticket resale site can post tickets to your hotel. Morning practice (keiko) 7:30-10:00 almost daily except March, July, November.",
+  "fact_he": "סומו: שישה טורנירים בשנה בחודשים אי-זוגיים - טוקיו ינואר/מאי/ספטמבר, אוסקה מרץ, נגויה יולי, פוקואוקה נובמבר. כרטיסים שמורים (3,100-6,900 ¥; בוקס ל-4: 38,000-48,800 ¥) נמכרים ב-10:00 שעון יפן ביום פתיחת המכירה ואוזלים תוך שעה. טריק: ~350 כרטיסים לא שמורים נמכרים ביום עצמו בקופת היכל ריוגוקוקו מ-8:00 ב-2,100 ¥. אימוני בוקר 7:30-10:00.",
+  "numbers": "unreserved 2,100 yen adult / 200 child",
+  "source_url": "https://yapanit.com/טיפים/סומו-sumo",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Workshops (cooking, kintsugi, tea, sword, kimono rental) sell out in peak season: book ahead, check an English guide exists, give 2-3 hours and place on a relaxed day, arrive early.",
+  "fact_he": "סדנאות נמכרות בעונות שיא: להזמין מראש, לוודא מדריך באנגלית, להקדיש 2-3 שעות ביום רגוע ולהגיע מוקדם.",
+  "source_url": "https://yapanit.com/טיפים/פעילויות-סדנאות-יפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "japan",
+  "fact_en": "Rule of thumb for central Honshu cherry blossom: one week before to one week after 1 April, which often overlaps Passover. The blossom front starts in Okinawa in February and moves north; hanami picnics under blooming trees at peak.",
+  "fact_he": "כלל אצבע לפריחת הדובדבן במרכז הונשו: שבוע לפני ושבוע אחרי 1 באפריל, לרוב בחפיפה לפסח. החזית מתחילה באוקינאווה בפברואר ועולה צפונה; האנאמי - פיקניקים מתחת לעצים.",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "tokyo",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 14 Mar, full bloom 22 Mar-1 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 14 Mar, פריחה מלאה 22 Mar-1 Apr.",
+  "numbers": "open 14 Mar; full 22 Mar-1 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "kyoto",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 17 Mar, full bloom 25 Mar-2 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 17 Mar, פריחה מלאה 25 Mar-2 Apr.",
+  "numbers": "open 17 Mar; full 25 Mar-2 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "osaka",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 19 Mar, full bloom 25 Mar-2 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 19 Mar, פריחה מלאה 25 Mar-2 Apr.",
+  "numbers": "open 19 Mar; full 25 Mar-2 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "nara",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 20 Mar, full bloom 25 Mar-2 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 20 Mar, פריחה מלאה 25 Mar-2 Apr.",
+  "numbers": "open 20 Mar; full 25 Mar-2 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "kobe",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 23 Mar, full bloom 29 Mar-6 Apr (page typo).",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 23 Mar, פריחה מלאה 29 Mar-6 Apr (page typo).",
+  "numbers": "open 23 Mar; full 29 Mar-6 Apr (page typo)",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "hiroshima",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 19 Mar, full bloom 26 Mar-3 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 19 Mar, פריחה מלאה 26 Mar-3 Apr.",
+  "numbers": "open 19 Mar; full 26 Mar-3 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "nagoya",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 17 Mar, full bloom 24 Mar-1 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 17 Mar, פריחה מלאה 24 Mar-1 Apr.",
+  "numbers": "open 17 Mar; full 24 Mar-1 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "kanazawa",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 23 Mar, full bloom 28 Mar-5 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 23 Mar, פריחה מלאה 28 Mar-5 Apr.",
+  "numbers": "open 23 Mar; full 28 Mar-5 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "hakone",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 30 Mar, full bloom 4-12 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 30 Mar, פריחה מלאה 4-12 Apr.",
+  "numbers": "open 30 Mar; full 4-12 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "takayama",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 31 Mar, full bloom ~15 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 31 Mar, פריחה מלאה ~15 Apr.",
+  "numbers": "open 31 Mar; full ~15 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "matsumoto",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 24 Mar, full bloom 4-11 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 24 Mar, פריחה מלאה 4-11 Apr.",
+  "numbers": "open 24 Mar; full 4-11 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "sendai",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 26 Mar, full bloom 1-8 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 26 Mar, פריחה מלאה 1-8 Apr.",
+  "numbers": "open 26 Mar; full 1-8 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "sapporo",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 15 Apr, full bloom 21-28 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 15 Apr, פריחה מלאה 21-28 Apr.",
+  "numbers": "open 15 Apr; full 21-28 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "hakodate",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 14 Apr, full bloom 19-25 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 14 Apr, פריחה מלאה 19-25 Apr.",
+  "numbers": "open 14 Apr; full 19-25 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "fukuoka",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering 19 Mar, full bloom 24 Mar-1 Apr.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה 19 Mar, פריחה מלאה 24 Mar-1 Apr.",
+  "numbers": "open 19 Mar; full 24 Mar-1 Apr",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "season",
+  "city": "okinawa",
+  "fact_en": "Sakura forecast table on page (written for 2024 from 2023 data; city/date columns read from a flattened table, treat as approximate): first flowering mid Jan, full bloom 2nd week Feb.",
+  "fact_he": "טבלת פריחת דובדבן (תחזית 2024, מבוססת על 2023; פענוח טבלה משוטחת): תחילת פריחה mid Jan, פריחה מלאה 2nd week Feb.",
+  "numbers": "open mid Jan; full 2nd week Feb",
+  "year_written": "2024",
+  "source_url": "https://yapanit.com/טיפים/פריחת-הדובדבן-סאקורה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Coupons from the page are old (Yunessun valid to Aug 2017). Karting in Tokyo requires an International Driving Permit (1949 Geneva convention).",
+  "fact_he": "קופונים בעמוד ישנים (יונסאן עד אוגוסט 2017). קארטינג בטוקיו דורש רישיון נהיגה בינלאומי.",
+  "year_written": "2017",
+  "source_url": "https://yapanit.com/טיפים/קופונים-ודילים-שווים-לטיולכם",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "shopping",
+  "city": "japan",
+  "fact_en": "Shoes: Japanese sizes are in cm; normal shops go up to 28 cm for men (US 10) and 25 cm for women (US 8); bigger sizes in special shops up to 32 cm. Asics/Mizuno cost about half of Israel and last-season models 500-2,000 yen; many running shoes come in WIDE and SLIM versions (order WIDE with insoles). London Sports (Ueno, Ochanomizu, TOC Gotanda B1) for cheap sport shoes.",
+  "fact_he": "נעליים: מידות בס\"מ; בחנויות רגילות עד 28 ס\"מ לגברים ו-25 ס\"מ לנשים; אסיקס/מיזונו בחצי מחיר, דגמי עונה קודמת 500-2,000 ¥; יש גרסת WIDE וגרסת SLIM. London Sports באואנו, אוצ'נומיזו ובניין TOC בגוטנדה.",
+  "numbers": "28 cm men max; 25 cm women max",
+  "source_url": "https://yapanit.com/טיפים/קניות-נעליים",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "etiquette",
+  "city": "japan",
+  "fact_en": "Omikuji fortune slips cost about 100 yen at shrines; best result is dai-kichi, worst dai-kyo; categories include travel, wish, love, childbirth; tie the bad ones on the rack at the shrine.",
+  "fact_he": "אומיקוג'י: פתקי מזל ב-100 ¥ בכניסה למקדש; הכי טוב דאי-קיצ'י, הכי גרוע דאי-קיו; מי שקיבל מזל רע קושר אותו על החבלים במקדש.",
+  "numbers": "100 yen",
+  "source_url": "https://yapanit.com/טיפים/קריאת-המזל-באומיקוג-י",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "luggage",
+  "city": "japan",
+  "fact_en": "Luggage rules: JR allows two suitcases per passenger up to 30 kg each (size limit applies); shinkansen overhead racks are small and there is room behind the last row for 2-3 large bags; buses limit 2 large bags per person; travel light. Coin lockers at stations: small ~400 yen, medium ~600, large ~800 per calendar day (100-yen coins, increasingly IC card); airport/station luggage counters 500-1000 yen per item per day.",
+  "fact_he": "כללי מזוודות: ב-JR עד שתי מזוודות לנוסע, 30 ק\"ג כל אחת; בשינקנסן יש מקום ל-2-3 מזוודות גדולות מאחורי השורה האחרונה; לוקרים בתחנות: קטן ~400 ¥, בינוני ~600, גדול ~800 ליום; דלפק אחסון 500-1000 ¥ ליום.",
+  "numbers": "lockers 400/600/800 yen; counters 500-1000",
+  "source_url": "https://yapanit.com/טיפים/שינוע-כבודתכם-מזוודותיכם-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "luggage",
+  "city": "japan",
+  "fact_en": "Takuhaibin luggage forwarding (Yamato Kuroneko etc.) door to door from hotels, airports and konbini, usually next day (up to 3 days remote); price by size, big suitcase within Tokyo about 2,400 yen, to Kyoto ~+200; rough rule 2,000 yen per suitcase and 1,200 per trolley. Hakone same-day luggage service 700-1,500 yen (Hakone-Yumoto station to hotels); Kyoto station same-day ~1,000 yen. Address it to the hotel in the guest name.",
+  "fact_he": "שילוח מזוודות (טאקוהאיבין, יאמאטו) מדלת לדלת ממלונות, שדות תעופה וקונביני, בדרך כלל למחרת; מזוודה גדולה בתוך טוקיו ~2,400 ¥, לקיוטו ~200 ¥ נוספים; בקירוב 2,000 ¥ למזוודה ו-1,200 ¥ לטרולי. האקונה: שילוח באותו יום 700-1,500 ¥; קיוטו: ~1,000 ¥. לכתוב על שם האורח במלון.",
+  "numbers": "~2,000 yen per suitcase; Hakone 700-1500; Kyoto ~1000",
+  "source_url": "https://yapanit.com/טיפים/שינוע-כבודתכם-מזוודותיכם-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "planning",
+  "city": "japan",
+  "fact_en": "Planning method: table with day number, date, weekday (some sights are better or closed on specific days, e.g. Harajuku on Sundays), start/mid/end of day, route, transport, special bookings, lodging area, luggage logistics; order JR Pass only about two weeks before travel; book sumo about 1.5 months ahead.",
+  "fact_he": "שיטת תכנון: טבלה עם מס' יום, תאריך, יום בשבוע, איפה מתחילים/מבלים/ישנים, מעברים, תחבורה, הזמנות מיוחדות, לינה ולוגיסטיקה; להזמין JR Pass כשבועיים לפני; סומו כחודש וחצי מראש.",
+  "source_url": "https://yapanit.com/טיפים/תכנון-טיול-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "luggage",
+  "city": "japan",
+  "fact_en": "Luggage rules: JR allows two suitcases per passenger up to 30 kg each (size limit applies); shinkansen overhead racks are small and there is room behind the last row for 2-3 large bags; buses limit 2 large bags per person; travel light. Coin lockers at stations: small ~400 yen, medium ~600, large ~800 per calendar day (100-yen coins, increasingly IC card); airport/station luggage counters 500-1000 yen per item per day.",
+  "fact_he": "כללי מזוודות: ב-JR עד שתי מזוודות לנוסע, 30 ק\"ג כל אחת; בשינקנסן יש מקום ל-2-3 מזוודות גדולות מאחורי השורה האחרונה; לוקרים בתחנות: קטן ~400 ¥, בינוני ~600, גדול ~800 ליום; דלפק אחסון 500-1000 ¥ ליום.",
+  "numbers": "lockers 400/600/800 yen; counters 500-1000",
+  "source_url": "https://yapanit.com/טיפים/שינוע-כבודתכם-מזוודותיכם-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "luggage",
+  "city": "japan",
+  "fact_en": "Takuhaibin luggage forwarding (Yamato Kuroneko etc.) door to door from hotels, airports and konbini, usually next day (up to 3 days remote); price by size, big suitcase within Tokyo about 2,400 yen, to Kyoto ~+200; rough rule 2,000 yen per suitcase and 1,200 per trolley. Hakone same-day luggage service 700-1,500 yen (Hakone-Yumoto station to hotels); Kyoto station same-day ~1,000 yen. Address it to the hotel in the guest name.",
+  "fact_he": "שילוח מזוודות (טאקוהאיבין, יאמאטו) מדלת לדלת ממלונות, שדות תעופה וקונביני, בדרך כלל למחרת; מזוודה גדולה בתוך טוקיו ~2,400 ¥, לקיוטו ~200 ¥ נוספים; בקירוב 2,000 ¥ למזוודה ו-1,200 ¥ לטרולי. האקונה: שילוח באותו יום 700-1,500 ¥; קיוטו: ~1,000 ¥. לכתוב על שם האורח במלון.",
+  "numbers": "~2,000 yen per suitcase; Hakone 700-1500; Kyoto ~1000",
+  "source_url": "https://yapanit.com/טיפים/שינוע-כבודתכם-מזוודותיכם-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "planning",
+  "city": "japan",
+  "fact_en": "Planning method: table with day number, date, weekday (some sights are better or closed on specific days, e.g. Harajuku on Sundays), start/mid/end of day, route, transport, special bookings, lodging area, luggage logistics; order JR Pass only about two weeks before travel; book sumo about 1.5 months ahead.",
+  "fact_he": "שיטת תכנון: טבלה עם מס' יום, תאריך, יום בשבוע, איפה מתחילים/מבלים/ישנים, מעברים, תחבורה, הזמנות מיוחדות, לינה ולוגיסטיקה; להזמין JR Pass כשבועיים לפני; סומו כחודש וחצי מראש.",
+  "source_url": "https://yapanit.com/טיפים/תכנון-טיול-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Plan train routes with Google Maps and Navitime (set JR Pass filter); Nozomi, Mizuho and Hayabusa shinkansen are not covered by the regular JR Pass; JR Pass holders can reserve seats free at the counter near the exchange office; Kodama is much slower than Hikari/Sakura (Hiroshima-Himeji 60 vs 132 min).",
+  "fact_he": "תכנון נסיעות: Google Maps ו-Navitime (סינון JR Pass); נוזומי, מיזוהו והיאבוסה לא כלולים בפס הרגיל; מחזיקי פס מזמינים מקומות בחינם בדלפק; קודמה איטי הרבה יותר (הירושימה-הימג'י 60 לעומת 132 דקות).",
+  "numbers": "Oct 2023",
+  "year_written": "2023",
+  "source_url": "https://yapanit.com/טיפים/תכנון-מסלול-jr-pass",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "Jewish communities in Japan: Tokyo has two unrelated Chabad houses (Takanawa and Omori) plus the American-style JCC in Hiroo; Kobe has the Orthodox-Sephardi community and Chabad; Kyoto has a Chabad house (Okazaki); Takayama has no Chabad house but the Omori rabbi runs a seder there. About 1,000 Jews live in Japan.",
+  "fact_he": "קהילות יהודיות ביפן: בטוקיו שני בתי חב\"ד (טקנאווה ואומורי) ו-JCC בהירו; בקובה קהילה ובית חב\"ד; בקיוטו בית חב\"ד; בטקיאמה אין בית חב\"ד אך יש ליל סדר. כ-1000 יהודים ביפן.",
+  "numbers": "~1000 Jews",
+  "source_url": "https://yapanit.com/יהדות-ביפן/רשימת-הקהילות-היהודיות-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "Passover seders 2026 (1 April): Tokyo Rabbi Binyamin (donation 50 USD adult / 25 child, 18:00 maariv, 18:30 seder), Tokyo American Club Rabbi Mendi (100 USD resident / 150 tourist / 65-95 child; 2-1-2 Azabudai, Minato-ku; second seder at Mendi Chabad house), Kyoto Chabad (donation 50/25), Takayama (kosher venue, donation 50/25), Kobe Chabad (50 adult, 20 student, 15 child; both nights 85/40/30; candle lighting 18:00, seder 18:30). Register in advance for exact location; book about a month ahead.",
+  "fact_he": "ליל סדר 2026 (1 באפריל): טוקיו אצל הרב בנימין (תרומה 50$/25$), Tokyo American Club אצל הרב מנדי (100-150$ למבוגר), קיוטו (50/25), טקיאמה (50/25), קובה (50$ בוגר, 20$ סטודנט, 15$ ילד). הרשמה מראש; מקום מדויק בהרשמה.",
+  "numbers": "Passover evening 1 April 2026",
+  "year_written": "2026",
+  "source_url": "https://yapanit.com/יהדות-ביפן/ליל-הסדר-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "History points: Jewish community arrived after 1845 (Yokohama, Nagasaki, Kobe; Kobe grew after 1923 Kanto earthquake to ~1,000); Sugihara saved thousands of Lithuanian Jews; two active communities today (Tokyo JCC, Kobe Orthodox) plus Chabad houses; most Israelis use Chabad.",
+  "fact_he": "היסטוריה: קהילה מ-1845 (יוקוהמה, נגסאקי, קובה); קובה גדלה אחרי רעידת האדמה ב-1923; סוגיהארה הציל אלפי יהודים; כיום קהילות בטוקיו ובקובה ובתי חב\"ד.",
+  "source_url": "https://yapanit.com/יהדות-ביפן/יהדות-ויהודים-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "Overview page: Israelis mostly go to Chabad rather than the JCC; there are Japanese converts, and Makuya / Beit Shalom Christians who support Israel but are not Jewish.",
+  "fact_he": "סקירה: רוב הישראלים הולכים לחב\"ד ולא ל-JCC; יש יפנים שהתגיירו; אנשי \"מקויה\" אינם יהודים אלא נוצרים אוהדי ישראל.",
+  "source_url": "https://yapanit.com/יהדות-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "yudanaka",
+  "fact_en": "For Jigokudani Monkey Park, sleep a night before or after in a traditional ryokan near Yudanaka station or in Shibu Onsen (about 10 min by road toward the park). Shibu Onsen hotels of the local association give a key to 9 free public baths within walking distance; non-members can buy tickets for 500 yen at the info centre. Most Yudanaka hotels offer station pickup and park shuttle; free parking.",
+  "fact_he": "ללון ליד פארק הקופים: ריוקאן ליד תחנת יודנאקה או בשיבו אונסן (~10 דקות נסיעה). מלונות איגוד שיבו אונסן נותנים מפתח ל-9 אונסנים ציבוריים בחינם; אחרים יכולים לקנות כרטיס ב-500 ¥. רוב מלונות יודנאקה מציעים איסוף מהתחנה והסעה לפארק.",
+  "numbers": "9 baths; 500 yen",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/yudanaka-shibu-onsen-ryokans",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Hostels: dorm beds about 60-130 NIS per night; private/family rooms in hostels are often cheaper than hotels. In Tokyo Asakusa hostels run $5-10 cheaper than Shinjuku; idea: Shinjuku at trip start, Asakusa at the end.",
+  "fact_he": "הוסטלים: מיטה בדורמיטורי 60-130 ש\"ח ללילה; חדרים פרטיים/משפחתיים לרוב זולים ממלון; באסאקוסה זול ב-5-10$ משינג'וקו.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/אכסניות-הוסטלים-מומלצים-ביפן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "hakone",
+  "fact_en": "Where to stay in Hakone: because most visitors use the Hakone Freepass, stay in a ryokan/hotel within walking distance of a Hakone Tozan line or cable car station; author most recommends the Miyanoshita station area (also Gora). Most ryokans under ~$250 per couple have shared toilets and baths (onsen), not in-room.",
+  "fact_he": "לינה בהאקונה: עם ה-Hakone Freepass כדאי ללון במרחק הליכה מתחנה בקו טוזאן או הרכבל; מומלצת בעיקר סביב תחנת מיינושיטה (וגם גורה). ריוקאנים עד ~250$ לזוג לרוב בלי שירותים ומקלחת בחדר.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בהאקונה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "hiroshima",
+  "fact_en": "Where to stay in Hiroshima: near the Peace Memorial Museum in Naka ward, or near Hiroshima station; most trips need 1-2 nights. Every bus from the station south exit passes the Peace Museum (Heiwa Odori); taxi ~15 min.",
+  "fact_he": "לינה בהירושימה: ליד מוזיאון השלום ברובע נאקה או ליד תחנת הירושימה; 1-2 לילות. כל אוטובוס מהיציאה הדרומית עובר במוזיאון השלום; מונית ~15 דקות.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בהירושימה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "tokyo",
+  "fact_en": "Tokyo where to stay: near Shinjuku, Shibuya, Shimbashi/Ginza or Ikebukuro stations, on the Yamanote line, walking distance from the station (search by station, not by the huge Shinjuku/Shibuya wards). Second Tokyo stay: Shinagawa, Gotanda, Ueno. Start and end the trip at the same hotel (free luggage storage) so you travel light with JR Pass. If unsure, book the first 2 nights only.",
+  "fact_he": "לינה בטוקיו: ליד תחנות שינג'וקו, שיבויה, שימבשי/גינזה או איקבוקורו על קו ימנוטה, במרחק הליכה מהתחנה (לחפש לפי תחנה ולא לפי הרובע). בביקור שני: שינגאווה, גוטנדה, אואנו. להתחיל ולסיים באותו מלון (שמירת מזוודות חינם).",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בטוקיו",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "tokyo",
+  "fact_en": "Gotanda: author lived and worked there for years; many restaurants and izakayas, Sony HQ nearby, Chabad (Mendi) about 2 km (15-25 min walk). Ueno area cheaper than Shinjuku/Shibuya; Ikebukuro is 9 min from Shinjuku and a cheaper option. Asakusa hostels cheapest.",
+  "fact_he": "גוטנדה: הכותבת גרה שם שנים; הרבה מסעדות, בית חב\"ד מנדי ~2 ק\"מ; אואנו זול משינג'וקו; איקבוקורו זול, 9 דקות משינג'וקו.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בטוקיו",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "takayama",
+  "fact_en": "Takayama: sleep within about 1 km of Takayama station, preferably north of it (old town, restaurants, morning markets). Search \"Takayama Station\" not \"Takayama\": the wider Takayama city area has hotels many km away reachable only by car or rare buses. Prefer places with an onsen in cold season.",
+  "fact_he": "טקיאמה: ללון עד ק\"מ מהתחנה, עדיף צפונית (העיר העתיקה, מסעדות, שווקי בוקר). לחפש \"Takayama Station\" ולא סתם Takayama - מחוז טקיאמה גדול ומלונות רחוקים רק לרכב. עדיף מקום עם אונסן.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בטקיאמה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "kagoshima",
+  "fact_en": "Kagoshima: usually 2 nights; best near Kagoshima-Chuo station, the Tenmonkan shopping area, or the Sakurajima ferry pier (for views of the active volcano). Local ramen is the house dish.",
+  "fact_he": "קגושימה: בדרך כלל 2 לילות; עדיף ליד תחנת Kagoshima Chuo, אזור הקניות טנמונקן או מזח המעבורת לסקורג'ימה (נוף להר הגעש). ראמן קגושימה - מנת הבית.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקגושימה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "kobe",
+  "fact_en": "Kobe: travellers usually stop for Shabbat/Jewish holidays while touring Kansai; stay near Sannomiya station / Tor Road area, walking distance to the Kobe synagogue and Chabad house (Kitano).",
+  "fact_he": "קובה: לרוב עוצרים לשבת/חג בזמן טיול בקנסאי; ללון ליד תחנת סאנומייה/אזור טור רואד, במרחק הליכה מבית הכנסת ובית חב\"ד.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקובה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "kyoto",
+  "fact_en": "Kyoto is spread out. Recommended bases: (1) Gion / Kiyomizudera (Higashiyama) area, (2) downtown Nakagyo/Shimogyo wards with lively nightlife (Shijo, Karasuma, Kawaramachi), (3) near Kyoto station (Minami-ku) where many hotels cluster. Families (3+) can consider apartments but compare prices.",
+  "fact_he": "קיוטו מפוזרת. אזורי לינה מומלצים: (1) גיון/קיומיזודרה (היגאשיאמה), (2) מרכז העיר נאקגיו/שימוגיו עם חיי לילה (שיג'ו, קרסומה, קווארמאצ'י), (3) ליד תחנת קיוטו. למשפחות אפשר דירה, אך להשוות מחירים.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקיוטו",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "kanazawa",
+  "fact_en": "Kanazawa: for a full day in the city stay downtown (Korinbo street / Kenrokuen gardens / Kanazawa Castle area). If you arrive late or have heavy luggage stay near Kanazawa station; the station is ~2 km from the centre (short bus or walk). Choose a hotel with onsen in cold season. Not an expensive city; book early for deals.",
+  "fact_he": "קנזאווה: ליום מלא בעיר - ללון במרכז (רחוב קורינבו/גני קנרוקואן/הטירה); בהגעה מאוחרת או עם מזוודות - ליד תחנת קנזאווה (~2 ק\"מ מהמרכז). בחורף - מלון עם אונסן.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-בקנזאווה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "koyasan",
+  "fact_en": "Koyasan: the highlight is sleeping in a temple lodging (shukubo): futon on tatami, usually shared toilets/bath, traditional monk meals for dinner and breakfast that are always vegan, optional morning prayers; relatively pricey; temples offer free parking; max Booking rating 4 stars, most are 2-3.",
+  "fact_he": "הר קויה: לינה במקדש (שוקובו) - פוטונים, לרוב שירותים ומקלחת משותפים, ארוחות ערב ובוקר נזיריות תמיד טבעוניות, תפילת בוקר; יקר יחסית; חניה חינם.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-הר-קויה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "kosher",
+  "city": "koyasan",
+  "fact_en": "Temple-lodging dinners and breakfasts at Koyasan are always vegan (shojin ryori) - practical for vegetarians/vegans; not certified kosher.",
+  "fact_he": "ארוחות במקדשי הר קויה תמיד טבעוניות - מתאים לצמחונים/טבעונים; לא כשר מוסמך.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-הר-קויה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "yakushima",
+  "fact_en": "Yakushima lodging is relatively cheap; options cluster around Miyanoura port (walk from port), Anbo port, the airport and the south near Onoaida/Senpiro falls onsen. Without a car it is hard to move around - rent a car early (booking ahead needed in Golden Week, ~6 months).",
+  "fact_he": "יקושימה: לינה זולה יחסית; ריכוזים סביב נמל מיינוארה, נמל אנבו, שדה התעופה והדרום. בלי רכב קשה - להזמין רכב מראש (גולדן וויק - חצי שנה).",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-יקושימה",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Lodging types and prices: business hotels (APA, MyStays, Super, Tokyu Stay, Sotetsu) $80-100 per double, rooms 11-14 sqm, near main stations; 4-star $120-200 (16-25 sqm); 5-star luxury; Airbnb room ~$40 / flat ~$100; hostels $20-30 pp; capsule $20-50 pp (mainly men, a few for women); love hotels ~$100 per room (usually walk-in only); ryokan ~$100 pp. Author suggests business hotel or apartment as main option in cities, a capsule night for solo men, a love hotel night for couples, a ryokan in rural/onsen areas.",
+  "fact_he": "סוגי לינה: מלונות עסקים (APA, MyStays, Super וכו') 80-100$ לזוג, חדרים 11-14 מ\"ר; 4 כוכבים 120-200$; Airbnb חדר ~40$ ודירה ~100$; הוסטל 20-30$ לאדם; קפסולה 20-50$; מלון אהבה ~100$; ריוקאן ~100$ לאדם. המלצה: מלון עסקים או דירה בערים, קפסולה ללילה לגברים, מלון אהבה לזוגות, ריוקאן באזורים כפריים.",
+  "numbers": "$",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-כללי",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "jewish",
+  "city": "japan",
+  "fact_en": "Beit Shalom (Makuya-related Christian pro-Israel group) hosts Israeli travellers free for up to 3 days in Tokyo, Kyoto, Nara and Hiroshima with rules: be home by 22:30, shower by 23:00, leave by 09:00 after breakfast; coordinate in advance.",
+  "fact_he": "בית שלום (ארגון נוצרי אוהד ישראל) מארח ישראלים בחינם עד 3 ימים בטוקיו, קיוטו, נארה והירושימה, עם כללים: חזרה עד 22:30, מקלחת עד 23:00, יציאה עד 09:00; תיאום מראש.",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-כללי",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "stay-area",
+  "city": "kiso-valley",
+  "fact_en": "Kiso Valley (Nakasendo Magome-Tsumago): few places to sleep, mostly ryokans with onsen; without a car pick a place near a bus/train stop or with a free shuttle (check hours). Near Tsumago: Fuki no Mori ($220) and Tokonamiso ($110) share a free shuttle from Nagiso and Tsumago stations (about 16:00-17:10 pickups); meals pricey (~$20 breakfast, ~$60 dinner) and nothing else nearby. Near Magome: Hanasarasa with shuttle from Nakatsugawa station until 16:55.",
+  "fact_he": "עמק קיסו: מעט מקומות לינה, בעיקר ריוקאנים עם אונסן; בלי רכב - ללון ליד תחנה או עם שאטל חינם. ליד צומאגו: Fuki no Mori ($220) ו-Tokonamiso ($110) עם שאטל חינם מתחנות Nagiso ו-Tsumago; ארוחות יקרות. ליד מאגומה: Hanasarasa עם שאטל מתחנת Nakatsugawa עד 16:55.",
+  "numbers": "$220 / $110",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/לינה-עמק-קיסו",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Love hotels: themed rooms, anonymous check-in, rest rates for a few hours or overnight (~$100); busiest Saturday.",
+  "fact_he": "מלונות אהבה: חדרים נושאיים, צ'ק-אין אנונימי, תעריף \"מנוחה\" לשעות או לילה (~100$); עמוס בשבת.",
+  "numbers": "~$100",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/מלונות-האהבה-love-hotels",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Capsule hotels: pod about 2 x 1 x 1.25 m with bed, TV, light, shared toilets/showers and often a sento bath; $25-50 per night; most are men-only; Shinjuku options for women and men include Shinjuku Kuyakusho-mae (~2,000 yen), Booth Netcafe & Capsule (free drinks, manga) and Anshin Oyado Shinjuku (rated 9.1, pricier); no big luggage in the pod (use lockers); no eating or smoking.",
+  "fact_he": "מלון קפסולה: תא 2 על 1 מ', מקלחות ושירותים משותפים; 25-50$; רובם לגברים בלבד; בשינג'וקו יש כמה למעורבים; מזוודות בלוקר.",
+  "numbers": "$25-50",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/מלונות-קפסולה-capsule-hotel",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "lodging",
+  "city": "japan",
+  "fact_en": "Ryokan: tatami and futon rooms, usually shared toilets/baths (more with private baths at higher prices), yukata, pricing per person not per room (so 4 futons in one room cost the same as two rooms); good for a whole family in one room, ask the owner to sleep 5. Many ryokan refuse children; searches on Booking with children show far fewer results; do not let kids sleep next to paper doors. Tattoo policies at onsen often strict but loosening. Best in rural areas: Hakone, Takayama, Kiso Valley; hard to find in Tokyo/Kyoto centres. Oldest hotels: Nishiyama Onsen Keiunkan (705) and Hoshi (718). Book breakfast, dinner optional; children's meal versions exist.",
+  "fact_he": "ריוקאן: טטאמי ופוטון, לרוב שירותים ורחצה משותפים, מחיר לפי מספר אנשים ולא חדרים - מתאים למשפחה בחדר אחד; ריוקאנים רבים לא מקבלים ילדים; קעקועים - לבדוק מדיניות; הכי טוב באזורים כפריים: האקונה, טקיאמה, עמק קיסו. ארוחת בוקר מסורתית מומלצת, יש מנות ילדים.",
+  "numbers": "price per person",
+  "source_url": "https://yapanit.com/לינה-בטיול-יפן/ריוקאן",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - JR Pass: about 2 weeks before flight; 90% refund if cancelled.",
+  "fact_he": "להזמין מראש - JR Pass: about 2 weeks before flight; 90% refund if cancelled.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Car rental: 2 weeks to 6 months ahead depending on season/area; Golden Week on Yakushima needs ~6 months; phone in Japanese often needed; free cancellation.",
+  "fact_he": "להזמין מראש - Car rental: 2 weeks to 6 months ahead depending on season/area; Golden Week on Yakushima needs ~6 months; phone in Japanese often needed; free cancellation.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Nohi bus Takayama-Shirakawa-go-Kanazawa: 1 month ahead only; few departures a day, 45 seats, the only way to Shirakawa-go (no train); cancellation 100 yen online.",
+  "fact_he": "להזמין מראש - Nohi bus Takayama-Shirakawa-go-Kanazawa: 1 month ahead only; few departures a day, 45 seats, the only way to Shirakawa-go (no train); cancellation 100 yen online.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Nohi bus Mt Fuji to Takayama: 1 month ahead; phone in Japanese or Yapanit service.",
+  "fact_he": "להזמין מראש - Nohi bus Mt Fuji to Takayama: 1 month ahead; phone in Japanese or Yapanit service.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Bus to Mt Fuji 5th station: from 1 month before; book outbound only; free cancel to day before.",
+  "fact_he": "להזמין מראש - Bus to Mt Fuji 5th station: from 1 month before; book outbound only; free cancel to day before.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Ninja Temple Kanazawa: from 1 month before the visit day by phone in Japanese or hotel concierge; depends on group size and season.",
+  "fact_he": "להזמין מראש - Ninja Temple Kanazawa: from 1 month before the visit day by phone in Japanese or hotel concierge; depends on group size and season.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Takayama Festival hotel: about a year ahead.",
+  "fact_he": "להזמין מראש - Takayama Festival hotel: about a year ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Hotels and ryokans: 1 week to 6 months ahead by season and destination.",
+  "fact_he": "להזמין מראש - Hotels and ryokans: 1 week to 6 months ahead by season and destination.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Benesse House boutique hotel on Naoshima: as far ahead as possible, usually no availability.",
+  "fact_he": "להזמין מראש - Benesse House boutique hotel on Naoshima: as far ahead as possible, usually no availability.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - teamLab Digital Museum (Epson teamLab): 2 days to 1.5 months ahead; usually no cancellation but date change possible.",
+  "fact_he": "להזמין מראש - teamLab Digital Museum (Epson teamLab): 2 days to 1.5 months ahead; usually no cancellation but date change possible.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Yayoi Kusama Museum Tokyo: about 1.5 months ahead.",
+  "fact_he": "להזמין מראש - Yayoi Kusama Museum Tokyo: about 1.5 months ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Chichu Museum Naoshima: about 1.5 months ahead.",
+  "fact_he": "להזמין מראש - Chichu Museum Naoshima: about 1.5 months ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Bikes for Shimanami Kaido / bikes, e-bikes or car on Naoshima: as far ahead as possible, especially weekends/holidays.",
+  "fact_he": "להזמין מראש - Bikes for Shimanami Kaido / bikes, e-bikes or car on Naoshima: as far ahead as possible, especially weekends/holidays.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Ghibli Museum: tickets sold on the 10th of the month before the visit at 10:00 Japan time.",
+  "fact_he": "להזמין מראש - Ghibli Museum: tickets sold on the 10th of the month before the visit at 10:00 Japan time.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Passover seder: about a month ahead.",
+  "fact_he": "להזמין מראש - Passover seder: about a month ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Mazda factory visit: immediately, up to a year ahead; free cancellation.",
+  "fact_he": "להזמין מראש - Mazda factory visit: immediately, up to a year ahead; free cancellation.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Toyota factory visit: 3 months before visit; free cancellation.",
+  "fact_he": "להזמין מראש - Toyota factory visit: 3 months before visit; free cancellation.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Yamaha piano factory visit: about 2 months before.",
+  "fact_he": "להזמין מראש - Yamaha piano factory visit: about 2 months before.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Intercity buses: about 1.5 months ahead.",
+  "fact_he": "להזמין מראש - Intercity buses: about 1.5 months ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Cooking classes: about 1.5 months ahead; free cancellation up to a week before.",
+  "fact_he": "להזמין מראש - Cooking classes: about 1.5 months ahead; free cancellation up to a week before.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Private guide / private airport pickup: from 3 months ahead.",
+  "fact_he": "להזמין מראש - Private guide / private airport pickup: from 3 months ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Sumo tickets: about 1.5 months before tournament, on sale day at 10:00 Japan time.",
+  "fact_he": "להזמין מראש - Sumo tickets: about 1.5 months before tournament, on sale day at 10:00 Japan time.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Robot Restaurant tickets: a week to a month ahead.",
+  "fact_he": "להזמין מראש - Robot Restaurant tickets: a week to a month ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - City go-karting / Mario kart: about 2 weeks ahead (International Driving Permit needed).",
+  "fact_he": "להזמין מראש - City go-karting / Mario kart: about 2 weeks ahead (International Driving Permit needed).",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Kidzania Tokyo: about 1.5 months ahead; choose a time slot.",
+  "fact_he": "להזמין מראש - Kidzania Tokyo: about 1.5 months ahead; choose a time slot.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Pokemon restaurant and themed restaurants: about 1.5 months ahead.",
+  "fact_he": "להזמין מראש - Pokemon restaurant and themed restaurants: about 1.5 months ahead.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Private geisha meeting: about 1.5 months ahead depending on season.",
+  "fact_he": "להזמין מראש - Private geisha meeting: about 1.5 months ahead depending on season.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Book ahead - Luxury / Michelin restaurants: from 3 months ahead; free cancellation up to ~2 weeks before.",
+  "fact_he": "להזמין מראש - Luxury / Michelin restaurants: from 3 months ahead; free cancellation up to ~2 weeks before.",
+  "source_url": "https://yapanit.com/טיפים/הזמנות-מראש",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "food",
+  "city": "kobe",
+  "fact_en": "Kobe beef is Tajima-ushi wagyu raised in Hyogo prefecture, eaten as steak, sukiyaki, shabu-shabu, sashimi or teppanyaki; \"Kobe-style\" beef abroad is a different, cheaper product. (Not kosher.)",
+  "fact_he": "בשר בקר קובה - וואגיו מזן טג'ימה ממחוז היוגו; סטייק, סוקיאקי, שבו-שבו, טפניאקי. בקר \"בסגנון קובה\" בחו\"ל הוא מוצר אחר. לא כשר.",
+  "source_url": "https://yapanit.com/אוכל/בשר-בקר-קוֹבֶּה-kobe-beef",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "food",
+  "city": "japan",
+  "fact_en": "Spinach salad with sesame (horenso goma-ae) is a popular izakaya starter and side dish.",
+  "fact_he": "סלט תרד עם שומשום (הורנסו גומאאה) - מנת פתיחה פופולרית באיזקאיות.",
+  "source_url": "https://yapanit.com/אוכל/סלט-תרד-יפני",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "food",
+  "city": "osaka",
+  "fact_en": "Okonomiyaki (savoury pancake with cabbage) is common in Kansai and Hiroshima; style varies by region.",
+  "fact_he": "אוקונומיאקי - חביתית כרוב, נפוצה בקנסאי ובהירושימה; הסגנון משתנה לפי אזור.",
+  "source_url": "https://yapanit.com/אוכל/אוקונומיאקי-okonomiyaki",
+  "agent": "yap-tips"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "JR Pass prices rose about 70% on 1 Oct 2023: 7 days 50,000 yen, 14 days 80,000, 21 days 100,000 (ordinary, adult 12+). Child 6-12 about half, under 6 free. Green car costs roughly 20,000-40,000 yen more depending on length.",
+  "fact_he": "מחירי JR Pass עלו ב-1 באוקטובר 2023 בכ-70%: שבוע 50,000 ין, שבועיים 80,000, שלושה שבועות 100,000 (רגיל, מבוגר מגיל 12). ילדים 6-12 כחצי, מתחת לגיל 6 חינם. מחלקה ראשונה יקרה בכ-20,000-40,000 ין, לפי משך הפס.",
+  "numbers": "7d 50,000; 14d 80,000; 21d 100,000 yen; child half; under 6 free",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "Old pre-Oct-2023 JR Pass prices (for comparison): 7 days about 30,000 yen, 14 days 48,000, 21 days 60,000. Passes bought before the change stay valid 3 months from issue at old prices. The rise is about 200 USD per person on average, about 1,000 USD for a family.",
+  "fact_he": "מחירי JR Pass לפני אוקטובר 2023 (להשוואה): שבוע כ-30,000 ין, שבועיים 48,000, שלושה שבועות 60,000. פסים שנרכשו לפני השינוי תקפים 3 חודשים מההנפקה. העלייה כ-200 דולר לאדם בממוצע וכ-1,000 דולר למשפחה.",
+  "numbers": "old: 30,000/48,000/60,000 yen",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/עליית-מחירי-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "Is the JR Pass worth it now? The author's bottom line is mostly no. Rule of thumb: a 7-day pass pays off with more than 4 long (over 1.5 h) shinkansen rides in a week, 7 long rides in 2 weeks, 9 in 3 weeks. Roughly 48 USD per day of pass. Typical fits: Tokyo-Kyoto-Hiroshima-Kanazawa-Tokyo within 7 days, or long star trips.",
+  "fact_he": "האם JR Pass משתלם? שורה תחתונה של הכותבת: ברוב המקרים לא. כלל אצבע: פס שבוע משתלם מעל 4 נסיעות שינקנסן ארוכות (מעל שעה וחצי) בשבוע, 7 בשבועיים, 9 בשלושה שבועות. עלות כ-48 דולר ליום. מתאים למסלול כמו טוקיו-קיוטו-הירושימה-קנאזאווה-טוקיו תוך 7 ימים.",
+  "numbers": "break-even: >4 long rides/7d, 7/14d, 9/21d",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "Example single fares (Oct 2023): Tokyo-Kyoto 14,170 yen; Kyoto-Hiroshima 11,940; Kyoto-Kanazawa 7,100; Kurashiki-Osaka 6,790; Kanazawa-Nagano 9,120; Matsumoto-Shinjuku 6,620. Use them to test if the pass pays off.",
+  "fact_he": "מחירי נסיעה לדוגמה (אוקטובר 2023): טוקיו-קיוטו 14,170 ין; קיוטו-הירושימה 11,940; קיוטו-קנזאווה 7,100; קורשיקי-אוסקה 6,790; קנזאווה-נגאנו 9,120; מצומוטו-שינג'וקו 6,620.",
+  "numbers": "see fact",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "When a JR Pass is probably not needed: short trip Osaka-Tokyo one way; trip by rental car between Tokyo and Kanazawa/Kyoto; low budget by highway/night buses; trip only Tokyo plus Kyoto-Hiroshima and Kanazawa; Tohoku/Hokkaido (use a regional pass instead). No pass needed inside Tokyo, for Nikko (Tobu pass) or Hakone (Freepass). Pass length need not equal trip length: e.g. a week in Tokyo/Hakone without it, then a 7-day pass.",
+  "fact_he": "מתי כנראה לא צריך JR Pass: טיול קצר באוסקה-טוקיו בכיוון אחד; נסיעה ברכב; תקציב נמוך עם אוטובוסי לילה; טיול רק בטוקיו + קיוטו-הירושימה/קנזאווה; טוהוקו והוקאידו (פס אזורי). אין צורך בפס בטוקיו, בניקו (פס טובו) או בהאקונה (Freepass). אורך הפס לא חייב להיות כאורך הטיול.",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "JR Pass rules: sold to foreign tourists; buy before leaving (a bit cheaper), shipped to home in about 2 business days, shipping about 20 USD per order. Activate at a JR office (airport takes ~20 min with passport and voucher) or at a big JR station in Tokyo/Kyoto. Activate close to the day you actually start long travel. Nozomi, Mizuho and Hayabusa shinkansen are not covered (supplement needed; Tokyo-Kyoto Nozomi vs Hikari only ~20 min faster). Keep the paper pass in hand; a seat reservation without the pass is not valid.",
+  "fact_he": "כללי JR Pass: למטיילים זרים בלבד; רכישה לפני הנסיעה זולה מעט יותר, משלוח עד הבית כ-2 ימי עסקים בכ-20 דולר להזמנה. מפעילים במשרד JR (בשדה כ-20 דקות עם דרכון) או בתחנה גדולה בטוקיו/קיוטו, קרוב ליום תחילת הנסיעות הארוכות. שינקנסן נוזומי, מיזוהו והאיבוסה לא כלולות (תוספת; בין טוקיו לקיוטו נוזומי מהירה רק כ-20 דקות מהיקארי). לשמור את הפס ביד.",
+  "numbers": "shipping ~20 USD; Nozomi/Mizuho/Hayabusa excluded",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "Do not burn JR Pass days on short or cheap rides: e.g. Shibuya-Yokohama JR Shonan Line 26 min about 400 yen, or Tokyu 28 min about 300 yen. Tokyo/Yokohama/Kamakura/Enoshima/Mitaka/Hakone/Izu/Nikko area does not need the pass; same for Osaka-Nara-Kyoto-Kobe if you land at Kansai.",
+  "fact_he": "לא לבזבז ימי פס על נסיעות קצרות וזולות: שיבויה-יוקוהמה בקו JR שונאן 26 דקות כ-400 ין (טוקיו 28 דקות כ-300 ין). אזור טוקיו-יוקוהמה-קמאקורה-אנושימה-האקונה-איזו-ניקו לא מצריך פס; וכן אוסקה-נארה-קיוטו-קובה אם נוחתים בקנסאי.",
+  "numbers": "400 yen vs 300 yen",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/jr-pass-כרטיס-הרכבת",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "JR Pass exchange offices: most people exchange at Narita/Haneda/Kansai airports or major stations in Tokyo or Kyoto. Many open at 10:00, long queues in peak season such as cherry blossom. One person may exchange for the whole family/group with all passes and passports. Hamamatsucho exchange point closed and had not reopened by 2023; some hours (e.g. Ikebukuro) shortened. Exchange the day before first use.",
+  "fact_he": "תחנות המרת JR Pass: רוב המטיילים ממירים בנמלי התעופה נאריטה/האנדה/קנסאי או בתחנות ראשיות בטוקיו/קיוטו. רבות נפתחות ב-10:00 ויש תורים בעונות שיא (פריחת דובדבן). אדם אחד יכול להמיר לכל המשפחה עם הפסים והדרכונים. נקודת המרה בהמאמצוצ'ו נסגרה ולא נפתחה מחדש עד 2023. עדיף להמיר יום לפני השימוש.",
+  "numbers": "most offices open 10:00",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/תחנות-המרת-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "tokyo",
+  "fact_en": "JR Pass exchange hours (2023 list): Tokyo Station JR East Travel Service Center 7:30-20:30; Shinjuku New South Gate 8:00-19:00; Ueno 8:30-19:00; Shibuya 10:00-18:30; Ikebukuro 10:00-18:00; Shinagawa 8:00-18:00; Narita T1 8:15-19:00 and T2/3 8:15-20:00; Haneda Intl 6:45-20:00; Yokohama 10:00-19:00.",
+  "fact_he": "שעות המרת JR Pass בטוקיו (רשימת 2023): תחנת טוקיו 7:30-20:30; שינג'וקו שער דרום חדש 8:00-19:00; אואנו 8:30-19:00; שיבויה 10:00-18:30; איקבוקורו 10:00-18:00; שינגאווה 8:00-18:00; נאריטה T1 8:15-19:00, T2/3 8:15-20:00; האנדה בינ\"ל 6:45-20:00; יוקוהמה 10:00-19:00.",
+  "numbers": "see fact",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/תחנות-המרת-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "kansai",
+  "fact_en": "JR Pass exchange hours (2023 list) in Kansai/west: Kyoto JR-West central ticket office 6:00-22:00; Shin-Osaka 5:30-23:30; Osaka 5:30-23:00; Kansai Airport 5:30-23:00; Nara 9:00-20:00; Sannomiya 5:30-23:00; Okayama 5:00-23:30; Hiroshima 5:30-23:00; Hakata 7:00-23:00; Kanazawa 4:40-23:30; Nagoya 10:00-19:00. (Hokkaido/Tohoku/Kyushu offices also listed on the page.)",
+  "fact_he": "שעות המרה באזור קנסאי/מערב (רשימת 2023): קיוטו 6:00-22:00; שין-אוסקה 5:30-23:30; אוסקה 5:30-23:00; שדה קנסאי 5:30-23:00; נארה 9:00-20:00; סנומיה 5:30-23:00; אוקיאמה 5:00-23:30; הירושימה 5:30-23:00; האקאטה 7:00-23:00; קנזאווה 4:40-23:30; נגויה 10:00-19:00.",
+  "numbers": "see fact",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/תחנות-המרת-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Seat reservations on shinkansen are free with a JR Pass but staff may refuse to reserve the whole trip in advance (many no-shows). If only 2 reservations allowed, take the first two. Otherwise ride non-reserved cars (1-3 per train); if full, sit anywhere free and the conductor will assign a seat. Reserve at the office next to the exchange desk; queues are long.",
+  "fact_he": "הזמנת מקומות בשינקנסן חינם עם JR Pass, אבל לפעמים מסרבים להזמין את כל הטיול מראש (בגלל אנשים שלא מגיעים). אם מאפשרים רק 2 הזמנות - להזמין את הראשונות. אחרת עולים לקרונות לא שמורים (1-3 ברכבת); אם תפוס, יושבים איפה שפנוי והקופאי ישבץ.",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/תחנות-המרת-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "kansai",
+  "fact_en": "Kansai-Hiroshima Area Pass: 5 days on all JR lines in Kansai-Hiroshima area incl. Nozomi shinkansen (not in normal JR Pass), about 17,000 yen (up from 16,000 after Oct 2023), child 6-12 half. Book via reseller up to ~90 days ahead (official site 2-27 days ahead), pick up at Kansai Airport, Shin-Osaka, Kyoto or Hiroshima; for pickup at Tsuruga it must be bought on official site. Can only be exchanged inside the covered area, not in Tokyo. Kyoto-Hiroshima one-way shinkansen alone is about 12,000 yen.",
+  "fact_he": "פס קנסאי-הירושימה: 5 ימים בכל קווי JR באזור כולל שינקנסן נוזומי (שאינה ב-JR Pass הרגיל), כ-17,000 ין (עלה מ-16,000 אחרי אוקטובר 2023), ילדים 6-12 חצי. הזמנה דרך משווק עד כ-90 יום מראש (באתר הרשמי 2-27 יום), איסוף בשדה קנסאי, שין-אוסקה, קיוטו או הירושימה; לאיסוף בצורוגה יש לקנות באתר הרשמי. ממירים רק בתוך אזור הכיסוי. נסיעה בשינקנסן קיוטו-הירושימה לכיוון אחד לבדה כ-12,000 ין.",
+  "numbers": "~17,000 yen / 5 days; child half",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/פס-הרכבות-קנסאי-הירושימה",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "kanazawa",
+  "fact_en": "With the Kansai-Hiroshima pass you can ride the Thunderbird toward Kanazawa only as far as Tsuruga; pay the rest separately (about 4,000-4,100 yen). In reverse, buy a ticket to Tsuruga, get off to exchange the pass there and continue. Good fit for a route: land Osaka, Kyoto, Hiroshima/Okayama/Kurashiki/Naoshima, then Kanazawa, then car or shinkansen to Tokyo.",
+  "fact_he": "עם פס קנסאי-הירושימה אפשר לנסוע ברכבת Thunderbird לקנזאווה רק עד צורוגה; את ההמשך משלמים בנפרד (כ-4,000-4,100 ין). בכיוון ההפוך קונים כרטיס לצורוגה, יורדים להמיר את הפס ומשם ממשיכים.",
+  "numbers": "~4,100 yen Tsuruga-Kanazawa",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/פס-הרכבות-קנסאי-הירושימה",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "kansai",
+  "fact_en": "JR Kansai Wide Pass: 4 days, covers shinkansen to Okayama, Kurashiki, Naoshima ferry, Kinosaki, Fukuchiyama Onsen; 8,500 yen if bought abroad or 9,000 yen at JR office (price from an undated page, likely old). Takayama-Hokuriku Area Tourist Pass: 5 days, 13,500 yen.",
+  "fact_he": "JR Kansai Wide Pass: 4 ימים, שינקנסן לאוקיאמה, קורשיקי, מעבורת נאושימה, קינוסאקי, פוקושימאיאמה; 8,500 ין מחו\"ל או 9,000 במקום (העמוד ללא תאריך, כנראה ישן). Takayama-Hokuriku Area Tourist Pass: 5 ימים, 13,500 ין.",
+  "numbers": "8,500/9,000 yen; 13,500 yen",
+  "source_url": "https://yapanit.com/תחבורה/דרכי-תחבורה-מ-אל-נמל-התעופה-קנסאי",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "hakone",
+  "fact_en": "Hakone Freepass (2 or 3 days): covers all Hakone transport (Tozan railway, cable car, ropeway, pirate ship, buses), discounts on attractions, and round trip on the Odakyu line from Shinjuku, Machida or Odawara. 2-day fares adult/child: Shinjuku 5,140/1,500; Machida 4,820/1,420; Odawara 4,000/1,000. 3-day: Shinjuku 5,640/1,750; Machida 5,320/1,670; Odawara 4,500/1,250 yen. Prices from an undated page and may be higher now.",
+  "fact_he": "האקונה פרי-פס (יומיים או 3 ימים): כל התחבורה בהאקונה (רכבת טוזאן, רכבל, אוניה, אוטובוסים), הנחות באטרקציות והלוך-חזור בקו אודקיו משינג'וקו/מצ'ידה/אודווארה. יומיים מבוגר/ילד: שינג'וקו 5,140/1,500; מצ'ידה 4,820/1,420; אודווארה 4,000/1,000. 3 ימים: שינג'וקו 5,640/1,750; מצ'ידה 5,320/1,670; אודווארה 4,500/1,250 ין. העמוד ללא תאריך.",
+  "numbers": "2d from Shinjuku 5,140 yen",
+  "source_url": "https://yapanit.com/תחבורה/hakone-freepass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "nikko",
+  "fact_en": "Nikko Pass World Heritage Area (2 days): round trip Tokyo (Asakusa) to Shimo-Imaichi plus unlimited trains/buses in the area; adult 2,000 yen, child 600 yen. Without it: one way on Tobu regular train 1,360 yen plus local buses 100-200 yen each, so saves ~30%. All Nikko Area Pass (4 days): 4,520 yen (Dec-Mar 4,150 yen), adds buses to Ikunikko and trains to Kinugawa Onsen. Regular (non-express) trains: ~136 min from Asakusa with one change; express supplement 1,340 yen cuts 20-30 min (~110 min). Pass gives ~5-10% shop discounts and 20% off supplement/private compartment. Foreigners only, buy in Japan with passport at Asakusa, Shinjuku, Ikebukuro Tobu offices or Keisei at Narita; do not waste JR Pass on Nikko.",
+  "fact_he": "פס ניקו World Heritage Area (יומיים): הלוך-חזור טוקיו (אסאקוסה) לשימו-אימאיצ'י ותחבורה חופשית באזור; מבוגר 2,000 ין, ילד 600. בלי פס: כיוון אחד בטובו 1,360 ין + אוטובוסים 100-200 ין, כלומר חיסכון כ-30%. All Nikko Area Pass (4 ימים): 4,520 ין (דצמבר-מרץ 4,150). רכבות רגילות כ-136 דקות מאסאקוסה עם החלפה; תוספת אקספרס 1,340 ין חוסכת 20-30 דקות. הנחות בחנויות ו-20% על התוספת. למטיילים זרים בלבד; רוכשים בתחנת אסאקוסה, שינג'וקו, איקבוקורו או משרד קייסיי בנאריטה. לא לבזבז JR Pass.",
+  "numbers": "2,000 yen/2d; 4,520 yen/4d; express +1,340",
+  "source_url": "https://yapanit.com/תחבורה/פס-רכבות-לניקו-nikko-tobu-pass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "pass",
+  "city": "japan",
+  "fact_en": "Seishun 18 Kippu: 5 days of unlimited local/rapid JR trains for 11,850 yen (2,370 per day, any age, shareable by up to 5 people, days need not be consecutive). Only sold and valid in school-holiday seasons: spring 1 Mar-10 Apr (sold 20 Feb-31 Mar), summer 20 Jul-10 Sep (sold 1 Jul-31 Aug), winter 10 Dec-10 Jan (sold 1 Dec-31 Dec). Not valid on express, limited express or shinkansen; no automatic gates (staff stamp it). Tokyo-Kyoto takes ~9 hours with many changes, so highway buses are better. Price is from an undated page; may have changed.",
+  "fact_he": "Seishun 18 Kippu: 5 ימי נסיעה ברכבות מקומיות ומהירות (לא אקספרס/שינקנסן) של JR ב-11,850 ין (2,370 ליום), לכל גיל, ניתן לשיתוף עד 5 אנשים, לא חייבים ימים רצופים. נמכר ותקף רק בחופשות: אביב 1.3-10.4 (מכירה 20.2-31.3), קיץ 20.7-10.9 (מכירה 1.7-31.8), חורף 10.12-10.1 (מכירה 1-31.12). עוברים בשער מאויש. טוקיו-קיוטו כ-9 שעות עם החלפות, עדיף אוטובוס. המחיר מעמוד ללא תאריך.",
+  "numbers": "11,850 yen / 5 days",
+  "source_url": "https://yapanit.com/תחבורה/seishun-18-kippu-פס-הרכבות",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "kyoto",
+  "fact_en": "Kansai Airport to Kyoto: JR Haruka limited express takes a little under 77 min (e.g. 20:16 departure arrives 21:32). Peak hours 06:00-09:00 and 16:00-20:00 depart at minute 16 and 46 each hour; otherwise hourly. First train 06:34 (06:42 weekends), last 22:16; slower last train 23:30 only reaches Osaka. Stops at Tennoji, Osaka, Shin-Osaka before Kyoto. Faster than shinkansen route, do not waste JR Pass days on it. Every second Haruka is Hello Kitty design.",
+  "fact_he": "משדה קנסאי לקיוטו: JR הארוקה לימיטד אקספרס, קצת פחות מ-77 דקות (למשל יציאה 20:16, הגעה 21:32). בשעות שיא 06:00-09:00 ו-16:00-20:00 יוצאת בדקה 16 ו-46 בכל שעה, אחרת פעם בשעה. ראשונה 06:34 (06:42 בסופ\"ש), אחרונה 22:16; רכבת איטית אחרונה 23:30 מגיעה רק לאוסקה. עוצרת בטנוג'י, אוסקה, שין-אוסקה. כל הארוקה שנייה בעיצוב הלו קיטי.",
+  "numbers": "77 min; first 06:34; last 22:16",
+  "source_url": "https://yapanit.com/תחבורה/נסיעה-מנמל-התעופה-קנסאי-לקיוטו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "kyoto",
+  "fact_en": "Tourists can buy the JR West Kansai One Day Pass for 2,000 yen (price from undated page, likely old; check) covering Haruka and JR lines to Himeji, Kyoto, Nara (no shinkansen). One-way airport-Kyoto unreserved ticket is 2,770 yen so the pass pays off on a single ride. Buy at JR counter in ~5 min with passport.",
+  "fact_he": "תיירים יכולים לקנות כרטיס JR West Kansai חד-יומי ב-2,000 ין (מעמוד ללא תאריך, כנראה ישן) הכולל הארוקה וקווי JR עד הימג'י, קיוטו ונארה (ללא שינקנסן). כרטיס כיוון אחד שדה-קיוטו (לא שמור) 2,770 ין, לכן משתלם גם לנסיעה אחת. בדלפק JR כ-5 דקות עם דרכון.",
+  "numbers": "2,000 yen vs 2,770 yen",
+  "source_url": "https://yapanit.com/תחבורה/נסיעה-מנמל-התעופה-קנסאי-לקיוטו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "kyoto",
+  "fact_en": "Other Kansai Airport-Kyoto options: Limousine Bus about every 30 min, 2,500 yen, last bus 22:10 (some continue to Nijo); Kyoto Access ticket (Nankai + Hankyu) 1,200-1,230 yen but 2-4 changes and ~100 min vs 72 min Haruka (+300 yen for faster train), for downtown Sanjo/Shijo; MK Shuttle door-to-door minivan about 3,500 yen, book 2 days ahead by 17:00. Beware two Osaka airports: Kansai (KIX) vs Itami (Osaka Airport). Some JR express trains split at Hineno and do not reach the airport.",
+  "fact_he": "אפשרויות נוספות משדה קנסאי לקיוטו: אוטובוס Limousine כל כ-30 דקות, 2,500 ין, אחרון 22:10; Kyoto Access (נאנקאי+האנקיו) כ-1,200 ין אבל 2-4 החלפות וכ-100 דקות; MK Shuttle דלת לדלת כ-3,500 ין, להזמין יומיים מראש עד 17:00. לשים לב: שני שדות באוסקה (קנסאי מול איטאמי). בהינו רכבות JR מתפצלות ולא כולן מגיעות לשדה.",
+  "numbers": "bus 2,500 yen; MK 3,500 yen",
+  "source_url": "https://yapanit.com/תחבורה/דרכי-תחבורה-מ-אל-נמל-התעופה-קנסאי",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "tokyo",
+  "fact_en": "Haneda to central Tokyo: Tokyo Monorail to Hamamatsucho 16 min 470 yen, or Keikyu to Shinagawa 13 min 410 yen; then Yamanote Line to Shibuya 16 min 160 yen.",
+  "fact_he": "מהאנדה למרכז טוקיו: מונורייל להמאמצוצ'ו 16 דקות 470 ין, או קייקיו לשינגאווה 13 דקות 410 ין; משם קו יאמנוטה לשיבויה 16 דקות 160 ין.",
+  "numbers": "470 / 410 / 160 yen",
+  "source_url": "https://yapanit.com/תחבורה/הגעה-מנמל-התעופה-לטוקיו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "tokyo",
+  "fact_en": "Narita to Tokyo: JR N'EX 65 min to Tokyo Station, 3,190 yen (to Tokyo, Shinagawa, Shibuya, Shinjuku, Ikebukuro); Keisei Skyliner 41 min to Ueno 2,400 yen (get off at Nippori for Yamanote; Skyliner + 1-day subway pass 2,600 yen); Keisei/JR rapid or limited express 80-100 min about 1,000 yen; Limousine Bus 3,100 yen; Keisei Expressway Bus 24h from Tokyo Station about 1 hour, 900 yen online / 1,000 yen cash (good for very early flights or late landings). Author's budget route to Shinjuku: Keisei express to Nippori then JR Yamanote, total 1,440 yen. Prices from undated page (likely pre-2019).",
+  "fact_he": "מנאריטה לטוקיו: JR N'EX 65 דקות לתחנת טוקיו 3,190 ין (גם שינגאווה, שיבויה, שינג'וקו, איקבוקורו); קייסיי סקיילינר 41 דקות לאואנו 2,400 ין (עדיף לרדת בניפורי; משולב עם פס תחתית יומי 2,600 ין); קייסיי/JR ראפיד או לימיטד אקספרס 80-100 דקות כ-1,000 ין; Limousine Bus 3,100 ין; אוטובוס קייסיי 24 שעות מתחנת טוקיו כשעה, 900 ין אונליין / 1,000 במזומן. מסלול חסכוני לשינג'וקו: קייסיי לניפורי ואז יאמנוטה, 1,440 ין. המחירים מעמוד ישן.",
+  "numbers": "N'EX 3,190; Skyliner 2,400; rapid ~1,000; bus 900-3,100 yen",
+  "source_url": "https://yapanit.com/תחבורה/הגעה-מנמל-התעופה-לטוקיו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "airport",
+  "city": "japan",
+  "fact_en": "Flying: check if you can land in Osaka and depart from Tokyo (open-jaw) if the trip is 14 days or less, worth it if the price gap is over about 150 USD. Haneda is quicker and cheaper to the city than Narita (about 1.5 hours by train). Cheap routes from Israel often via Moscow (Aeroflot), Tashkent (Uzbekistan Airlines) or LOT; Alitalia and Swiss deals sometimes. Domestic flights booked over a month ahead are cheap for Hokkaido, Shikoku, Kyushu. (Page date unclear; Aeroflot advice may be outdated.)",
+  "fact_he": "טיסות: לבדוק נחיתה באוסקה והמראה מטוקיו אם הטיול עד 14 יום, משתלם אם הפער מעל כ-150 דולר. האנדה מהירה וזולה יותר מנאריטה (כשעה וחצי ברכבת). טיסות זולות מישראל לרוב דרך מוסקבה (אירופלוט), טשקנט או LOT. טיסות פנים להוקאידו/שיקוקו/קיושו זולות אם מזמינים מעל חודש מראש. (תאריך העמוד לא ברור; ייתכן שמיושן.)",
+  "source_url": "https://yapanit.com/תחבורה/טיסות-זולות",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Highway buses are the cheapest way for medium/long distances, often under half of rail fares; night buses save a hotel night. Example Kyoto-Tokyo night bus in August: KB Liner 5,800 yen, Willer 6,100, Sakura 4,500 (basic seat in low season); Grace Liner from 1,900 yen midweek. Compare on Kosoku Bus; English booking at JapanBusOnline and Willer Express. Book up to ~60 days ahead. Check which terminal (Tokyo/Kyoto have several); discount operators often stop away from the station. Seats: 3-abreast or 2-abreast night buses, 4-abreast on discount buses, premium business-like seats (Willer). Round trip ~10% cheaper. Japan Bus Pass (3-5 days, foreigners) at Willer; Sun Q Pass for Kyushu (3-4 days). Prices from an undated page, probably pre-2020.",
+  "fact_he": "אוטובוסים בינעירוניים הם הדרך הזולה למרחקים בינוניים/ארוכים, לרוב פחות ממחצית מחיר הרכבת; אוטובוס לילה חוסך לינה. לדוגמה קיוטו-טוקיו לילה באוגוסט: KB Liner 5,800 ין, Willer 6,100, Sakura 4,500; Grace Liner מ-1,900 ין באמצע השבוע. השוואה ב-Kosoku Bus; הזמנה באנגלית ב-JapanBusOnline ו-Willer Express. להזמין עד כ-60 יום מראש. לבדוק מאיזה טרמינל יוצאים; חברות דיסקאונט עוצרות רחוק מהתחנה. הלוך-חזור כ-10% זול יותר. Japan Bus Pass (3-5 ימים, לזרים) ב-Willer; Sun Q Pass לקיושו. המחירים מעמוד ישן.",
+  "numbers": "Kyoto-Tokyo night 4,500-6,100 yen; Grace Liner from 1,900 yen",
+  "source_url": "https://yapanit.com/תחבורה/אוטובוסים-בינעירוניים-highway-buses",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Highway bus luggage: stored in the hold, sometimes limited to one or two bags per person plus hand luggage; most buses have toilets and make several stops. Buy at phone, convenience stores like Seven-Eleven, online or JR counters. JR buses are pricier than discount operators but cheaper than express trains.",
+  "fact_he": "מטען באוטובוס בינעירוני: בתא המטען, לעיתים מוגבל לתיק אחד-שניים לנוסע ועוד מטען יד; ברוב האוטובוסים שירותים ויש כמה עצירות. רוכשים בטלפון, בחנויות נוחות כמו סבן-אלבן, אונליין או בדלפקי JR. אוטובוסי JR יקרים מחברות דיסקאונט וזולים מרכבות אקספרס.",
+  "source_url": "https://yapanit.com/תחבורה/אוטובוסים-בינעירוניים-highway-buses",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Shinkansen basics: Tokaido line opened 1 Oct 1964; standard gauge, up to ~300 km/h, average delay about 6 seconds, no passenger fatality from derailment or collision. Tokyo-Shin-Osaka is the busiest high-speed line in the world. Fastest Nozomi is not in the normal JR Pass; Hikari is.",
+  "fact_he": "יסודות על שינקנסן: קו טוקאידו נפתח ב-1 באוקטובר 1964; מסילה ברוחב תקני, עד כ-300 קמ\"ש, איחור ממוצע כ-6 שניות, ללא נפגעים מירידה מהפסים או התנגשות. טוקיו-שין-אוסקה הוא הקו המהיר העמוס בעולם. נוזומי לא כלולה ב-JR Pass הרגיל, היקארי כן.",
+  "source_url": "https://yapanit.com/תחבורה/שינקנסן",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Planning rail trips: use Google Maps and NAVITIME (Oct 2023 view: best for timetables); enter station names, pick from the dropdown, tick the JR Pass option. Navitime covers trains but not private highway buses or city buses. Plan a table with date, time, train name, from/to. Check the last train of a chain and work backwards. Missing a Hikari may put you on a slow Kodama (e.g. Hiroshima-Himeji by Sakura ~60 min vs Kodama ~132 min). Excluded from JR Pass: Nozomi, Mizuho, Hayabusa, but may be in regional passes. Without a pass, buy Nozomi (same price as slower trains for reserved seat) and an unreserved ticket is cheaper than reserved.",
+  "fact_he": "תכנון נסיעות ברכבת: גוגל מפות ו-NAVITIME (לדעת הכותבת באוקטובר 2023 הכי טוב ללו\"ז רכבות); מקלידים שם תחנה, בוחרים מהרשימה ומסמנים JR Pass. נאוויטיים לא כולל אוטובוסים בינעירוניים פרטיים ואוטובוסים עירוניים. כדאי טבלה עם תאריך, שעה, שם רכבת, מוצא ויעד. לבדוק קודם את הרכבת האחרונה בשרשרת. פספוס היקארי עלול להכניס לקודמה איטית (הירושימה-הימג'י ב-סאקורה כ-60 דקות מול קודמה כ-132). בלי פס כדאי נוזומי (אותו מחיר במושב שמור) וכרטיס ללא מקום שמור זול יותר.",
+  "numbers": "Sakura 60 min vs Kodama 132 min",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/תכנון-מסלולי-נסיעה-ולו-ז-רכבות-ביפן",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "hiroshima",
+  "fact_en": "Hello Kitty Shinkansen (Kodama 730/741) ran Shin-Osaka-Hakata via Kobe, Okayama, Hiroshima from 30 June 2018 at least to Oct 2018: Hiroshima dep 08:13 arr Osaka 11:13; Osaka dep 11:29 arr Hiroshima 13:55. Included in JR Pass. Likely discontinued.",
+  "fact_he": "שינקנסן הלו קיטי (קודמה 730/741) פעלה מ-30 ביוני 2018 לפחות עד אוקטובר 2018 בין שין-אוסקה להאקאטה: הירושימה 08:13 הגעה לאוסקה 11:13; אוסקה 11:29 הגעה להירושימה 13:55. כלולה ב-JR Pass. כנראה הופסקה.",
+  "numbers": "08:13 / 11:29",
+  "year_written": 2018,
+  "source_url": "https://yapanit.com/תחבורה/שינקנסן-הלו-קיטי-hello-kitty-shinkansen",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Suica prepaid IC card: tap at gates for JR, subway, buses and many shops and vending machines. Starting values 1,000-10,000 yen including 500 yen deposit. Child Suica gets half fares. Buy at JR stations (Midori no Madoguchi) or machines. Works across Japan.",
+  "fact_he": "כרטיס נטען Suica: מצמידים בשער ברכבות JR, תחתית, אוטובוסים וגם בחנויות ובמכונות. טעינה התחלתית 1,000-10,000 ין כולל פיקדון 500 ין. לילדים כרטיס ילד בחצי מחיר. רוכשים בתחנות JR (Midori no Madoguchi). תקף ברחבי יפן.",
+  "numbers": "deposit 500 yen; 1,000-10,000 yen",
+  "source_url": "https://yapanit.com/תחבורה/כרטיס-נטען-suica",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "tokyo",
+  "fact_en": "Tokyo trains: JR Yamanote loop line 34.5 km, 29 stations, about 3.2 million riders per day, passes Ginza, Shibuya, Akihabara, Shinjuku. Single fares 110-210 yen, child half. Buy cheapest 110 yen ticket if unsure and settle at fare adjustment machines at exit. Rush hours 07:30-09:30 and last trains 23:30-00:30 are packed; women-only cars exist at rush hours. Buses are minor; taxis mostly used after midnight (about 660 yen first 2 km). Most stations announce in English. Pass options (valid calendar day): Tokyo Free Kippu 1,580 yen (Toei + Metro + JR in central Tokyo); Toei and Tokyo Metro One-Day Economy Pass 1,000 yen (no JR). Worth it only with more than 7 rides a day.",
+  "fact_he": "רכבות בטוקיו: קו יאמנוטה המעגלי 34.5 ק\"מ, 29 תחנות, כ-3.2 מיליון נוסעים ביום, עובר בגינזה, שיבויה, אקיהברה ושינג'וקו. נסיעה בודדת 110-210 ין, ילד חצי. אם לא בטוחים קונים כרטיס 110 ין ומתקנים במכונת Fare Adjustment ביציאה. שעות עומס 07:30-09:30 ורכבות אחרונות 23:30-00:30 צפופות; יש קרונות לנשים בלבד. אוטובוסים משניים; מוניות בעיקר אחרי חצות (כ-660 ין ל-2 ק\"מ ראשונים). Tokyo Free Kippu 1,580 ין (תחתית טואי+מטרו+JR במרכז); Economy Pass 1,000 ין (ללא JR). משתלם רק מעל 7 נסיעות ביום.",
+  "numbers": "single 110-210 yen; Free Kippu 1,580; Economy pass 1,000; taxi 660 first 2km",
+  "source_url": "https://yapanit.com/תחבורה/תחבורה-בטוקיו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Tokyo rail map is free at stations; print and mark your stops.",
+  "fact_he": "מפת הרכבות של טוקיו זמינה בתחנות; כדאי להדפיס ולסמן יעדים.",
+  "source_url": "https://yapanit.com/תחבורה/מפת-הרכבות-של-טוקיו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Renting a car: worth it for Hokkaido, Kyushu, Yakushima, Noto, Kii peninsula, Shikoku and rural areas, or groups of 4+ (e.g. Mt Fuji one-way bus ~2,700 yen per person, 21,600 for 4 round trip). Avoid in Tokyo/Kyoto (parking in 15-30 min units is expensive). Drive on the left. Israelis need an international licence issued within the last year (valid 3 years normally but Japan wants recent); no licence, no car. Ask for an ETC card (about 315 yen per day). Rental about 60-150 USD per 24h, luxury/vans from ~120 USD. One-way drop-off fee: Tokyo to Kanazawa about 34,000 yen, Tokyo to Odawara about 3,000 yen. Tocoo comparison site recommended (2025 coupon 1,000 yen mentioned). Waze and Google Maps work well.",
+  "fact_he": "השכרת רכב: משתלם בהוקאידו, קיושו, יאקושימה, נוטו, קיי, שיקוקו ואזורים כפריים או קבוצה של 4+ (עלייה להר פוג'י כ-2,700 ין לאדם בכיוון אחד). לא בטוקיו/קיוטו (חניות יקרות ביחידות של 15-30 דקות). נוסעים בצד שמאל. ישראלים צריכים רישיון בינלאומי מהשנה האחרונה; בלעדיו לא משכירים. לבקש כרטיס ETC (כ-315 ין ליום). שכירות כ-60-150 דולר ל-24 שעות, רכבי יוקרה/וואן מכ-120 דולר. דמי החזרה בנקודה אחרת: טוקיו-קנזאווה כ-34,000 ין, טוקיו-אודווארה כ-3,000 ין. מומלץ אתר Tocoo. Waze וגוגל מפות עובדים טוב.",
+  "numbers": "60-150 USD/day; ETC 315 yen/day; drop-off Tokyo-Kanazawa ~34,000 yen",
+  "year_written": 2025,
+  "source_url": "https://yapanit.com/תחבורה/השכרת-רכב-ביפן",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "japan",
+  "fact_en": "Driving loop ideas from the car-rental page: Kanazawa-Noto-Kanazawa (+ Shirakawa-go); Yakushima ~3 days; Hokkaido 5-8 days; Tokyo-Hakone-Five Lakes-Chureito-Fuji-Q-Fuji-Tokyo (rent from Odawara possible); Kii peninsula/Kumano Kodo. One-way: Tokyo-Kawaguchiko-Kiso Valley-Matsumoto-Takayama-Shirakawa-go-Kanazawa; Kagoshima to Fukuoka via Ibusuki, Mt Aso, Miyazaki, Takachiho, Beppu; the Romantic Road with Nikko and Kusatsu Onsen.",
+  "fact_he": "רעיונות למסלולי נהיגה: קנזאווה-נוטו-קנזאווה (+שירקאווה-גו); יאקושימה כ-3 ימים; הוקאידו 5-8 ימים; טוקיו-האקונה-חמשת האגמים-צ'ורייטו-פוג'יקיו-פוג'י-טוקיו; חצי האי קיי וקומאנו קודו. חד-כיווני: טוקיו-קוואגוצ'יקו-עמק קיסו-מצומוטו-טקאיאמה-שירקאווה-גו-קנזאווה; קגושימה-פוקואוקה דרך איבוסוקי, הר אסו, מיאזאקי, טקצ'יהו, בפו; הדרך הרומנטית (ניקו וקוסאצו).",
+  "year_written": 2025,
+  "source_url": "https://yapanit.com/תחבורה/השכרת-רכב-ביפן",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "transport",
+  "city": "hiroshima",
+  "fact_en": "Hiroshima: stay at least 2 nights (Peace Park, Miyajima, Mazda museum/factory). Meipuru~pu loop bus is the easy way around the centre (see place card).",
+  "fact_he": "הירושימה: מומלץ ללון לפחות 2 לילות (פארק השלום, מייג'ימה, מוזיאון ומפעל מאזדה). קו המעגלי מייפל-פ נוח להתניידות במרכז.",
+  "source_url": "https://yapanit.com/תחבורה/קו-אוטובוס-מעגלי-בהירושימה-jr",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "lodging",
+  "city": "kyoto",
+  "fact_en": "Entrance and tax rises noted in 2023: temple/site entries up by 100-200 yen (Nijo Castle 600 to 800 yen; combined ticket with Nijo + Kyoto Gosho-area palace about 1,300 yen); Kyoto accommodation tax about 100-500 yen per person per night depending on price. Yen rate Aug 2023: 100 yen = 2.58 NIS.",
+  "fact_he": "עליות מחירים שצוינו ב-2023: כניסות למקדשים/אתרים עלו ב-100-200 ין (טירת ניג'ו מ-600 ל-800 ין; כרטיס משולב עם ארמון גוטן כ-1,300 ין); מס לינה בקיוטו כ-100-500 ין ללילה לאדם. שער אוגוסט 2023: 100 ין = 2.58 ש\"ח.",
+  "numbers": "Nijo 800 yen; tax 100-500 yen/night",
+  "year_written": 2023,
+  "source_url": "https://yapanit.com/תחבורה/עליית-מחירי-jrpass",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "otsu",
+  "fact_en": "Otsu Matsuri: weekend before Health-Sports Day (2nd Monday Oct). 2019: 12-13 Oct; 2023: 7-8 Oct; 2024: 12-13 Oct. Starts Sat ~18:00 for 3-4 h, continues Sun 09:30-17:00. Near Tenson Shrine, ~10 min from Otsu station, JR Biwako line 9 min from Kyoto, 200 yen.",
+  "fact_he": "פסטיבל אוצו: בסופ\"ש שלפני יום הבריאות/ספורט (יום שני השני באוקטובר). 2019: 12-13.10; 2023: 7-8.10; 2024: 12-13.10. מתחיל בשבת ~18:00 לכ-3-4 שעות וממשיך ביום ראשון 09:30-17:00. ליד מקדש טנסון, רכבת JR ביווקו 9 דקות מקיוטו, 200 ין.",
+  "numbers": "7-8 Oct 2023; 12-13 Oct 2024",
+  "year_written": 2024,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/otsu-matsuri",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Yabusame at Anahachimangu (Takadanobaba): 2nd Monday of October, 14:00-15:30, free.",
+  "fact_he": "יאבוסאמה באנהאצ'ימנגו (טקאדנובאבה): יום שני השני באוקטובר, 14:00-15:30, חינם.",
+  "numbers": "8 Oct 2018",
+  "year_written": 2018,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-אנהאצ-ימנגו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Jidai Matsuri 22 Oct (noon to 14:30) and Kurama Fire Festival 22 Oct evening (from 18:00). Other Kyoto big festivals: Aoi 15 May, Gion in July.",
+  "fact_he": "ג'ידאי מאצורי 22 באוקטובר (צהריים עד 14:30) ופסטיבל האש של קוראמה 22 באוקטובר בערב (מ-18:00). פסטיבלים גדולים נוספים בקיוטו: אאוי 15 במאי, גיון ביולי.",
+  "numbers": "22 Oct",
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-ג-ידאי-בקיוטו-jidai-matsuri",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Daimonji/Gozan no Okuribi: 16 Aug evening from 20:00; postponed a day in heavy rain (as in 2016).",
+  "fact_he": "דאימונג'י: 16 באוגוסט בערב מ-20:00; בגשם כבד נדחה ליום הבא (כמו ב-2016).",
+  "numbers": "16 Aug 20:00",
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-דאימונג-י-daimonji-festival",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "kawasaki",
+  "fact_en": "Kanamara Matsuri: first Sunday of April (2 Apr 2023, 7 Apr 2024), Kawasaki; parade ~13:00. Adult themed.",
+  "fact_he": "קנמארה: יום ראשון הראשון של אפריל (2.4.2023, 7.4.2024), קוואסאקי; מצעד כ-13:00. אופי למבוגרים.",
+  "numbers": "7 Apr 2024",
+  "year_written": 2024,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-ה-בולבולים-קנמארה",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "miyajima",
+  "fact_en": "Miyajima Water Fireworks: last Saturday of August, 19:30-20:30 (2019: 24 Aug). ~5,000 shells. Plan to be on the island from midday. Note the yapanit Enoshima/Fujisawa fireworks page (/פסטיבל-הזיקוקין-באנושימה-פוג-יסאווה) actually holds this same Miyajima text.",
+  "fact_he": "זיקוקין מייג'ימה: שבת האחרונה של אוגוסט, 19:30-20:30 (2019: 24.8). כ-5,000 זיקוקים. להגיע לאי מהצהריים. הערה: עמוד זיקוקין אנושימה-פוג'יסאווה באתר מכיל למעשה את אותו טקסט של מייג'ימה.",
+  "numbers": "24 Aug 2019 19:30-20:30",
+  "year_written": 2019,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-הזיקוקין-של-מייג-ימה",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "chichibu",
+  "fact_en": "Chichibu Night Festival: 2-3 December, main night 3 Dec 18:00-20:30, 78 min from Ikebukuro on Seibu limited express 1,480 yen.",
+  "fact_he": "פסטיבל הלילה של צ'יצ'יבו: 2-3 בדצמבר, הערב המרכזי 3.12 בין 18:00-20:30, 78 דקות מאיקבוקורו בסייבו אקספרס, 1,480 ין.",
+  "numbers": "2-3 Dec; 1,480 yen",
+  "year_written": 2017,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-הלילה-של-צ-יצ-יבו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Tokyo fireworks: Sumidagawa Hanabi last Saturday of July (29 Jul 2023, 19:00-20:30, ~1 million visitors); Edogawa Hanabi first Saturday of August (4 Aug 2018; 24 Aug 2024 after postponement; 19:15-20:30). Buy yukata/jinbei (1,500-5,000 yen) at Ueno market, Nakamise or Don Quijote.",
+  "fact_he": "זיקוקין בטוקיו: סומידאגאווה בשבת האחרונה של יולי (29.7.2023, 19:00-20:30, כמיליון צופים); אדוגאווה בשבת הראשונה של אוגוסט (4.8.2018; 24.8.2024 לאחר דחייה; 19:15-20:30). יוקאטה/ג'ינביי 1,500-5,000 ין באואנו, נאקמיסה או דון קיחוטה.",
+  "numbers": "29 Jul 2023; 24 Aug 2024; yukata 1,500-5,000 yen",
+  "year_written": 2024,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-זיקוקין-די-נור-בטוקיו-בקיץ-sumidagawa-edogawa-hanabi",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "Obon: ~15 July in parts of Kanto, ~15 August in most of Japan, 3-4 days; businesses may close, travel crowded; Daimonji in Kyoto ends it on 16 Aug.",
+  "fact_he": "אובון: סביב 15 ביולי בחלק מקאנטו, סביב 15 באוגוסט ברוב יפן, 3-4 ימים; עסקים סגורים והנסיעות עמוסות; דאימונג'י בקיוטו מסיים ב-16 באוגוסט.",
+  "numbers": "15 Jul / 15 Aug",
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבל-אובון-obon-festival",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "takayama",
+  "fact_en": "Takayama festival dates mentioned: spring 9-10 April and autumn 14-15 October (year not stated, from page likely 2023). Rooms in Takayama are hard to find then; Otsu Matsuri is a more accessible alternative. Chichibu and Gion are the other two famous float festivals.",
+  "fact_he": "תאריכי פסטיבל טקאיאמה שהוזכרו: אביב 9-10 באפריל וסתיו 14-15 באוקטובר (השנה לא צוינה). קשה למצוא לינה בטקאיאמה בתאריכים אלה; אוצו אלטרנטיבה נגישה. צ'יצ'יבו וגיון הם שני פסטיבלי המרכבות המפורסמים הנוספים.",
+  "numbers": "9-10 Apr; 14-15 Oct",
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "kyoto",
+  "fact_en": "Yasurai Festival Kyoto on 9 April and Buddha's birthday 8 April (temples across Kyoto; Hachiko memorial ceremony at Shibuya Station 12:00 on 8 April) are listed in the March-April festival roundup. Other March-April events cover Tokyo, Kamakura, Kawasaki, Nikko, Kyoto, Nara, Osaka, Kanazawa, Takayama, Kamikochi, Beppu (schedule is a downloadable PDF/Excel on the page).",
+  "fact_he": "פסטיבל יסוראי בקיוטו ב-9 באפריל ויום ההולדת של בודהה ב-8 באפריל (מקדשים בקיוטו; טקס זיכרון להאצ'יקו בתחנת שיבויה ב-12:00 ב-8 באפריל) מופיעים בסיכום פסטיבלי מרץ-אפריל. הלו\"ז המלא בקובץ PDF/Excel בעמוד.",
+  "numbers": "8-9 Apr",
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבלים-וארועים-ביפן-מרץ-אפריל",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "October is a good month to travel: mild autumn weather and hundreds of local festivals; page's selection covers Tokyo, Kyoto, Takayama, Shirakawa-go, Nikko, Nagasaki, Kagoshima (downloadable PDF/Excel list on the page). Wear yukata (women) or jinbei (men/kids) to festivals: 1,500-5,000 yen at Ueno market, Nakamise Asakusa, Don Quijote; geta sandals are uncomfortable, bring other shoes.",
+  "fact_he": "אוקטובר חודש מצוין לטיול: מזג אוויר סתווי ומאות פסטיבלים; הרשימה בעמוד כוללת טוקיו, קיוטו, טקאיאמה, שירקאווה-גו, ניקו, נגסאקי וקגושימה (קובץ PDF/Excel). ללבוש יוקאטה (נשים) או ג'ינביי (גברים/ילדים) לפסטיבלים: 1,500-5,000 ין באואנו, נאקמיסה ודון קיחוטה; כפכפי גטה לא נוחים - לקחת נעליים.",
+  "numbers": "yukata/jinbei 1,500-5,000 yen",
+  "year_written": 2024,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבלי-אוקטובר",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Meguro River cherry blossom light-up mid-March to early April (20 Mar-7 Apr in 2024), lit 17:00-21:00.",
+  "fact_he": "תאורת פריחת הדובדבן בנהר מגורו מאמצע מרץ עד תחילת אפריל (20.3-7.4 ב-2024), מואר 17:00-21:00.",
+  "numbers": "20 Mar-7 Apr 2024",
+  "year_written": 2024,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/פסטיבלים-ביפן/פסטיבלים-וארועים-ביפן-מרץ-אפריל/פריחת-הדובדבן-מגורו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "tokyo",
+  "fact_en": "Tokyo Marathon: last Sunday of February, lottery about 6 months ahead, ~1 in 10 odds. Tokyo 2020 Olympic marathon was moved to Sapporo (9 Aug 2020, not relevant now).",
+  "fact_he": "מרתון טוקיו: יום ראשון האחרון של פברואר, הגרלה כחצי שנה מראש, סיכוי כ-1 ל-10.",
+  "numbers": "last Sunday of Feb",
+  "year_written": 2020,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/תיירות-ספורט/מרתון-טוקיו",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "festival",
+  "city": "japan",
+  "fact_en": "Sport tourism: other marathons and half marathons in Osaka, Kanazawa and Beppu; sumo and baseball spectating; running, cycling, rafting, kayaking, skiing and climbing walls can be added to a trip. Race calendar link: aims-worldrunning.org/calendar.html (page listed May 2022-Aug 2023).",
+  "fact_he": "תיירות ספורט: מרתונים וחצאי מרתונים נוספים באוסקה, קנזאווה ובפו; סומו ובייסבול כצופים; ריצה, אופניים, ראפטינג, קיאקים, סקי וקירות טיפוס. לוח מרוצים: aims-worldrunning.org/calendar.html.",
+  "year_written": 2022,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/תיירות-ספורט",
+  "agent": "yap-transport"
+ },
+ {
+  "topic": "booking",
+  "city": "japan",
+  "fact_en": "Organizer offers guided small-group trips (boutique, Tishrei holidays), bar/bat mitzvah trips (parent+child) with route Tokyo, Kyoto, Takayama, Kanazawa, Hiroshima, Kiso Valley; page lists 2023-2024 (outdated). Also monthly online lectures (e.g. 9 Nov 2026 19:30, 30-40 NIS) on planning a 10-21 day trip on a budget, JR Pass value, seasons.",
+  "fact_he": "המארגנת מציעה טיולים מאורגנים בקבוצות קטנות (חגי תשרי), טיולי בר/בת מצווה (הורה+ילד) בטוקיו, קיוטו, טקאיאמה, קנזאווה, הירושימה ועמק קיסו (העמוד מציין 2023-2024, מיושן). בנוסף הרצאות אונליין חודשיות (למשל 9.11.2026 ב-19:30, 30-40 ש\"ח) על תכנון טיול של 10-21 יום בתקציב, כדאיות JR Pass ועונות.",
+  "numbers": "lecture 9 Nov 2026 19:30; 30-40 NIS",
+  "year_written": 2026,
+  "source_url": "https://yapanit.com/אירועים-והרצאות/הרצאות",
+  "agent": "yap-transport"
+ }
+]

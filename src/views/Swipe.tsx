@@ -45,7 +45,7 @@ type Props = {
 }
 
 export default function SwipeGame({ trip, userId, members, showCard, onCardShown, onOpenPlaces }: Props) {
-  const { rows: rawCandidates, loading } = useTripTable<Candidate>('candidates', trip.id)
+  const { rows: rawCandidates, loading, reload: reloadCandidates } = useTripTable<Candidate>('candidates', trip.id)
   const media = useMediaIndex()
   const candidates = useMemo(() => rawCandidates.map((c) => withMedia(c, media)), [rawCandidates, media])
   // this person's questionnaire: places that are no use to them stay out of everything here (deck, lists, counts),
@@ -91,9 +91,13 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     }
   }, [trip.id, swipes, rawCandidates.length])
 
+  // copies new library cards, and the library's photos, links and English text, into this trip's deck. The request is
+  // only sent once it is awaited or given a then(); it answers with how many cards it added
   useEffect(() => {
-    supabase.rpc('sync_library', { tid: trip.id })
-  }, [trip.id])
+    supabase.rpc('sync_library', { tid: trip.id }).then(({ data, error }) => {
+      if (!error && data) reloadCandidates()
+    })
+  }, [trip.id, reloadCandidates])
 
   const likes = useMemo(() => {
     const m = new Map<string, string[]>()

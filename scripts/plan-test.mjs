@@ -16,12 +16,51 @@ const PB = await build({
   entryPoints: [join(root, 'supabase/functions/plan-trip/presence.ts')],
   bundle: true, write: false, format: 'esm', platform: 'node', target: 'node18',
 })
+const SB = await build({
+  entryPoints: [join(root, 'supabase/functions/plan-trip/stay.ts')],
+  bundle: true, write: false, format: 'esm', platform: 'node', target: 'node18',
+})
+const S = await import('data:text/javascript;base64,' + Buffer.from(SB.outputFiles[0].text).toString('base64'))
 const P = await import('data:text/javascript;base64,' + Buffer.from(PB.outputFiles[0].text).toString('base64'))
 const E = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'))
 
 // a fixture's days carry `at` as an object (as the dry run's `input` does); the engine wants a Map
 // a fixture with `presence` (stays, flights, day_info.who) gets its days from presence.ts, the way index.ts builds them
+// a fixture with `trip` starts one step earlier, like index.ts with no hotel: stays (trip_stays rows) or the city written
+// on each day (dayCities) → stay.ts picks where to sleep → buildDays → each place's base and day trip (baseFor) → units
 const load = (f) => {
+  if (f.trip) {
+    const x = f.trip
+    const dateOf = (d) => new Date(Date.parse(x.startDate + 'T00:00:00Z') + (d - 1) * 86400000).toISOString().slice(0, 10)
+    const base = Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, { lat: c.lat, lng: c.lng }]))
+    const ctx = {
+      base,
+      nameEn: Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, c.en])),
+      nameHe: Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, c.he])),
+      places: x.places.map((p) => ({ id: p.id, point: p.point ?? null, city: p.city, weight: p.priority ?? 3, mins: p.mins ?? 90, parties: p.couples ?? null })),
+    }
+    const r = x.stays
+      ? S.sleepsFromStays(x.stays.map((s) => ({ party: null, lat: null, lng: null, area: null, status: 'proposed', booked: false, hotelPoint: null, hotelTitle: null, ...s })), ctx)
+      : S.sleepsFromDays(Array.from({ length: x.numDays }, (_, i) => S.cityIdOf(x.dayCities?.[String(i + 1)], ctx)), x.numDays, dateOf, ctx)
+    const days = P.buildDays({
+      numDays: x.numDays, dateOf, sleeps: r.sleeps, couples: x.couples, flights: x.flights ?? [],
+      dayWho: new Map(Object.entries(x.dayWho ?? {}).map(([d, w]) => [Number(d), w])), capOf: new Map(), past: () => false,
+    })
+    const basePt = S.basePoints(days)
+    const units = []
+    for (const p of x.places) {
+      const couples = p.couples ?? x.couples
+      const bases = [...new Set(days.flatMap((d) => couples.map((c) => d.at.get(c)?.base).filter(Boolean)))]
+      const point = p.point ?? base[p.city] ?? null
+      const { base: b, far } = S.baseFor(point, p.city, bases, basePt, base)
+      if (!b) continue
+      units.push({
+        id: p.id, couples, base: b, far, point, mins: p.mins ?? 90, category: p.category ?? 'sight', best: p.best ?? 'any',
+        opens: null, closes: null, closedWeekdays: [], closedDates: [], openDates: [], priority: p.priority ?? 3, current: null,
+      })
+    }
+    return { ...f, days, units, fixed: f.fixed ?? [], sleeps: r.sleeps, recs: r.recs }
+  }
   if (f.presence) {
     const x = f.presence
     const dateOf = (d) => new Date(Date.parse(x.startDate + 'T00:00:00Z') + (d - 1) * 86400000).toISOString().slice(0, 10)
@@ -141,6 +180,36 @@ const expectations = (f, out, run) => {
     const got = run.days.filter((d) => [...d.at.values()].some((p) => p.estimate)).map((d) => d.day)
     if (got.join() !== x.estimateDays.join()) errs.push(`estimate days ${got.join(',') || '-'}, expected ${x.estimateDays.join(',') || '-'}`)
   }
+  // recommend: city id → the area recommended for its stretch (every stretch of that city, one area each)
+  for (const [city, key] of Object.entries(x.recommend ?? {})) {
+    const got = (run.recs ?? []).filter((r) => r.city === city)
+    if (!got.length) errs.push(`no recommendation for ${city}`)
+    for (const r of got) if (r.best.key !== key) errs.push(`${city}: recommended ${r.best.key}, expected ${key} (others: ${r.alternatives.map((a) => a.key).join(', ')})`)
+  }
+  // dayTrips: ids that must be day trips (far), placed, each on a day of day-trip places only (nothing back in town);
+  // dayTripDays: on at most this many days. notFar: ids that must not be day trips
+  if (x.dayTrips) {
+    const byId = new Map(run.units.map((u) => [u.id, u]))
+    for (const id of x.dayTrips) if (!byId.get(id)?.far) errs.push(`${id}: expected a day trip`)
+    for (const id of x.dayTrips) if (!out.placed.has(id)) errs.push(`${id}: day trip not placed`)
+    const ds = new Set(x.dayTrips.map((id) => out.placed.get(id)?.day).filter((d) => d != null))
+    for (const d of ds) for (const [id, p] of out.placed) if (p.day === d && !byId.get(id).far) errs.push(`${id}: in town on day ${d}, a day-trip day`)
+    if (x.dayTripDays != null && ds.size > x.dayTripDays) errs.push(`day trip spread over days ${[...ds].join(',')}, expected at most ${x.dayTripDays}`)
+  }
+  for (const id of x.notFar ?? []) if (run.units.find((u) => u.id === id)?.far) errs.push(`${id}: a day trip, expected in town`)
+  // oneBase: every city's nights are one stretch at one point (no hotel change inside a city)
+  if (x.oneBase) {
+    const byCity = new Map()
+    for (const sl of run.sleeps ?? []) byCity.set(sl.city, [...(byCity.get(sl.city) ?? []), sl])
+    for (const [c, ss] of byCity) {
+      const pts = new Set(ss.map((sl) => `${sl.point.lat},${sl.point.lng}|${sl.key}`))
+      if (pts.size > 1) errs.push(`${c}: ${pts.size} different bases (${[...pts].join(' / ')})`)
+    }
+    for (const d of run.days) for (const [c, p] of d.at) {
+      const prev = run.days.find((y) => y.day === d.day - 1)?.at.get(c)
+      if (prev && prev.base === p.base && (prev.hotel.lat !== p.hotel.lat || prev.hotel.lng !== p.hotel.lng)) errs.push(`day ${d.day}: ${c} changes hotel inside ${p.base}`)
+    }
+  }
   if (x.stable) {
     // second run: each unit's current is the day the first run gave it (index.ts: autoByPlace)
     const again = E.plan(run.days, f.units.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })), f.fixed)
@@ -163,14 +232,15 @@ for (const file of files) {
   let out
   try {
     out = E.plan(run.days, run.units, run.fixed)
-    errs = [...rules(run, out), ...expectations(f, out, run)]
+    errs = [...rules(run, out), ...expectations(run, out, run)]
   } catch (e) {
     errs = ['threw: ' + (e.stack ?? e)]
   }
   const known = f.knownFailing === true
   const status = !errs.length ? (known ? 'PASS (known failing, now passes: drop the flag)' : 'PASS') : known ? 'FAIL (known)' : 'FAIL'
   if (errs.length && !known) failed++
-  console.log(`${status}  ${f.name ?? file}${out ? `  [${out.placed.size}/${f.units.length} placed]` : ''}`)
+  console.log(`${status}  ${f.name ?? file}${out ? `  [${out.placed.size}/${run.units.length} placed]` : ''}`)
+  for (const r of run.recs ?? []) console.log(`     where to sleep in ${r.city} (${r.check_in}→${r.check_out}): ${r.best.key} [${r.best.near}/${r.best.total} within ${r.best.within} min${r.best.hubs.length ? ', near ' + r.best.hubs.join('+') : ''}]; others: ${r.alternatives.map((a) => `${a.key} [${a.near}/${a.total}${a.hubs.length ? ', ' + a.hubs.join('+') : ''}]`).join(', ') || '-'}`)
   for (const e of errs) console.log('   - ' + e)
   if (out && process.env.VERBOSE) {
     for (const [id, p] of [...out.placed].sort((a, b) => a[1].day - b[1].day || a[1].start - b[1].start)) console.log(`     day ${p.day} ${E.hhmm(p.start)} ${id}`)

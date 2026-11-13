@@ -7,7 +7,7 @@ CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 F=$(mktemp -d)
 HTML="file://$PWD/toogo-logo-motion.html"
 shot() { local t=$(printf "%.4f" $(echo "$1/30" | bc -l)); local n=$(printf "%04d" $1)
-  "$CH" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1080,1080 \
+  "$CH" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=500 --window-size=1080,1080 \
     --user-data-dir=$F/prof-$(($1 % 8)) --screenshot=$F/f$n.png "$HTML#t=$t" >/dev/null 2>&1 }
 for i in {0..149}; do shot $i & (( i % 8 == 7 )) && wait; done; wait
 X=(-c:v libx264 -pix_fmt yuv420p -crf 16 -preset slow -movflags +faststart)

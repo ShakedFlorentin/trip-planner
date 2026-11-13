@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
-import { BedDouble, Lock, Plus, Wand2 } from 'lucide-react'
+import { BedDouble, Bus, Lock, MapPin, Plus, Search, TrainFront, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { suggestSplits, type SplitAlt } from '../stays'
-import { TOGETHER, whoOptions, type Booking, type City, type TripStay } from '../types'
+import { TOGETHER, whoOptions, type Booking, type City, type StayAreaPick, type StayAreaRec, type TripStay } from '../types'
 import { mutate } from '../lib'
-import { t } from '../i18n'
+import { isEn, t } from '../i18n'
+import { AREAS, type Area } from '../areas'
+import { hotelSearchUrl } from '../affiliate'
+import { openExternal } from '../native'
 import { Empty, Field, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { cityName, stayLabel } from './planUtils'
@@ -24,11 +27,15 @@ type Props = {
   bookings: Booking[]
   /** false while the table isn't in the database yet */
   available: boolean
+  /** where to sleep in each stretch with no hotel (the planner's summary.stay_areas) */
+  recs: StayAreaRec[]
+  /** how many adults and rooms a hotel search is for, by party (null = everyone) */
+  people: (party: string | null) => { adults: number; rooms: number }
   onClose: () => void
 }
 
 /** "Where we sleep": the nights of each party in each city, before and after any hotel is booked. */
-export default function StaysSheet({ tripId, date, couples, stays, cities, bookings, available, onClose }: Props) {
+export default function StaysSheet({ tripId, date, couples, stays, cities, bookings, available, recs, people, onClose }: Props) {
   const [edit, setEdit] = useState<Partial<TripStay> | null>(null)
   const [split, setSplit] = useState(false)
   // everyone first, then each couple, then any other party a stay names
@@ -37,6 +44,11 @@ export default function StaysSheet({ tripId, date, couples, stays, cities, booki
   return (
     <>
       <Sheet title={t('איפה ישנים')} onClose={onClose}>
+        {[...recs]
+          .sort((a, b) => a.check_in.localeCompare(b.check_in))
+          .map((r) => (
+            <StayRecCard key={`${r.party ?? ''}|${r.city}|${r.check_in}`} rec={r} cities={cities} people={people(r.party)} />
+          ))}
         {!available && <Empty>{t('הלינה לפי עיר תהיה זמינה אחרי עדכון השרת. עד אז התוכנית קוראת את הזמנות המלון.')}</Empty>}
         {available && stays.length === 0 && <Empty>{t('עוד לא הוזנה לינה. הוסיפו עיר ולילות, והתוכנית תסתדר גם לפני שמזמינים מלון.')}</Empty>}
         {available &&
@@ -89,6 +101,99 @@ export default function StaysSheet({ tripId, date, couples, stays, cities, booki
 }
 
 const nights = (n: number) => (n === 1 ? t('לילה אחד') : t('{n} לילות', { n }))
+
+// ---- where to sleep (plan-trip/stay.ts): the recommended area of a stretch with no hotel
+
+const areaName = (a: Area) => (isEn ? a.en : a.he)
+const areaOfRec = (rec: StayAreaRec, key: string) => (AREAS[rec.areas_city] ?? []).find((a) => a.key === key)
+
+/** The recommended area of the stretch that covers this night, by name; null when there is none. */
+export function recommendedArea(recs: StayAreaRec[] | undefined, date: string, party: string | null = null) {
+  const r = recs?.find((x) => x.check_in <= date && date < x.check_out && (x.party == null || x.party === party))
+  const a = r && areaOfRec(r, r.best.key)
+  return a ? areaName(a) : null
+}
+
+// the day-trip line an area's station has (shared/areas.ts HUBS), in words
+const HUB: Record<string, { text: () => string; bus?: true }> = {
+  fuji: { text: () => t('קרוב לאוטובוס לפוג׳י ולרכבת להקונה'), bus: true },
+  nikko: { text: () => t('קרוב לרכבת לניקו') },
+  kamakura: { text: () => t('קרוב לרכבת לקמקורה') },
+  karuizawa: { text: () => t('קרוב לשינקנסן לקארואיזאווה') },
+  yokohama: { text: () => t('קרוב לרכבת ליוקוהמה') },
+  nara: { text: () => t('קרוב לרכבת לנארה') },
+  osaka: { text: () => t('קרוב לרכבת לאוסקה') },
+  kyoto: { text: () => t('קרוב לרכבת לקיוטו') },
+  kobe: { text: () => t('קרוב לרכבת לקובה ולהימג׳י') },
+  uji: { text: () => t('קרוב לרכבת לאוג׳י') },
+  amanohashidate: { text: () => t('קרוב לרכבת לאמאנוהאשידטה') },
+  koyasan: { text: () => t('קרוב לרכבת לקויאסן') },
+}
+
+/** Why this area, from the planner's numbers. */
+function whyText(p: StayAreaPick, basis: StayAreaRec['basis']) {
+  if (basis === 'central') return t('בסיס מרכזי עם רכבות לכל העיר. ההמלצה תתעדכן לפי המקומות שתאהבו.')
+  if (!p.total) return t('הכי קרוב ליציאה לטיולי היום שלכם')
+  if (p.total === 1) return p.near ? t('המקום שאהבתם כאן במרחק עד {m} דק׳', { m: p.within }) : t('הכי קרוב למקום שאהבתם כאן')
+  if (p.near === p.total) return t('כל {total} המקומות שלכם כאן במרחק עד {m} דק׳', { total: p.total, m: p.within })
+  return t('{n} מתוך {total} המקומות שלכם במרחק עד {m} דק׳', { n: p.near, total: p.total, m: p.within })
+}
+
+/**
+ * "Recommended: sleep in Shinjuku": the area for all the nights of a stretch with no hotel, why, the two others as
+ * chips (a tap shows that one instead), and a hotel search there with the stretch's dates and the party's size.
+ */
+function StayRecCard({ rec, cities, people }: { rec: StayAreaRec; cities: City[]; people: { adults: number; rooms: number } }) {
+  const [sel, setSel] = useState<string | null>(null)
+  const best = areaOfRec(rec, rec.best.key)
+  if (!best) return null
+  const others = rec.alternatives.filter((a) => areaOfRec(rec, a.key))
+  const pick = others.find((a) => a.key === sel) ?? rec.best
+  const area = areaOfRec(rec, pick.key)!
+  return (
+    <div className="card stay-rec">
+      <div className="stay-rec-head">
+        <span className="stay-rec-mark">
+          <Icon as={MapPin} />
+        </span>
+        <div className="stay-rec-text">
+          <b>{t('מומלץ לישון ב{area}', { area: areaName(best) })}</b>
+          <span className="small muted">
+            {rec.party ? `${t(rec.party)} · ` : ''}
+            {cityName(rec.city, cities)} · {shortDate(rec.check_in)} – {shortDate(rec.check_out)} · {nights(rec.nights)}
+          </span>
+        </div>
+      </div>
+      <div className="stay-rec-why">
+        <span>{whyText(pick, rec.basis)}</span>
+        {pick.hubs.map((h) =>
+          HUB[h] ? (
+            <span key={h} className="stay-rec-hub">
+              <Icon as={HUB[h].bus ? Bus : TrainFront} /> {HUB[h].text()}
+            </span>
+          ) : null,
+        )}
+      </div>
+      {others.length > 0 && (
+        <div className="stay-rec-alts" role="group" aria-label={t('אזורים נוספים')}>
+          <span className="small muted">{t('או:')}</span>
+          {others.map((o) => (
+            <button key={o.key} className={'chip' + (sel === o.key ? ' on' : '')} aria-pressed={sel === o.key} onClick={() => setSel(sel === o.key ? null : o.key)}>
+              {areaName(areaOfRec(rec, o.key)!)}
+            </button>
+          ))}
+        </div>
+      )}
+      <button
+        className="primary"
+        onClick={() => openExternal(hotelSearchUrl({ search: area.search, checkIn: rec.check_in, checkOut: rec.check_out, ...people }))}
+      >
+        <Icon as={Search} />
+        <span>{t('חיפוש מלון ב{area}', { area: areaName(area) })}</span>
+      </button>
+    </div>
+  )
+}
 
 /** Why an alternative is worth considering, in words. */
 function reasonText(r: SplitAlt['reason']) {
