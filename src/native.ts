@@ -7,6 +7,7 @@ import { Keyboard } from '@capacitor/keyboard'
 import { requestAddLink } from './quickAdd'
 import { settings } from './settings'
 import { isEn } from './i18n'
+import { track } from './track'
 
 /** Running inside the iOS app (Capacitor), not in a browser. */
 export const isNative = Capacitor.isNativePlatform()
@@ -22,6 +23,11 @@ export const privacyUrl = () => new URL((isEn ? 'en/' : '') + 'privacy/', appUrl
 
 /** Open an outside page: a new tab on the web, an in-app Safari sheet in the iOS app. */
 export function openExternal(href: string) {
+  try {
+    track('link_out', { host: new URL(href).hostname.replace(/^www\./, '') })
+  } catch {
+    // not a full address: nothing to count
+  }
   if (isNative) void Browser.open({ url: href })
   else window.open(href, '_blank', 'noreferrer')
 }

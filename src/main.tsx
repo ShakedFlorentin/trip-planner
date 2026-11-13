@@ -5,6 +5,7 @@ import './styles.css'
 import './styles/ltr.css'
 import { endLaunch, isNative } from './native'
 import { watchFades } from './fades'
+import { trackOpen } from './track'
 
 // relative path: the site lives under /<repo>/ on GitHub Pages; dev has no worker so it never serves stale files
 // the iOS app carries its files inside, so it has no worker
@@ -40,3 +41,4 @@ createRoot(document.getElementById('root')!).render(
 
 endLaunch()
 watchFades()
+trackOpen()

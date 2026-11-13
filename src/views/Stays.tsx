@@ -7,6 +7,7 @@ import { mutate } from '../lib'
 import { isEn, t } from '../i18n'
 import { AREAS, type Area } from '../areas'
 import { hotelSearchUrl } from '../affiliate'
+import { track } from '../track'
 import { openExternal } from '../native'
 import { Empty, Field, Sheet } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
@@ -193,7 +194,10 @@ function StayRecCard({ rec, cities, people }: { rec: StayAreaRec; cities: City[]
       )}
       <button
         className="primary"
-        onClick={() => openExternal(hotelSearchUrl({ search: area.search, checkIn: rec.check_in, checkOut: rec.check_out, ...people }))}
+        onClick={() => {
+          track('hotel_tap', { area: area.key, nights: rec.nights ?? null })
+          openExternal(hotelSearchUrl({ search: area.search, checkIn: rec.check_in, checkOut: rec.check_out, ...people }))
+        }}
       >
         <Icon as={Search} />
         <span>{t('חיפוש מלון ב{area}', { area: areaName(area) })}</span>

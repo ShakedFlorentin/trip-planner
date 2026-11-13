@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { t } from '../i18n'
 import LoginCarousel from './LoginCarousel'
 import { openExternal, privacyUrl } from '../native'
+import { track } from '../track'
 
 // Accounts are created for the group up front; each logs in with just their name, in Hebrew or English.
 const ACCOUNTS: Record<string, string> = {
@@ -113,6 +114,7 @@ function GoogleMark() {
 function GoogleButton({ onError }: { onError: (msg: string) => void }) {
   const [busy, setBusy] = useState(false)
   const go = async () => {
+    track('google_tap')
     setBusy(true)
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } })
     if (error) {

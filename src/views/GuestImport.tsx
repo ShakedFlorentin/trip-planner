@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabase'
 import { t } from '../i18n'
+import { track } from '../track'
 import { writeCache } from '../lib'
 import { forgetGuest, type GuestState } from '../guest'
 import type { Profile } from '../types'
@@ -22,6 +23,7 @@ export default function GuestImport({ userId, guest, tripId, onDone }: { userId:
     ;(async () => {
       try {
         onDone(await carry(userId, guest, tripId))
+        track('guest_import', { liked: guest.liked.length, answers: !!guest.answers })
         forgetGuest()
       } catch (e) {
         console.error('guest import', e)

@@ -32,13 +32,14 @@ export function privacyPage(lang) {
 <li><b>The trip:</b> the places you added, what you liked and rated, the plan, the hotels, the bookings (flights, hotels and so on) and the documents you attach to them, the expenses and the packing lists.</li>
 <li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo.</li>
 <li><b>Problem reports:</b> what you wrote, the screen you were on, the app version and your device and browser type.</li>
+<li><b>How the app is used:</b> which screens are opened, how far people get from the first screen to a saved trip, which outside sites are opened (the site's name only), and errors in the app. It is tied to a random code made on your device, and to your account once you sign in. It never includes what you type. We keep it for two years, in our own database, and use it only to improve Toogo.</li>
 <li><b>On your phone:</b> a copy of the trip so the app works without signal, your settings, and, if you started without an account, your answers and likes until you sign in.</li>
 </ul>
 
 <h2>What we don't do</h2>
 <ul>
 <li>We don't sell or rent out anything about you.</li>
-<li>We show no ads and use no tracking tools or advertising cookies.</li>
+<li>We show no ads, and use no outside tracking tools or advertising cookies. The usage counting above stays with us.</li>
 <li>We don't track your location.</li>
 <li>We don't use your content to train AI models.</li>
 </ul>
@@ -110,13 +111,14 @@ export function privacyPage(lang) {
 <li><b>הטיול:</b> המקומות שהוספתם, מה אהבתם ודירגתם, התוכנית, המלונות, ההזמנות (טיסות, מלונות וכו') והמסמכים שצירפתם אליהן, ההוצאות ורשימות הציוד.</li>
 <li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo.</li>
 <li><b>דיווח על בעיה:</b> מה שכתבתם, המסך שבו הייתם, גרסת האפליקציה וסוג המכשיר והדפדפן.</li>
+<li><b>איך משתמשים באפליקציה:</b> אילו מסכים נפתחים, עד לאן מגיעים מהמסך הראשון ועד טיול שמור, אילו אתרים חיצוניים נפתחים (רק שם האתר), ותקלות באפליקציה. המידע מקושר לקוד אקראי שנוצר במכשיר שלכם, ולחשבון אחרי שאתם מתחברים. הוא אף פעם לא כולל את מה שאתם כותבים. אנחנו שומרים אותו שנתיים, במסד הנתונים שלנו, ומשתמשים בו רק כדי לשפר את Toogo.</li>
 <li><b>בטלפון שלכם:</b> עותק של הטיול כדי שהאפליקציה תעבוד גם בלי קליטה, ההגדרות שלכם, ואם התחלתם בלי חשבון, גם התשובות והלייקים עד שתתחברו.</li>
 </ul>
 
 <h2>מה אנחנו לא עושים</h2>
 <ul>
 <li>לא מוכרים ולא משכירים שום מידע עליכם.</li>
-<li>לא מציגים פרסומות, ולא משתמשים בכלי מעקב או בעוגיות פרסום.</li>
+<li>לא מציגים פרסומות, ולא משתמשים בכלי מעקב חיצוניים או בעוגיות פרסום. הספירה שלמעלה נשארת אצלנו.</li>
 <li>לא עוקבים אחרי המיקום שלכם.</li>
 <li>לא משתמשים בתוכן שלכם כדי לאמן מודלים של בינה מלאכותית.</li>
 </ul>

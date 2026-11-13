@@ -3,6 +3,7 @@ import { supabase } from '../supabase'
 import { readCache, writeCache } from '../lib'
 import { neverOf } from '../prefs'
 import { t } from '../i18n'
+import { track } from '../track'
 import type { Answers, InterestKind, Profile } from '../types'
 import { Icon } from '../icons'
 import { Check, ChevronRight } from 'lucide-react'
@@ -210,6 +211,8 @@ export default function Onboarding({ userId, initial, onDone, onClose, keep }: P
     const error = keep ? ((await keep(row)) ? null : true) : (await supabase.from('profiles').upsert(row, { onConflict: 'user_id' })).error
     setBusy(false)
     if (error) return setMsg(t('לא הצלחנו לשמור. בדקו את החיבור ונסו שוב.'))
+    // who answers what, in counts only (src/track.ts)
+    track('quiz_done', { guest: !!keep, with: answers.with.join(','), cities: answers.cities.length, been: answers.been_to_japan ?? null, pace: answers.pace })
     onDone(row)
   }
 

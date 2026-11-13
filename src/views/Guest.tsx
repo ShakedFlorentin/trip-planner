@@ -5,6 +5,7 @@ import { Icon, type LucideIcon } from '../icons'
 import { EmptyState, Sheet } from '../ui'
 import { Loading } from '../rings'
 import { guestCityInUrl, guestDeck, loadGuestCards, readGuest, writeGuest, type GuestState } from '../guest'
+import { track } from '../track'
 import type { Answers, Candidate } from '../types'
 import Onboarding from './Onboarding'
 import LoginCarousel from './LoginCarousel'
@@ -26,6 +27,9 @@ export default function Guest({ onSignIn }: { onSignIn: () => void }) {
   const [g, setG] = useState<GuestState>(readGuest)
   const [step, setStep] = useState<'welcome' | 'questions' | 'cards'>(() => (readGuest().answers ? 'cards' : 'welcome'))
   const city = useMemo(guestCityInUrl, [])
+  // how far visitors get: the welcome, the questions, the cards (src/track.ts)
+  const shown = step === 'welcome' ? 'welcome' : step === 'questions' || !g.answers ? 'questions' : 'cards'
+  useEffect(() => track('guest_step', { step: shown }), [shown])
   const update = (next: GuestState) => {
     writeGuest(next)
     setG(next)
@@ -82,6 +86,9 @@ function Welcome({ city, onStart, onSignIn }: { city: string | null; onStart: ()
 function GuestCards({ g, update, onPrefs, onSignIn }: { g: GuestState; update: (g: GuestState) => void; onPrefs: () => void; onSignIn: () => void }) {
   const [cards, setCards] = useState<Candidate[] | null>(null)
   const [ask, setAsk] = useState(false)
+  useEffect(() => {
+    if (ask) track('guest_ask', { liked: g.liked.length })
+  }, [ask])
   const [swiped, setSwiped] = useState(0)
   const cities = g.answers?.cities ?? []
   useEffect(() => {
@@ -98,6 +105,7 @@ function GuestCards({ g, update, onPrefs, onSignIn }: { g: GuestState; update: (
     update({ ...g, liked: liked ? [...g.liked, c.id] : g.liked, seen: [...g.seen, c.id] })
     const n = swiped + 1
     setSwiped(n)
+    if ([1, 8, 20, 50, 100].includes(n)) track('guest_swipes', { n, liked: g.liked.length + (liked ? 1 : 0) })
     if (n === PROMPT_AFTER || (n > PROMPT_AFTER && (n - PROMPT_AFTER) % PROMPT_EVERY === 0)) setAsk(true)
     return true
   }
@@ -172,7 +180,13 @@ function GuestCards({ g, update, onPrefs, onSignIn }: { g: GuestState; update: (
                 <Icon as={CalendarDays} /> <span>{t('מקבלים תוכנית יום אחרי יום, ואיפה כדאי לישון')}</span>
               </li>
             </ul>
-            <button className="primary" onClick={onSignIn}>
+            <button
+              className="primary"
+              onClick={() => {
+                track('guest_save', { liked: g.liked.length, swiped })
+                onSignIn()
+              }}
+            >
               {t('התחברות ושמירה')}
             </button>
             <button className="link" onClick={() => setAsk(false)}>

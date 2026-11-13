@@ -27,6 +27,7 @@ import { isNative } from './native'
 import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
+import { track } from './track'
 import { askForRating } from './rating'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
@@ -93,6 +94,7 @@ function AppMain() {
         }
       }
       if (s) writeCache(UID_KEY, s.user.id)
+      if (e === 'SIGNED_IN' && s) countSignIn(s.user)
       setInvited(!!s?.user.user_metadata?.invite)
       setFresh(isNewOAuth(s?.user))
       setOutboxUser(s?.user.id ?? null)
@@ -127,6 +129,15 @@ function ProfileGate({ userId, invited }: { userId: string; invited: boolean }) 
  * straight to sign-in. On a first visit the switch is read before choosing, so nobody sees the wrong screen flash.
  */
 /** A Google account with no invite: made through open sign-up (the database only lets those in while it is open). */
+/** Once per account per open: how they signed in, and whether the account was just made (its first sign-in). */
+const counted = new Set<string>()
+function countSignIn(u: { id: string; created_at?: string; app_metadata?: { provider?: string }; user_metadata?: { invite?: string } }) {
+  if (counted.has(u.id)) return
+  counted.add(u.id)
+  const made = u.created_at ? Date.now() - new Date(u.created_at).getTime() < 10 * 60_000 : false
+  track(made ? 'sign_up' : 'sign_in', { provider: u.app_metadata?.provider ?? 'email', invite: !!u.user_metadata?.invite, guest: !!pendingGuest() })
+}
+
 function isNewOAuth(u: { app_metadata?: { provider?: string }; user_metadata?: { invite?: string } } | null | undefined) {
   return !!u && u.app_metadata?.provider === 'google' && !u.user_metadata?.invite
 }
@@ -135,6 +146,10 @@ function SignedOut() {
   const { features } = useSettings()
   const known = useSettingsKnown()
   const [login, setLogin] = useState(() => !!inviteInUrl())
+  const shows = !known ? null : features.guest_mode && !login ? 'guest' : 'login'
+  useEffect(() => {
+    if (shows) track('signed_out_view', { shows, invite: !!inviteInUrl() })
+  }, [shows])
   if (!known) return <Loading />
   if (features.guest_mode && !login) return <Guest onSignIn={() => setLogin(true)} />
   return <Login onGuest={features.guest_mode ? () => setLogin(false) : undefined} google={features.google_signin && !isNative} />
@@ -235,6 +250,11 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   // the ☰ menu and what it opens: each is a sheet over the current page, so closing it returns to the same place (5)
   const [menu, setMenu] = useState(false)
   const [tool, setTool] = useState<MoreTab | null>(null)
+  // which screens and tools get used (src/track.ts)
+  useEffect(() => track('screen', { tab }), [tab])
+  useEffect(() => {
+    if (tool) track('tool', { tool })
+  }, [tool])
   const [settings, setSettings] = useState(false)
   const [prefs, setPrefs] = useState(false)
   const [reporting, setReporting] = useState(false)
