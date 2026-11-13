@@ -4,7 +4,8 @@
 -- id for the device (made on the phone, not tied to a person until they sign in), the open's id, and the account when
 -- someone is signed in. Nothing typed by a person is sent (no place names they wrote, no messages, no bookings).
 -- Kept 12 months. Only app admins can read it. Each person can turn it off in Settings (src/track.ts). app_settings features.counting = false stops it on the server too.
--- Safe to run twice.
+-- Safe to run twice. Applied 13 Nov 2026. The 12-month clean-up is in 2026-11-13-events-cleanup.sql (not applied yet:
+-- the Supabase connector asks the owner to approve anything that deletes, and its prompt did not reach the owner).
 
 create table if not exists public.events (
   id bigint generated always as identity primary key,
@@ -23,8 +24,11 @@ create index if not exists events_user on public.events (user_id) where user_id 
 alter table public.events enable row level security;
 revoke all on public.events from anon, authenticated;
 grant select on public.events to authenticated;
-drop policy if exists events_admin_read on public.events;
-create policy events_admin_read on public.events for select to authenticated using (public.is_app_admin());
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'events' and policyname = 'events_admin_read') then
+    create policy events_admin_read on public.events for select to authenticated using (public.is_app_admin());
+  end if;
+end $$;
 
 -- One call per batch: {visitor, session, events: [{name, props, at}]}, at most 30 events. A device that sends more than
 -- 300 an hour is ignored for the rest of that hour. Anything malformed is skipped; the call never fails the app.
@@ -66,10 +70,6 @@ begin
     insert into public.events (at, visitor, session, user_id, name, props) values (t, v, s, auth.uid(), e->>'name', p);
     added := added + 1;
   end loop;
-  -- now and then, events older than 12 months go
-  if random() < 0.005 then
-    delete from public.events where at < now() - interval '12 months';
-  end if;
   return added;
 end $function$;
 revoke all on function public.track(jsonb) from public;

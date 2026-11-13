@@ -3,6 +3,20 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Privacy page and usage counting (2026-11-13, live)
+- `/privacy/` and `/en/privacy/` (scripts/pages/privacy.mjs, built with the guide pages): privacy notice and terms,
+  compared with Wanderlog, TripIt, Polarsteps, Tripadvisor, Mindtrip, Layla and Israel's Amendment 13. Linked from
+  sign-in, the menu, Settings and the guide pages' footer. `CONTACT_EMAIL` is still empty (waits for the owner);
+  until then the page points to "report a problem". Change both languages together and move `UPDATED`.
+- Usage counting: `src/track.ts` → `rpc('track')` → `public.events` (supabase/sql/2026-11-13-events.sql, applied).
+  Events: open (from guide/invite/shared_plan/link/direct, lang, ios/web, installed), screen {tab}, tool {tool},
+  signed_out_view, guest_step, guest_swipes {n}, guest_ask, guest_save, quiz_done, guest_import, google_tap,
+  sign_up / sign_in {provider}, hotel_tap {area}, link_out {host}, error {msg, where}. Never typed text. Off by
+  `features.counting = false` (server too) or per device in Settings ("עזרה בשיפור Toogo", localStorage `counting`).
+  Only app admins can read the table. Exclude the owner's own rows when reading numbers.
+- NOT DONE: the 12-month clean-up (supabase/sql/2026-11-13-events-cleanup.sql). The Supabase connector asks the owner
+  to approve deletes and the prompt never reached them; needed before Nov 2027.
+
 ## Toogo before an account, and sign-up through Google (2026-11-13, in main, both switched off)
 - `features.guest_mode` (app_settings): a visitor gets a welcome, the questionnaire and real cards of their cities
   (`dist/guest/<city>.json`, built with the guide pages; no photos), swipes, and is asked to sign in to save after 8.
