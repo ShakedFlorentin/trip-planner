@@ -4,8 +4,8 @@
 -- id for the device (made on the phone, not tied to a person until they sign in), the open's id, and the account when
 -- someone is signed in. Nothing typed by a person is sent (no place names they wrote, no messages, no bookings).
 -- Kept 12 months. Only app admins can read it. Each person can turn it off in Settings (src/track.ts). app_settings features.counting = false stops it on the server too.
--- Safe to run twice. Applied 13 Nov 2026. The 12-month clean-up is in 2026-11-13-events-cleanup.sql (not applied yet:
--- the Supabase connector asks the owner to approve anything that deletes, and its prompt did not reach the owner).
+-- Safe to run twice. Applied 13 Nov 2026. The 12-month clean-up is in 2026-11-13-events-cleanup.sql (run by the
+-- owner in the SQL editor on 13 Nov 2026); it replaces track() with the same body plus the clean-up call.
 
 create table if not exists public.events (
   id bigint generated always as identity primary key,

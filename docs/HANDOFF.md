@@ -14,8 +14,9 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
   sign_up / sign_in {provider}, hotel_tap {area}, link_out {host}, error {msg, where}. Never typed text. Off by
   `features.counting = false` (server too) or per device in Settings ("עזרה בשיפור Toogo", localStorage `counting`).
   Only app admins can read the table. Exclude the owner's own rows when reading numbers.
-- NOT DONE: the 12-month clean-up (supabase/sql/2026-11-13-events-cleanup.sql). The Supabase connector asks the owner
-  to approve deletes and the prompt never reached them; needed before Nov 2027.
+- 12-month clean-up: `public.events_cleanup()` (supabase/sql/2026-11-13-events-cleanup.sql), called by `track()` on
+  about 1 call in 200. Run by the owner in the SQL editor on 13 Nov 2026 (the connector's approval prompt for deletes
+  never reached them, so changes that delete go through the owner that way).
 
 ## Toogo before an account, and sign-up through Google (2026-11-13, in main, both switched off)
 - `features.guest_mode` (app_settings): a visitor gets a welcome, the questionnaire and real cards of their cities

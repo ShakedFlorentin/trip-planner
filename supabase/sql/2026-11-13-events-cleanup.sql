@@ -1,5 +1,5 @@
 -- Usage counting is kept 12 months (the privacy page says so). Paste this whole file once into Supabase's SQL editor
--- and press Run. Safe to run twice. It adds public.events_cleanup() and has public.track() call it now and then.
+-- and press Run. Run by the owner on 13 Nov 2026. Safe to run twice. It adds public.events_cleanup() and has public.track() call it now and then.
 
 create or replace function public.events_cleanup()
  returns void
