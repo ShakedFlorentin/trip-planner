@@ -58,6 +58,11 @@ const WITH: Opt<Answers['with'][number]>[] = [
   { id: 'friends', label: t('חברים') },
   { id: 'solo', label: t('לבד') },
 ]
+// a first visit gets more nights in Tokyo and the classic line first when the trip's nights are split between cities
+const BEEN: Opt<boolean>[] = [
+  { id: false, label: t('זו הפעם הראשונה') },
+  { id: true, label: t('כבר היינו ביפן') },
+]
 const CITIES: Opt<Answers['cities'][number]>[] = [
   { id: 'tokyo', label: t('טוקיו') },
   { id: 'kyoto', label: t('קיוטו') },
@@ -89,7 +94,7 @@ const LEVELS: Opt<Answers['interest'][InterestKind]>[] = [
   { id: 'ok', label: t('אפשר') },
   { id: 'no', label: t('לא בשבילנו') },
 ]
-// question 4 asks what they eat; whatever is left unticked is saved as `never`
+// question 5 asks what they eat; whatever is left unticked is saved as `never`
 const EATS: Opt<Answers['never'][number]>[] = [
   { id: 'chicken', label: t('עוף') },
   { id: 'beef', label: t('בקר') },
@@ -122,12 +127,14 @@ const MAX_LOVES = 3
 /** The answers so far: a single choice not made yet is undefined (budget's "doesn't matter" is null). */
 type Draft = Omit<Answers, 'interest' | 'kosher' | 'budget' | 'pace'> & {
   interest: Partial<Answers['interest']>
+  been_to_japan?: boolean
   budget?: Answers['budget']
   pace?: Answers['pace']
 }
 
 const QUESTIONS: { title: string; hint?: string; ready: (d: Draft) => boolean }[] = [
   { title: t('עם מי אתם נוסעים?'), hint: t('אפשר לבחור כמה'), ready: (d) => d.with.length > 0 },
+  { title: t('הייתם כבר ביפן?'), hint: t('ככה נדע כמה זמן כדאי לתת לטוקיו'), ready: (d) => d.been_to_japan !== undefined },
   { title: t('אילו ערים בתוכנית?'), hint: t('אפשר לבחור כמה'), ready: (d) => d.cities.length > 0 },
   { title: t('כמה כל סוג מקום מעניין אתכם?'), ready: (d) => KINDS.every((k) => d.interest[k.id]) },
   { title: t('מה אתם אוכלים?'), hint: t('מסמנים את כל מה שאוכלים'), ready: () => true },
@@ -149,6 +156,7 @@ type Props = {
 export default function Onboarding({ userId, initial, onDone, onClose }: Props) {
   const [d, setD] = useState<Draft>(() => ({
     with: initial?.with ?? [],
+    been_to_japan: initial?.been_to_japan,
     cities: initial?.cities ?? [],
     interest: initial?.interest ?? {},
     never: initial ? neverOf(initial) : [],
@@ -182,6 +190,7 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
   const save = async () => {
     const answers: Answers = {
       with: d.with,
+      been_to_japan: d.been_to_japan,
       cities: d.cities,
       interest: d.interest as Answers['interest'],
       never: d.never,
@@ -250,8 +259,9 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
               pick={(v) => set('with', v === 'solo' ? (d.with.includes('solo') ? [] : ['solo']) : toggle(d.with.filter((x) => x !== 'solo'), v))}
             />
           )}
-          {step === 1 && <Chips opts={CITIES} on={d.cities} pick={(v) => set('cities', toggle(d.cities, v))} />}
-          {step === 2 && (
+          {step === 1 && <Choice opts={BEEN} on={d.been_to_japan} pick={(v) => set('been_to_japan', v)} />}
+          {step === 2 && <Chips opts={CITIES} on={d.cities} pick={(v) => set('cities', toggle(d.cities, v))} />}
+          {step === 3 && (
             <div className="ob-rows">
               {KINDS.map((k) => (
                 <div key={k.id} className="ob-row">
@@ -276,14 +286,14 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
               ))}
             </div>
           )}
-          {step === 3 && (
+          {step === 4 && (
             <Chips
               opts={EATS}
               on={EATS.map((o) => o.id).filter((id) => !d.never.includes(id))}
               pick={(v) => set('never', toggle(d.never, v))}
             />
           )}
-          {step === 4 && (
+          {step === 5 && (
             <Chips
               opts={LOVES}
               on={d.loves}
@@ -292,8 +302,8 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
               pick={(v) => set('loves', toggle(d.loves, v))}
             />
           )}
-          {step === 5 && <Choice opts={BUDGETS} on={d.budget} pick={(v) => set('budget', v)} />}
-          {step === 6 && <Choice opts={PACES} on={d.pace} pick={(v) => set('pace', v)} />}
+          {step === 6 && <Choice opts={BUDGETS} on={d.budget} pick={(v) => set('budget', v)} />}
+          {step === 7 && <Choice opts={PACES} on={d.pace} pick={(v) => set('pace', v)} />}
           {last && (
             <div className="ob-final">
               <span className="ob-final-mark" aria-hidden="true">

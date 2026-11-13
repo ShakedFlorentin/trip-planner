@@ -411,12 +411,14 @@ export type Report = {
 /** One person's getting-to-know-you answers (profiles.answers); the planner reads `pace`. */
 export type Answers = {
   with: ('partner' | 'baby' | 'kids' | 'friends' | 'solo')[]
+  /** been to Japan before (older saves don't have it: the night split then counts a first visit) */
+  been_to_japan?: boolean
   cities: (
     | 'tokyo' | 'kyoto' | 'osaka' | 'nara' | 'daytrip'
     | 'hakone' | 'nikko' | 'kobe' | 'hiroshima' | 'kanazawa' | 'takayama' | 'fukuoka' | 'nagoya' | 'sapporo' | 'okinawa'
   )[]
   interest: Record<InterestKind, 'love' | 'ok' | 'no'>
-  /** what they don't eat (question 4 asks what they do eat; 'raw_fish' and 'alcohol' only come from older saves) */
+  /** what they don't eat (question 5 asks what they do eat; 'raw_fish' and 'alcohol' only come from older saves) */
   never: ('chicken' | 'beef' | 'pork' | 'fish' | 'seafood' | 'raw_fish' | 'alcohol')[]
   /** only in older saves (the kosher question is gone); answersOf folds it into `never` */
   kosher?: 'any' | 'prefer' | 'only'
