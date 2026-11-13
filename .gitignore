@@ -2,3 +2,5 @@ node_modules
 dist
 *.local
 *.tsbuildinfo
+# Supabase CLI cache (written by functions deploy/download)
+supabase/.temp
