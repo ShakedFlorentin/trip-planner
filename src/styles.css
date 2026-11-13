@@ -939,7 +939,8 @@ html[dir='rtl'] .pass-plane { transform: rotate(-135deg); }
 
 /* swipe rows (swipe.tsx): the card slides aside over round capsules on its end side, or one on its start side */
 .swipe-row { position: relative; overflow-x: clip; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.swipe-card { position: relative; z-index: 1; will-change: transform; }
+/* only a list row's sliding layer: the game's cards (.deck > .swipe-card) stay stacked on top of each other */
+.swipe-row > .swipe-card { position: relative; z-index: 1; will-change: transform; }
 /* a list row's sliding layer is not the game's card: flat, like the video's rows (no lifted shadow, no fill of its own) */
 .swipe-row > .swipe-card { inset: auto; display: block; overflow: visible; background: none; border-radius: 16px; box-shadow: none; transition: none; }
 .swipe-acts { position: absolute; z-index: 0; inset-block: 0; padding-inline: 8px; gap: 8px; display: flex; align-items: center; visibility: hidden; }
