@@ -1,4 +1,5 @@
-// Saves the live library cards the public pages are built from: data/pages/cards.json (npm run pages:data).
+// Saves the live library cards the public pages and the visitors' Discover are built from: data/pages/cards.json
+// (npm run pages:data).
 // Only switched-on cards that we wrote (none added from a trip), and only fields fit for a public page: no photos (their
 // licences aren't settled), no Instagram/TikTok or source links, no opening hours (they go stale; the app re-checks).
 // Reads through Supabase's Management API: needs SUPABASE_ACCESS_TOKEN (a personal token, sbp_…), or a session whose
@@ -12,7 +13,7 @@ const out = join(dirname(fileURLToPath(import.meta.url)), '../../data/pages/card
 const sql = `
   select id, name, name_ja, city, area, category, price, hype, reality, tip, serves, dishes, todo, special, highlights,
          time_needed, kosher, kosher_note, audience, baby_notes, address, maps_url, website_url, tabelog_score,
-         google_score, local_pick, verdict,
+         google_score, local_pick, verdict, baby_block, tags,
          en - 'plan_line' - 'baby_block' as en
     from public.place_library
    where active and added_from_trip is null

@@ -1,0 +1,26 @@
+/* Toogo before an account (src/views/Guest.tsx): the welcome, and Discover with a "save your trip" bar */
+.guest-welcome { gap: 14px; }
+.guest-lead { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.guest-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; text-align: start; }
+.guest-lines li { display: flex; align-items: center; gap: 10px; }
+.guest-lines .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
+.guest-note { margin: -4px 0 0; }
+
+.guest-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100dvh;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: calc(10px + env(safe-area-inset-top)) 16px calc(12px + env(safe-area-inset-bottom));
+}
+.guest-top { flex: none; display: flex; align-items: center; gap: 10px; min-height: 52px; }
+.guest-prefs { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: var(--fill); color: var(--text); }
+.guest-prefs .ic { width: 20px; height: 20px; }
+.guest-count { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guest-count .ic { flex: none; width: 18px; height: 18px; color: var(--accent); }
+/* a capsule its own size, not the full-width button the app's .primary is elsewhere */
+.guest-top .guest-save { flex: none; width: auto; min-height: 40px; padding: 8px 16px; }
+.guest-spacer { visibility: hidden; }
+.guest-ask p { margin: 0; }

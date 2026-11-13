@@ -9,14 +9,15 @@ import { supabase } from './supabase'
  */
 export type Settings = {
   swipe_batch_size: number
-  features: { share_extension: boolean; rating_prompt: boolean }
+  /** guest_mode: someone not signed in starts with the questionnaire and real cards, and signs in to save (off by default) */
+  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean }
   free_places_per_trip: number
   trip_pass_price: { usd: number; ils: number }
 }
 
 export const DEFAULTS: Settings = {
   swipe_batch_size: 20,
-  features: { share_extension: true, rating_prompt: true },
+  features: { share_extension: true, rating_prompt: true, guest_mode: false },
   free_places_per_trip: 10,
   trip_pass_price: { usd: 7.99, ils: 29 },
 }
@@ -37,6 +38,7 @@ export function parseSettings(rows: Record<string, unknown>): Settings {
     features: {
       share_extension: bool(f.share_extension, DEFAULTS.features.share_extension),
       rating_prompt: bool(f.rating_prompt, DEFAULTS.features.rating_prompt),
+      guest_mode: bool(f.guest_mode, DEFAULTS.features.guest_mode),
     },
     free_places_per_trip: Math.round(num(rows.free_places_per_trip, DEFAULTS.free_places_per_trip)),
     trip_pass_price: { usd: num(p.usd, DEFAULTS.trip_pass_price.usd), ils: num(p.ils, DEFAULTS.trip_pass_price.ils) },
@@ -52,6 +54,8 @@ const saved = (): Record<string, unknown> => {
 }
 
 let current = parseSettings(saved())
+// whether the values come from the server (now or on an earlier visit), not only the defaults
+let known = Object.keys(saved()).length > 0
 const listeners = new Set<() => void>()
 
 /** The settings now (defaults until the first read). */
@@ -69,10 +73,28 @@ export async function loadSettings() {
       // private mode: this start still uses the values just read
     }
     current = parseSettings(rows)
+    known = true
     listeners.forEach((l) => l())
   } catch {
     // offline: the saved values or the defaults stay
+  } finally {
+    // asked once, answered or not: whoever waits for the first answer stops waiting
+    if (!known) {
+      known = true
+      listeners.forEach((l) => l())
+    }
   }
+}
+
+/** True once the settings have been read from the server, on this visit or an earlier one (or the first try failed). */
+export function useSettingsKnown() {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l)
+      return () => listeners.delete(l)
+    },
+    () => known,
+  )
 }
 
 /** A screen's view of the settings: it draws again when they change. */

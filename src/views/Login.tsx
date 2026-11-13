@@ -32,7 +32,7 @@ export function toEmail(typed: string) {
 // email-confirmation link brings people back without the query string
 const INVITE_KEY = 'invite'
 
-const inviteInUrl = () => new URLSearchParams(location.search).get('invite')?.trim() || null
+export const inviteInUrl = () => new URLSearchParams(location.search).get('invite')?.trim() || null
 
 function savedInvite() {
   try {
@@ -72,7 +72,27 @@ async function signupFailure(error: unknown) {
   return t('ההרשמה לא הצליחה. נסו שוב.')
 }
 
-export default function Login() {
+/** The Toogo stacked logo: red rings, the name in the text colour (brand/toogo/kit/masters/toogo-stacked.svg). */
+export function ToogoLogo() {
+  return (
+    <h1 className="login-logo">
+      <svg viewBox="60 50 420 343" role="img" aria-label="Toogo">
+        <path
+          className="logo-rings"
+          transform="translate(142 0)"
+          d="M24 142A48 48 0 1 1 120 142A48 48 0 1 1 24 142ZM44 142A28 28 0 1 0 100 142A28 28 0 1 0 44 142ZM136 114A48 48 0 1 1 232 114A48 48 0 1 1 136 114ZM156 114A28 28 0 1 0 212 114A28 28 0 1 0 156 114Z"
+        />
+        <path
+          fill="currentColor"
+          transform="translate(76.86 199.44) scale(0.74)"
+          d="M20 44H40V126A30 30 0 0 0 70 156V176A50 50 0 0 1 20 126ZM4 78H70V98H4ZM82 126A50 50 0 1 1 182 126A50 50 0 1 1 82 126ZM102 126A30 30 0 1 0 162 126A30 30 0 1 0 102 126ZM194 112A50 50 0 1 1 294 112A50 50 0 1 1 194 112ZM214 112A30 30 0 1 0 274 112A30 30 0 1 0 214 112ZM306 126A50 50 0 1 1 406 126A50 50 0 1 1 306 126ZM326 126A30 30 0 1 0 386 126A30 30 0 1 0 326 126ZM386 76H406V190A50 50 0 0 1 356 240H326V220H356A30 30 0 0 0 386 190ZM418 126A50 50 0 1 1 518 126A50 50 0 1 1 418 126ZM438 126A30 30 0 1 0 498 126A30 30 0 1 0 438 126Z"
+        />
+      </svg>
+    </h1>
+  )
+}
+
+export default function Login({ onGuest }: { onGuest?: () => void } = {}) {
   const [invite] = useState(() => {
     const code = inviteInUrl()
     if (code)
@@ -142,21 +162,7 @@ export default function Login() {
 
   return (
     <div className="login">
-      <h1 className="login-logo">
-        {/* the Toogo stacked logo (brand/toogo/kit/masters/toogo-stacked.svg): red rings, the name in the text colour */}
-        <svg viewBox="60 50 420 343" role="img" aria-label="Toogo">
-          <path
-            className="logo-rings"
-            transform="translate(142 0)"
-            d="M24 142A48 48 0 1 1 120 142A48 48 0 1 1 24 142ZM44 142A28 28 0 1 0 100 142A28 28 0 1 0 44 142ZM136 114A48 48 0 1 1 232 114A48 48 0 1 1 136 114ZM156 114A28 28 0 1 0 212 114A28 28 0 1 0 156 114Z"
-          />
-          <path
-            fill="currentColor"
-            transform="translate(76.86 199.44) scale(0.74)"
-            d="M20 44H40V126A30 30 0 0 0 70 156V176A50 50 0 0 1 20 126ZM4 78H70V98H4ZM82 126A50 50 0 1 1 182 126A50 50 0 1 1 82 126ZM102 126A30 30 0 1 0 162 126A30 30 0 1 0 102 126ZM194 112A50 50 0 1 1 294 112A50 50 0 1 1 194 112ZM214 112A30 30 0 1 0 274 112A30 30 0 1 0 214 112ZM306 126A50 50 0 1 1 406 126A50 50 0 1 1 306 126ZM326 126A30 30 0 1 0 386 126A30 30 0 1 0 326 126ZM386 76H406V190A50 50 0 0 1 356 240H326V220H356A30 30 0 0 0 386 190ZM418 126A50 50 0 1 1 518 126A50 50 0 1 1 418 126ZM438 126A30 30 0 1 0 498 126A30 30 0 1 0 438 126Z"
-          />
-        </svg>
-      </h1>
+      <ToogoLogo />
       <p className="muted">
         {mode === 'signup' ? t('הוזמנתם לטיול. יוצרים חשבון ומצטרפים.') : t('מסלול, הזמנות והוצאות במקום אחד')}
       </p>
@@ -232,6 +238,11 @@ export default function Login() {
             </p>
           )}
         </form>
+      )}
+      {onGuest && !invite && (
+        <button className="link" onClick={onGuest}>
+          {t('אין לכם חשבון? מתחילים בלי')}
+        </button>
       )}
       {invite &&
         (mode === 'signup' ? (

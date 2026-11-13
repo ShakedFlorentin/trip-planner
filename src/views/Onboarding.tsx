@@ -148,12 +148,17 @@ type Props = {
   /** the saved answers, when opened again from settings */
   initial?: Partial<Answers> | null
   onDone: (p: Profile) => void
+  /**
+   * Keeps the answers somewhere other than the profiles table: a visitor who has no account yet keeps them on the
+   * phone (src/guest.ts). True when they were kept.
+   */
+  keep?: (row: Profile) => boolean | Promise<boolean>
   /** from settings only: a new person has to answer before the app opens */
   onClose?: () => void
 }
 
 /** The getting-to-know-you questions, one per screen, full screen. Saving tailors the Discover deck to this person. */
-export default function Onboarding({ userId, initial, onDone, onClose }: Props) {
+export default function Onboarding({ userId, initial, onDone, onClose, keep }: Props) {
   const [d, setD] = useState<Draft>(() => ({
     with: initial?.with ?? [],
     been_to_japan: initial?.been_to_japan,
@@ -202,7 +207,7 @@ export default function Onboarding({ userId, initial, onDone, onClose }: Props) 
     const row: Profile = { user_id: userId, answers, completed_at: now, updated_at: now }
     setBusy(true)
     setMsg('')
-    const { error } = await supabase.from('profiles').upsert(row, { onConflict: 'user_id' })
+    const error = keep ? ((await keep(row)) ? null : true) : (await supabase.from('profiles').upsert(row, { onConflict: 'user_id' })).error
     setBusy(false)
     if (error) return setMsg(t('לא הצלחנו לשמור. בדקו את החיבור ונסו שוב.'))
     onDone(row)

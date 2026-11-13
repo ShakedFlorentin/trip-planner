@@ -508,7 +508,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   )
 }
 
-function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: boolean; likedBy: string[]; prior?: number; onSwipe: (liked: boolean) => Promise<boolean> }) {
+export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: boolean; likedBy: string[]; prior?: number; onSwipe: (liked: boolean) => Promise<boolean> }) {
   const [dx, setDx] = useState(0)
   const [more, setMore] = useState(false)
   const [photo, setPhoto] = useState(0)

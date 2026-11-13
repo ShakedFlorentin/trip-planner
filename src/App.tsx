@@ -6,7 +6,7 @@ import type { Member, Trip } from './types'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
 import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
-import Login from './views/Login'
+import Login, { inviteInUrl } from './views/Login'
 import TripPicker from './views/TripPicker'
 import Home from './views/Home'
 import Itinerary from './views/Itinerary'
@@ -22,6 +22,10 @@ import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
 import { Loading } from './rings'
 import { useQuickAddRoute } from './quickAdd'
+import { useSettings, useSettingsKnown } from './settings'
+import Guest from './views/Guest'
+import GuestImport from './views/GuestImport'
+import { forgetGuest, pendingGuest } from './guest'
 import { askForRating } from './rating'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
@@ -79,7 +83,7 @@ function AppMain() {
         // nothing of this account is left for whoever signs in next on this device
         forgetPendingShare()
         try {
-          for (const k of ['tripId', 'invite', 'translator-turns']) localStorage.removeItem(k)
+          for (const k of ['tripId', 'invite', 'translator-turns', 'guest']) localStorage.removeItem(k)
         } catch {
           // nothing remembered to forget
         }
@@ -93,7 +97,7 @@ function AppMain() {
   }, [])
 
   if (userId === undefined) return <Loading />
-  if (!userId) return <Login />
+  if (!userId) return <SignedOut />
   return invited ? <ProfileGate key={userId} userId={userId} /> : <TripGate userId={userId} />
 }
 
@@ -105,8 +109,23 @@ function AppMain() {
 function ProfileGate({ userId }: { userId: string }) {
   const { profile, failed, saved } = useProfile(userId)
   if (profile === undefined) return <Loading />
-  if (!profile?.completed_at && !(failed && !profile)) return <Onboarding userId={userId} initial={profile?.answers} onDone={saved} />
-  return <TripGate userId={userId} />
+  if (!profile?.completed_at && !(failed && !profile))
+    return <Onboarding userId={userId} initial={profile?.answers ?? pendingGuest()?.answers} onDone={saved} />
+  return <TripGate userId={userId} invited />
+}
+
+/**
+ * Not signed in. With guest mode on (app_settings features.guest_mode) a visitor starts with the questionnaire and
+ * real cards (Guest) and signs in only to save; an invite link, "I already have an account" or guest mode off go
+ * straight to sign-in. On a first visit the switch is read before choosing, so nobody sees the wrong screen flash.
+ */
+function SignedOut() {
+  const { features } = useSettings()
+  const known = useSettingsKnown()
+  const [login, setLogin] = useState(() => !!inviteInUrl())
+  if (!known) return <Loading />
+  if (features.guest_mode && !login) return <Guest onSignIn={() => setLogin(true)} />
+  return <Login onGuest={features.guest_mode ? () => setLogin(false) : undefined} />
 }
 
 function savedTrip() {
@@ -117,13 +136,19 @@ function savedTrip() {
   }
 }
 
-function TripGate({ userId }: { userId: string }) {
+function TripGate({ userId, invited = false }: { userId: string; invited?: boolean }) {
   // open on the last trip at once (no waiting for a network that may not be there); the check below corrects it
   const [tripId, setTripId] = useState<string | null | undefined>(() => savedTrip() ?? undefined)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   // a shared plan the person asked to copy before signing in: offered once they are in
   const [offer, setOffer] = useState(pendingShare)
+  // what a visitor answered and liked before making the account: carried into it once the trip is known. Someone who
+  // came by invite joins their friend's trip instead (their answers already went into the questionnaire), so it's dropped
+  const [guest, setGuest] = useState(() => (invited ? null : pendingGuest()))
+  useEffect(() => {
+    if (invited) forgetGuest()
+  }, [invited])
 
   const choose = (id: string | null) => {
     try {
@@ -172,6 +197,18 @@ function TripGate({ userId }: { userId: string }) {
     )
   if (failed) return <LoadError onRetry={() => setAttempt((a) => a + 1)} />
   if (tripId === undefined) return <Loading />
+  if (guest)
+    return (
+      <GuestImport
+        userId={userId}
+        guest={guest}
+        tripId={tripId}
+        onDone={(id) => {
+          setGuest(null)
+          choose(id)
+        }}
+      />
+    )
   if (!tripId) return <TripPicker onPick={choose} />
   return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
 }

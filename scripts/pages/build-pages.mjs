@@ -107,7 +107,7 @@ const T = {
 const pathOf = (lang, ...parts) => (lang === 'en' ? 'en/' : '') + ['japan', ...parts].join('/') + '/'
 const rel = (fromDepth) => '../'.repeat(fromDepth)
 
-function page({ lang, path, title, description, h1, lead, body, crumbs, alt, jsonld }) {
+function page({ lang, path, title, description, h1, lead, body, crumbs, alt, jsonld, city }) {
   const t = T[lang]
   const depth = path.split('/').filter(Boolean).length
   const up = rel(depth)
@@ -141,7 +141,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 ${crumbs ? `<div class="crumbs">${crumbs}</div>` : ''}
 <h1>${esc(h1)}</h1>
 ${lead ? `<p class="lead">${esc(lead)}</p>` : ''}
-<a class="cta" href="${up}">${t.cta}</a>
+<a class="cta" href="${up}?${city && city !== 'daytrip' ? `city=${city}&` : ''}lang=${lang}">${t.cta}</a>
 ${body}
 <p class="note">${esc(t.note)} ${t.updated}: ${exported}.</p>
 </main>
@@ -273,6 +273,7 @@ for (const lang of ['he', 'en']) {
         crumbs: home(1),
         body: tabs(lang, id, '') + sections,
         jsonld: itemList(city, sorted),
+        city: id,
       }),
     )
 
@@ -298,6 +299,7 @@ for (const lang of ['he', 'en']) {
           crumbs: `${home(2)} › <a href="../">${esc(city)}</a>`,
           body: tabs(lang, id, 'food-no-pork-seafood') + food.map((c) => placeCard(c, lang, id, { food: true })).join('\n'),
           jsonld: itemList(en ? `Food without pork or seafood in ${city}` : `אוכל בלי חזיר ופירות ים ב${city}`, food),
+        city: id,
         }),
       )
     }
@@ -322,6 +324,7 @@ for (const lang of ['he', 'en']) {
             ? 'Sleep close to the places you want to see. In Toogo the plan picks the area for you from the places your group liked.'
             : 'כדאי לישון קרוב למקומות שרוצים לראות. ב-Toogo התוכנית בוחרת את האזור בשבילכם, לפי המקומות שהקבוצה אהבה.',
           crumbs: `${home(2)} › <a href="../">${esc(city)}</a>`,
+          city: id,
           body:
             tabs(lang, id, 'where-to-stay') +
             ordered
@@ -341,6 +344,17 @@ for (const lang of ['he', 'en']) {
     }
   }
 }
+
+// the cards a visitor swipes before signing in (src/guest.ts): one file per city, the same public fields as the pages
+// plus what the deck needs to fit them to the questionnaire (search words, the baby line). No photos, no hours
+mkdirSync(join(DIST, 'guest'), { recursive: true })
+const guestIndex = {}
+for (const [id, list0] of byCity) {
+  const rows = list0.map((c) => ({ ...c, en: c.en ?? null }))
+  writeFileSync(join(DIST, 'guest', `${id}.json`), JSON.stringify(rows))
+  guestIndex[id] = rows.length
+}
+writeFileSync(join(DIST, 'guest', 'index.json'), JSON.stringify({ exported, cities: guestIndex }))
 
 // sitemap and robots
 const today = exported

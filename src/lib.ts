@@ -34,6 +34,8 @@ export function useTripHasBaby(tripId: string): boolean {
   const key = 'baby:' + tripId
   const [has, setHas] = useState<boolean>(() => readCache<boolean>(key)?.data ?? true)
   useEffect(() => {
+    // a visitor's card has no trip: nothing to ask
+    if (!tripId) return
     let live = true
     const load = () => {
       let ask = babyAsks.get(tripId)
@@ -74,6 +76,7 @@ export function useTripAvoidsPorkSeafood(tripId: string): boolean {
   const key = 'food:' + tripId
   const [avoids, setAvoids] = useState<boolean>(() => readCache<boolean>(key)?.data ?? true)
   useEffect(() => {
+    if (!tripId) return
     let live = true
     const load = () => {
       let ask = foodAsks.get(tripId)
