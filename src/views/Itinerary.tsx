@@ -13,7 +13,8 @@ import { reducedMotion } from '../spring'
 import { SwipeRow } from '../swipe'
 import { CardFull } from './Swipe'
 import { ShareSheet } from './Share'
-import StaysSheet, { recommendedArea } from './Stays'
+import StaysSheet, { NightsSheet, SplitSheet, SplitStart, nightsWithoutCity, recommendedArea } from './Stays'
+import { requestAddBooking } from '../quickAdd'
 import { useStays } from '../stays'
 import {
   ARRIVAL,
@@ -48,6 +49,17 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   const [sharing, setSharing] = useState(false)
   const [showStays, setShowStays] = useState(false)
   const { stays, cities, available: staysAvailable } = useStays(trip.id)
+  // nights in no city yet: the starting card offers the three ways in, until they are all set or the card is put off
+  const noCity = staysAvailable ? nightsWithoutCity(trip.start_date, trip.num_days, stays) : []
+  const laterKey = 'splitStartLater:' + trip.id
+  const [later, setLater] = useState(() => {
+    try {
+      return localStorage.getItem(laterKey) === '1'
+    } catch {
+      return false
+    }
+  })
+  const [splitWay, setSplitWay] = useState<'nights' | 'suggest' | null>(null)
   // the item whose sheet is open: what the place is and what else is around it
   const [openId, setOpenId] = useState<string | null>(null)
   const stripRef = useRef<HTMLDivElement>(null)
@@ -175,6 +187,23 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         <p className="strip-legend muted small">
           <RingsIcon one /> {t('יום שלא כולם ביחד')}
         </p>
+      )}
+
+      {noCity.length > 0 && !later && (
+        <SplitStart
+          open={noCity.length}
+          onBooked={() => requestAddBooking('hotel')}
+          onNights={() => setSplitWay('nights')}
+          onSuggest={() => setSplitWay('suggest')}
+          onLater={() => {
+            setLater(true)
+            try {
+              localStorage.setItem(laterKey, '1')
+            } catch {
+              // private mode: it comes back next time, which is fine
+            }
+          }}
+        />
       )}
 
       {/* the day as in the promo video: its title, then a photo of the day's city with the name on it; whose day it is and
@@ -306,6 +335,8 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
       {editItem && (
         <ItemForm tripId={trip.id} start={trip.start_date} numDays={trip.num_days} couples={couples} item={editItem} onClose={() => setEditItem(null)} />
       )}
+      {splitWay === 'nights' && <NightsSheet tripId={trip.id} stays={stays} cities={cities} onClose={() => setSplitWay(null)} />}
+      {splitWay === 'suggest' && <SplitSheet tripId={trip.id} stays={stays} cities={cities} onClose={() => setSplitWay(null)} />}
       {showStays && (
         <StaysSheet
           tripId={trip.id}

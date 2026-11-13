@@ -22,6 +22,22 @@ export function requestAddLink(url: string) {
   requestAdd('place')
 }
 
+// the kind of booking asked for ("We booked hotels" on Plan's first step), for the new-booking form
+let pendingBookingKind: string | null = null
+
+/** A new booking of this kind: the Bookings tab opens on it, with the form set to it. */
+export function requestAddBooking(kind: string) {
+  pendingBookingKind = kind
+  requestAdd('booking')
+}
+
+/** The booking kind asked for, once; null when the form was opened some other way. */
+export function takeBookingKind() {
+  const k = pendingBookingKind
+  pendingBookingKind = null
+  return k
+}
+
 /** The shared link waiting for the add-place sheet, once; '' when the sheet was opened some other way. */
 export function takeSharedLink() {
   const url = pendingLink ?? ''

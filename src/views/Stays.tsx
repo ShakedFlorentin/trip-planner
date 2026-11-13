@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BedDouble, Bus, CalendarRange, Lock, MapPin, Minus, Plus, Search, TrainFront, Wand2 } from 'lucide-react'
+import { BedDouble, Bus, CalendarRange, ChevronLeft, Lock, MapPin, Minus, Plus, Search, Ticket, TrainFront, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { askSplit, suggestSplits, type NightCount, type SplitAlt } from '../stays'
 import { TOGETHER, whoOptions, type Booking, type City, type StayAreaPick, type StayAreaRec, type TripStay } from '../types'
@@ -9,7 +9,7 @@ import { AREAS, type Area } from '../areas'
 import { hotelSearchUrl } from '../affiliate'
 import { openExternal } from '../native'
 import { Empty, Field, Sheet } from '../ui'
-import { Icon } from '../icons'
+import { Icon, type LucideIcon } from '../icons'
 import { cityName, stayLabel } from './planUtils'
 
 const dayMs = 86400000
@@ -217,6 +217,61 @@ function reasonText(r: SplitAlt['reason']) {
   return t('איזון בין מקומות להחלפות: {places}. {moves}.', { moves, places })
 }
 
+/**
+ * The nights of the trip with no city yet: on none of them does any stay (booked, typed, or proposed) say where
+ * anyone sleeps. The last day has no night. Empty without a start date or before the stays table exists.
+ */
+export function nightsWithoutCity(start: string | null, numDays: number, stays: TripStay[]) {
+  if (!start || numDays < 2) return []
+  const out: string[] = []
+  for (let i = 0; i < numDays - 1; i++) {
+    const d = addDays(start, i)
+    if (!stays.some((s) => s.check_in <= d && d < s.check_out)) out.push(d)
+  }
+  return out
+}
+
+/**
+ * The first step of a trip with nights in no city yet: three ways in, by what the group already knows. Booked hotels
+ * (a booking fills its nights by itself), the nights per city, or only flights (the planner suggests a split).
+ * "Later" hides it for this trip on this phone; "Where we sleep" still has all three.
+ */
+export function SplitStart({ open, onBooked, onNights, onSuggest, onLater }: { open: number; onBooked: () => void; onNights: () => void; onSuggest: () => void; onLater: () => void }) {
+  const ways: { icon: LucideIcon; title: string; line: string; go: () => void }[] = [
+    { icon: Ticket, title: t('הזמנו מלונות'), line: t('מוסיפים את ההזמנה, והלילות מתמלאים לבד'), go: onBooked },
+    { icon: CalendarRange, title: t('יודעים כמה לילות בכל עיר'), line: t('בוחרים ערים ולילות, ואנחנו מסדרים לפי הטיסות'), go: onNights },
+    { icon: Wand2, title: t('רק טיסות, תציעו לנו'), line: t('חלוקה לפי הטיסות ומה שמקובל בכל עיר'), go: onSuggest },
+  ]
+  return (
+    <section className="card split-start" aria-labelledby="split-start-title">
+      <div className="stay-rec-head">
+        <span className="stay-rec-mark">
+          <Icon as={BedDouble} />
+        </span>
+        <div className="stay-rec-text">
+          <b id="split-start-title">{t('איך מחלקים את הטיול בין ערים?')}</b>
+          <span className="small muted">{open === 1 ? t('ללילה אחד עוד אין עיר') : t('ל-{n} לילות עוד אין עיר', { n: open })}</span>
+        </div>
+      </div>
+      <div className="split-ways">
+        {ways.map((w) => (
+          <button key={w.title} className="split-way" onClick={w.go}>
+            <Icon as={w.icon} />
+            <span>
+              <b>{w.title}</b>
+              <span className="small muted">{w.line}</span>
+            </span>
+            <Icon as={ChevronLeft} className="chev flip-ltr" />
+          </button>
+        ))}
+      </div>
+      <button className="link split-later" onClick={onLater}>
+        {t('אחר כך')}
+      </button>
+    </section>
+  )
+}
+
 /** Replaces the planner's earlier proposals with this split. Confirmed, locked and typed-in stays are never touched. */
 async function saveSplit(tripId: string, stays: TripStay[], a: SplitAlt) {
   const old = stays.filter((s) => s.source === 'auto' && s.status === 'proposed' && !s.locked).map((s) => s.id)
@@ -266,7 +321,7 @@ function AltCard({ a, cities, saving, onUse, why = true }: { a: SplitAlt; cities
 }
 
 /** "Suggest a split": 2-3 ways to spread the open nights between cities; "use this" saves one as proposed stays. */
-function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
+export function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
   const [alts, setAlts] = useState<SplitAlt[] | 'loading' | 'error'>('loading')
   const [saving, setSaving] = useState(false)
   useEffect(() => {
@@ -302,7 +357,7 @@ function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays:
  * "We know how many nights in each city": the cities and their nights (filled in with the planner's own suggestion to
  * start from), then the planner chooses the order and the dates by the flights and the route, keeping the counts.
  */
-function NightsSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
+export function NightsSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
   const [open, setOpen] = useState<number | null | 'error'>(null)
   const [counts, setCounts] = useState<NightCount[]>([])
   const [alts, setAlts] = useState<SplitAlt[] | 'loading' | 'error' | null>(null)

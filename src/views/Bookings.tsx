@@ -10,7 +10,7 @@ import { isNative, openExternal } from '../native'
 import { RingsIcon } from '../rings'
 import { WhoChips, shows, validWho, type Who } from '../who'
 import QuickFab from './QuickFab'
-import { useQuickAdd } from '../quickAdd'
+import { takeBookingKind, useQuickAdd } from '../quickAdd'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -35,7 +35,12 @@ export default function Bookings({ trip, members, userId }: Props) {
   const tabs = Object.keys(BOOKING_TABS).filter((k, i) => i < 4 || rows.some((b) => kindOf(b) === k))
   const [tab, pick] = useRemembered('bookingsTab', 'flight')
   const current = tabs.includes(tab) ? tab : 'flight'
-  useQuickAdd('booking', () => setEdit({ kind: current, who: myCouple }))
+  useQuickAdd('booking', () => {
+    // asked for a kind (Plan's "We booked hotels"): the form and the tab open on it
+    const kind = takeBookingKind()
+    if (kind && BOOKING_TABS[kind]) pick(kind)
+    setEdit({ kind: kind ?? current, who: myCouple })
+  })
   // by date, then whose; bookings with no date go last
   const items = shown
     .filter((b) => kindOf(b) === current)

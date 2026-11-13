@@ -241,3 +241,12 @@
 .nights-step button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--fill); color: var(--accent); }
 .nights-step button:disabled { color: var(--muted); opacity: 0.5; }
 .nights-step .ic { width: 18px; height: 18px; }
+/* the first step of splitting the trip between cities: three ways in, as rows */
+.split-start { display: flex; flex-direction: column; gap: 12px; }
+.split-ways { display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--fill); }
+.split-way { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; text-align: start; font: inherit; color: inherit; }
+.split-way + .split-way { border-top: 1px solid var(--line); }
+.split-way > .ic:first-child { flex: none; width: 22px; height: 22px; color: var(--accent); }
+.split-way > span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.split-way .chev { flex: none; color: var(--muted); }
+.split-later { align-self: center; }
