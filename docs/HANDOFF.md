@@ -3,6 +3,20 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Toogo before an account, and sign-up through Google (2026-11-13, in main, both switched off)
+- `features.guest_mode` (app_settings): a visitor gets a welcome, the questionnaire and real cards of their cities
+  (`dist/guest/<city>.json`, built with the guide pages; no photos), swipes, and is asked to sign in to save after 8.
+  Answers and swipes stay in localStorage `guest` until sign-in; `GuestImport` then saves the profile, makes a trip
+  (or uses their first), syncs the library and writes their votes. Invited people join their friend's trip instead.
+  Guide pages' button opens the app on the page's city and language (`?city=kyoto&lang=en`).
+- `features.google_signin`: "Continue with Google" on the sign-in screen (web only, not the iOS app yet), and
+  `block_new_users` (supabase/sql/2026-11-13-google-signin.sql) lets a Google account in without an invite while it
+  is on. Email/password sign-up stays invite-only. New Google accounts answer the questionnaire first (unless they
+  answered it as a visitor). Tested in the database with four sign-ups in a rolled-back block.
+- Before turning `google_signin` on: Google OAuth client (Google Cloud), the Google provider in Supabase Auth, and
+  Auth → URL Configuration: Site URL https://shakedflorentin.github.io/trip-planner/ and that address with `**` in
+  Redirect URLs (it was http://localhost:3000 with none).
+
 ## Night split: starting values, seasons, route rules (2026-11-13, live: plan-trip v26, cities route columns filled)
 - `supabase/functions/plan-trip/split.ts` ("Suggest a split") now works on a trip with only flights. A night in a city
   is worth the places liked there plus a starting value per city (`route-data.ts`: least and ideal nights, more Tokyo

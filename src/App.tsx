@@ -23,6 +23,7 @@ import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl }
 import { Loading } from './rings'
 import { useQuickAddRoute } from './quickAdd'
 import { useSettings, useSettingsKnown } from './settings'
+import { isNative } from './native'
 import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
@@ -63,6 +64,8 @@ function AppMain() {
   const [userId, setUserId] = useState<string | null | undefined>(undefined)
   // joined with an invite code: asked the getting-to-know-you questions before anything else
   const [invited, setInvited] = useState(false)
+  // came in through Google with no invite (open sign-up): asked the same questions first, but joins no one's trip
+  const [fresh, setFresh] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data, error }) => {
@@ -71,6 +74,7 @@ function AppMain() {
       // a refresh that failed for lack of network is not a sign-out: carry on as the same user
       const offlineId = !id && error?.name === 'AuthRetryableFetchError' ? readCache<string>(UID_KEY)?.data : null
       setInvited(!!data.session?.user.user_metadata?.invite)
+      setFresh(isNewOAuth(data.session?.user))
       setOutboxUser(id ?? offlineId ?? null)
       setUserId(id ?? offlineId ?? null)
     })
@@ -90,6 +94,7 @@ function AppMain() {
       }
       if (s) writeCache(UID_KEY, s.user.id)
       setInvited(!!s?.user.user_metadata?.invite)
+      setFresh(isNewOAuth(s?.user))
       setOutboxUser(s?.user.id ?? null)
       setUserId(s?.user.id ?? null)
     })
@@ -98,7 +103,7 @@ function AppMain() {
 
   if (userId === undefined) return <Loading />
   if (!userId) return <SignedOut />
-  return invited ? <ProfileGate key={userId} userId={userId} /> : <TripGate userId={userId} />
+  return invited || fresh ? <ProfileGate key={userId} userId={userId} invited={invited} /> : <TripGate userId={userId} />
 }
 
 /**
@@ -106,12 +111,14 @@ function AppMain() {
  * members have no invite, so they never pass through here. When the server can't be asked and there is no saved copy,
  * the app opens anyway rather than locking them out.
  */
-function ProfileGate({ userId }: { userId: string }) {
+function ProfileGate({ userId, invited }: { userId: string; invited: boolean }) {
   const { profile, failed, saved } = useProfile(userId)
   if (profile === undefined) return <Loading />
+  // answered already as a visitor: the answers come in with the rest (GuestImport), no need to ask again
+  if (!invited && pendingGuest()?.answers) return <TripGate userId={userId} />
   if (!profile?.completed_at && !(failed && !profile))
     return <Onboarding userId={userId} initial={profile?.answers ?? pendingGuest()?.answers} onDone={saved} />
-  return <TripGate userId={userId} invited />
+  return <TripGate userId={userId} invited={invited} />
 }
 
 /**
@@ -119,13 +126,18 @@ function ProfileGate({ userId }: { userId: string }) {
  * real cards (Guest) and signs in only to save; an invite link, "I already have an account" or guest mode off go
  * straight to sign-in. On a first visit the switch is read before choosing, so nobody sees the wrong screen flash.
  */
+/** A Google account with no invite: made through open sign-up (the database only lets those in while it is open). */
+function isNewOAuth(u: { app_metadata?: { provider?: string }; user_metadata?: { invite?: string } } | null | undefined) {
+  return !!u && u.app_metadata?.provider === 'google' && !u.user_metadata?.invite
+}
+
 function SignedOut() {
   const { features } = useSettings()
   const known = useSettingsKnown()
   const [login, setLogin] = useState(() => !!inviteInUrl())
   if (!known) return <Loading />
   if (features.guest_mode && !login) return <Guest onSignIn={() => setLogin(true)} />
-  return <Login onGuest={features.guest_mode ? () => setLogin(false) : undefined} />
+  return <Login onGuest={features.guest_mode ? () => setLogin(false) : undefined} google={features.google_signin && !isNative} />
 }
 
 function savedTrip() {

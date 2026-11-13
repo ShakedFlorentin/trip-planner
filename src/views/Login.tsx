@@ -92,7 +92,41 @@ export function ToogoLogo() {
   )
 }
 
-export default function Login({ onGuest }: { onGuest?: () => void } = {}) {
+/** Google's "G", in its own colours (Google's sign-in branding asks for the mark as is). */
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.5 5.8c4.4-4 6.8-10 6.8-17.2z" />
+      <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6z" />
+      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6C6.5 42.6 14.6 48 24 48z" />
+    </svg>
+  )
+}
+
+/**
+ * "Continue with Google": the way in for anyone, invite or not (app_settings features.google_signin; the database
+ * lets a Google account in without an invite only while it is on). Google brings them back to this page signed in.
+ * Not in the iOS app yet: it needs the app's own link back from the browser.
+ */
+function GoogleButton({ onError }: { onError: (msg: string) => void }) {
+  const [busy, setBusy] = useState(false)
+  const go = async () => {
+    setBusy(true)
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } })
+    if (error) {
+      setBusy(false)
+      onError(navigator.onLine ? t('ההתחברות עם Google לא הצליחה. נסו שוב.') : t('אין אינטרנט. נסו שוב כשיש קליטה.'))
+    }
+  }
+  return (
+    <button type="button" className="google-btn" onClick={go} disabled={busy}>
+      <GoogleMark /> <span>{busy ? t('עוברים ל-Google…') : t('המשך עם Google')}</span>
+    </button>
+  )
+}
+
+export default function Login({ onGuest, google = false }: { onGuest?: () => void; google?: boolean } = {}) {
   const [invite] = useState(() => {
     const code = inviteInUrl()
     if (code)
@@ -167,6 +201,12 @@ export default function Login({ onGuest }: { onGuest?: () => void } = {}) {
         {mode === 'signup' ? t('הוזמנתם לטיול. יוצרים חשבון ומצטרפים.') : t('מסלול, הזמנות והוצאות במקום אחד')}
       </p>
       <LoginCarousel />
+      {google && mode === 'login' && (
+        <>
+          <GoogleButton onError={setMsg} />
+          <p className="small muted login-or">{t('או עם שם או אימייל וסיסמה')}</p>
+        </>
+      )}
       {mode === 'signup' ? (
         <form onSubmit={signUp} className="card">
           <input

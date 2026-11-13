@@ -10,14 +10,15 @@ import { supabase } from './supabase'
 export type Settings = {
   swipe_batch_size: number
   /** guest_mode: someone not signed in starts with the questionnaire and real cards, and signs in to save (off by default) */
-  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean }
+  /** google_signin: "Continue with Google" on the sign-in screen, and new accounts through Google (supabase/sql/2026-11-13-google-signin.sql) */
+  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean; google_signin: boolean }
   free_places_per_trip: number
   trip_pass_price: { usd: number; ils: number }
 }
 
 export const DEFAULTS: Settings = {
   swipe_batch_size: 20,
-  features: { share_extension: true, rating_prompt: true, guest_mode: false },
+  features: { share_extension: true, rating_prompt: true, guest_mode: false, google_signin: false },
   free_places_per_trip: 10,
   trip_pass_price: { usd: 7.99, ils: 29 },
 }
@@ -39,6 +40,7 @@ export function parseSettings(rows: Record<string, unknown>): Settings {
       share_extension: bool(f.share_extension, DEFAULTS.features.share_extension),
       rating_prompt: bool(f.rating_prompt, DEFAULTS.features.rating_prompt),
       guest_mode: bool(f.guest_mode, DEFAULTS.features.guest_mode),
+      google_signin: bool(f.google_signin, DEFAULTS.features.google_signin),
     },
     free_places_per_trip: Math.round(num(rows.free_places_per_trip, DEFAULTS.free_places_per_trip)),
     trip_pass_price: { usd: num(p.usd, DEFAULTS.trip_pass_price.usd), ils: num(p.ils, DEFAULTS.trip_pass_price.ils) },
