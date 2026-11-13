@@ -39,12 +39,26 @@ export type SplitAlt = {
     added?: string[]
     /** cities in the split that are out of season on the trip's dates */
     offSeason?: string[]
+    /** with given night counts: how many route rules the order still breaks */
+    ruleBreaks?: number
   }
 }
 
 /** Asks the planner for 2-3 ways to split the open nights between cities. Writes nothing. Null when it can't answer. */
 export async function suggestSplits(tripId: string): Promise<SplitAlt[] | null> {
-  const { data, error } = await supabase.functions.invoke('plan-trip', { body: { trip_id: tripId, suggest_stays: true } })
-  if (error || !data || !Array.isArray((data as { alternatives?: unknown }).alternatives)) return null
-  return (data as { alternatives: SplitAlt[] }).alternatives
+  return (await askSplit(tripId))?.alternatives ?? null
+}
+
+/** Nights per city the group already knows: the planner keeps them and chooses the order and the dates. */
+export type NightCount = { city: string; nights: number }
+
+/**
+ * The planner's answer for the open nights: 1-3 ways to split them, and how many nights are open. With `nights`
+ * the counts are kept and only the order is chosen (and any nights they leave over are filled). Writes nothing.
+ */
+export async function askSplit(tripId: string, nights?: NightCount[]): Promise<{ alternatives: SplitAlt[]; openNights: number | null } | null> {
+  const { data, error } = await supabase.functions.invoke('plan-trip', { body: { trip_id: tripId, suggest_stays: true, ...(nights ? { nights } : {}) } })
+  const d = data as { alternatives?: unknown; openNights?: unknown } | null
+  if (error || !d || !Array.isArray(d.alternatives)) return null
+  return { alternatives: d.alternatives as SplitAlt[], openNights: typeof d.openNights === 'number' ? d.openNights : null }
 }

@@ -70,6 +70,11 @@ export type SplitInput = {
   firstVisit?: boolean
   /** the cities the members picked in the questionnaire */
   picked?: string[]
+  /**
+   * "We know how many nights in each city": these counts are kept exactly and only the order and dates are chosen.
+   * Nights they leave over are filled the usual way (more in one of these cities, or one more city).
+   */
+  counts?: { city: string; nights: number }[]
 }
 export type SplitRow = { city: string; nights: number; party: string | null; checkIn: string; checkOut: string }
 export type SplitReason = {
@@ -85,8 +90,15 @@ export type SplitReason = {
   added: string[]
   /** cities in the split that are out of season on these dates (someone picked them or liked places there) */
   offSeason: string[]
+  /** with given night counts: how many route rules the order still breaks (the counts themselves allow no better) */
+  ruleBreaks?: number
 }
 export type Alternative = { rows: SplitRow[]; reason: SplitReason }
+
+/** How many nights are open for a split (no confirmed, locked or typed-in stay on them), for the nights-per-city screen. */
+export function openNights(inp: SplitInput) {
+  return buildSlots(inp).slots.filter((s) => s.free).length
+}
 
 const DAY = 86400000
 const HOURS_PER_NIGHT = 5.5 // hours of visits a day holds
@@ -396,16 +408,18 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
       }
       lastNights += lens?.[k] ?? 0
     })
-    // the last stop may be the departure airport's region, whichever way the route went before: back to Tokyo for
-    // the last days of a round trip, or past Osaka to Hiroshima and back to fly. It is the one return that is fine
+    // the last stop may go back to the departure airport's region when the trip already stayed there (back to Tokyo
+    // for the last days of a round trip), or for a night or two by the airport (past Osaka to Hiroshima, and back to
+    // fly). Going past it and coming back for a long stay is not one of them: that is a detour
     const end = R[R.length - 1]
     const short = R.length >= 2 && depRegions.has(end) && lastNights <= RETURN_NIGHTS
+    const home = R.length >= 2 && depRegions.has(end) && (short || R.indexOf(end) < R.length - 1)
     let v = 0
     // an island is the first or the last stop; only a night or two by the departure airport may follow it
     R.forEach((r, p) => {
       if (LINE.indexOf(r) < 0 && p !== 0 && p !== R.length - 1 && !(short && p === R.length - 2)) v++
     })
-    if (R.length >= 2 && depRegions.has(end)) R.pop()
+    if (home) R.pop()
     const seen = new Set<string>()
     const L: number[] = []
     R.forEach((r) => {
@@ -987,6 +1001,8 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
 
   // seeds: for one stretch, every list that fits; for several, each stretch in turn with the others at their best
   const balanced = PROFILES[0]
+  // "we know the nights per city": only the order is chosen
+  if (inp.counts?.length) return byCounts(inp.counts)
   const seeds = new Map<string, Assign>()
   const addSeed = (a: Assign) => {
     const s = sigOf(a)
@@ -1097,6 +1113,70 @@ export function suggestSplit(inp: SplitInput): Alternative[] {
     }
   }
   return picked.map(({ f, kind }) => toAlternative(f.assign, kind, f.ev.balanced))
+
+  /**
+   * The given counts, in every order (a city once; the order that keeps the route rules wins over one that doesn't),
+   * scored like any split. Left-over nights go to one of the given cities or to one more city, whichever scores best.
+   */
+  function byCounts(given: { city: string; nights: number }[]): Alternative[] {
+    const list = given.filter((g) => cities.has(g.city) && g.nights > 0)
+    const sum = list.reduce((s, g) => s + g.nights, 0)
+    if (!list.length || sum > F) return []
+    const rest = F - sum
+    const options: { city: string; nights: number }[][] = []
+    if (!rest) options.push(list)
+    else {
+      for (let k = 0; k < list.length; k++) options.push(list.map((g, i) => (i === k ? { ...g, nights: g.nights + rest } : g)))
+      // the rest the way the usual suggestion would split it: its other cities, in proportion to their nights there
+      const free = suggestSplit({ ...inp, counts: undefined })[0]
+      if (free) {
+        const theirs = new Map<string, number>()
+        for (const r of free.rows) if (!list.some((g) => g.city === r.city)) theirs.set(r.city, Math.max(theirs.get(r.city) ?? 0, r.nights))
+        const total = [...theirs.values()].reduce((x, y) => x + y, 0)
+        if (total) {
+          const share = [...theirs].map(([city, n]) => ({ city, exact: (n / total) * rest }))
+          const got = share.map((x) => ({ city: x.city, nights: Math.floor(x.exact), frac: x.exact - Math.floor(x.exact) }))
+          let left = rest - got.reduce((x, y) => x + y.nights, 0)
+          for (const g of [...got].sort((x, y) => y.frac - x.frac || (x.city < y.city ? -1 : 1))) if (left-- > 0) g.nights++
+          const added = got.filter((g) => g.nights > 0).map(({ city, nights }) => ({ city, nights }))
+          if (added.length && list.length + added.length <= 7) options.push([...list, ...added])
+        }
+      }
+      if (list.length < 6) {
+        for (const c of [...candList, ...extraList]) {
+          if (list.some((g) => g.city === c) || level(c) === 0) continue
+          options.push([...list, { city: c, nights: rest }])
+        }
+      }
+    }
+    const perms = <T,>(xs: T[]): T[][] => (xs.length <= 1 ? [xs] : xs.flatMap((x, i) => perms([...xs.slice(0, i), ...xs.slice(i + 1)]).map((p) => [x, ...p])))
+    const tried: { a: Assign; hard: number; score: number; sig: string; ev: Eval }[] = []
+    for (const opt of options) {
+      for (const order of perms(opt)) {
+        const a = blank()
+        let k = 0
+        for (const g of order) for (let n = 0; n < g.nights; n++) a[freeIdx[k++]] = g.city
+        const ev = evaluate(a, balanced)
+        tried.push({ a, hard: ev.hard, score: ev.score + 1000 * ev.hard, sig: sigOf(a), ev })
+      }
+    }
+    // fewest broken rules first, then the score; the second choice is another order, not the same one shifted
+    tried.sort((x, y) => x.hard - y.hard || y.score - x.score || (x.sig < y.sig ? -1 : 1))
+    const out: typeof tried = []
+    const orderOf = (a: Assign) => freeIdx.map((i) => a[i]).filter((c, k, xs) => !k || xs[k - 1] !== c).join('>')
+    for (const t of tried) {
+      if (out.some((o) => orderOf(o.a) === orderOf(t.a))) continue
+      if (out.length && (t.hard > out[0].hard || t.ev.score < out[0].ev.score - 0.2 * Math.max(1, out[0].ev.hours))) break
+      out.push(t)
+      if (out.length === 2) break
+    }
+    return out.map((t) => {
+      const ev = evaluate(t.a, balanced, true)
+      const alt = toAlternative(t.a, 'balanced', ev)
+      alt.reason.ruleBreaks = t.hard
+      return alt
+    })
+  }
 
   // ---- the answer: runs of open nights, and what the alternative covers
   function toAlternative(assign: Assign, kind: SplitReason['kind'], ev: Eval): Alternative {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { BedDouble, Bus, Lock, MapPin, Plus, Search, TrainFront, Wand2 } from 'lucide-react'
+import { BedDouble, Bus, CalendarRange, Lock, MapPin, Minus, Plus, Search, TrainFront, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
-import { suggestSplits, type SplitAlt } from '../stays'
+import { askSplit, suggestSplits, type NightCount, type SplitAlt } from '../stays'
 import { TOGETHER, whoOptions, type Booking, type City, type StayAreaPick, type StayAreaRec, type TripStay } from '../types'
 import { mutate } from '../lib'
 import { isEn, t } from '../i18n'
@@ -38,6 +38,7 @@ type Props = {
 export default function StaysSheet({ tripId, date, couples, stays, cities, bookings, available, recs, people, onClose }: Props) {
   const [edit, setEdit] = useState<Partial<TripStay> | null>(null)
   const [split, setSplit] = useState(false)
+  const [counting, setCounting] = useState(false)
   // everyone first, then each couple, then any other party a stay names
   const parties: (string | null)[] = [null, ...new Set([...whoOptions(couples), ...stays.map((s) => s.party).filter((p): p is string => !!p)])]
 
@@ -89,12 +90,18 @@ export default function StaysSheet({ tripId, date, couples, stays, cities, booki
           </button>
         )}
         {available && (
+          <button onClick={() => setCounting(true)}>
+            <Icon as={CalendarRange} /> {t('יודעים כמה לילות בכל עיר')}
+          </button>
+        )}
+        {available && (
           <button onClick={() => setSplit(true)}>
             <Icon as={Wand2} /> {t('הצעה לחלוקת לילות')}
           </button>
         )}
       </Sheet>
       {split && <SplitSheet tripId={tripId} stays={stays} cities={cities} onClose={() => setSplit(false)} />}
+      {counting && <NightsSheet tripId={tripId} stays={stays} cities={cities} onClose={() => setCounting(false)} />}
       {edit &&<StayForm tripId={tripId} couples={couples} cities={cities} bookings={bookings} stay={edit} onClose={() => setEdit(null)} />}
     </>
   )
@@ -210,6 +217,54 @@ function reasonText(r: SplitAlt['reason']) {
   return t('איזון בין מקומות להחלפות: {places}. {moves}.', { moves, places })
 }
 
+/** Replaces the planner's earlier proposals with this split. Confirmed, locked and typed-in stays are never touched. */
+async function saveSplit(tripId: string, stays: TripStay[], a: SplitAlt) {
+  const old = stays.filter((s) => s.source === 'auto' && s.status === 'proposed' && !s.locked).map((s) => s.id)
+  return (
+    (!old.length || (await mutate(supabase.from('trip_stays').delete().in('id', old)))) &&
+    (await mutate(
+      supabase.from('trip_stays').insert(
+        a.rows.map((r) => ({ trip_id: tripId, party: r.party, city: r.city, check_in: r.checkIn, check_out: r.checkOut, status: 'proposed', locked: false, source: 'auto' })),
+      ),
+    ))
+  )
+}
+
+/** One way to split the nights: each run of nights, why it is a good choice, and "use this". */
+function AltCard({ a, cities, saving, onUse, why = true }: { a: SplitAlt; cities: City[]; saving: boolean; onUse: () => void; why?: boolean }) {
+  return (
+    <div className="card stack">
+      {a.rows.map((r, k) => (
+        <div key={k} className="row spread">
+          <b>
+            <Icon as={BedDouble} /> {cityName(r.city, cities)}
+          </b>
+          <span className="small muted">
+            {r.party ? `${t(r.party)} · ` : ''}
+            {shortDate(r.checkIn)} – {shortDate(r.checkOut)} · {nights(r.nights)}
+          </span>
+        </div>
+      ))}
+      {why && <div className="small muted">{reasonText(a.reason)}</div>}
+      {!!a.reason.added?.length && (
+        <div className="small muted">{t('כולל את {cities}, שלא בחרתם.', { cities: a.reason.added.map((c) => cityName(c, cities)).join(', ') })}</div>
+      )}
+      {!!a.reason.offSeason?.length && (
+        <div className="small muted">{t('{cities}: פחות מומלץ בעונה הזו.', { cities: a.reason.offSeason.map((c) => cityName(c, cities)).join(', ') })}</div>
+      )}
+      {!!a.reason.ruleBreaks && <div className="small muted">{t('אפשר, אבל המסלול פחות נוח: יש בו נסיעה ארוכה ללילה או שניים, או חזרה לאזור שכבר הייתם בו.')}</div>}
+      {a.reason.dayTrips.map((d) => (
+        <div key={d.city} className="small muted">
+          {t('טיול יום ל{city} מ{from}: {n} מקומות', { city: cityName(d.city, cities), from: cityName(d.from, cities), n: d.places })}
+        </div>
+      ))}
+      <button className="primary" disabled={saving} onClick={onUse}>
+        {t('להשתמש בזה')}
+      </button>
+    </div>
+  )
+}
+
 /** "Suggest a split": 2-3 ways to spread the open nights between cities; "use this" saves one as proposed stays. */
 function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
   const [alts, setAlts] = useState<SplitAlt[] | 'loading' | 'error'>('loading')
@@ -222,17 +277,9 @@ function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays:
     }
   }, [tripId])
 
-  /** Replaces the planner's earlier proposals with this one. Confirmed, locked and typed-in stays are never touched. */
   const use = async (a: SplitAlt) => {
     setSaving(true)
-    const old = stays.filter((s) => s.source === 'auto' && s.status === 'proposed' && !s.locked).map((s) => s.id)
-    const ok =
-      (!old.length || (await mutate(supabase.from('trip_stays').delete().in('id', old)))) &&
-      (await mutate(
-        supabase.from('trip_stays').insert(
-          a.rows.map((r) => ({ trip_id: tripId, party: r.party, city: r.city, check_in: r.checkIn, check_out: r.checkOut, status: 'proposed', locked: false, source: 'auto' })),
-        ),
-      ))
+    const ok = await saveSplit(tripId, stays, a)
     setSaving(false)
     if (ok) onClose()
   }
@@ -242,41 +289,121 @@ function SplitSheet({ tripId, stays, cities, onClose }: { tripId: string; stays:
       {alts === 'loading' && <Empty>{t('מחשבים חלוקות אפשריות…')}</Empty>}
       {alts === 'error' && <Empty>{t('לא הצלחנו להציע חלוקה כרגע. נסו שוב עוד רגע.')}</Empty>}
       {Array.isArray(alts) && alts.length === 0 && <Empty>{t('אין לילות פתוחים לחלוקה, או שעוד אין ערים להציע.')}</Empty>}
-      {Array.isArray(alts) &&
-        alts.map((a, i) => (
-          <div key={i} className="card stack">
-            {a.rows.map((r, k) => (
-              <div key={k} className="row spread">
-                <b>
-                  <Icon as={BedDouble} /> {cityName(r.city, cities)}
-                </b>
-                <span className="small muted">
-                  {r.party ? `${t(r.party)} · ` : ''}
-                  {shortDate(r.checkIn)} – {shortDate(r.checkOut)} · {nights(r.nights)}
-                </span>
-              </div>
-            ))}
-            <div className="small muted">{reasonText(a.reason)}</div>
-            {!!a.reason.added?.length && (
-              <div className="small muted">{t('כולל את {cities}, שלא בחרתם.', { cities: a.reason.added.map((c) => cityName(c, cities)).join(', ') })}</div>
-            )}
-            {!!a.reason.offSeason?.length && (
-              <div className="small muted">{t('{cities}: פחות מומלץ בעונה הזו.', { cities: a.reason.offSeason.map((c) => cityName(c, cities)).join(', ') })}</div>
-            )}
-            {a.reason.dayTrips.map((d) => (
-              <div key={d.city} className="small muted">
-                {t('טיול יום ל{city} מ{from}: {n} מקומות', { city: cityName(d.city, cities), from: cityName(d.from, cities), n: d.places })}
-              </div>
-            ))}
-            <button className="primary" disabled={saving} onClick={() => use(a)}>
-              {t('להשתמש בזה')}
-            </button>
-          </div>
-        ))}
+      {Array.isArray(alts) && alts.map((a, i) => <AltCard key={i} a={a} cities={cities} saving={saving} onUse={() => use(a)} />)}
       {Array.isArray(alts) && alts.some((a) => a.reason.typical) && (
         <div className="small muted">{t('ההצעה מתבססת על מה שמקובל בכל עיר. ככל שתאהבו עוד מקומות בגילוי, היא תתאים לכם יותר.')}</div>
       )}
       {Array.isArray(alts) && alts.length > 0 && <div className="small muted">{t('נשמר כהצעה בלבד, רק בלילות הפנויים. לינות מאושרות ונעולות לא משתנות.')}</div>}
+    </Sheet>
+  )
+}
+
+/**
+ * "We know how many nights in each city": the cities and their nights (filled in with the planner's own suggestion to
+ * start from), then the planner chooses the order and the dates by the flights and the route, keeping the counts.
+ */
+function NightsSheet({ tripId, stays, cities, onClose }: { tripId: string; stays: TripStay[]; cities: City[]; onClose: () => void }) {
+  const [open, setOpen] = useState<number | null | 'error'>(null)
+  const [counts, setCounts] = useState<NightCount[]>([])
+  const [alts, setAlts] = useState<SplitAlt[] | 'loading' | 'error' | null>(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    let live = true
+    askSplit(tripId).then((r) => {
+      if (!live) return
+      if (!r || r.openNights == null) return setOpen('error')
+      setOpen(r.openNights)
+      // start from the planner's own split: each city once, with all its nights, in the order it comes
+      const first = r.alternatives[0]
+      const start: NightCount[] = []
+      for (const row of first?.rows ?? []) {
+        const c = start.find((x) => x.city === row.city)
+        if (c) c.nights = Math.max(c.nights, row.nights)
+        else start.push({ city: row.city, nights: row.nights })
+      }
+      setCounts(start)
+    })
+    return () => {
+      live = false
+    }
+  }, [tripId])
+
+  const total = counts.reduce((s, c) => s + c.nights, 0)
+  const free = typeof open === 'number' ? open : 0
+  const change = (city: string, d: number) => {
+    setAlts(null)
+    setCounts((xs) => xs.map((x) => (x.city === city ? { ...x, nights: x.nights + d } : x)).filter((x) => x.nights > 0))
+  }
+  const add = (city: string) => {
+    if (!city) return
+    setAlts(null)
+    setCounts((xs) => [...xs, { city, nights: 1 }])
+  }
+  const order = async () => {
+    setAlts('loading')
+    const r = await askSplit(tripId, counts)
+    setAlts(r ? r.alternatives : 'error')
+  }
+  const use = async (a: SplitAlt) => {
+    setSaving(true)
+    const ok = await saveSplit(tripId, stays, a)
+    setSaving(false)
+    if (ok) onClose()
+  }
+  const unused = cities.filter((c) => !counts.some((x) => x.city === c.id)).sort((a, b) => cityName(a.id, cities).localeCompare(cityName(b.id, cities)))
+
+  return (
+    <Sheet title={t('כמה לילות בכל עיר')} onClose={onClose}>
+      {open === null && <Empty>{t('בודקים כמה לילות פנויים…')}</Empty>}
+      {open === 'error' && <Empty>{t('לא הצלחנו לבדוק כרגע. נסו שוב עוד רגע.')}</Empty>}
+      {open === 0 && <Empty>{t('כל הלילות כבר סגורים. אין מה לחלק.')}</Empty>}
+      {free > 0 && (
+        <>
+          <p className="small muted">{t('מסמנים כמה לילות בכל עיר. את הסדר והתאריכים נסדר לפי הטיסות והמסלול.')}</p>
+          <div className="stack">
+            {counts.map((c) => (
+              <div key={c.city} className="card nights-row">
+                <b>{cityName(c.city, cities)}</b>
+                <div className="nights-step">
+                  <button aria-label={t('לילה אחד פחות ב{city}', { city: cityName(c.city, cities) })} onClick={() => change(c.city, -1)}>
+                    <Icon as={Minus} />
+                  </button>
+                  <span aria-live="polite">{nights(c.nights)}</span>
+                  <button aria-label={t('עוד לילה ב{city}', { city: cityName(c.city, cities) })} disabled={total >= free} onClick={() => change(c.city, 1)}>
+                    <Icon as={Plus} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {unused.length > 0 && counts.length < 8 && (
+            <Field label={t('הוספת עיר')}>
+              <select value="" onChange={(e) => add(e.target.value)} disabled={total >= free}>
+                <option value="">{t('בחירת עיר…')}</option>
+                {unused.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {cityName(c.id, cities)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          <p className={'small' + (total > free ? ' msg' : ' muted')}>
+            {t('{n} מתוך {total} לילות פנויים', { n: total, total: free })}
+            {total < free && total > 0 && ' · ' + t('את השאר נשלים לפי מה שמתאים')}
+          </p>
+          {alts === null && (
+            <button className="primary" disabled={!total || total > free} onClick={order}>
+              <Icon as={Wand2} /> {t('לסדר לפי הטיסות')}
+            </button>
+          )}
+          {alts === 'loading' && <Empty>{t('מסדרים…')}</Empty>}
+          {alts === 'error' && <Empty>{t('לא הצלחנו לסדר כרגע. נסו שוב עוד רגע.')}</Empty>}
+          {Array.isArray(alts) && alts.length === 0 && <Empty>{t('לא מצאנו סדר שמתאים למספרים האלה.')}</Empty>}
+          {Array.isArray(alts) && alts.map((a, i) => <AltCard key={i} a={a} cities={cities} saving={saving} onUse={() => use(a)} why={false} />)}
+          {Array.isArray(alts) && alts.length > 0 && <div className="small muted">{t('נשמר כהצעה, רק בלילות הפנויים. אפשר לשנות כל לינה אחר כך.')}</div>}
+        </>
+      )}
     </Sheet>
   )
 }

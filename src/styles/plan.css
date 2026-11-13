@@ -234,3 +234,10 @@
 .stay-rec .primary { min-height: 46px; }
 /* one line, centred with its icon, whatever the area's name */
 .stay-rec .primary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* nights per city: the city, and − n nights + */
+.nights-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 16px; }
+.nights-step { display: flex; align-items: center; gap: 4px; }
+.nights-step span { min-width: 5.5em; text-align: center; font-variant-numeric: tabular-nums; }
+.nights-step button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--fill); color: var(--accent); }
+.nights-step button:disabled { color: var(--muted); opacity: 0.5; }
+.nights-step .ic { width: 18px; height: 18px; }

@@ -175,9 +175,9 @@ function broken(a, inp) {
   // one direction along the line, each region once; only a short way back to the departure airport may return
   const R = []
   for (const r of runs) { const g = J[r.city].region; if (R.length && R[R.length - 1].g === g) R[R.length - 1].n += r.n; else R.push({ g, n: r.n }) }
-  // the last stop may be the departure airport's region, whichever way the route went before it
+  // the last stop may go back to the departure airport's region: to one the trip stayed in, or for a night or two
   const last = R[R.length - 1]
-  const home = R.length > 1 && dep && J[dep].region === last.g
+  const home = R.length > 1 && dep && J[dep].region === last.g && (last.n <= 2 || R.slice(0, -1).some((x) => x.g === last.g))
   const way = home ? R.slice(0, -1) : R
   if (new Set(way.map((x) => x.g)).size !== way.length) out.push('a region twice: ' + way.map((x) => x.g))
   const idx = way.map((x) => LINE.indexOf(x.g)).filter((i) => i >= 0)
@@ -328,6 +328,41 @@ Object.assign(cases, {
     }
     const r = S.partyStretch([{ who: null, title: 'TLV → NRT', starts_at: '2026-12-11 22:00:00+00', ends_at: '2026-12-12 19:40:00+00' }, { who: null, title: 'CTS → TLV', starts_at: '2026-12-20 09:10:00+00', ends_at: '2026-12-20 20:00:00+00' }], 'A', '2026-12-12', 9)
     ok(r.arrivalLate === true && r.departureEarly === true && r.arrival === 'tokyo' && r.departure === 'sapporo', 'flight times and airports: ' + JSON.stringify(r))
+  },
+
+  'nights per city: the counts are kept, only the order and the dates are chosen'() {
+    // given in the wrong order: Osaka, Tokyo, Kyoto for a trip that lands in Tokyo and leaves from Osaka
+    const inp = trip({ parties: fly('tokyo', 'osaka'), counts: [{ city: 'osaka', nights: 3 }, { city: 'tokyo', nights: 6 }, { city: 'kyoto', nights: 4 }] })
+    const alts = S.suggestSplit(inp)
+    console.log('    ' + showJ(alts))
+    ok(alts.length >= 1, 'no answer')
+    ok(order(alts[0]).join() === 'tokyo,kyoto,osaka', 'the order should follow the flights and the line: ' + line(alts[0]))
+    for (const a of alts) {
+      ok(nightsIn(a, 'tokyo') === 6 && nightsIn(a, 'kyoto') === 4 && nightsIn(a, 'osaka') === 3, 'counts changed: ' + line(a))
+      ok(a.reason.ruleBreaks === 0, 'should keep the rules: ' + line(a))
+    }
+    // fewer nights than the trip: the rest is filled, the given counts are at least kept
+    const part = S.suggestSplit(trip({ parties: fly('tokyo', 'osaka'), counts: [{ city: 'kyoto', nights: 4 }] }))
+    console.log('    only Kyoto 4 given: ' + showJ(part).replace(/\n {4}/g, ' | '))
+    ok(part.length && nightsIn(part[0], 'kyoto') >= 4 && part[0].rows.reduce((s, r) => s + r.nights, 0) === 13, 'the rest should be filled: ' + (part[0] && line(part[0])))
+    ok(part.length && nightsIn(part[0], 'kyoto') === 4 && order(part[0]).join() === 'tokyo,kyoto,osaka', 'the rest as the usual split would: ' + (part[0] && line(part[0])))
+    // more nights than the trip: nothing
+    ok(S.suggestSplit(trip({ counts: [{ city: 'tokyo', nights: 20 }] })).length === 0, 'more nights than the trip should give nothing')
+    // past Osaka to Hiroshima and back for a week is a detour: Hiroshima goes after Kansai, or as the far end
+    const far = trip({ parties: fly('tokyo', 'osaka'), counts: [{ city: 'tokyo', nights: 4 }, { city: 'kyoto', nights: 4 }, { city: 'osaka', nights: 3 }, { city: 'hiroshima', nights: 2 }] })
+    const f = S.suggestSplit(far)
+    console.log('    with Hiroshima 2: ' + showJ(f).replace(/\n {4}/g, ' | '))
+    for (const a of f) ok(!broken(a, far).length && a.reason.ruleBreaks === 0, 'a detour: ' + line(a) + ' ' + broken(a, far))
+    // what people ask for even if it breaks a rule is kept, and said
+    const odd = S.suggestSplit(trip({ startDate: '2027-07-10', numDays: 8, parties: fly('tokyo', 'osaka'), counts: [{ city: 'tokyo', nights: 3 }, { city: 'osaka', nights: 3 }, { city: 'sapporo', nights: 1 }] }))
+    console.log('    Tokyo 3, Osaka 3, Sapporo 1 asked for: ' + showJ(odd).replace(/\n {4}/g, ' | ') + ` [breaks ${odd[0]?.reason.ruleBreaks}]`)
+    ok(odd.length && nightsIn(odd[0], 'sapporo') === 1 && odd[0].reason.ruleBreaks > 0, 'asked-for counts are kept and the broken rule is reported')
+    // a booked stay in the middle: the given counts fill the open nights around it
+    const stays = [{ party: null, city: 'kyoto', checkIn: add('2026-12-12', 6), checkOut: add('2026-12-12', 10), status: 'confirmed', locked: true, source: 'booking' }]
+    const mid = S.suggestSplit(trip({ parties: fly('tokyo', 'osaka'), stays, counts: [{ city: 'tokyo', nights: 6 }, { city: 'osaka', nights: 3 }] }))
+    console.log('    Kyoto booked in the middle: ' + showJ(mid).replace(/\n {4}/g, ' | '))
+    ok(mid.length && mid[0].rows[0].city === 'tokyo' && mid[0].rows.at(-1).city === 'osaka', 'Tokyo before the booked Kyoto, Osaka after: ' + (mid[0] && line(mid[0])))
+    ok(S.openNights(trip({ parties: fly('tokyo', 'osaka'), stays })) === 9, 'open nights around the booking: ' + S.openNights(trip({ stays })))
   },
 
   'two thousand random trips: every suggestion keeps every route rule, and the same trip gives the same answer'() {

@@ -7,7 +7,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
-import { CITY_ROUTE, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
+import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
 const cors = {
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
-  const body = (await req.json().catch(() => null)) as { trip_id?: unknown; dry?: unknown; wait?: unknown; suggest_stays?: unknown } | null
+  const body = (await req.json().catch(() => null)) as { trip_id?: unknown; dry?: unknown; wait?: unknown; suggest_stays?: unknown; nights?: unknown } | null
   const tid = typeof body?.trip_id === 'string' && UUID.test(body.trip_id) ? body.trip_id : null
   if (!tid) return json({ error: 'trip_id missing' }, 400)
 
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
   // alternative splits of the open nights between cities: reads, writes nothing
   if (body?.suggest_stays === true) {
     try {
-      return json(await suggestStays(admin, tid))
+      return json(await suggestStays(admin, tid, countsOf(body.nights)))
     } catch (e) {
       return json({ error: String(e instanceof Error ? e.message : e) }, 500)
     }
@@ -781,8 +781,24 @@ function groupBy<T>(xs: T[], key: (x: T) => string) {
   return m
 }
 
-/** Alternative splits of the open nights between cities (see split.ts). Reads only; writes nothing. */
-async function suggestStays(admin: SupabaseClient, tid: string) {
+/** "Nights per city" from a request: up to 8 cities, each 1-60 nights, a city once. Anything else is dropped. */
+function countsOf(v: unknown): { city: string; nights: number }[] | undefined {
+  if (!Array.isArray(v)) return undefined
+  const out: { city: string; nights: number }[] = []
+  for (const x of v.slice(0, 8)) {
+    const c = x as { city?: unknown; nights?: unknown }
+    if (typeof c?.city !== 'string' || !/^[a-z_-]{2,30}$/.test(c.city) || out.some((o) => o.city === c.city)) continue
+    if (typeof c.nights !== 'number' || !Number.isInteger(c.nights) || c.nights < 1 || c.nights > 60) continue
+    out.push({ city: c.city, nights: c.nights })
+  }
+  return out.length ? out : undefined
+}
+
+/**
+ * Alternative splits of the open nights between cities (see split.ts), and how many nights are open. With `counts`
+ * ("we know the nights per city") they are kept and only the order is chosen. Reads only; writes nothing.
+ */
+async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city: string; nights: number }[]) {
   const q = async <T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) => {
     const { data, error } = await p
     if (error) throw new Error(error.message)
@@ -800,7 +816,7 @@ async function suggestStays(admin: SupabaseClient, tid: string) {
     ),
     optional<(CityRow & RouteColumns)[]>(admin.from('cities').select('*')),
   ])
-  if (!trip.start_date || trip.num_days < 2) return { alternatives: [] }
+  if (!trip.start_date || trip.num_days < 2) return { alternatives: [], openNights: 0 }
   const cities: SplitCity[] = (cityRowsDb?.length ? cityRowsDb : Object.entries(BASE_POINT).map(([id, p]) => ({ id, ...p }) as CityRow & RouteColumns)).map(routeCity)
   // what the members said in the questionnaire: the cities they picked, and whether anyone is new to Japan
   const answers =
@@ -847,5 +863,6 @@ async function suggestStays(admin: SupabaseClient, tid: string) {
       parties: v.yes.length >= couples.length ? [] : v.yes,
     })
   }
-  return { alternatives: suggestSplit({ startDate: trip.start_date, numDays: trip.num_days, parties, stays, cities, places: liked, firstVisit, picked }) }
+  const input = { startDate: trip.start_date, numDays: trip.num_days, parties, stays, cities, places: liked, firstVisit, picked, counts }
+  return { alternatives: suggestSplit(input), openNights: openNights(input) }
 }
