@@ -37,6 +37,8 @@ self.addEventListener('fetch', (e) => {
   if (u.hostname.endsWith('tile.openstreetmap.org') || (u.hostname === 'server.arcgisonline.com' && u.pathname.includes('/tile/')))
     e.respondWith(tile(req))
   else if (u.origin !== self.location.origin) return
+  // the guide pages (japan/…, en/japan/…, built by scripts/pages) are plain pages: the network serves them as is
+  else if (req.mode === 'navigate' && /\/(en\/)?japan(\/|$)/.test(u.pathname)) return
   else if (req.mode === 'navigate') e.respondWith(page(req))
   else e.respondWith(asset(e, req, u))
 })
@@ -53,7 +55,8 @@ async function page(req) {
       fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }),
       new Promise((_, no) => setTimeout(() => no(new Error('slow')), NAV_TIMEOUT)),
     ])
-    if (res.ok) cache.put(url('./'), res.clone())
+    // only the app's own page is kept as the offline copy (a link to some other page must not replace it)
+    if (res.ok && new URL(req.url).pathname === new URL(url('./')).pathname) cache.put(url('./'), res.clone())
     return res
   } catch {
     return (await cache.match(url('./'))) || Response.error()

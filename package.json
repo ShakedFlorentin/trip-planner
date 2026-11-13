@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/pages/build-pages.mjs",
+    "pages:data": "node scripts/pages/export-cards.mjs",
     "preview": "vite preview",
     "test:plan": "node scripts/plan-test.mjs",
     "test:split": "node scripts/split-test.mjs",
