@@ -107,7 +107,7 @@ Small pieces, published one at a time.
 ### When there are real trips (my guess: 50 or more)
 | # | Step | From |
 |---|---|---|
-| 10 | **Trip pass:** website checkout, Apple in-app purchase, US-only link | Section 2 |
+| 10 | **Trip pass:** website checkout, Apple in-app purchase, US-only link. *14 Nov: the free 10 places and the pass itself are built (switched off); paying waits for the payment company and the Apple licence* | Section 2 |
 | 11 | **Card look time** in the ranking | Reels, Tinder code |
 | 12 | **Get the next day ready on the phone** the night before | Reels, TikTok code |
 | 13 | **Notifications that name the benefit:** "your partner liked the same place", "you are near a place you saved" | Reels, Duolingo code; נעצתי does the second one |

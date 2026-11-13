@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import PassSheet from './Pass'
+import { usePassStatus } from '../pass'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, VERDICTS, type Candidate } from '../types'
 import { aiError, cityLabel, localizeCard, mutate, safeUrl, samePlace, useTripAvoidsPorkSeafood, useTripHasBaby } from '../lib'
@@ -171,6 +173,9 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
   const [to, setTo] = useState(defaultTo)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+  // the trip used its free new places (suggest-place answered 402 needs_pass): the pass offer shows instead
+  const [passOffer, setPassOffer] = useState(false)
+  const passStatus = usePassStatus(passOffer ? tripId : null)
   // what was typed when the duplicate sheet opened, so going back to edit doesn't lose it
   const [typed, setTyped] = useState<Draft | null>(null)
   // search: the typed name, when the match was found before the lookup ran (so "a different place" still has to search)
@@ -248,8 +253,12 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
       // out of credits (the function answers 402 with the price): say what it costs and where credits come from
       if (error && status === 402) {
         const need = (await (error as { context?: Response }).context?.clone().json().catch(() => null)) as
-          | { cost?: number; balance?: number; trip_balance?: number }
+          | { cost?: number; balance?: number; trip_balance?: number; needs_pass?: boolean }
           | null
+        if (need?.needs_pass) {
+          setErr('')
+          return setPassOffer(true)
+        }
         return setErr(
           t('חיפוש מקום חדש עולה {n} קרדיטים, ויש לך {mine} אישיים ו־{trip} בקבוצה. כל יום מתווספים קרדיטים חינם, ובהגדרות הטיול (ארנק) אפשר להעביר קרדיטים לקבוצה. מקום שכבר חיפשו בעבר נשלף בחינם.', {
             n: need?.cost ?? 0,
@@ -444,6 +453,8 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
       </button>
     </div>
   )
+
+  if (passOffer) return <PassSheet tripId={tripId} status={passStatus} onClose={() => setPassOffer(false)} />
 
   if (existing) {
     const { found, draft: d, search } = existing

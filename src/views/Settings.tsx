@@ -4,10 +4,12 @@ import { supabase } from '../supabase'
 import type { Trip } from '../types'
 import { dayDate, fmtDay, mutate } from '../lib'
 import { ymd } from './planUtils'
-import { lang, locale, setLang, t } from '../i18n'
+import { isEn, lang, locale, setLang, t } from '../i18n'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { countingOn, setCounting } from '../track'
+import { usePassStatus } from '../pass'
+import PassSheet from './Pass'
 import { openExternal, privacyUrl } from '../native'
 
 /**
@@ -89,6 +91,7 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
       </div>
       <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים ואיפה נתקעים, כדי לשפר את האפליקציה. בלי מה שאתם כותבים, ובלי כלים חיצוניים.')}</p>
 
+      <PassRow tripId={trip.id} />
       <WalletRow tripId={trip.id} onOpen={() => setWallet(true)} />
 
       {dates && (
@@ -135,12 +138,32 @@ function CountingRow() {
 function rangeLabel(start: string, numDays: number) {
   const a = dayDate(start, 1)!
   const b = dayDate(start, numDays)!
-  const dm = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+  // short months in English ("12 Dec"): the long ones ran into the "Dates" label on a phone; Hebrew fits as is
+  const dm = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: isEn ? 'short' : 'long' })
   return `${dm(a)} – ${dm(b)} ${b.getFullYear()}`
 }
 
 function daysCount(n: number) {
   return n === 1 ? t('יום אחד') : t('{n} ימים', { n })
+}
+
+/** The trip pass row (src/pass.ts): shown only while the trip pass is on; opens the offer, or says the pass is on. */
+function PassRow({ tripId }: { tripId: string }) {
+  const status = usePassStatus(tripId)
+  const [open, setOpen] = useState(false)
+  if (!status) return null
+  return (
+    <>
+      <div className="group">
+        <button className="group-row" onClick={() => setOpen(true)}>
+          <span className="k">{t('כרטיס לטיול')}</span>
+          <span className="v">{status.pass ? t('פעיל') : status.left > 0 ? t('{left} מתוך {n} מקומות חדשים בחינם', { left: status.left, n: status.free }) : t('נוצלו {n} המקומות בחינם', { n: status.free })}</span>
+          <Icon as={ChevronLeft} className="chev flip-ltr" />
+        </button>
+      </div>
+      {open && <PassSheet tripId={tripId} status={status} onClose={() => setOpen(false)} />}
+    </>
+  )
 }
 
 /** The credits row: shown only while credits are on (my_credits says enabled); opens the wallet on its own page. */

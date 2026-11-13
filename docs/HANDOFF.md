@@ -3,6 +3,21 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Trip pass (roadmap step 10, 2026-11-14, switched off)
+- `features.trip_pass` (app_settings, off). On: the first `free_places_per_trip` (10) NEW places of each trip are free
+  for the whole group; then suggest-place answers 402 `{needs_pass}` and the app opens the offer (src/views/Pass.tsx).
+  A saved answer or a library place stays free and is not counted; a search that finds nothing is given back.
+  When it is on, the old per-person credits (app_flags 'credits', also off) are not used for suggest-place.
+- Database: supabase/sql/2026-11-14-trip-pass.sql (applied): `trip_passes` (one row per trip with a pass; source
+  web/apple/grant, `external_id` unique for payment notices), `trip_place_uses` (reserved → settled/refunded),
+  `reserve_place/settle_place/refund_place` (service role), `trip_pass_status(trip)` for the app,
+  `grant_trip_pass(trip, note)` for admins. The owner's trip got a granted pass (it was "unlimited" under credits).
+- suggest-place uses `_shared/pass.ts`. NOT DEPLOYED YET (waits for the owner's go-ahead); with the switch off the
+  deployed code behaves as before.
+- Not built: paying. `buyPass()` in src/pass.ts says "payment opens soon". The website checkout (needs the owner's
+  payment company) and Apple's in-app purchase (needs the licence) each add a `trip_passes` row from a server function.
+- Settings shows a "Trip pass" row while the switch is on.
+
 ## Privacy page and usage counting (2026-11-13, live)
 - `/privacy/` and `/en/privacy/` (scripts/pages/privacy.mjs, built with the guide pages): privacy notice and terms,
   compared with Wanderlog, TripIt, Polarsteps, Tripadvisor, Mindtrip, Layla and Israel's Amendment 13. Linked from

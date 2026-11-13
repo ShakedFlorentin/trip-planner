@@ -24,3 +24,10 @@ export async function settingInt(admin: SupabaseClient, key: string, fallback: n
   const v = (await all(admin))[key]
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : fallback
 }
+
+/** A switch in app_settings features (e.g. trip_pass), or `fallback` when it is missing or not true/false. */
+export async function featureOn(admin: SupabaseClient, name: string, fallback = false): Promise<boolean> {
+  const f = (await all(admin)).features
+  const v = f && typeof f === 'object' ? (f as Record<string, unknown>)[name] : undefined
+  return typeof v === 'boolean' ? v : fallback
+}

@@ -6,7 +6,8 @@ import { z } from 'npm:zod@4'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
 import { creditsOn, hold, refund, settle, tripIdOf } from '../_shared/credits.ts'
-import { settingInt } from '../_shared/settings.ts'
+import { featureOn, settingInt } from '../_shared/settings.ts'
+import { holdPlace, refundPlace, settlePlace } from '../_shared/pass.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -500,10 +501,37 @@ Deno.serve(async (req) => {
     }
   }
 
-  // credits (behind CREDITS_ON): a cached answer above was free; a new search holds its price first and gives it back
-  // if it fails. The hold goes before the daily cap check so a refused search leaves no ai_usage row.
+  // the trip pass (features.trip_pass): a cached answer above was free; a new search takes one of the trip's free new
+  // places first (or the pass covers it) and gives it back if it finds nothing. When it is on, the old credits are not
+  // used. Both go before the daily cap check so a refused search leaves no ai_usage row.
   let creditOp: string | null = null
-  if (await creditsOn(admin)) {
+  let placeOp: string | null = null
+  const passOn = await featureOn(admin, 'trip_pass')
+  if (passOn) {
+    const tripId = tripIdOf(body?.trip_id)
+    if (!tripId) return json({ error: 'trip needed' }, 400)
+    const h = await holdPlace(admin, userId, tripId, id)
+    if (h.repeat) {
+      const { data: done } = await admin
+        .from('place_lookups')
+        .select('places')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .eq('status', 'done')
+        .maybeSingle()
+      const places = done?.places as unknown[] | null
+      if (!places?.length) return json(h.body, h.status)
+      if (live) {
+        return streamed(async (send) => {
+          send({ type: 'cached', places: places.map(spot) })
+          send({ type: 'done', places, cached: true })
+        })
+      }
+      return json({ places, cached: true })
+    }
+    if (!h.ok) return json(h.body, h.status)
+    placeOp = h.opId
+  } else if (await creditsOn(admin)) {
     const h = await hold(admin, userId, tripIdOf(body?.trip_id), 'suggest-place', id)
     if (h.repeat) {
       // this lookup id was already charged: never new AI work. Give back its finished result if it has one.
@@ -530,6 +558,7 @@ Deno.serve(async (req) => {
   const refused = await charge(admin, userId, 'suggest-place', json)
   if (refused) {
     if (creditOp) await refund(admin, creditOp)
+    if (placeOp) await refundPlace(admin, placeOp)
     return refused
   }
   await track({ status: 'running' })
@@ -542,10 +571,13 @@ Deno.serve(async (req) => {
         .from('place_lookups')
         .update('places' in r ? { status: 'done', places: r.places, finished_at } : { status: 'failed', error: r.error, finished_at })
         .eq('id', id)
-      if (creditOp) await ('places' in r && r.places.length ? settle(admin, creditOp) : refund(admin, creditOp))
+      const found = 'places' in r && r.places.length > 0
+      if (creditOp) await (found ? settle(admin, creditOp) : refund(admin, creditOp))
+      if (placeOp) await (found ? settlePlace(admin, placeOp) : refundPlace(admin, placeOp))
       return r
     }, async (e) => {
       if (creditOp) await refund(admin, creditOp)
+      if (placeOp) await refundPlace(admin, placeOp)
       throw e
     })
   if (live) {
