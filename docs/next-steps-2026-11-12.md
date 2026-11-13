@@ -114,8 +114,8 @@ Small pieces, published one at a time.
 | 14 | **Over-the-air updates and session replays** | Reels, items 6 and 3. Replays need a privacy decision |
 
 ## 4. Decisions that are yours
-1. **Free allowance:** 10 new places per trip (my suggestion), or keep one a day per person.
-2. **Pass price:** $7.99 is my starting guess. Step 4 makes it changeable without a new app version.
+1. **Free allowance: decided (13 Nov).** A trip pass, not credit packs: the first 10 new places of each trip are free for the whole group. Set in `app_settings` (`free_places_per_trip`).
+2. **Pass price: decided (13 Nov).** $7.99 (about ₪29) per trip, unlimited new places for everyone on it. Set in `app_settings` (`trip_pass_price`), so it can change without a new app version. Not charged until step 10.
 3. **Payment company for the website.** Not every company serves Israeli businesses. It needs your business details, so this is yours to open; I can compare the options when step 10 comes.
 4. **Old saved lookups: decided (12 Nov).** A link is kept for good, because the same link always points to the same places. Only a card's opening hours, or the place closing, can change, so that is the only thing re-checked, and only after 6 months. The design is in section 5.
 
