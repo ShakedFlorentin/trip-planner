@@ -1,28 +1,12 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { supabase } from './supabase'
 import { onOutbox, withPending } from './outbox'
 import type { CardText, Member } from './types'
 import { isEn, locale, t } from './i18n'
+import { CACHE_PREFIX, readCache, writeCache } from './cache'
+import { dropTableStores, tableStore } from './tableStore'
 
-const CACHE_PREFIX = 'cache:'
-
-/** The last good copy of some data, kept on the phone so the app opens with no network. */
-export function readCache<T>(key: string): { data: T; at: number } | null {
-  try {
-    const s = localStorage.getItem(CACHE_PREFIX + key)
-    return s ? JSON.parse(s) : null
-  } catch {
-    return null
-  }
-}
-
-export function writeCache(key: string, data: unknown) {
-  try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, at: Date.now() }))
-  } catch {
-    // storage full or blocked: the app just won't have this copy offline
-  }
-}
+export { readCache, writeCache }
 
 /**
  * Whether to show baby details: false only when some member answered the profile questions and none said "baby" ("kids" doesn't count). Profiles are
@@ -108,6 +92,7 @@ export function useTripAvoidsPorkSeafood(tripId: string): boolean {
 
 /** Forget every saved copy (on sign-out, so the next person on this phone doesn't see the old data). */
 export function clearCache() {
+  dropTableStores()
   try {
     Object.keys(localStorage)
       .filter((k) => k.startsWith(CACHE_PREFIX))
@@ -120,71 +105,12 @@ export function clearCache() {
 /**
  * Rows of one trip-scoped table, kept in sync with every member's edits via realtime. The last good rows are
  * saved on the phone and shown at once; `stale` means what's on screen hasn't been confirmed by the server yet.
+ * Every screen showing the same table shares one copy, one channel and one load (tableStore.ts).
  */
 export function useTripTable<T>(table: string, tripId: string, order: string = 'created_at') {
-  const key = `${table}:${tripId}:${order}`
-  const [cached] = useState(() => readCache<T[]>(key))
-  const [rows, setRows] = useState<T[]>(cached?.data ?? [])
-  const [loading, setLoading] = useState(!cached)
-  const [error, setError] = useState('')
-  const [stale, setStale] = useState(!!cached)
-  const [updatedAt, setUpdatedAt] = useState<number | null>(cached?.at ?? null)
-  const haveRows = useRef(!!cached)
-  // reloads can overlap when several changes arrive together; only the latest one may write
-  const latest = useRef(0)
-  // Supabase hands back the existing channel for a name already in use, so two screens watching one table (search
-  // over the places list) would share it: adding listeners after subscribe() throws, and the first to close would
-  // stop the other's updates. Each screen gets its own channel.
-  const instance = useId()
-
-  const reload = useCallback(async () => {
-    const req = ++latest.current
-    const { data, error } = await supabase
-      .from(table)
-      .select('*')
-      .eq('trip_id', tripId)
-      .order(order)
-    if (req !== latest.current) return
-    if (error) {
-      // offline with a saved copy is expected, and the offline banner says so: don't nag on every screen
-      if (!(haveRows.current && navigator.onLine === false)) setError(error.message)
-      setStale(true)
-    } else {
-      setRows(data as T[])
-      setError('')
-      setStale(false)
-      setUpdatedAt(Date.now())
-      haveRows.current = true
-      writeCache(key, data)
-    }
-    setLoading(false)
-  }, [table, tripId, order, key])
-
-  useEffect(() => {
-    reload()
-    const channel = supabase
-      .channel(`${table}:${tripId}:${instance}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table, filter: `trip_id=eq.${tripId}` },
-        () => reload(),
-      )
-      // realtime can't filter deletes by column, so listen to every delete on the table
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table }, () => reload())
-      .subscribe()
-    // catch up after the phone wakes or comes back online, when realtime events may have been missed
-    const refresh = () => document.visibilityState === 'visible' && reload()
-    document.addEventListener('visibilitychange', refresh)
-    window.addEventListener('online', refresh)
-    // what was saved offline has reached the server: show the server's copy
-    window.addEventListener('outbox-sent', reload)
-    return () => {
-      window.removeEventListener('outbox-sent', reload)
-      supabase.removeChannel(channel)
-      document.removeEventListener('visibilitychange', refresh)
-      window.removeEventListener('online', refresh)
-    }
-  }, [table, tripId, reload, instance])
+  const store = tableStore<T>(table, tripId, order)
+  const { rows, loading, error, stale, updatedAt } = useSyncExternalStore(store.subscribe, store.getState)
+  const reload = store.reload
 
   // changes made offline show at once, before they reach the server
   const [outboxAt, setOutboxAt] = useState(0)

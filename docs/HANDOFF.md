@@ -3,6 +3,18 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Load: one shared copy of each trip table (2026-11-14, on the branch, not on main yet)
+
+- **Why:** the stress test (`docs/stress-test-2026-11-14.md`) brought production down at about 20 users. The biggest cause was the app itself: every screen kept its own copy of each table and its own realtime channel, and loaded the whole table again on every change.
+- **Now** (`src/tableStore.ts`, used by `useTripTable` in `src/lib.ts`): one copy, one channel and one load per table and trip, shared by every screen.
+  - A burst of changes is followed by one load (250 ms after the last change, at most every 1.5 s).
+  - A delete on another trip loads nothing: the deleted row's key is compared with the rows on screen.
+  - A screen that opens within 5 s of a load uses it; the channel stays 3 s after the last screen closes, so moving between tabs doesn't reconnect.
+  - Sign-out drops every copy (`clearCache` → `dropTableStores`).
+- `readCache` / `writeCache` moved to `src/cache.ts` (still exported from `lib.ts`).
+- Test: `npm run test:table`. Checked in the real app against a leftover test trip: Home opens with one `candidates` load (was two), and Home → Discover → swipe → Plan → Places → Home took 4 (each was ~450 KB).
+- **Still open from the stress test:** `sync_library` hits the 8 s limit on a trip that already has its cards, even with one user; every swipe starts a `plan-trip` run from a trigger; the test accounts (21 users, 6 trips) are still in the database.
+
 ## Card look time in the ranking (roadmap step 11, 2026-11-14)
 
 - **Live (14 Nov):** columns and card_interest applied, app on main.
