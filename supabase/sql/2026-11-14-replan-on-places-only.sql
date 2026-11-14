@@ -4,7 +4,7 @@
 -- places_replan_who). So a swipe that changes no match changed nothing in the plan, but each one could start a
 -- planner run of ~30 requests: with 40 people swiping in 40 trips, the planner made 9 requests for every one of
 -- theirs and took the database's connections (1,164 of 1,299 requests in a minute).
--- Now: no plan per swipe; a match still makes one (match_place adds or changes the place), and an undone match
+-- Applied 14 Nov. Now: no plan per swipe; a match still makes one (match_place adds or changes the place), and an undone match
 -- does too (match_place deletes the place: the new places_replan_gone).
 
 create or replace function public.request_plan()
@@ -15,6 +15,10 @@ create or replace function public.request_plan()
 as $function$
 declare tok text; tid uuid;
 begin
+  -- a swipe changes the plan only through a match, and a match adds, changes or deletes a place, which asks for a
+  -- plan itself: swipes alone ask for nothing. (The trigger swipes_replan stays and returns here; dropping it needs
+  -- the owner's approval in the dashboard.)
+  if tg_table_name = 'swipes' then return null; end if;
   if tg_op = 'DELETE' then tid := old.trip_id; else tid := new.trip_id; end if;
   if tid is null then return null; end if;
   -- a planner is running for this trip: it reads the flag when it finishes and runs once more
@@ -32,5 +36,4 @@ begin
 end
 $function$;
 
-drop trigger if exists swipes_replan on public.swipes;
 create or replace trigger places_replan_gone after delete on public.places for each row execute function public.request_plan();
