@@ -11,6 +11,7 @@ import { RingsIcon } from '../rings'
 import { WhoChips, shows, validWho, type Who } from '../who'
 import QuickFab from './QuickFab'
 import { takeBookingKind, useQuickAdd } from '../quickAdd'
+import { DOC_ACCEPT, isDocType, saveDoc, savedDoc } from '../docs'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -139,38 +140,6 @@ export default function Bookings({ trip, members, userId }: Props) {
       {importing && <ImportSheet trip={trip} couples={couples} myCouple={myCouple} onClose={() => setImporting(false)} />}
     </div>
   )
-}
-
-// Booking documents are saved in Cache Storage so they open with no network (underground, in the air). The key is
-// only a unique URL-shaped name: nothing is ever fetched from it. Paths are uuids, so a saved copy never goes stale.
-const docKey = (path: string) => new URL('__doc/' + path.split('/').map(encodeURIComponent).join('/'), document.baseURI).href
-
-// Booking documents are PDFs or photos. Anything else is refused on upload, and a saved copy opens under one of these
-// types or as a plain download: a file opened from a blob: URL runs on the app's own origin, so an SVG or HTML file
-// typed as itself could run script with the viewer's session.
-const DOC_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
-const DOC_ACCEPT = DOC_TYPES.join(',')
-const isDocType = (type: string) => DOC_TYPES.includes(type)
-
-async function savedDoc(path: string) {
-  try {
-    return (await (await caches.open('docs')).match(docKey(path))) ?? null
-  } catch {
-    return null
-  }
-}
-
-async function saveDoc(path: string) {
-  try {
-    const { data } = await supabase.storage.from('docs').createSignedUrl(path, 600)
-    if (!data) return false
-    const res = await fetch(data.signedUrl)
-    if (!res.ok) return false
-    await (await caches.open('docs')).put(docKey(path), res)
-    return true
-  } catch {
-    return false
-  }
 }
 
 async function openFile(path: string) {

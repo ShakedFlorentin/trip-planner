@@ -3,6 +3,19 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Today and tomorrow on the phone (roadmap step 12, 2026-11-14)
+- `src/ready.ts` + the line on Home (`src/views/Ready.tsx`), from the day before the trip to its last day: whenever the
+  app is in front with a connection (at most every 2 hours, or when the days change, or on a tap) it saves ahead:
+  the trip's lists under the keys `useTripTable` reads; the photos of the places planned for today and tomorrow
+  (Cache Storage `photos`); the map around them, zoom 13–16, up to 160 tiles a day (`tiles`); and the documents of
+  bookings and hotel nights on those days (`docs`, helpers moved to `src/docs.ts`). Photos and map are skipped when the
+  phone asks to save data. Counted as the `ready` event.
+- `public/sw.js`: now serves place photos (our storage's public files and Google's lh3) from `photos`, keeps up to
+  400; tiles up to 600. App files are matched with `ignoreVary` — with "Vary: Origin" (vite preview) the saved app
+  never matched the module script's request and the app could not open offline at all. Tested: an offline reload
+  opens Home with today's plan, hotel and bookings; today's photos open, other days' are not saved.
+- The iOS app has no service worker (Capacitor): photos and tiles are saved but not served there yet.
+
 ## Trip pass (roadmap step 10, 2026-11-14, switched off)
 - `features.trip_pass` (app_settings, off). On: the first `free_places_per_trip` (10) NEW places of each trip are free
   for the whole group; then suggest-place answers 402 `{needs_pass}` and the app opens the offer (src/views/Pass.tsx).

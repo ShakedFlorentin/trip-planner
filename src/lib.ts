@@ -316,6 +316,14 @@ export function replan(tripId: string) {
 }
 
 /** Links/photos collected per place name (public/media.json), shipped with the app. */
+/** The media index (public/media.json: links and photos by place name), loaded once and shared. */
+export function mediaIndex(): Promise<Record<string, MediaEntry>> {
+  mediaCache ??= fetch('./media.json')
+    .then((r) => (r.ok ? r.json() : {}))
+    .catch(() => ({}))
+  return mediaCache
+}
+
 export function useMediaIndex() {
   const [index, setIndex] = useState<Record<string, MediaEntry>>({})
   useEffect(() => {

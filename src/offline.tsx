@@ -18,7 +18,7 @@ export function useOnline() {
 }
 
 /** "לפני 3 שעות" for a timestamp. */
-function ago(at: number) {
+export function ago(at: number) {
   const min = Math.max(1, Math.round((Date.now() - at) / 60000))
   if (min < 60) return min === 1 ? t('לפני דקה') : t('לפני {n} דקות', { n: min })
   const h = Math.round(min / 60)

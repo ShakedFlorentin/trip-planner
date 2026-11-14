@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import ReadyLine from './Ready'
 import {
   BedDouble,
   Check,
@@ -126,6 +127,9 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
               <div className="big">{daysLabel(daysLeft)}</div>
               <div className="muted">{t('להמראה')}</div>
             </>
+          ) : today ? (
+            // during the trip with no city set for the day: which day it is, not "the trip is over"
+            <div className="big">{t('יום {n} מתוך {total}', { n: today, total: trip.num_days })}</div>
           ) : daysLeft !== null ? (
             <div className="big">{t('הטיול הסתיים')}</div>
           ) : (
@@ -141,6 +145,8 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
           </div>
         </section>
       )}
+
+      <ReadyLine trip={trip} />
 
       <ReviewCard tripId={trip.id} userId={userId} />
 
