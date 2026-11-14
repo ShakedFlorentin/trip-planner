@@ -73,10 +73,20 @@ export default function Bookings({ trip, members, userId }: Props) {
           confirmation code in a small mono chip on the far side. A tap opens the booking (the boarding pass for flights) */}
       <div className="stack bk-list">
         {items.map((b) => (
-          <div key={b.id} className="bk-row" role="button" tabIndex={0} onClick={() => setOpenId(b.id)} onKeyDown={(e) => e.key === 'Enter' && setOpenId(b.id)}>
-            <span className="bk-ic" aria-hidden="true">
-              <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
-            </span>
+          <div
+            key={b.id}
+            className="bk-row"
+            role="button"
+            tabIndex={0}
+            onClick={() => setOpenId(b.id)}
+            onKeyDown={(e) => e.target === e.currentTarget && e.key === 'Enter' && setOpenId(b.id)}
+          >
+            {/* the kind's icon only on the mixed "other" tab; on a one-kind tab it would repeat on every row */}
+            {current === 'other' && (
+              <span className="bk-ic" aria-hidden="true">
+                <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+              </span>
+            )}
             <div className="bk-body">
               <div className="bk-title" dir="auto">
                 {bookingTitle(b)}
@@ -84,7 +94,7 @@ export default function Bookings({ trip, members, userId }: Props) {
               <div className="bk-sub">
                 <span className="bk-line">{bookingLine(b)}</span>
                 {/* whose it is, while the list shows everyone's */}
-                {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill">{t(b.who)}</span>}
+                {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill" dir="auto">{t(b.who)}</span>}
               </div>
             </div>
             {b.file_path && <DocSaver path={b.file_path} />}
@@ -96,13 +106,15 @@ export default function Bookings({ trip, members, userId }: Props) {
               // no code yet: a way to add it (39)
               <button
                 className="link bk-add"
+                aria-label={t('הוספת קוד אישור להזמנה: {name}', { name: bookingTitle(b) })}
+                onKeyDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation()
                   setFocusConf(true)
                   setEdit(b)
                 }}
               >
-                + {t('הוספה')}
+                + {t('קוד אישור')}
               </button>
             )}
           </div>
@@ -591,7 +603,7 @@ function bookingLine(b: Booking) {
   if (!b.starts_at) return BOOKING_KINDS[b.kind] ?? BOOKING_KINDS.other
   const f = b.kind === 'flight' ? flightParts(b) : null
   // kept left to right, or Hebrew turns "TLV → MUC" around
-  if (f) return [`\u2066${f.from} → ${f.to}\u2069`, dayMonth(b.starts_at)].join(' · ')
+  if (f) return [`\u2066${f.from} → ${f.to}\u2069`, dayMonth(b.starts_at), flightTimes(b)].filter(Boolean).join(' · ')
   if (b.kind === 'hotel' && b.ends_at) {
     const n = Math.round((Date.parse(b.ends_at.slice(0, 10)) - Date.parse(b.starts_at.slice(0, 10))) / 86400000)
     const nights = n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''
@@ -644,7 +656,7 @@ function BookingSheet({ b, who, onClose, onEdit }: { b: Booking; who?: string | 
           <div className="small muted no-conf">
             {t('אין מספר אישור')}
             <button className="link" onClick={() => onEdit(true)}>
-              + {t('הוספה')}
+              + {t('קוד אישור')}
             </button>
           </div>
         )}
@@ -690,7 +702,15 @@ function flightParts(b: Booking) {
   return { from: m[1], to: m[2], number: num ? num[1] + num[2] : '', airline }
 }
 
-const hm = (iso: string) => (iso.slice(11, 16) === '00:00' ? '' : iso.slice(11, 16))
+/** The one place a time of day is read from a stored time: a whole-day marker (00:00) is no time and shows nothing. */
+const hm = (iso: string | null | undefined) => (!iso || iso.slice(11, 16) === '00:00' ? '' : iso.slice(11, 16))
+/** "23:40 → 06:15" (left to right) for a flight, just the departure when the arrival is not known. */
+const flightTimes = (b: Booking) => {
+  const from = hm(b.starts_at)
+  if (!from) return ''
+  const to = hm(b.ends_at)
+  return `\u2066${from}${to ? ` → ${to}` : ''}\u2069`
+}
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'numeric' })
 
@@ -754,8 +774,3 @@ function toBase64(file: File): Promise<string> {
     r.readAsDataURL(file)
   })
 }
-
-/**
- * Write each hotel on the trip nights it covers (needs the trip start date). A couple's hotel becomes its own line,
- * "couple: hotel", so the two couples' hotels sit side by side on nights they stay apart.
- */

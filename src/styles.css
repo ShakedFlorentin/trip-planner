@@ -268,7 +268,7 @@ form.card, .login .card { display: flex; flex-direction: column; gap: 12px; widt
 main { padding: 14px 20px calc(var(--tabbar-h) + 36px + env(safe-area-inset-bottom)); }
 main.tab-swipe { padding-bottom: 0; }
 /* a page with the + button ends lower, so its last item can scroll clear of the button */
-main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 24px + env(safe-area-inset-bottom)); }
+main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }
 
 /* Liquid Glass: blur and saturate what is behind, a bright rim where light catches the edge, a soft sheen
    across the face and a lifted shadow. Real lensing can't be done in Safari, so this is the closest web form */
@@ -708,7 +708,7 @@ html[dir='rtl'] .ja { text-align: right; }
 .round svg .fill { fill: currentColor; stroke-width: 1.5; }
 .round:active { transform: scale(0.9); }
 .round.nope { color: var(--nope); }
-.round.like { color: var(--like); }
+.round.like { color: var(--accent); }
 .small-round { width: 44px; height: 44px; }
 .small-round svg { width: 20px; height: 20px; stroke-width: 2.2; color: var(--muted); }
 .small-round:disabled { opacity: 0.35; }
@@ -990,7 +990,7 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
 .group-row > select { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: end; text-align-last: end; color: var(--muted); font-size: 1rem; min-height: 40px; }
 .group-row:disabled { opacity: 0.5; }
 /* list or map: one floating button centred above the tab bar */
-.view-toggle { position: fixed; z-index: 4; left: 50%; translate: -50% 0; bottom: calc(var(--tabbar-h) + 22px + env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 18px; border-radius: 999px; font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+.view-toggle { position: fixed; z-index: 4; right: max(16px, calc(50% - 304px)); bottom: calc(var(--tabbar-h) + 22px + env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 18px; border-radius: 999px; font-weight: 600; font-size: 0.9375rem; color: var(--text); }
 /* the map fills the screen under the filter row */
 .map-wrap { position: relative; margin: 0 -20px; }
 .places.map-mode .map-wrap .map { height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 64px); border-radius: 0; }
@@ -1079,10 +1079,10 @@ html[dir='ltr'] .place-row { padding: 12px 14px 12px 16px; }
 .bk-ic .ic { width: 22px; height: 22px; color: #fff; }
 .bk-body { flex: 1; min-width: 0; }
 .bk-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.125rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
-.bk-sub { display: flex; align-items: center; min-width: 0; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
-.bk-line { flex: 0 0 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* the route and date come first; a long couple name gives way */
-.bk-sub .who-pill { flex: 0 1 auto; min-width: 28px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
+.bk-line { flex: 0 1 auto; max-width: 100%; overflow-wrap: anywhere; }
+/* the route and date first; a long couple name drops to its own line instead of being cut off */
+.bk-sub .who-pill { flex: 0 1 auto; max-width: 100%; }
 .bk-code { flex: none; max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 8px; border-radius: 8px; background: var(--bg); font-family: ui-monospace, 'SF Mono', monospace; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.02em; }
 .bk-add { flex: none; min-height: 32px; padding: 0 2px; font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
 /* a booking opened */

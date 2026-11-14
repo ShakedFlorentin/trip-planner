@@ -448,4 +448,6 @@ export const EN_A: Record<string, string> = {
   "מאצ׳ים בטיול": "Matches on the trip",
   "באייפון, התראות עובדות רק כשפותחים את Toogo מהמסך הראשי: בספארי, שיתוף ואז \"הוספה למסך הבית\".": "On an iPhone, notifications work only when Toogo is opened from the Home Screen: in Safari, tap Share, then \"Add to Home Screen\".",
   "התראה כשמישהו מהטיול אוהב מקום שגם אתם אהבתם. רק בטלפון הזה.": "A notification when someone on the trip likes a place you liked too. On this phone only.",
+  'קוד אישור': 'Confirmation code',
+  'הוספת קוד אישור להזמנה: {name}': 'Add a confirmation code to the booking: {name}',
 }

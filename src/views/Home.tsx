@@ -34,7 +34,7 @@ import {
   type Swipe,
   type Trip,
 } from '../types'
-import { cityLabel, couplesOf, currentDay, dayDate, dayParts, errorText, fmtDay, fmtDayLong, mutate, useTripTable } from '../lib'
+import { readCache, cityLabel, couplesOf, currentDay, dayDate, dayParts, errorText, fmtDay, fmtDayLong, mutate, useTripTable } from '../lib'
 import { locale, t } from '../i18n'
 import { cityColor, cityPhoto } from '../cities'
 import { BOOKING_ICON, Icon } from '../icons'
@@ -87,6 +87,11 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
   const tonight = today
     ? hotelFor(nightLines(todayInfo?.hotel ?? null, bookings, ymd(dayDate(trip.start_date, today)!), couples, stays, stayCities), myCouple)
     : []
+  // the same number Discover shows as "N left": the cards still to vote on. Discover saves its own count (it knows this
+  // person's questionnaire and which places are for their couple); until it has, count the cards not voted on yet
+  const swipesLeft =
+    readCache<number>('left:' + trip.id + ':' + userId)?.data ??
+    candidates.filter((c) => !swipes.some((s) => !s.skipped && s.user_id === userId && s.candidate_id === c.id)).length
   const cities = runs(days, 'city')
   const destinations = Object.entries(
     candidates.reduce<Record<string, number>>((acc, c) => ((acc[c.city] = (acc[c.city] ?? 0) + 1), acc), {}),
@@ -202,7 +207,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
           bookings={bookings}
           todos={todos}
           open={() => onOpenMore('lists')}
-          swipesLeft={candidates.filter((c) => !swipes.some((s) => s.user_id === userId && s.candidate_id === c.id)).length}
+          swipesLeft={swipesLeft}
         />
       )}
 
