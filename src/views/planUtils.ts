@@ -168,7 +168,7 @@ function checkInFrom(list: Entry[]) {
         key: ci.booking.id + ':bags',
         time: null,
         icon: Luggage,
-        title: t('השארת מזוודות · {hotel}', { hotel: ci.booking.title }),
+        title: t('השארת מזוודות במלון'),
         sub: t('המלון שומר אותן עד הצ׳ק-אין'),
         location: ci.location,
         who: ci.who,

@@ -474,7 +474,7 @@ export const EN_B: Record<string, string> = {
   'אחרת…': 'Other…',
   'שם השכונה': 'Neighbourhood name',
   'אפשר מ-{time}, לפי ההזמנה': 'From {time}, per the booking',
-  'השארת מזוודות · {hotel}': 'Leave the bags · {hotel}',
+  'השארת מזוודות במלון': 'Leave the bags at the hotel',
   'המלון שומר אותן עד הצ׳ק-אין': 'The hotel keeps them until check-in',
   'עריכת היום': 'Edit the day',
   '{n} צעדים ראשונים אחרי הנחיתה': '{n} first steps after landing',

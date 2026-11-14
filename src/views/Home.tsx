@@ -162,7 +162,9 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
                 <Icon as={BedDouble} /> {t('הלילה במלון')}
               </h3>
               {tonight.map((t) => (
-                <div key={t}>{t}</div>
+                <bdi key={t} className="tonight-hotel">
+                  {t}
+                </bdi>
               ))}
             </section>
           )}

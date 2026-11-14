@@ -162,6 +162,8 @@
 .nav-round { flex: none; align-self: center; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--accent); }
 .nav-round .ic { width: 18px; height: 18px; }
 .who-pill .rings-ic { vertical-align: -0.15em; }
+/* Home, tonight's hotel: the name never breaks inside itself; a long one ends in … */
+.tonight-hotel { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* the photo hero at the top of Home (19) */
 .city-tile.hero-tile { aspect-ratio: auto; min-height: 210px; width: 100%; padding: 16px 18px; border-radius: 20px; gap: 3px; }
 .hero-tile b { font-size: 2.25rem; letter-spacing: -0.02em; }
@@ -185,6 +187,8 @@
 .day-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; margin: 0 2px; }
 .day-meta .day-who { margin: 0; }
 .day-bed span { min-width: 0; }
+/* the hotel name never breaks inside itself: it drops to the next line whole, or ends in … if it is wider than the line; bdi keeps its direction apart from the text around it */
+.day-bed .bed-name { display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 .day-bed { max-width: 100%; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 30px; padding: 0; font-size: 0.8125rem; color: var(--muted); text-align: start; }
 .day-bed .ic { flex: none; width: 15px; height: 15px; }
 .day-bed .chev { width: 13px; height: 13px; opacity: 0.6; }

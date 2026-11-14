@@ -248,7 +248,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                 <span>
                   {l.who && mode === 'all' && <>{t(l.who)}: </>}
                   {sleepAway && <>{t('לינה ב{city}', { city: lodging })} · </>}
-                  {l.text}
+                  <bdi className="bed-name">{l.text}</bdi>
                   {l.proposed && <> · {t('מוצע')}</>}
                 </span>
                 <Icon as={ChevronLeft} className="chev flip-ltr" />

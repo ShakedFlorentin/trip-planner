@@ -350,14 +350,17 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)
-  const [stale, setStale] = useState(!!tripCache)
+  const [stale, setStale] = useState(false)
 
   useEffect(() => {
+    // a saved copy is shown at once; the banner waits for a failed load or a slow first answer (6 s), not for the first round trip
+    const slow = setTimeout(() => setStale(true), 6000)
     const load = async () => {
       const [t, m] = await Promise.all([
         supabase.from('trips').select('*').eq('id', tripId).single(),
         supabase.from('members').select('*').eq('trip_id', tripId).order('joined_at'),
       ])
+      clearTimeout(slow)
       if (t.data) {
         setTrip(t.data as Trip)
         writeCache('trip:' + tripId, t.data)
@@ -390,6 +393,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       stop = () => void supabase.removeChannel(channel)
     }
     return () => {
+      clearTimeout(slow)
       stop()
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('online', refresh)
