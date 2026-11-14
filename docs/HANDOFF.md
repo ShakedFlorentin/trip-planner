@@ -13,7 +13,9 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
   - Sign-out drops every copy (`clearCache` → `dropTableStores`).
 - `readCache` / `writeCache` moved to `src/cache.ts` (still exported from `lib.ts`).
 - Test: `npm run test:table`. Checked in the real app against a leftover test trip: Home opens with one `candidates` load (was two), and Home → Discover → swipe → Plan → Places → Home took 4 (each was ~450 KB).
-- **Still open from the stress test:** `sync_library` hits the 8 s limit on a trip that already has its cards, even with one user; every swipe starts a `plan-trip` run from a trigger; the test accounts (21 users, 6 trips) are still in the database.
+- **Test accounts removed** (14 Nov, by the owner in the SQL editor); the Japan trip checked equal to its fingerprint before the test.
+- **`sync_library` (fix 2, `supabase/sql/2026-11-14-sync-library-speed.sql`, to apply in the SQL editor):** the old "already in the trip" check ran `same_place_name` for every library card × every trip card (~340,000 calls on the Japan trip) and timed out on every Discover open, so new library cards stopped reaching trips: the Japan trip is missing 66 active cards (48 Tokyo food and 12 cafés from Ptitim, Facebook-group picks). The new version drops cards already there by id or exact name first and splits names into words once; the same 66 cards come out. Once applied, the Japan trip gets them on the next Discover open.
+- **Still open:** every swipe starts a `plan-trip` run from a trigger (`swipes_replan`). The database's CPU is small and bursts: after the test a plain benchmark ran 5–20× slower than normal for a while.
 
 ## Card look time in the ranking (roadmap step 11, 2026-11-14)
 
