@@ -255,3 +255,19 @@
 .split-way > span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .split-way .chev { flex: none; color: var(--muted); }
 .split-later { align-self: center; }
+
+/* the landing row: the ride to the hotel, one calm line under the title */
+.arrival-ride { display: block; margin-top: 2px; font-size: 0.8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* leaving the bags is a hint, not a stop: its icon is plain and muted, with no circle to tap */
+.plan-row .plan-icon.quiet { color: var(--muted); opacity: 0.7; }
+/* in the trip: a slim photo band, and who / bed / note as one quiet block, so the first stop sits high */
+.day-head.on-trip { gap: 6px; }
+.day-head.on-trip .day-banner { height: 60px; border-radius: 14px; }
+.day-head.on-trip .day-banner-city { bottom: 8px; inset-inline-start: 14px; font-size: 1.125rem; }
+.day-head.on-trip .day-banner-edit { top: 15px; width: 30px; height: 30px; }
+.day-head.on-trip .day-block { display: flex; flex-direction: column; gap: 2px; padding: 6px 12px; border-radius: 12px; background: var(--card); }
+.day-head.on-trip .day-meta { margin: 0; }
+.day-head.on-trip .day-notes { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.day-head:not(.on-trip) .day-block { display: contents; }
+/* the + is fixed at the bottom: Plan's last row ends above it with room to spare */
+main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }

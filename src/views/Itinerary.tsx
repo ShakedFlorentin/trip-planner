@@ -32,6 +32,7 @@ import {
 } from './planUtils'
 import '../styles/plan.css'
 import QuickFab from './QuickFab'
+import { arrivalLine, arrivalOf, type Arrival } from './arrivalLine'
 
 type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string }
 
@@ -108,7 +109,11 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
     replan(trip.id)
   }
   const date = trip.start_date ? ymd(dayDate(trip.start_date, day)!) : ''
-  const entries = dayEntries(items, bookings, day, date, mode, myCouple)
+  // the planner's landing data for this day (none in a plan made before it was added: then nothing extra shows)
+  const dayArrival = summary?.days?.find((d) => d.day === day)?.arrival
+  const entries = dayEntries(items, bookings, day, date, mode, myCouple, dayArrival)
+  // a day inside the trip dates: a slim header, so the first stop sits high on the screen
+  const onTrip = today != null
   // on a day with several owners, "הכל" reads as one section per owner (the group first)
   const owners = [...new Set(entries.map((e) => e.who))].sort((a, b) => (a ?? '').localeCompare(b ?? ''))
   const sections = mode === 'all' && owners.length > 1 ? owners : [undefined]
@@ -209,8 +214,8 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
 
       {/* the day as in the promo video: its title, then a photo of the day's city with the name on it; whose day it is and
           where you sleep sit small under the photo. The photo (or the pencil in its corner) opens the day's details */}
-      <section className="day-head">
-        <h2 className="day-title">{trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })}</h2>
+      <section className={'day-head' + (onTrip ? ' on-trip' : '')}>
+        {!onTrip && <h2 className="day-title">{trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })}</h2>}
         {mainCity ? (
           <button
             className={'day-banner c' + cityColor(mainCity) + (dayPhoto ? ' has-photo' : '')}
@@ -228,6 +233,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
             <Icon as={Pencil} /> {t('עריכת היום')}
           </button>
         )}
+        <div className="day-block">
         <div className="day-meta">
           <span className="day-who">
             {info?.who ? (
@@ -264,6 +270,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         </div>
         {estimateDay && <div className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</div>}
         {info?.notes && <div className="notes day-notes" dir="auto">{keepRanges(info.notes)}</div>}
+        </div>
       </section>
 
       {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={mode} onChange={setMode} />}
@@ -292,6 +299,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                   <ArrivalCard
                     entry={e}
                     dayWho={info?.who ?? null}
+                    arrival={arrivalOf(dayArrival, e.who)}
                     checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null}
                   />
                 ) : (
@@ -452,6 +460,11 @@ export function EntryRow(props: {
         >
           {i.done && <Check size="1em" strokeWidth={3.2} aria-hidden="true" />}
         </button>
+      ) : e.key.endsWith(':bags') ? (
+        // leaving the bags is a hint, not a stop to tick or navigate to: a quiet icon with no circle
+        <span className="plan-icon quiet" aria-hidden="true">
+          <Icon as={e.icon} />
+        </span>
       ) : e.location ? (
         // a booking moment has no sheet: its round icon is the way there
         <NavLink to={e.location} round icon={e.icon} />
@@ -749,11 +762,12 @@ function Spare({ trip, day, spare, places }: { trip: Trip; day: number; spare: P
 }
 
 /** First steps after landing; the check-in line gives the day's hotel booking hour when there is one. */
-function ArrivalCard({ entry, checkin, dayWho }: { entry: Entry; checkin: string | null; dayWho: string | null }) {
+function ArrivalCard({ entry, checkin, dayWho, arrival }: { entry: Entry; checkin: string | null; dayWho: string | null; arrival: Arrival | null }) {
   const b = entry.booking!
   const airport = tokyoArrival(b)
   if (!airport) return null
   const a = ARRIVAL[airport]
+  const ride = arrivalLine(arrival, (v) => t('עד המלון כ-{n} דק׳ · שם בסביבות {time}', v))
   return (
     // closed to one row like the day's stops (the video's calm list); the first steps open under it
     <details className="arrival">
@@ -767,6 +781,7 @@ function ArrivalCard({ entry, checkin, dayWho }: { entry: Entry; checkin: string
             <span className="plan-kind">{t('{n} צעדים ראשונים אחרי הנחיתה', { n: a.steps.length })}</span>
             {b.who && b.who !== dayWho && <span className="who-pill">{t(b.who)}</span>}
           </span>
+          {ride && <span className="plan-sub arrival-ride">{ride}</span>}
         </span>
         <Icon as={ChevronDown} className="chev" />
       </summary>

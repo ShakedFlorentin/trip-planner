@@ -13,6 +13,7 @@ import {
 import { CATEGORY_ICON, BOOKING_ICON, type LucideIcon } from '../icons'
 import { whoOptions, type Booking, type City, type ItineraryItem, type TripStay } from '../types'
 import { isEn, t } from '../i18n'
+import { arrivalOf, roundUp5, type Arrival } from './arrivalLine'
 
 /** itinerary_items.who is a new column (couple, or null for everyone); types.ts doesn't have it yet. */
 // ItineraryItem carries `who` now; the alias keeps the plan code's name for it
@@ -139,12 +140,12 @@ export function itemEntry(i: PlanItem): Entry {
 const byEntryTime = (a: Entry, b: Entry) => (a.time ?? '99').localeCompare(b.time ?? '99')
 
 /** A day as one timeline: plan items and bookings merged by time, filtered by whose they are. */
-export function dayEntries(items: PlanItem[], bookings: Booking[], day: number, date: string, mode: WhoMode, mine: string | null) {
+export function dayEntries(items: PlanItem[], bookings: Booking[], day: number, date: string, mode: WhoMode, mine: string | null, arrival?: Record<string, Arrival> | null) {
   const own = items.filter((i) => i.day === day).sort((a, b) => a.sort - b.sort).map(itemEntry)
   const list = [...own, ...bookingEntries(bookings, date)]
     .filter((e) => visible(e.who, mode, mine) || (mode === 'mine' && !!e.booking && staysWithUs(e.booking, bookings, mine)))
     .sort(byEntryTime)
-  return checkInFrom(list)
+  return checkInFrom(list, arrival)
 }
 
 /**
@@ -153,7 +154,7 @@ export function dayEntries(items: PlanItem[], bookings: Booking[], day: number, 
  * in another city (Tokyo → the Yokohama hotel → Tokyo). On a landing day the hotel comes first, to leave the bags:
  * hotels keep them until check-in.
  */
-function checkInFrom(list: Entry[]) {
+function checkInFrom(list: Entry[], arrival?: Record<string, Arrival> | null) {
   let out = list
   for (const ci of list.filter((e) => e.key.endsWith(':in'))) {
     const same = (e: Entry) => !e.who || !ci.who || e.who === ci.who
@@ -166,7 +167,8 @@ function checkInFrom(list: Entry[]) {
     if (landing && ci.booking) {
       const bags: Entry = {
         key: ci.booking.id + ':bags',
-        time: null,
+        // the planner's arrival-at-the-hotel time, when the summary has it (older plans have none: no time then)
+        time: roundUp5(arrivalOf(arrival, ci.who)?.ready),
         icon: Luggage,
         title: t('השארת מזוודות במלון'),
         sub: t('המלון שומר אותן עד הצ׳ק-אין'),

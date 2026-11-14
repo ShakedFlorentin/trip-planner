@@ -17,6 +17,7 @@ import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
 import Menu from './views/Menu'
 import Settings from './views/Settings'
 import ReportSheet from './views/Report'
+import { Sheet } from './ui'
 import SwipeGame from './views/Swipe'
 import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
@@ -272,6 +273,8 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     },
     [tripId],
   )
+  // once the trip has started, the wand asks first (a stray tap must not re-plan the days ahead)
+  const [askWand, setAskWand] = useState(false)
   const wand = () => {
     if (wandRun.current) return
     clearTimeout(toastTimer.current)
@@ -469,7 +472,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
-            onClick={wand}
+            onClick={() => (trip && currentDay(trip.start_date, trip.num_days) != null ? setAskWand(true) : wand())}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -527,6 +530,22 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           onLeave={props.onLeave}
           onReport={() => setReporting(true)}
         />
+      )}
+      {askWand && (
+        <Sheet
+          title={t('לסדר מחדש את הימים שלפנינו?')}
+          closeLabel={t('ביטול')}
+          onClose={() => setAskWand(false)}
+          action={{
+            label: t('סידור מחדש'),
+            onClick: () => {
+              setAskWand(false)
+              wand()
+            },
+          }}
+        >
+          <p className="muted">{t('ימים שעברו נשארים כמו שהם.')}</p>
+        </Sheet>
       )}
       {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
       {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}
