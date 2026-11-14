@@ -19,6 +19,7 @@
 // nearer ones have their minimum. A split that breaks one is never returned; what people booked or typed is theirs
 // and is never judged.
 import { km } from './plan.ts'
+import { JAPAN, ROUTE, AIRPORT_CITY, cityOfAirport, flightDest } from './airports.ts'
 export { CITY_ROUTE, type RouteInfo } from './route-data.ts'
 
 /** A city nights can go to. The route fields are optional: a city without them takes no part in the route rules. */
@@ -145,20 +146,6 @@ export function travelMins(a: SplitCity, b: SplitCity) {
 
 // ---------- flights → a party's stretch
 
-const JAPAN = /\b(HND|NRT|KIX|ITM|NGO|CTS|FUK|OKA|UKB|HIJ|KMQ)\b|Haneda|Narita|Kansai|Itami|Chubu|Centrair|Chitose|Fukuoka|Naha/i
-const ROUTE = /→|->|⟶|—|–|\s-\s/
-const AIRPORT_CITY: [RegExp, string][] = [
-  [/\b(HND|NRT)\b|Haneda|Narita/i, 'tokyo'],
-  [/\b(KIX|ITM)\b|Kansai|Itami/i, 'osaka'],
-  [/\bNGO\b|Chubu|Centrair/i, 'nagoya'],
-  [/\bCTS\b|Chitose/i, 'sapporo'],
-  [/\bFUK\b|Fukuoka/i, 'fukuoka'],
-  [/\bOKA\b|Naha/i, 'okinawa'],
-  [/\bUKB\b/i, 'kobe'],
-  [/\bHIJ\b/i, 'hiroshima'],
-  [/\bKMQ\b/i, 'kanazawa'],
-]
-const cityOfAirport = (s: string) => AIRPORT_CITY.find(([re]) => re.test(s))?.[1] ?? null
 // flight times are kept as the airport's own clock time
 const hourOf = (ts: string) => Number(ts.slice(11, 13))
 export type FlightLite = { who: string | null; title: string; starts_at: string | null; ends_at: string | null }
@@ -169,8 +156,9 @@ export function partyStretch(flights: FlightLite[], party: string, startDate: st
   const last = addDays(startDate, numDays - 1)
   for (const f of flights) {
     if (f.who && f.who !== party) continue
-    const [from, ...to] = f.title.split(ROUTE)
-    const dest = to.join(' ')
+    const [from] = f.title.split(ROUTE)
+    // flightDest returns the destination half, or the full title when there is no separator (e.g. "TLV-NRT", "טוקיו")
+    const dest = flightDest(f.title)
     if (JAPAN.test(dest) && f.ends_at) {
       const d = f.ends_at.slice(0, 10)
       if (d >= startDate && d < last && (!out.from || d < out.from)) {

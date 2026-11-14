@@ -115,6 +115,19 @@ const rules = (f, out) => {
       if (taker) errs.push(`${id}: left out ('full') although day ${d.day}, in its city, holds ${taker[0]} from ${out.away.get(taker[0])}`)
     }
   }
+  // on a landing day (p.landing === true): no placed stop may be more than 40 min ride from the hotel
+  for (const [id, p] of out.placed) {
+    const u = byId.get(id)
+    const d = dayOf.get(p.day)
+    if (!u || !d) continue
+    for (const c of u.couples) {
+      const pr = d.at.get(c)
+      if (pr?.landing && u.point) {
+        const rideMin = E.ride(pr.hotel, u.point)
+        if (rideMin > 40) errs.push(`${id}: on landing day ${p.day}, ${Math.round(rideMin)} min ride > 40 from ${c}'s hotel`)
+      }
+    }
+  }
   return errs
 }
 
@@ -197,6 +210,26 @@ const expectations = (f, out, run) => {
     if (x.dayTripDays != null && ds.size > x.dayTripDays) errs.push(`day trip spread over days ${[...ds].join(',')}, expected at most ${x.dayTripDays}`)
   }
   for (const id of x.notFar ?? []) if (run.units.find((u) => u.id === id)?.far) errs.push(`${id}: a day trip, expected in town`)
+  // arrival: per day and couple, check airport and ride_min on the PresenceInfo (presence fixtures only)
+  for (const [day, byCouple] of Object.entries(x.arrival ?? {})) {
+    for (const [c, want] of Object.entries(byCouple)) {
+      const got = run.days.find((d) => d.day === Number(day))?.at.get(c)
+      if (!got) { errs.push(`day ${day}: ${c} missing (arrival check)`); continue }
+      const a = got.arrival
+      if (!a) { errs.push(`day ${day}: ${c} has no arrival info`); continue }
+      if (want.airport && a.airport !== want.airport) errs.push(`day ${day}: ${c} airport ${a.airport}, expected ${want.airport}`)
+      if (want.ride_min != null && a.ride_min !== want.ride_min) errs.push(`day ${day}: ${c} ride_min ${a.ride_min}, expected ${want.ride_min}`)
+    }
+  }
+  // startsBefore: pairs [id1, id2] where id1 must be scheduled before id2 on the same day
+  for (const [id1, id2] of x.startsBefore ?? []) {
+    const p1 = out.placed.get(id1)
+    const p2 = out.placed.get(id2)
+    if (!p1) { errs.push(`${id1}: not placed (startsBefore)`); continue }
+    if (!p2) { errs.push(`${id2}: not placed (startsBefore)`); continue }
+    if (p1.day !== p2.day) { errs.push(`${id1} (day ${p1.day}) and ${id2} (day ${p2.day}) on different days, can't compare order`); continue }
+    if (p1.start >= p2.start) errs.push(`${id1} starts ${p1.start} >= ${id2} starts ${p2.start}: expected ${id1} before ${id2}`)
+  }
   // oneBase: every city's nights are one stretch at one point (no hotel change inside a city)
   if (x.oneBase) {
     const byCity = new Map()

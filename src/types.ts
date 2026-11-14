@@ -85,8 +85,9 @@ export type PlanSummary = {
   // city id (cities.id); day is where the planner put it
   away?: { place_id: string; day: number; city: string }[]
   facts_pending: number
-  // per day the planner worked on: where each couple sleeps, and estimate:true when no hotel booking is behind it
-  days?: { day: number; estimate?: boolean; hotels: Record<string, string | null> }[]
+  // per day the planner worked on: where each couple sleeps, and estimate:true when no hotel booking is behind it.
+  // arrival is set on days when a couple lands: airport code, ride minutes to the hotel, and arrival-at-hotel time
+  days?: { day: number; estimate?: boolean; hotels: Record<string, string | null>; arrival?: Record<string, { airport: string; ride_min: number; ready: string }> }[]
   // where to sleep, for each stretch with no hotel (plan-trip/stay.ts): one area for all its nights, and up to two others
   stay_areas?: StayAreaRec[]
 }
