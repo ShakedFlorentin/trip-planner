@@ -137,7 +137,8 @@
 
 /* sharing the plan (views/Share.tsx) */
 .share-stops { margin: 0; padding-inline-start: 1.25em; display: grid; gap: 6px; }
-.check-row { display: flex; align-items: center; gap: 8px; }
+.check-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.check-row input[type=checkbox] { flex: none; width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0; border: none; accent-color: var(--accent); }
 /* where we sleep */
 .stays-open { margin-top: 8px; align-self: flex-start; gap: 6px; }
 .stay-row { display: block; width: 100%; text-align: start; font: inherit; color: inherit; cursor: pointer; }

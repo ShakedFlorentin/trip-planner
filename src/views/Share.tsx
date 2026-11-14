@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link2, MapPin } from 'lucide-react'
 import { supabase } from '../supabase'
-import { CARD_STYLE, CATEGORIES, type Candidate, type DayInfo, type Place, type Trip } from '../types'
+import { CARD_STYLE, CATEGORIES, CITY_HE, type Candidate, type DayInfo, type Place, type Trip } from '../types'
 import { cityLabel, errorText, mutate } from '../lib'
 import { isEn, t } from '../i18n'
 import { Icon } from '../icons'
@@ -39,6 +39,7 @@ export function buildSnapshot(opts: {
   const out: SharedDay[] = []
   for (let d = 1; d <= trip.num_days; d++) {
     const stops: SharedStop[] = []
+    const cityCounts = new Map<string, number>()
     const todays = items
       .filter((i) => i.day === d && i.place_id)
       .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99') || a.sort - b.sort)
@@ -48,6 +49,12 @@ export function buildSnapshot(opts: {
       const card = cards.find((c) => c.id === p.candidate_id)
       const category = card?.category ?? p.category
       if (!SHARED_CATEGORIES.has(category)) continue
+      // track the city of this stop in Hebrew (p.city is already Hebrew; card.city is a city ID)
+      // skip the day-trip pseudo-city so a day-trip stop does not influence the heading
+      const stopCity = p.city?.trim() || (card?.city ? (CITY_HE[card.city] ?? null) : null)
+      if (stopCity && stopCity !== CITY_HE['daytrip']) {
+        cityCounts.set(stopCity, (cityCounts.get(stopCity) ?? 0) + 1)
+      }
       const stop: SharedStop = { name: p.name.trim().slice(0, NAME_MAX), category }
       // the card's own tip (shared library text), never the notes someone typed on the place
       const tip = card?.tip?.trim()
@@ -61,7 +68,17 @@ export function buildSnapshot(opts: {
       if (lat !== undefined && lng !== undefined) Object.assign(stop, { lat, lng })
       if (stop.name) stops.push(stop)
     }
-    if (stops.length) out.push({ day: d, city: days.find((x) => x.day === d)?.city?.trim() || null, stops })
+    // label the day with the city most of its shared stops are in; fall back to the sleep city on tie or no data
+    const dayCity = days.find((x) => x.day === d)?.city?.trim() || null
+    let city = dayCity
+    if (cityCounts.size > 0) {
+      const sorted = [...cityCounts.entries()].sort((a, b) => b[1] - a[1])
+      // unique winner only: if the top two are tied, keep the sleep city
+      if (sorted.length === 1 || sorted[0][1] > sorted[1][1]) {
+        city = sorted[0][0]  // already in Hebrew
+      }
+    }
+    if (stops.length) out.push({ day: d, city, stops })
   }
   const snap: SharedSnapshot = { v: 1, num_days: trip.num_days, days: out }
   if (opts.withName && trip.name.trim()) snap.name = trip.name.trim().slice(0, NAME_MAX)
