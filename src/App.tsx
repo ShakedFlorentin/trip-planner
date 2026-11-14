@@ -278,7 +278,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [toast, setToast] = useState('')
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>()
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(
     () => () => {
       wandRun.current?.stop()

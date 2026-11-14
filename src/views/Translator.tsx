@@ -90,8 +90,8 @@ export default function Translator({ tripId }: { tripId: string }) {
   const live = useRef(false)
   const unlocked = useRef(false)
   const t0 = useRef(0)
-  const watchdog = useRef<ReturnType<typeof setTimeout>>()
-  const forceStop = useRef<ReturnType<typeof setTimeout>>()
+  const watchdog = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const forceStop = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // a timed trail of what the recognizer reported, for the technical details
   const note = (what: string) => setLog((l) => [...l, `${((performance.now() - t0.current) / 1000).toFixed(1)}s ${what}`])
   const reset = () => {
