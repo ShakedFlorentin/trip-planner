@@ -71,7 +71,7 @@ export function AddPhoto({ name, tripId, libraryId, onClose }: { name: string; t
           {preview && <img className="photo-preview" src={preview} alt="" />}
           <label className="photo-rights">
             <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} />
-            <span>{t('צילמתי את התמונה בעצמי, ואני מרשה לאפליקציה להציג אותה לכל המשתמשים. אין בה אנשים שאפשר לזהות בלי הסכמתם.')}</span>
+            <span>{t('צילמתי את התמונה בעצמי. אני מרשה ל-Toogo להציג אותה לכל המשתמשים ולהשתמש בה לתמיד, גם אחרי שאמחק את החשבון. אין בה אנשים שאפשר לזהות בלי הסכמתם.')}</span>
           </label>
           {err && <p className="msg" role="alert">{err}</p>}
           <button className="primary" onClick={send} disabled={!file || !rights || busy}>

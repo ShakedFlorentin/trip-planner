@@ -6,7 +6,7 @@
 
 // where people write to us. Empty: the page sends them to the app's "report a problem" box
 export const CONTACT_EMAIL = ''
-export const UPDATED = { he: '13 בנובמבר 2026', en: '13 November 2026' }
+export const UPDATED = { he: '14 בנובמבר 2026', en: '14 November 2026' }
 
 const contact = (lang) =>
   CONTACT_EMAIL
@@ -33,7 +33,7 @@ export function privacyPage(lang) {
 <li><b>The questionnaire:</b> who you travel with (including whether a baby is coming), which cities, what interests you, what you don't eat, your budget for a meal, your pace, and whether you've been to Japan.</li>
 <li><b>The trip:</b> the places you added, what you liked and rated, the plan, the hotels, the bookings (flights, hotels and so on) and the documents you attach to them, the expenses and the packing lists. Booking documents can include passport or ticket numbers: they are stored privately, for your trip's members only.</li>
 <li><b>Places you add:</b> the place itself (its name, area, address and description, not your notes, likes or who added it) is also kept in Toogo's shared place library. Once another trip adds the same place, it can be shown to everyone who uses Toogo.</li>
-<li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo. We save every photo as a new image file, which drops the location data phones add to photos.</li>
+<li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo. We save every photo as a new image file, which drops the location data phones add to photos. An approved photo stays there even if you later delete your account, and it isn't linked to your name.</li>
 <li><b>Problem reports:</b> what you wrote, the screen you were on, the app version and your device and browser type.</li>
 <li><b>How the app is used:</b> which screens are opened, how far people get from the first screen to a saved trip, which outside sites are opened (the site's name only), and errors in the app. It is tied to a random code made on your device, and to your account once you sign in. It never includes what you type. You can turn it off in Settings.</li>
 <li><b>On your phone:</b> a copy of the trip so the app works without signal, your settings, and, if you started without an account, your answers and likes until you sign in.</li>
@@ -93,7 +93,7 @@ export function privacyPage(lang) {
 <p>You can ask to see your information, to get a copy of it, to correct it or to delete it, to limit how we use it or object to it, and to take back a consent you gave. You can turn off usage counting in Settings yourself. Write to us ${c}. If you're unhappy with our answer, you can complain to Israel's Privacy Protection Authority or, in the EU, to your local data protection authority.</p>
 
 <h2>Deleting your account</h2>
-<p>Write to us ${c} and we will delete your account and your information within 30 days. What stays: places you added to a shared trip stay with its other members, and approved photos stay on place cards, unless you ask us to remove those too. Usage counting already sent stays without your account attached, until its 12 months end. Backups expire on their own.</p>
+<p>Write to us ${c} and we will delete your account and your information within 30 days. What stays: places you added to a shared trip stay with its other members, unless you ask us to remove those too. Approved photos stay on place cards for good, without your name (see "What you upload" in the terms below). Usage counting already sent stays without your account attached, until its 12 months end. Backups expire on their own.</p>
 
 <h2>Age</h2>
 <p>Toogo is for people aged 18 and over. Information about a child or baby on the trip is only what their parents chose to enter. If you think a child gave us information, tell us and we will delete it.</p>
@@ -122,7 +122,8 @@ export function privacyPage(lang) {
 <h2>What you upload</h2>
 <ul>
 <li>Upload only photos and content that are yours or that you're allowed to share. They stay yours.</li>
-<li>When you send a photo for a place, you allow us, free of charge and not exclusively, to show it on that place's card in Toogo. You can ask us to take it down at any time.</li>
+<li>When you send a photo for a place and we approve it, you give Toogo a permanent, irrevocable, worldwide and free licence to use it: to show it in the app and on our websites, to resize or crop it, to use it to promote Toogo, and to let our service providers, and anyone who takes over Toogo, do the same.</li>
+<li>The licence isn't exclusive: the copyright stays yours, and you can keep using your photo anywhere. It stays after you delete your account, and approved photos aren't taken down on request. We will still remove a photo that breaks these rules or someone else's rights.</li>
 <li>Not allowed: hateful, insulting or threatening content; sexual or violent content; someone else's private details; spam or advertising; and information you know is false, such as made-up places.</li>
 <li>Saw something like that? Report it from the app's menu and we'll deal with it as fast as we can. We may remove content and block accounts that break these rules.</li>
 </ul>
@@ -175,7 +176,7 @@ export function privacyPage(lang) {
 <li><b>השאלון:</b> עם מי אתם נוסעים (כולל אם מגיע תינוק), אילו ערים, מה מעניין אתכם, מה אתם לא אוכלים, התקציב לארוחה, קצב הטיול והאם הייתם כבר ביפן.</li>
 <li><b>הטיול:</b> המקומות שהוספתם, מה אהבתם ודירגתם, התוכנית, המלונות, ההזמנות (טיסות, מלונות וכו') והמסמכים שצירפתם אליהן, ההוצאות ורשימות הציוד. במסמכי הזמנה יכולים להופיע מספרי דרכון או כרטיס: הם נשמרים באופן פרטי, רק לחברי הטיול שלכם.</li>
 <li><b>מקומות שהוספתם:</b> המקום עצמו (השם, האזור, הכתובת והתיאור, בלי ההערות שלכם, בלי הלייקים ובלי מי הוסיף אותו) נשמר גם בספריית המקומות המשותפת של Toogo. ברגע שטיול נוסף מוסיף את אותו מקום, הוא יכול להופיע לכל מי שמשתמש ב-Toogo.</li>
-<li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo. כל תמונה נשמרת כקובץ חדש, וכך נמחק ממנה המיקום שהטלפון מוסיף לתמונות.</li>
+<li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo. כל תמונה נשמרת כקובץ חדש, וכך נמחק ממנה המיקום שהטלפון מוסיף לתמונות. תמונה שאושרה נשארת שם גם אם תמחקו אחר כך את החשבון, והיא לא מקושרת לשם שלכם.</li>
 <li><b>דיווח על בעיה:</b> מה שכתבתם, המסך שבו הייתם, גרסת האפליקציה וסוג המכשיר והדפדפן.</li>
 <li><b>איך משתמשים באפליקציה:</b> אילו מסכים נפתחים, עד לאן מגיעים מהמסך הראשון ועד טיול שמור, אילו אתרים חיצוניים נפתחים (רק שם האתר), ותקלות באפליקציה. המידע מקושר לקוד אקראי שנוצר במכשיר שלכם, ולחשבון אחרי שאתם מתחברים. הוא אף פעם לא כולל את מה שאתם כותבים. אפשר לכבות את זה בהגדרות.</li>
 <li><b>בטלפון שלכם:</b> עותק של הטיול כדי שהאפליקציה תעבוד גם בלי קליטה, ההגדרות שלכם, ואם התחלתם בלי חשבון, גם התשובות והלייקים עד שתתחברו.</li>
@@ -235,7 +236,7 @@ export function privacyPage(lang) {
 <p>אפשר לבקש לראות את המידע שלכם, לקבל עותק שלו, לתקן אותו או למחוק אותו, להגביל את השימוש בו או להתנגד לו, ולבטל הסכמה שנתתם. את הספירה אפשר לכבות לבד בהגדרות. כתבו לנו ${c}. אם התשובה שלנו לא מספקת אתכם, אפשר להתלונן ברשות להגנת הפרטיות, ובאיחוד האירופי ברשות להגנת מידע של המדינה שלכם.</p>
 
 <h2>מחיקת החשבון</h2>
-<p>כתבו לנו ${c}, ונמחק את החשבון ואת המידע שלכם תוך 30 יום. מה נשאר: מקומות שהוספתם לטיול משותף נשארים אצל שאר חברי הטיול, ותמונות שאושרו נשארות בכרטיסי המקומות, אלא אם תבקשו שנסיר גם אותם. ספירה שכבר נשלחה נשארת בלי קשר לחשבון שלכם, עד שעוברים 12 החודשים שלה. הגיבויים פגים מעצמם.</p>
+<p>כתבו לנו ${c}, ונמחק את החשבון ואת המידע שלכם תוך 30 יום. מה נשאר: מקומות שהוספתם לטיול משותף נשארים אצל שאר חברי הטיול, אלא אם תבקשו שנסיר גם אותם. תמונות שאושרו נשארות בכרטיסי המקומות לתמיד, בלי השם שלכם (ראו "מה שאתם מעלים" בתנאי השימוש בהמשך). ספירה שכבר נשלחה נשארת בלי קשר לחשבון שלכם, עד שעוברים 12 החודשים שלה. הגיבויים פגים מעצמם.</p>
 
 <h2>גיל</h2>
 <p>Toogo מיועדת לבני 18 ומעלה. מידע על ילד או תינוק בטיול הוא רק מה שההורים בחרו לכתוב. אם אתם חושבים שילד מסר לנו מידע, ספרו לנו ונמחק אותו.</p>
@@ -264,7 +265,8 @@ export function privacyPage(lang) {
 <h2>מה שאתם מעלים</h2>
 <ul>
 <li>העלו רק תמונות ותוכן שהם שלכם או שמותר לכם לשתף. הם נשארים שלכם.</li>
-<li>כששולחים תמונה של מקום, אתם מרשים לנו, בלי תשלום ובלי בלעדיות, להציג אותה בכרטיס של המקום ב-Toogo. אפשר לבקש שנוריד אותה בכל זמן.</li>
+<li>כששולחים תמונה של מקום ואנחנו מאשרים אותה, אתם נותנים ל-Toogo רישיון קבוע, בלתי חוזר, בכל העולם ובלי תשלום להשתמש בה: להציג אותה באפליקציה ובאתרים שלנו, להקטין או לחתוך אותה, להשתמש בה כדי לפרסם את Toogo, ולאפשר לספקים שלנו, ולמי שיקבל את Toogo לידיו, לעשות את אותו הדבר.</li>
+<li>הרישיון לא בלעדי: זכויות היוצרים נשארות שלכם, ואפשר להמשיך להשתמש בתמונה בכל מקום. הוא נשאר גם אחרי מחיקת החשבון, ותמונות שאושרו לא מוסרות לפי בקשה. נסיר תמונה שעוברת על הכללים או פוגעת בזכויות של מישהו אחר.</li>
 <li>אסור: תוכן שנאה, העלבה או איום; תוכן מיני או אלים; פרטים פרטיים של אדם אחר; ספאם או פרסום; ומידע שאתם יודעים שהוא שקרי, כמו מקומות מומצאים.</li>
 <li>ראיתם משהו כזה? דווחו מהתפריט של האפליקציה, ונטפל בזה הכי מהר שנוכל. אנחנו רשאים להסיר תוכן ולחסום חשבונות שעוברים על הכללים.</li>
 </ul>
