@@ -2,11 +2,12 @@ import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
-import { cityLabel, couplesOf, keepRanges, mutate, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia } from '../lib'
+import { cityLabel, couplesOf, keepRanges, mutate, readCache, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
 import { askForRating } from '../rating'
 import { mayAskForPush, notifyMatch } from '../push'
+import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
 import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
@@ -15,13 +16,15 @@ import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
-import { categoryMeans, learnTags, rankDeck } from '../rank'
+import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
 import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
 import QuickFab from './QuickFab'
+
+type CardInterest = { base: InterestBase; cards: Record<string, Interest> }
 
 const LEVELS = [
   { xp: 0, name: t('גאיג׳ין') },
@@ -110,6 +113,15 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     }
   }, [trip.id, swipes, rawCandidates.length])
 
+  // how each card did on other trips (card_interest, step 11). The copy from the last visit ranks this visit, so the
+  // deck never reshuffles under a card being looked at; the fresh one is kept for the next visit
+  const [interest] = useState(() => readCache<CardInterest>('interest:' + trip.id)?.data ?? null)
+  useEffect(() => {
+    supabase.rpc('card_interest', { tid: trip.id }).then(({ data, error }) => {
+      if (!error && data) writeCache('interest:' + trip.id, data)
+    })
+  }, [trip.id])
+
   // copies new library cards, and the library's photos, links and English text, into this trip's deck. The request is
   // only sent once it is awaited or given a then(); it answers with how many cards it added
   useEffect(() => {
@@ -194,6 +206,8 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         stars: (c) => ratings.stars((c as Candidate).library_id ?? ''),
         categoryMean: (cat) => catMean.get(cat),
         tagWeights,
+        interest: (c) => interest?.cards?.[c.id],
+        interestBase: interest?.base,
         notNow: (c) => notNowIds.has(c.id) || skippedByMe.includes(c.id),
         recent,
         hash: (c) => hash(c.id + userId),
@@ -209,14 +223,16 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const swipe = async (c: Candidate, liked: boolean) => {
     if (pending.current.has(c.id)) return false
     pending.current.add(c.id)
+    const look = lookTake(c.id)
     const ok = await mutate(
-      supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }),
+      supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}), ...look }),
     )
+    if (!ok) lookStart(c.id, !!c.photos?.length)
     if (ok) {
       if (liked) markLiked(c.id)
       setHistory((h) => (h[h.length - 1] === c.id ? h : [...h, c.id]))
-      // learn from it for the next cards, and move on in the batch
-      setTagWeights((w) => learnTags(w, c, liked))
+      // learn from it (and from how long it was looked at) for the next cards, and move on in the batch
+      setTagWeights((w) => learnTags(w, c, liked, look?.look_ms))
       setRecent((r) => [...r, c.category].slice(-3))
       setBatchDone((n) => n + 1)
       await reloadSwipes()
@@ -226,16 +242,18 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   }
 
   // "not now": not a vote. Kept in the database when swipes.skipped exists, always on this phone; the card goes
-  // to the back of the line and is not held against its tags
+  // to the back of the line and is not held against its tags (after a long look, its tags even gain a little)
   const notNow = (c: Candidate) => {
     if (pending.current.has(c.id)) return false
+    const look = lookTake(c.id)
+    setTagWeights((w) => learnNotNow(w, c, look?.look_ms))
     const next = new Set(notNowIds).add(c.id)
     setNotNowIds(next)
     writeNotNow(trip.id, userId, next)
     setSessionNotNow((s) => new Set(s).add(c.id))
     setRecent((r) => [...r, c.category].slice(-3))
     setBatchDone((n) => n + 1)
-    if (skipCol) void mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked: false, skipped: true })).then(() => reloadSwipes())
+    if (skipCol) void mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked: false, skipped: true, ...look })).then(() => reloadSwipes())
     return true
   }
 
@@ -547,6 +565,16 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   const photos = (c.photos ?? []).filter((u) => !broken.has(u))
   const cur = photos[Math.min(photo, photos.length - 1)]
   useEffect(() => () => stop.current?.(), [])
+  // how long the top card is looked at, and whether its photos and details are opened (src/look.ts, step 11)
+  useEffect(() => {
+    if (!top) return
+    lookStart(c.id, photos.length > 0)
+    return () => lookPause(c.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [top, c.id])
+  useEffect(() => {
+    if (more) lookOpened(c.id)
+  }, [more, c.id])
 
   const show = (x: number) => {
     pos.current = x
@@ -673,7 +701,9 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   }
   const cycle = (e: { stopPropagation: () => void }, step: number) => {
     e.stopPropagation()
-    setPhoto((i) => (i + step + photos.length) % photos.length)
+    const next = (Math.min(photo, photos.length - 1) + step + photos.length) % photos.length
+    setPhoto(next)
+    lookPhoto(c.id, next)
   }
 
   const p = Math.min(1, Math.abs(dx) / 90)

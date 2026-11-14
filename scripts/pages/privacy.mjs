@@ -36,7 +36,7 @@ export function privacyPage(lang) {
 <li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo. We save every photo as a new image file, which drops the location data phones add to photos. An approved photo stays there even if you later delete your account, and it isn't linked to your name.</li>
 <li><b>Problem reports:</b> what you wrote, the screen you were on, the app version and your device and browser type.</li>
 <li><b>Notifications, if you turn them on:</b> the address your phone's browser gives for sending it notifications, the app's language, and which matches you were told about, so you're told once.</li>
-<li><b>How the app is used:</b> which screens are opened, how far people get from the first screen to a saved trip, which outside sites are opened (the site's name only), and errors in the app. It is tied to a random code made on your device, and to your account once you sign in. It never includes what you type. You can turn it off in Settings.</li>
+<li><b>How the app is used:</b> which screens are opened, how far people get from the first screen to a saved trip, which outside sites are opened (the site's name only), and errors in the app. It is tied to a random code made on your device, and to your account once you sign in. It never includes what you type. In Discover, also how long each card was on screen before your vote, and whether you opened its photos or details: that is kept with your vote, and totals over all trips, without names, help put the cards people like first. You can turn all of this off in Settings.</li>
 <li><b>On your phone:</b> a copy of the trip so the app works without signal (during the trip also the photos and map for today and tomorrow), your settings, and, if you started without an account, your answers and likes until you sign in.</li>
 </ul>
 
@@ -182,7 +182,7 @@ export function privacyPage(lang) {
 <li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo. כל תמונה נשמרת כקובץ חדש, וכך נמחק ממנה המיקום שהטלפון מוסיף לתמונות. תמונה שאושרה נשארת שם גם אם תמחקו אחר כך את החשבון, והיא לא מקושרת לשם שלכם.</li>
 <li><b>דיווח על בעיה:</b> מה שכתבתם, המסך שבו הייתם, גרסת האפליקציה וסוג המכשיר והדפדפן.</li>
 <li><b>התראות, אם הפעלתם אותן:</b> הכתובת שהדפדפן בטלפון נותן לשליחת התראות אליו, שפת האפליקציה, ועל אילו מאצ׳ים כבר הודענו לכם, כדי שתשמעו על כל אחד פעם אחת.</li>
-<li><b>איך משתמשים באפליקציה:</b> אילו מסכים נפתחים, עד לאן מגיעים מהמסך הראשון ועד טיול שמור, אילו אתרים חיצוניים נפתחים (רק שם האתר), ותקלות באפליקציה. המידע מקושר לקוד אקראי שנוצר במכשיר שלכם, ולחשבון אחרי שאתם מתחברים. הוא אף פעם לא כולל את מה שאתם כותבים. אפשר לכבות את זה בהגדרות.</li>
+<li><b>איך משתמשים באפליקציה:</b> אילו מסכים נפתחים, עד לאן מגיעים מהמסך הראשון ועד טיול שמור, אילו אתרים חיצוניים נפתחים (רק שם האתר), ותקלות באפליקציה. המידע מקושר לקוד אקראי שנוצר במכשיר שלכם, ולחשבון אחרי שאתם מתחברים. הוא אף פעם לא כולל את מה שאתם כותבים. במסך הגילוי, גם כמה זמן כל כרטיס היה מול העיניים לפני ההצבעה, והאם פתחתם את התמונות או הפרטים שלו: זה נשמר עם ההצבעה, וסיכומים מכל הטיולים, בלי שמות, עוזרים להקדים כרטיסים שאנשים אוהבים. אפשר לכבות את כל זה בהגדרות.</li>
 <li><b>בטלפון שלכם:</b> עותק של הטיול כדי שהאפליקציה תעבוד גם בלי קליטה (בזמן הטיול גם התמונות והמפה של היום ושל מחר), ההגדרות שלכם, ואם התחלתם בלי חשבון, גם התשובות והלייקים עד שתתחברו.</li>
 </ul>
 

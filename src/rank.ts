@@ -65,6 +65,10 @@ export type RankCtx = {
   stars: (c: RankCard) => number[]
   /** category average for the Bayesian mean (falls back to 3.5) */
   categoryMean: (category: string) => number | undefined
+  /** how the card did on other trips (card_interest): views, likes, and the median look time over `looks` views */
+  interest?: (c: RankCard) => Interest | undefined
+  /** the same over every card, the baseline a card is compared with */
+  interestBase?: InterestBase
   /** this session's tag weights from the swipes so far */
   tagWeights?: Map<string, number>
   /** cards the person pressed "not now" on earlier: they come after everything else */
@@ -76,6 +80,18 @@ export type RankCtx = {
   /** cards wanted; default one batch */
   size?: number
 }
+
+/** A card's record on other trips. */
+export type Interest = { views: number; likes: number; looks: number; look_ms: number | null }
+export type InterestBase = { rate: number; look_ms: number | null }
+
+/** How long a look has to be to count as a real look, and how short a "no" counts as a glance. */
+export const LONG_LOOK_MS = 6000
+export const GLANCE_MS = 1500
+/** How many views' worth of the overall like rate a card starts with. */
+export const INTEREST_PRIOR_WEIGHT = 10
+/** Fewest timed views before a card's look time counts. */
+export const MIN_LOOKS = 5
 
 const MAX_RUN = 3
 const FRESH_SHARE = 0.2
@@ -101,18 +117,51 @@ export const isFresh = (c: RankCard, votes: number) => votes <= 1 || c.verdict =
 /**
  * Live learning: after a swipe, a like adds 1 to each of the card's tags and a no takes 0.5 off (only 0.1 for food,
  * cafes and bars, where skipping one restaurant says little about the cuisine). Older weights fade by 10% first.
- * "Not now" is not a swipe and changes nothing. Returns a new map.
+ * With the look time: a like after 6 seconds or more adds 1.3; a no in under 1.5 seconds takes 1.5 times as much, and
+ * a no after 6 seconds or more half as much. "Not now" is learnNotNow. Returns a new map.
  */
-export function learnTags(weights: Map<string, number>, c: RankCard, liked: boolean): Map<string, number> {
+export function learnTags(weights: Map<string, number>, c: RankCard, liked: boolean, lookMs?: number | null): Map<string, number> {
   const next = new Map<string, number>()
   for (const [k, w] of weights) if (Math.abs(w * 0.9) >= 0.02) next.set(k, w * 0.9)
   const eats = c.category === 'food' || c.category === 'cafe' || c.category === 'nightlife'
-  const d = liked ? 1 : eats ? -0.1 : -0.5
+  // how long they looked first (roadmap step 11): a like after a real look counts a little more; a "no" at a glance
+  // says more than a "no" after reading the card through, which was a near miss
+  const long = lookMs != null && lookMs >= LONG_LOOK_MS
+  const glance = lookMs != null && lookMs < GLANCE_MS
+  const d = liked ? (long ? 1.3 : 1) : (eats ? -0.1 : -0.5) * (glance ? 1.5 : long ? 0.5 : 1)
   for (const t of c.tags ?? []) {
     const k = tagOf(t)
     if (k) next.set(k, (next.get(k) ?? 0) + d)
   }
   return next
+}
+
+/**
+ * "Not now" after a real look is a sign of interest: a small lift for the card's tags (older weights fade the same way).
+ * A quick "not now" changes nothing, as before.
+ */
+export function learnNotNow(weights: Map<string, number>, c: RankCard, lookMs?: number | null): Map<string, number> {
+  if (lookMs == null || lookMs < LONG_LOOK_MS) return weights
+  const next = new Map<string, number>()
+  for (const [k, w] of weights) if (Math.abs(w * 0.9) >= 0.02) next.set(k, w * 0.9)
+  for (const t of c.tags ?? []) {
+    const k = tagOf(t)
+    if (k) next.set(k, (next.get(k) ?? 0) + 0.3)
+  }
+  return next
+}
+
+/**
+ * How the card did on other trips, against all cards: its like rate, smoothed toward the overall rate (10 views'
+ * worth), up to ±0.8; and its median look time against the overall median once 5 views were timed, up to ±0.3
+ * (twice as long is +0.3). Nothing known: 0, so a new card is never held back.
+ */
+export function interestBonus(i: Interest | undefined, base: InterestBase | undefined): number {
+  if (!i || !base || !i.views) return 0
+  const rate = (i.likes + INTEREST_PRIOR_WEIGHT * base.rate) / (i.views + INTEREST_PRIOR_WEIGHT)
+  let b = Math.max(-0.8, Math.min(0.8, (rate - base.rate) * 4))
+  if (i.looks >= MIN_LOOKS && i.look_ms && base.look_ms) b += Math.max(-0.3, Math.min(0.3, Math.log2(i.look_ms / base.look_ms) * 0.3))
+  return b
 }
 
 function tagBonus(c: RankCard, w: Map<string, number> | undefined): number {
@@ -129,12 +178,14 @@ export function cardScore(c: RankCard, ctx: RankCtx): number {
   s += ratingBonus(ctx.stars(c), ctx.categoryMean(c.category))
   s += dataQuality(c)
   s += tagBonus(c, ctx.tagWeights)
+  s += interestBonus(ctx.interest?.(c), ctx.interestBase)
   if (ctx.notNow?.(c)) s -= 10
   return s
 }
 
 /**
- * The next batch: cards ordered by score (fit + group fit + smoothed rating + data quality + session learning),
+ * The next batch: cards ordered by score (fit + group fit + smoothed rating + data quality + session learning +
+ * how the card did on other trips),
  * at most 3 of one category in a row, and about 20% of the slots (every fifth) for new or gem cards. The same input
  * gives the same order; ties go to the per-user hash.
  */

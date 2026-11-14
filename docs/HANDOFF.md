@@ -3,6 +3,14 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Card look time in the ranking (roadmap step 11, 2026-11-14)
+
+- **Measured on the phone** (`src/look.ts`): for the top card of the swipe deck, the time it is on screen before the vote (only while the page is visible, at most 60 s), how many of its photos were seen, and whether its details were opened. Sent with the vote as `swipes.look_ms`, `photos_seen`, `opened`, also with "not now". Not sent when "Help improve Toogo" is off.
+- **Used right away** (`src/rank.ts`, tested in `scripts/rank-test.mjs`): a like after 6 s or more counts 1.3 instead of 1; a "no" in under 1.5 s takes 1.5 times the usual off the card's tags, and a "no" after 6 s or more half (`learnTags`). A "not now" after 6 s or more lifts the tags by 0.3 (`learnNotNow`).
+- **Across trips** (`card_interest(tid)` in `supabase/sql/2026-11-14-look-time.sql`): for each card of the trip, how the same library card did on other trips (votes, likes, median look). `interestBonus` adds its like rate against the overall rate, smoothed with 10 votes' worth of the overall rate (up to ±0.8), and its median look time against the overall median once 5 views were timed (up to ±0.3). A trip ranks with the copy saved on its last visit (`cache:interest:<trip>`), so the deck never reshuffles under a card.
+- **With one trip today** there are no other trips, so only the session learning does anything until testers join.
+- Tests: `node scripts/look-test.mjs` (the clock, with a fake clock and page visibility) and `node scripts/rank-test.mjs`.
+
 ## Notifications (roadmap step 13, 2026-11-14)
 
 - **Live (14 Nov):** tables applied, VAPID secrets set, notify deployed (live code checked equal to git), features.push on.

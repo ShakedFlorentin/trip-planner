@@ -47,4 +47,31 @@ w = R.learnTags(w, { id: 'b', category: 'sight', tags: ['temple'] }, false)
 assert.ok(Math.abs(w.get('temple') - 0.4) < 1e-9)
 const eat = R.learnTags(new Map(), { id: 'c', category: 'food', tags: ['ramen'] }, false)
 assert.equal(eat.get('ramen'), -0.1)
+// look time (step 11): a glance "no" hurts more, a "no" after reading the card hurts less, a long-look like counts more
+assert.ok(Math.abs(R.learnTags(new Map(), { id: 'g', category: 'sight', tags: ['zoo'] }, false, 800).get('zoo') + 0.75) < 1e-9)
+assert.ok(Math.abs(R.learnTags(new Map(), { id: 'g', category: 'sight', tags: ['zoo'] }, false, 9000).get('zoo') + 0.25) < 1e-9)
+assert.equal(R.learnTags(new Map(), { id: 'g', category: 'sight', tags: ['zoo'] }, false, 3000).get('zoo'), -0.5)
+assert.equal(R.learnTags(new Map(), { id: 'g', category: 'sight', tags: ['zoo'] }, true, 7000).get('zoo'), 1.3)
+assert.equal(R.learnTags(new Map(), { id: 'g', category: 'sight', tags: ['zoo'] }, true).get('zoo'), 1, 'no look time: as before')
+// "not now" after a real look lifts the tags a little; a quick one changes nothing
+const nn = new Map([['zoo', 1]])
+assert.equal(R.learnNotNow(nn, { id: 'g', category: 'sight', tags: ['onsen'] }, 2000), nn)
+assert.ok(Math.abs(R.learnNotNow(nn, { id: 'g', category: 'sight', tags: ['onsen'] }, 8000).get('onsen') - 0.3) < 1e-9)
+
+// how the card did on other trips: nothing known is 0; few views barely move it; many strong views cap at +0.8
+const base = { rate: 0.5, look_ms: 4000 }
+assert.equal(R.interestBonus(undefined, base), 0)
+assert.equal(R.interestBonus({ views: 0, likes: 0, looks: 0, look_ms: null }, base), 0)
+const two = R.interestBonus({ views: 2, likes: 2, looks: 0, look_ms: null }, base) // (2+5)/12 = 0.583 -> +0.33
+assert.ok(two > 0.3 && two < 0.35, String(two))
+assert.equal(R.interestBonus({ views: 60, likes: 54, looks: 0, look_ms: null }, base), 0.8)
+assert.equal(R.interestBonus({ views: 60, likes: 3, looks: 0, look_ms: null }, base), -0.8)
+// look time counts only after 5 timed views; twice the usual median is +0.3 on top
+assert.equal(R.interestBonus({ views: 10, likes: 5, looks: 4, look_ms: 8000 }, base), 0)
+assert.ok(Math.abs(R.interestBonus({ views: 10, likes: 5, looks: 6, look_ms: 8000 }, base) - 0.3) < 1e-9)
+// in the deck: of two equal cards, the one liked on other trips comes first
+const pair = [{ id: 'x1', category: 'sight', tags: [] }, { id: 'x2', category: 'sight', tags: [] }]
+const pctx = { ...ctx, fit: () => 0, swipeCount: () => 5, hash: (c) => (c.id === 'x1' ? 0 : 1), interestBase: base,
+  interest: (c) => (c.id === 'x2' ? { views: 30, likes: 25, looks: 0, look_ms: null } : undefined) }
+assert.equal(R.rankDeck(pair, pctx)[0].id, 'x2')
 console.log('rank-test: ok')
