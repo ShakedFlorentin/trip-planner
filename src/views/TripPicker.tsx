@@ -4,6 +4,7 @@ import { Field } from '../ui'
 import { t } from '../i18n'
 import { forgetInvite } from './Login'
 import { Loading } from '../rings'
+import SignOutSheet from './SignOutSheet'
 
 // accounts this phone already joined to their invite's trip: someone who later leaves that trip isn't pulled back in
 const JOINED_KEY = 'inviteJoined'
@@ -25,15 +26,25 @@ function rememberJoined(userId: string) {
   }
 }
 
+/** The server's own Hebrew messages, in the app's language; anything else gets a plain line instead of raw text. */
+function failure(message: string) {
+  if (!navigator.onLine || /failed to fetch|network|load failed/i.test(message)) return t('אין אינטרנט. נסו שוב כשיש קליטה.')
+  if (message.includes('יותר מדי ניסיונות')) return t('יותר מדי ניסיונות, נסו שוב בעוד שעה') // he-only: the include() above matches the server's Hebrew text
+  return t('לא הצלחנו. נסו שוב.')
+}
+
 export default function TripPicker({ onPick }: { onPick: (id: string) => void }) {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [tripName, setTripName] = useState(t('יפן'))
   const [start, setStart] = useState('')
   const [err, setErr] = useState('')
+  // a request is running: a second tap must not send it again
+  const [busy, setBusy] = useState<'' | 'join' | 'create'>('')
   // a new account came in through an invite: join that trip by itself before showing the picker
   const [auto, setAuto] = useState<'checking' | 'joining' | 'done'>('checking')
   const started = useRef(false)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     if (started.current) return
@@ -47,7 +58,12 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
       if (!user || joinedBefore(user.id)) return setAuto('done')
       const { data, error } = await supabase.rpc('my_invite')
       const invite = (Array.isArray(data) ? data[0] : data) as { trip_id: string; join_code: string } | null
-      if (error || !invite?.join_code) return setAuto('done')
+      // no invite is normal; a failed lookup is not: say so, and the manual picker below still works
+      if (error) {
+        setErr(t('לא הצלחנו לבדוק אם יש הזמנה. אפשר להצטרף עם קוד, או ליצור טיול.'))
+        return setAuto('done')
+      }
+      if (!invite?.join_code) return setAuto('done')
       setAuto('joining')
       const joined = await supabase.rpc('join_trip', { code: invite.join_code, name: shown })
       if (joined.error || !joined.data) {
@@ -64,21 +80,29 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
 
   const join = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
+    setErr('')
+    setBusy('join')
     const { data, error } = await supabase.rpc('join_trip', { code, name })
-    if (error) setErr(error.message)
+    if (error) setErr(failure(error.message))
     else if (!data) setErr(t('קוד טיול שגוי'))
-    else onPick(data as string)
+    else return onPick(data as string)
+    setBusy('')
   }
 
   const create = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
+    setErr('')
+    setBusy('create')
     const { data, error } = await supabase.rpc('create_trip', {
       trip_name: tripName,
       name,
       start: start || null,
     })
-    if (error) setErr(error.message)
-    else onPick(data as string)
+    if (error) setErr(failure(error.message))
+    else return onPick(data as string)
+    setBusy('')
   }
 
   // the app's own loading look while checking, so people without an invite don't see a flash of anything else
@@ -98,8 +122,8 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
         <h3>{t('הצטרפות לטיול קיים')}</h3>
         <p className="muted small">{t('את הקוד מקבלים ממי שיצר את הטיול, הוא מופיע אצלו במסך הבית')}</p>
         <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t('קוד טיול')} dir="ltr" required />
-        <button className="primary" disabled={!name.trim()}>
-          {t('הצטרפות')}
+        <button className="primary" disabled={!name.trim() || !!busy}>
+          {busy === 'join' ? t('מצטרפים לטיול…') : t('הצטרפות')}
         </button>
       </form>
 
@@ -112,14 +136,19 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
         <Field label={t('תאריך התחלה (אפשר להשלים אחר כך)')}>
           <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
         </Field>
-        <button className="secondary" disabled={!name.trim()}>
-          {t('יצירת טיול')}
+        <button className="secondary" disabled={!name.trim() || !!busy}>
+          {busy === 'create' ? t('יוצרים טיול…') : t('יצירת טיול')}
         </button>
       </form>
-      {err && <p className="msg">{err}</p>}
-      <button className="link" onClick={() => supabase.auth.signOut({ scope: 'local' })}>
+      {err && (
+        <p className="msg" role="alert">
+          {err}
+        </p>
+      )}
+      <button className="link" onClick={() => setSigningOut(true)}>
         {t('התנתקות')}
       </button>
+      {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
     </div>
   )
 }

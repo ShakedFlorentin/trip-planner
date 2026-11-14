@@ -3,7 +3,8 @@ import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { t } from '../i18n'
 import LoginCarousel from './LoginCarousel'
-import { openExternal, privacyUrl } from '../native'
+import { appUrl, openExternal, privacyUrl } from '../native'
+import { Sheet } from '../ui'
 import { track } from '../track'
 
 // Accounts are created for the group up front; each logs in with just their name, in Hebrew or English.
@@ -129,6 +130,61 @@ function GoogleButton({ onError }: { onError: (msg: string) => void }) {
   )
 }
 
+/** "Forgot password?": asks for the email and sends the reset link. It never says whether the address has an account. */
+function ForgotSheet({ start, onClose }: { start: string; onClose: () => void }) {
+  const [email, setEmail] = useState(start)
+  const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const send = async (e: FormEvent) => {
+    e.preventDefault()
+    setMsg('')
+    setBusy(true)
+    // the link comes back to this page with ?reset=1, signed in, and the app asks for the new password
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: appUrl() + '?reset=1' })
+    setBusy(false)
+    if (error?.name === 'AuthRetryableFetchError' || (error && !navigator.onLine)) return setMsg(t('אין אינטרנט. נסו שוב כשיש קליטה.'))
+    if (error?.status === 429) return setMsg(t('יותר מדי ניסיונות. חכו דקה ונסו שוב.'))
+    // any other answer looks the same as success
+    setSent(true)
+  }
+  return (
+    <Sheet title={t('איפוס סיסמה')} onClose={onClose}>
+      {sent ? (
+        <>
+          <p role="status">{t('אם יש חשבון עם האימייל הזה, קישור בדרך אליו.')}</p>
+          <button className="primary" onClick={onClose}>
+            {t('חזרה להתחברות')}
+          </button>
+        </>
+      ) : (
+        <form onSubmit={send} className="stack">
+          <p className="muted small">{t('כותבים את האימייל ונשלח קישור לבחירת סיסמה חדשה.')}</p>
+          <input
+            type="email"
+            placeholder={t('אימייל')}
+            aria-label={t('אימייל')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+            required
+            dir="ltr"
+          />
+          <button className="primary" disabled={busy}>
+            {busy ? t('שולחים…') : t('שליחת קישור')}
+          </button>
+          {msg && (
+            <p className="msg" role="alert">
+              {msg}
+            </p>
+          )}
+        </form>
+      )}
+    </Sheet>
+  )
+}
+
 export default function Login({ onGuest, google = false }: { onGuest?: () => void; google?: boolean } = {}) {
   const [invite] = useState(() => {
     const code = inviteInUrl()
@@ -145,8 +201,10 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [msg, setMsg] = useState('')
+  // an expired or used reset link comes back with the error in the address bar
+  const [msg, setMsg] = useState(() => (/error_code=otp_expired|error_description=.*(expired|invalid)/i.test(location.hash) ? t('הקישור לא בתוקף יותר. בקשו קישור חדש.') : ''))
   const [busy, setBusy] = useState(false)
+  const [forgot, setForgot] = useState(false)
 
   const switchTo = (m: 'login' | 'signup') => {
     setMode(m)
@@ -272,6 +330,12 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
             required
             dir="ltr"
           />
+          {/* the group's names have no email to send to */}
+          {!toEmail(name)?.endsWith('@japantrip.app') && (
+            <button type="button" className="link" onClick={() => setForgot(true)}>
+              {t('שכחתי סיסמה')}
+            </button>
+          )}
           <button className="primary" disabled={busy}>
             {busy ? t('מתחברים…') : t('התחברות')}
           </button>
@@ -303,6 +367,7 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
           {t('תנאי השימוש ומדיניות הפרטיות')}
         </button>
       </p>
+      {forgot && <ForgotSheet start={name.includes('@') ? name.trim() : ''} onClose={() => setForgot(false)} />}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, VERDICTS, type Candidate } from '../types'
 import { aiError, cityLabel, localizeCard, mutate, safeUrl, samePlace, useTripAvoidsPorkSeafood, useTripHasBaby } from '../lib'
 import { isEn, t } from '../i18n'
-import { ArrowRight, Check, Heart, List, LoaderCircle, Search, Star, X } from 'lucide-react'
+import { ArrowRight, Check, Heart, LoaderCircle, Search, Star, X } from 'lucide-react'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
 
@@ -32,7 +32,8 @@ type Props = {
   tripId: string
   userId: string
   me: string
-  defaultTo: 'deck' | 'list'
+  /** no longer used: a new place always goes to the game (Discover) as a candidate, never straight to the list */
+  defaultTo?: 'deck' | 'list'
   /** a link shared into the app (iOS Share menu): filled in, not looked up until the person taps */
   initial?: string
   onClose: () => void
@@ -56,6 +57,9 @@ async function savedResult(id: string): Promise<Draft[] | undefined> {
   }
   return undefined
 }
+
+/** A card needs a name, a city and where it is (address or neighbourhood); otherwise it is left out (weak cards). */
+const isWeak = (d: Draft) => !d.name?.trim() || !d.city || !(d.area?.trim() || d.address?.trim())
 
 /** A place as the lookup's progress names it (see suggest-place): a card's area comes with its city apart. */
 type Spot = { name: string; where: string; city?: string }
@@ -161,7 +165,7 @@ async function lookupLive(body: object, opened: () => void, on: (e: Step) => voi
  * Suggest a place from an Instagram/TikTok/Maps link or just its name; Claude finds it on the web and fills in the
  * card. Nobody types details by hand: when a link can't be read, the place's name is searched instead.
  */
-export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', onClose }: Props) {
+export default function AddPlace({ tripId, userId, me, initial = '', onClose }: Props) {
   // one field: a link or a place's name
   const hasBaby = useTripHasBaby(tripId)
   const avoidsPork = useTripAvoidsPorkSeafood(tripId)
@@ -170,7 +174,6 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
   const [failedLink, setFailedLink] = useState('')
   const [name, setName] = useState('')
   const [draft, setDraft] = useState<Draft | null>(null)
-  const [to, setTo] = useState(defaultTo)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   // the trip used its free new places (suggest-place answered 402 needs_pass): the pass offer shows instead
@@ -320,7 +323,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
   }
 
   const save = async (d: Draft, anyway = false) => {
-    if (!d.name?.trim() || !d.city) return
+    if (isWeak(d)) return
     setBusy(true)
     setErr('')
     // two friends often add the same place: offer the one that's there instead of a second copy
@@ -345,9 +348,9 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
     if (res === 'ok') onClose()
   }
 
-  /** Writes one place to the game (with my like) or straight to the list. */
+  /** Writes one place to the game (Discover) as a candidate, with my like. Never straight to the trip's list. */
   const insertDraft = async (d: Draft): Promise<'ok' | 'dup' | 'error'> => {
-    if (!d.name?.trim() || !d.city) return 'error'
+    if (isWeak(d)) return 'error'
     // only http(s) links are stored: the rest would end up as clickable hrefs
     const l = safeUrl(d.link) ?? null
     const social = {
@@ -357,7 +360,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
     }
     const base = {
       trip_id: tripId,
-      name: d.name.trim(),
+      name: d.name!.trim(),
       area: d.area || null,
       lat: d.lat ?? null,
       lng: d.lng ?? null,
@@ -365,94 +368,64 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
       audience: d.audience ?? null,
       added_by: me,
     }
-    if (to === 'deck') {
-      const { data, error } = await supabase
-        .from('candidates')
-        .insert({
-          ...base,
-          ...social,
-          name_ja: d.name_ja || null,
-          city: d.city,
-          category: d.category ?? 'food',
-          hype: d.hype || null,
-          reality: d.reality || null,
-          tabelog_score: d.tabelog_score ?? null,
-          google_score: d.google_score ?? null,
-          price: d.price || null,
-          tip: d.tip || null,
-          baby_notes: d.baby_notes || null,
-          serves: d.serves || null,
-          dishes: d.dishes?.length ? d.dishes : null,
-          todo: d.todo || null,
-          special: d.special || null,
-          highlights: d.highlights?.length ? d.highlights : null,
-          time_needed: d.time_needed || null,
-          kosher: d.kosher ?? null,
-          kosher_note: d.kosher_note || null,
-          sources: d.sources ? d.sources.filter((u) => safeUrl(u)) : l ? [l] : [],
-          // the lookup's hours and plan line, so the planner places the card without looking anything up
-          ...(d.facts_at
-            ? {
-                opens: d.opens ?? null,
-                closes: d.closes ?? null,
-                closed_weekdays: d.closed_weekdays ?? [],
-                closed_dates: d.closed_dates ?? [],
-                open_dates: d.open_dates ?? [],
-                best_time: d.best_time ?? 'any',
-                visit_mins: d.visit_mins ?? null,
-                booking: d.booking ?? null,
-                plan_line: d.plan_line ?? null,
-                address: d.address ?? null,
-                baby_block: d.baby_block ?? null,
-                facts_at: d.facts_at,
-                facts_sure: d.facts_sure ?? true,
-              }
-            : {}),
-          // the same card in English, for whoever uses the app in English
-          ...(d.en ? { en: d.en } : {}),
-          ...(d.tags?.length ? { tags: d.tags } : {}),
-        })
-        .select('id')
-        .single()
-      // 23505: someone added the same name a moment ago
-      if (error?.code === '23505') return 'dup'
-      if (error) {
-        alert(t('שגיאה: {msg}', { msg: error.message }))
-        return 'error'
-      }
-      // suggesting a place counts as liking it
-      await supabase.from('swipes').insert({ trip_id: tripId, candidate_id: data.id, user_id: userId, liked: true })
-      return 'ok'
-    } else {
-      const cat = d.category === 'cafe' ? 'food' : ['food', 'sight', 'shopping'].includes(d.category ?? '') ? d.category : 'other'
-      const { error } = await supabase.from('places').insert({
-          ...base,
-          instagram_url: social.instagram_url,
-          tiktok_url: social.tiktok_url,
-          city: CITY_HE[d.city] ?? d.city,
-          category: cat,
-          url: social.maps_url,
-          notes: [d.tip, hasBaby && d.baby_notes && 'עם התינוק: ' + d.baby_notes].filter(Boolean).join('\n') || null, // he-only
-        })
-      if (error?.code === '23505') return 'dup'
-      if (error) {
-        alert(t('שגיאה: {msg}', { msg: error.message }))
-        return 'error'
-      }
-      return 'ok'
+    const { data, error } = await supabase
+      .from('candidates')
+      .insert({
+        ...base,
+        ...social,
+        name_ja: d.name_ja || null,
+        city: d.city,
+        category: d.category ?? 'food',
+        hype: d.hype || null,
+        reality: d.reality || null,
+        tabelog_score: d.tabelog_score ?? null,
+        google_score: d.google_score ?? null,
+        price: d.price || null,
+        tip: d.tip || null,
+        baby_notes: d.baby_notes || null,
+        serves: d.serves || null,
+        dishes: d.dishes?.length ? d.dishes : null,
+        todo: d.todo || null,
+        special: d.special || null,
+        highlights: d.highlights?.length ? d.highlights : null,
+        time_needed: d.time_needed || null,
+        kosher: d.kosher ?? null,
+        kosher_note: d.kosher_note || null,
+        sources: d.sources ? d.sources.filter((u) => safeUrl(u)) : l ? [l] : [],
+        // the lookup's hours and plan line, so the planner places the card without looking anything up
+        ...(d.facts_at
+          ? {
+              opens: d.opens ?? null,
+              closes: d.closes ?? null,
+              closed_weekdays: d.closed_weekdays ?? [],
+              closed_dates: d.closed_dates ?? [],
+              open_dates: d.open_dates ?? [],
+              best_time: d.best_time ?? 'any',
+              visit_mins: d.visit_mins ?? null,
+              booking: d.booking ?? null,
+              plan_line: d.plan_line ?? null,
+              address: d.address ?? null,
+              baby_block: d.baby_block ?? null,
+              facts_at: d.facts_at,
+              facts_sure: d.facts_sure ?? true,
+            }
+          : {}),
+        // the same card in English, for whoever uses the app in English
+        ...(d.en ? { en: d.en } : {}),
+        ...(d.tags?.length ? { tags: d.tags } : {}),
+      })
+      .select('id')
+      .single()
+    // 23505: someone added the same name a moment ago
+    if (error?.code === '23505') return 'dup'
+    if (error) {
+      alert(t('שגיאה: {msg}', { msg: error.message }))
+      return 'error'
     }
+    // suggesting a place counts as liking it
+    await supabase.from('swipes').insert({ trip_id: tripId, candidate_id: data.id, user_id: userId, liked: true })
+    return 'ok'
   }
-
-  const destination = (
-    <div className="segmented" role="group" aria-label={t('לאן להוסיף')}>
-      <button className={to === 'deck' ? 'on' : ''} onClick={() => setTo('deck')}>
-        <Icon as={Heart} /> {t('לגילוי, להצבעה')}
-      </button>
-      <button className={to === 'list' ? 'on' : ''} onClick={() => setTo('list')}>
-        <Icon as={List} /> {t('ישר לרשימה')}
-      </button>
-    </div>
-  )
 
   if (passOffer) return <PassSheet tripId={tripId} status={passStatus} onClose={() => setPassOffer(false)} />
 
@@ -487,7 +460,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
 
   if (many) {
     // ticked places already on the list are skipped, so they don't count
-    const picked = many.filter((m) => m.on && m.found?.where !== 'list').length
+    const picked = many.filter((m) => m.on && !isWeak(m.d) && m.found?.where !== 'list').length
     return (
       <Sheet title={t('נמצאו {n} מקומות', { n: many.length })} onClose={onClose}>
         <p className="muted small">{t('מסמנים אילו מקומות להוסיף. מקום שכבר בטיול לא יתווסף שוב, ואם הוא בגילוי יסומן לו לייק.')}</p>
@@ -501,7 +474,8 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
               <label key={i} className="card pick-row">
                 <input
                   type="checkbox"
-                  checked={m.on}
+                  checked={m.on && !isWeak(m.d)}
+                  disabled={isWeak(m.d)}
                   onChange={() => setMany(many.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))}
                 />
                 <span className="pick-body">
@@ -516,6 +490,7 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
                   )}
                   <span className="row">
                     {verdict && <span className={'verdict ' + verdict.tone}>{verdict.label}</span>}
+                    {isWeak(m.d) && <span className="verdict meh">{t('בלי שכונה, לא נוסף')}</span>}
                     {m.found && (
                       <span className="verdict meh">{m.found.where === 'deck' ? t('כבר בגילוי') : t('כבר ברשימה')}</span>
                     )}
@@ -526,7 +501,6 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
           })}
         </div>
         {err && <p className="msg">{err}</p>}
-        {destination}
         <button className="primary" onClick={addMany} disabled={busy || !picked}>
           {busy ? t('מוסיף…') : picked === 1 ? t('הוספת מקום אחד') : t('הוספת {n} מקומות', { n: picked })}
         </button>
@@ -546,7 +520,6 @@ export default function AddPlace({ tripId, userId, me, defaultTo, initial = '', 
           draft={typed ?? draft}
           busy={busy}
           err={err}
-          destination={destination}
           onSave={save}
           onBack={() => (setTyped(null), setDraft(null))}
         />
@@ -731,7 +704,6 @@ function DraftForm(props: {
   draft: Draft
   busy: boolean
   err: string
-  destination: React.ReactNode
   onSave: (d: Draft) => void
   onBack: () => void
 }) {
@@ -743,6 +715,7 @@ function DraftForm(props: {
   const verdict = d.verdict ? VERDICTS[d.verdict] : null
   // the preview shows the lookup's English text; edits go to the Hebrew columns (and, for the tip, to `en` too)
   const shown = localizeCard(d)
+  const weak = isWeak(d)
 
   return (
     <>
@@ -824,8 +797,8 @@ function DraftForm(props: {
       <Field label={t('טיפ / הערה')}>
         <textarea value={shown.tip ?? ''} onChange={setTip} rows={2} dir="auto" />
       </Field>
-      {props.destination}
-      <button className="primary" onClick={() => props.onSave(d)} disabled={props.busy || !d.name?.trim()}>
+      {weak && <p className="muted small">{t('כדי להוסיף צריך שם, עיר ושכונה.')}</p>}
+      <button className="primary" onClick={() => props.onSave(d)} disabled={props.busy || weak}>
         {props.busy ? t('שומר…') : t('הוספה')}
       </button>
       <button className="link" onClick={props.onBack}>

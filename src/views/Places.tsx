@@ -235,7 +235,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
           setAdding(true)
         }}
       />
-      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="list" initial={sharedLink} onClose={() => setAdding(false)} />}
+      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} initial={sharedLink} onClose={() => setAdding(false)} />}
       {read && (
         <PlaceSheet
           p={read}
@@ -595,7 +595,8 @@ function PlaceForm(props: { hasBaby: boolean; tripId: string; me: string; place:
   const area = areaOf(f.city, f.area)
 
   const save = async () => {
-    if (!f.name?.trim()) return
+    // editing only: a place gets into the trip through the game (swipe and match), never from this form
+    if (!f.id || !f.name?.trim()) return
     const untouched = tip === tipStart && baby === babyStart
     const notes = untouched ? props.place.notes : [tip.trim(), props.hasBaby && baby.trim() && BABY_HE + ' ' + baby.trim()].filter(Boolean).join('\n')
     const row = {
@@ -608,7 +609,7 @@ function PlaceForm(props: { hasBaby: boolean; tripId: string; me: string; place:
       url: f.url || null,
       notes: notes || null,
     }
-    const ok = await mutate(f.id ? supabase.from('places').update(row).eq('id', f.id) : supabase.from('places').insert({ ...row, added_by: props.me }))
+    const ok = await mutate(supabase.from('places').update(row).eq('id', f.id))
     if (ok) props.onClose()
   }
 
@@ -617,9 +618,9 @@ function PlaceForm(props: { hasBaby: boolean; tripId: string; me: string; place:
   }
 
   return (
-    <Sheet title={f.id ? t('עריכת מקום') : t('מקום חדש')} onClose={props.onClose} closeLabel={t('ביטול')} action={{ label: t('שמירה'), onClick: save, disabled: !f.name?.trim() }}>
+    <Sheet title={t('עריכת מקום')} onClose={props.onClose} closeLabel={t('ביטול')} action={{ label: t('שמירה'), onClick: save, disabled: !f.name?.trim() }}>
       <Field label={t('שם')}>
-        <input value={f.name ?? ''} onChange={set('name')} dir="auto" autoFocus={!f.id} />
+        <input value={f.name ?? ''} onChange={set('name')} dir="auto" />
       </Field>
       <div className="group">
         <button className="group-row" onClick={() => setPicking('city')}>

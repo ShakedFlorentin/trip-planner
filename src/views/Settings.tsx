@@ -12,6 +12,7 @@ import { usePassStatus } from '../pass'
 import PassSheet from './Pass'
 import { openExternal, privacyUrl } from '../native'
 import { disablePush, enablePush, pushState, type PushState } from '../push'
+import SignOutSheet from './SignOutSheet'
 
 /**
  * Settings (62, 63): only what is saved, as iOS grouped rows. "הטיול" (its name and dates, seen by everyone in the
@@ -25,6 +26,7 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
   const [saved, setSaved] = useState<'' | 'trip' | 'me' | 'dates'>('')
   const [dates, setDates] = useState(false)
   const [wallet, setWallet] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const flash = (k: 'trip' | 'me' | 'dates') => {
     setSaved(k)
     setTimeout(() => setSaved((s) => (s === k ? '' : s)), 1600)
@@ -96,6 +98,14 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
 
       <PassRow tripId={trip.id} />
       <WalletRow tripId={trip.id} onOpen={() => setWallet(true)} />
+
+      <div className="group-label">{t('חשבון')}</div>
+      <div className="group">
+        <button className="group-row danger" onClick={() => setSigningOut(true)}>
+          {t('התנתקות')}
+        </button>
+      </div>
+      {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
 
       {dates && (
         <DateRangeSheet

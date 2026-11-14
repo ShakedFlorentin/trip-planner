@@ -9,6 +9,7 @@ import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl } from './views/Login'
 import TripPicker from './views/TripPicker'
+import ResetPassword from './views/ResetPassword'
 import Home from './views/Home'
 import Itinerary from './views/Itinerary'
 import Bookings from './views/Bookings'
@@ -70,6 +71,8 @@ function AppMain() {
   const [invited, setInvited] = useState(false)
   // came in through Google with no invite (open sign-up): asked the same questions first, but joins no one's trip
   const [fresh, setFresh] = useState(false)
+  // the reset email's link signed the person in (PASSWORD_RECOVERY): choose the new password before the app
+  const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data, error }) => {
@@ -85,7 +88,9 @@ function AppMain() {
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
       // the first event repeats getSession above, which also knows about the offline case
       if (e === 'INITIAL_SESSION') return
+      if (e === 'PASSWORD_RECOVERY') setRecovering(true)
       if (e === 'SIGNED_OUT') {
+        setRecovering(false)
         clearCache()
         window.caches?.delete('docs').catch(() => {})
         // nothing of this account is left for whoever signs in next on this device
@@ -108,6 +113,14 @@ function AppMain() {
 
   if (userId === undefined) return <Loading />
   if (!userId) return <SignedOut />
+  if (recovering)
+    return (
+      <ResetPassword
+        onDone={() => {
+          setRecovering(false)
+        }}
+      />
+    )
   return invited || fresh ? <ProfileGate key={userId} userId={userId} invited={invited} /> : <TripGate userId={userId} />
 }
 
