@@ -46,8 +46,9 @@ declare
 begin
   begin
     for r in execute format(
-      'select %1$I::text as tid, count(*) as n, case when count(*) <= 20 then jsonb_agg(to_jsonb(x)) end as rows
-         from live_rows x where %1$I is not null group by %1$I', col)
+      'select g.tid, g.n,
+              case when g.n <= 20 then (select jsonb_agg(to_jsonb(y)) from live_rows y where y.%1$I::text = g.tid) end as rows
+         from (select %1$I::text as tid, count(*) as n from live_rows where %1$I is not null group by %1$I) g', col)
     loop
       if r.rows is not null and pg_column_size(r.rows) > 100000 then r.rows := null; end if;
       perform realtime.send(
