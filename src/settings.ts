@@ -14,7 +14,8 @@ export type Settings = {
   /** counting: usage events to our own table (src/track.ts, supabase/sql/2026-11-13-events.sql) */
   /** trip_pass: free new places per trip, then the pass (src/pass.ts, supabase/sql/2026-11-14-trip-pass.sql) */
   /** push: notifications, e.g. "it's a match" (src/push.ts, supabase/sql/2026-11-14-push.sql) */
-  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean; google_signin: boolean; counting: boolean; trip_pass: boolean; push: boolean }
+  /** live: changes arrive on one Broadcast channel per trip, rows included (src/live.ts, supabase/sql/2026-11-14-live-v2.sql) */
+  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean; google_signin: boolean; counting: boolean; trip_pass: boolean; push: boolean; live: boolean }
   free_places_per_trip: number
   trip_pass_price: { usd: number; ils: number }
   /** the public half of the notifications key (VAPID), base64url; the private half is the notify function's secret */
@@ -23,7 +24,7 @@ export type Settings = {
 
 export const DEFAULTS: Settings = {
   swipe_batch_size: 20,
-  features: { share_extension: true, rating_prompt: true, guest_mode: false, google_signin: false, counting: true, trip_pass: false, push: false },
+  features: { share_extension: true, rating_prompt: true, guest_mode: false, google_signin: false, counting: true, trip_pass: false, push: false, live: false },
   free_places_per_trip: 10,
   trip_pass_price: { usd: 7.99, ils: 29 },
   push_public_key: '',
@@ -50,6 +51,7 @@ export function parseSettings(rows: Record<string, unknown>): Settings {
       counting: bool(f.counting, DEFAULTS.features.counting),
       trip_pass: bool(f.trip_pass, DEFAULTS.features.trip_pass),
       push: bool(f.push, DEFAULTS.features.push),
+      live: bool(f.live, DEFAULTS.features.live),
     },
     free_places_per_trip: Math.round(num(rows.free_places_per_trip, DEFAULTS.free_places_per_trip)),
     trip_pass_price: { usd: num(p.usd, DEFAULTS.trip_pass_price.usd), ils: num(p.ils, DEFAULTS.trip_pass_price.ils) },

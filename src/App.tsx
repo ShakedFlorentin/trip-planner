@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { setOutboxUser } from './outbox'
 import { t } from './i18n'
 import type { Member, Trip } from './types'
+import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
 import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
@@ -374,13 +375,22 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     const refresh = () => document.visibilityState === 'visible' && load()
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('online', refresh)
-    const channel = supabase
-      .channel(`trip:${tripId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter: `trip_id=eq.${tripId}` }, load)
-      .subscribe()
+    // the trip's Broadcast channel (live.ts) once it is switched on, the two table subscriptions until then
+    let stop: () => void
+    if (liveOn()) {
+      stop = onLive(tripId, (c) => {
+        if (c === 'resync' || c.t === 'trips' || c.t === 'members') void load()
+      })
+    } else {
+      const channel = supabase
+        .channel(`trip:${tripId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, load)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter: `trip_id=eq.${tripId}` }, load)
+        .subscribe()
+      stop = () => void supabase.removeChannel(channel)
+    }
     return () => {
-      supabase.removeChannel(channel)
+      stop()
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('online', refresh)
     }

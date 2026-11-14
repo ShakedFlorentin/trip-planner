@@ -3,6 +3,24 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Design for thousands of users (2026-11-14): live by Broadcast, deck by revision, kept card stats
+
+Why: `docs/stress-test-2026-11-14.md`. Supabase's own guidance is that Postgres Changes doesn't scale (every change is checked per subscriber, on one thread; deletes can't be filtered), and the deck was 1.3 MB of JSON on every open.
+
+- **Database** (`supabase/sql/2026-11-14-live-v2.sql`, applied 14 Nov; additive, the old app and the iOS app keep working):
+  - `live_change()` statement triggers (`live_ins` / `live_upd` / `live_del`) on the 14 trip tables send one message per statement and trip to the private topic `live:<trip id>`: `{t, op, n, rows}` with the rows themselves up to 20 (null beyond, or over 100 KB). The policy on `realtime.messages` (`live_topic_member`) lets only the trip's members join; it is checked once, on join.
+  - `candidates.rev`: +1 on every update of a card (`candidates_rev`). Added with a constant default, so no row was rewritten.
+  - `card_interest` no longer reads every other trip's swipes on each Discover open: `library_interest` (+ `library_interest_base`) holds each library card's numbers over all trips, worked out again at most every 6 hours (`refresh_library_interest`). A trip's own votes are subtracted, as before; only the median look times now include them.
+- **App** (flag `app_settings.features.live`; `localStorage live = 1 / 0` overrides on one phone):
+  - `src/live.ts`: one channel per trip, shared by every table store and by App's trip/members load.
+  - `src/tableStore.ts`: with live on, rows that arrive are put in place with no read; "n rows changed" or a dropped channel coming back reads the table once. `put` / `remove` do the same for this phone's own write (Swipe uses them: a swipe is one request, it used to be a write plus a read of everyone's votes).
+  - The deck is read by revision in both modes: ids and revs (about 11 KB for 500 cards), then only the cards not held at that rev. The whole deck is read once per phone.
+  - `trip_place_couples` is asked once per run of votes (1 s after the last, at least every 4 s), `trip_has_baby` / `trip_avoids_pork_seafood` once a minute, not per card.
+- **Measured in the real app** (two phones on one test trip): a swipe = 1 request on the swiper's phone and 0 on the other's; a new list item appears on the other phone with 0 requests; reopening the app reads 17 KB in all (deck 11 KB) where it read about 470 KB.
+- Tests: `npm run test:table` (old mode, deck by revision, live mode).
+- **To switch off:** `update app_settings set value = jsonb_set(value, '{live}', 'false') where key = 'features'` (phones follow within 10 minutes, at their next table open).
+- **Not done:** the app side is on the branch, not on main; the flag is off; the library is still copied into every trip (500 rows per new trip); the publication `supabase_realtime` still carries the tables for old clients (drop them once no old app is left, the iOS app included); compute is still Micro.
+
 ## Load: one shared copy of each trip table (2026-11-14, live on main since 11:59)
 
 - **Why:** the stress test (`docs/stress-test-2026-11-14.md`) brought production down at about 20 users. The biggest cause was the app itself: every screen kept its own copy of each table and its own realtime channel, and loaded the whole table again on every change.

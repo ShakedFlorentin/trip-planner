@@ -13,6 +13,8 @@ export { readCache, writeCache }
  * private, so the database answers (trip_has_baby). The last answer is kept on the phone for offline; until the first
  * one arrives (and when nobody has answered) baby details are shown.
  */
+// every card on screen asks; the answer changes only when someone edits their profile, so one question a minute is plenty
+const ASK_AGAIN_MS = 60_000
 const babyAsks = new Map<string, Promise<boolean | null>>()
 export function useTripHasBaby(tripId: string): boolean {
   const key = 'baby:' + tripId
@@ -27,7 +29,7 @@ export function useTripHasBaby(tripId: string): boolean {
         ask = Promise.resolve(supabase.rpc('trip_has_baby', { tid: tripId }))
           .then(({ data, error }) => (error || typeof data !== 'boolean' ? null : data))
           .catch(() => null)
-          .finally(() => setTimeout(() => babyAsks.delete(tripId), 1000))
+          .finally(() => setTimeout(() => babyAsks.delete(tripId), ASK_AGAIN_MS))
         babyAsks.set(tripId, ask)
       }
       ask.then((v) => {
@@ -68,7 +70,7 @@ export function useTripAvoidsPorkSeafood(tripId: string): boolean {
         ask = Promise.resolve(supabase.rpc('trip_avoids_pork_seafood', { tid: tripId }))
           .then(({ data, error }) => (error || typeof data !== 'boolean' ? null : data))
           .catch(() => null)
-          .finally(() => setTimeout(() => foodAsks.delete(tripId), 1000))
+          .finally(() => setTimeout(() => foodAsks.delete(tripId), ASK_AGAIN_MS))
         foodAsks.set(tripId, ask)
       }
       ask.then((v) => {
@@ -122,7 +124,7 @@ export function useTripTable<T>(table: string, tripId: string, order: string = '
   }, [])
   // eslint-disable-next-line react-hooks/exhaustive-deps -- outboxAt is the signal that the waiting changes moved
   const shown = useMemo(() => withPending(table, rows), [table, rows, outboxAt])
-  return { rows: shown, loading, error, reload, stale, updatedAt }
+  return { rows: shown, loading, error, reload, stale, updatedAt, put: store.put, remove: store.remove }
 }
 
 /**

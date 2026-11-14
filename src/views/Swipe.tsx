@@ -66,7 +66,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     [candidates, answers, prefsLoading],
   )
   const fit = useMemo(() => new Map(answers ? visible.map((c) => [c.id, score(c, answers)]) : []), [visible, answers])
-  const { rows: allSwipes, loading: swipesLoading, reload: reloadSwipes } = useTripTable<Swipe>('swipes', trip.id)
+  const { rows: allSwipes, loading: swipesLoading, reload: reloadSwipes, put: putSwipes, remove: removeSwipes } = useTripTable<Swipe>('swipes', trip.id)
   // a "not now" kept in the database (swipes.skipped) is not a vote: it never counts as a like or a no
   const swipes = useMemo(() => allSwipes.filter((s) => !s.skipped), [allSwipes])
   const skippedByMe = useMemo(() => allSwipes.filter((s) => s.skipped && s.user_id === userId).map((s) => s.candidate_id), [allSwipes, userId])
@@ -101,15 +101,23 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   // who each card is for (the couples sleeping near it) and which of them said yes: the database's own rules
   // (trip_place_couples), fetched again after every change in the votes
   const [forWhom, setForWhom] = useState<Map<string, { couples: string[]; liked: string[] }> | null>(null)
+  // The first answer is asked for at once; after that a run of votes (every swipe of every member lands here) is
+  // followed by one question, not one per vote, and at least every 4 seconds while the votes keep coming
+  const askedForWhom = useRef(0)
   useEffect(() => {
     let live = true
-    supabase.rpc('trip_place_couples', { tid: trip.id }).then(({ data }) => {
-      if (!live || !data) return
-      const rows = data as { candidate_id: string; couples: string[] | null; liked_by: string[] | null }[]
-      setForWhom(new Map(rows.map((r) => [r.candidate_id, { couples: r.couples ?? [], liked: r.liked_by ?? [] }])))
-    })
+    const ask = () => {
+      askedForWhom.current = Date.now()
+      supabase.rpc('trip_place_couples', { tid: trip.id }).then(({ data }) => {
+        if (!live || !data) return
+        const rows = data as { candidate_id: string; couples: string[] | null; liked_by: string[] | null }[]
+        setForWhom(new Map(rows.map((r) => [r.candidate_id, { couples: r.couples ?? [], liked: r.liked_by ?? [] }])))
+      })
+    }
+    const wait = askedForWhom.current ? setTimeout(ask, Math.max(0, Math.min(1000, askedForWhom.current + 4000 - Date.now()))) : (ask(), null)
     return () => {
       live = false
+      if (wait) clearTimeout(wait)
     }
   }, [trip.id, swipes, rawCandidates.length])
 
@@ -224,9 +232,9 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     if (pending.current.has(c.id)) return false
     pending.current.add(c.id)
     const look = lookTake(c.id)
-    const ok = await mutate(
-      supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}), ...look }),
-    )
+    // the vote comes back as the server saved it and goes straight into the list: no read of everyone's votes per swipe
+    const res = await supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}), ...look }).select()
+    const ok = await mutate(Promise.resolve(res))
     if (!ok) lookStart(c.id, !!c.photos?.length)
     if (ok) {
       if (liked) markLiked(c.id)
@@ -235,7 +243,8 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       setTagWeights((w) => learnTags(w, c, liked, look?.look_ms))
       setRecent((r) => [...r, c.category].slice(-3))
       setBatchDone((n) => n + 1)
-      await reloadSwipes()
+      if (res.data?.length) putSwipes(res.data as Swipe[])
+      else await reloadSwipes()
     }
     pending.current.delete(c.id)
     return ok
@@ -253,17 +262,23 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     setSessionNotNow((s) => new Set(s).add(c.id))
     setRecent((r) => [...r, c.category].slice(-3))
     setBatchDone((n) => n + 1)
-    if (skipCol) void mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked: false, skipped: true, ...look })).then(() => reloadSwipes())
+    if (skipCol)
+      void supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked: false, skipped: true, ...look }).select().then((res) => {
+        void mutate(Promise.resolve(res))
+        if (res.data?.length) putSwipes(res.data as Swipe[])
+        else void reloadSwipes()
+      })
     return true
   }
 
   const undo = async () => {
     const last = history[history.length - 1]
     if (!last) return
-    await mutate(supabase.from('swipes').delete().eq('candidate_id', last).eq('user_id', userId))
+    const ok = await mutate(supabase.from('swipes').delete().eq('candidate_id', last).eq('user_id', userId))
     setHistory((h) => h.slice(0, -1))
     setBatchDone((n) => Math.max(0, n - 1))
-    reloadSwipes()
+    if (ok) removeSwipes([{ candidate_id: last, user_id: userId }])
+    else reloadSwipes()
   }
 
   const board = members
@@ -301,9 +316,11 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   }, [visible, swipes])
   // a vote from a list or a card opened from search: not part of the deck's undo
   const vote = async (c: Candidate, liked: boolean) => {
-    if (await mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }))) {
+    const res = await supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }).select()
+    if (await mutate(Promise.resolve(res))) {
       if (liked) markLiked(c.id)
-      reloadSwipes()
+      if (res.data?.length) putSwipes(res.data as Swipe[])
+      else reloadSwipes()
     }
   }
   const me = members.find((m) => m.user_id === userId)?.display_name ?? ''
