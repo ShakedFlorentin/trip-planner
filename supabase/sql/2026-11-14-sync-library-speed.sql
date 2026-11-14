@@ -19,6 +19,10 @@ as $function$
 declare n int; trip_cities text[];
 begin
   if not public.is_trip_member(tid) then raise exception 'not a member'; end if;
+  -- one sync per trip at a time (2026-11-14, scale test): every member opens Discover at once on a new trip, and the
+  -- syncs that ran together waited on each other's new rows until the 8 s limit, holding the database's few
+  -- connections. Another one is already copying the cards: its message on the trip's live channel brings them.
+  if not pg_try_advisory_xact_lock(hashtextextended('sync_library:' || tid::text, 0)) then return 0; end if;
 
   trip_cities := array(
     select s.city from public.trip_stays s where s.trip_id = tid and s.city is not null

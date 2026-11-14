@@ -19,7 +19,9 @@ Why: `docs/stress-test-2026-11-14.md`. Supabase's own guidance is that Postgres 
 - **Measured in the real app** (two phones on one test trip): a swipe = 1 request on the swiper's phone and 0 on the other's; a new list item appears on the other phone with 0 requests; reopening the app reads 17 KB in all (deck 11 KB) where it read about 470 KB.
 - Tests: `npm run test:table` (old mode, deck by revision, live mode).
 - **To switch off:** `update app_settings set value = jsonb_set(value, '{live}', 'false') where key = 'features'` (phones follow within 10 minutes, at their next table open).
-- **Not done:** the app side is on the branch, not on main; the flag is off; the library is still copied into every trip (500 rows per new trip); the publication `supabase_realtime` still carries the tables for old clients (drop them once no old app is left, the iOS app included); compute is still Micro.
+- **One sync per trip at a time** (14 Nov, applied): on a new trip every member opens Discover at once, and their `sync_library` calls waited on each other's new rows until the 8 s limit, holding the database's few connections (scale test: 139 timeouts with 300 scripted users being set up). A second call while one runs now returns 0 at once (`pg_try_advisory_xact_lock`); the running one's live message brings the cards. `live_change` builds the rows only when it will send them (20 or fewer).
+- **Deployed to main 14 Nov 13:05** with the flag off.
+- **Not done:** the flag is off; the library is still copied into every trip (500 rows per new trip); the publication `supabase_realtime` still carries the tables for old clients (drop them once no old app is left, the iOS app included); compute is still Micro.
 
 ## Load: one shared copy of each trip table (2026-11-14, live on main since 11:59)
 
