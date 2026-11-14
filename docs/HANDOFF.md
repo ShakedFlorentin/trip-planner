@@ -20,6 +20,8 @@ Why: `docs/stress-test-2026-11-14.md`. Supabase's own guidance is that Postgres 
 - Tests: `npm run test:table` (old mode, deck by revision, live mode).
 - **To switch off:** `update app_settings set value = jsonb_set(value, '{live}', 'false') where key = 'features'` (phones follow within 10 minutes, at their next table open).
 - **One sync per trip at a time** (14 Nov, applied): on a new trip every member opens Discover at once, and their `sync_library` calls waited on each other's new rows until the 8 s limit, holding the database's few connections (scale test: 139 timeouts with 300 scripted users being set up). A second call while one runs now returns 0 at once (`pg_try_advisory_xact_lock`); the running one's live message brings the cards. `live_change` builds the rows only when it will send them (20 or fewer).
+- **Planner on matches only** (14 Nov, applied, `supabase/sql/2026-11-14-replan-on-places-only.sql`): `request_plan` returns at once for swipes (the trigger `swipes_replan` is still there and can be dropped from the dashboard); `places_replan_gone` plans again when a match is undone.
+- **Scale test result** (`docs/stress-test-2026-11-14.md`, end): 160 users swiping nonstop at a slowest-5% of 0.6 s, no failures; at 200 the machine (Micro) gave out. Realtime refused connections past ~200.
 - **Deployed to main 14 Nov 13:05** with the flag off.
 - **Not done:** the flag is off; the library is still copied into every trip (500 rows per new trip); the publication `supabase_realtime` still carries the tables for old clients (drop them once no old app is left, the iOS app included); compute is still Micro.
 

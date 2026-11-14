@@ -115,3 +115,36 @@ The stress accounts (21 users, 6 trips and their rows) are still in the database
   2. Realtime by Broadcast per trip instead of Postgres Changes, with the changed row sent instead of a reload.
   3. A bigger compute size before a real launch: Small or Medium to absorb bursts, Large for steady load.
   4. RLS: `trip_id in (select my_trip_ids())` instead of `is_trip_member(trip_id)` per row (small gain).
+
+## Scale test with scripted users (after the redesign), 14 Nov, 13:09–14:52
+Scripted users in Node (`scratchpad/load/loadbot.mjs`), each a real account. Each one:
+- signs up with an invite, then makes or joins a trip;
+- opens the app with the same requests the new app sends (deck by revision, `sync_library`, `card_interest`, …);
+- holds the trip's live channel;
+- swipes every 3–6 s, now and then adds a list item or an expense, and reopens the app every few minutes.
+
+No AI calls. Sign-ins are paced by Supabase's limit of 1,800 an hour per IP address. Brake: the slowest 5% over 5 s, or over 5% of requests failing.
+
+| run | what | result | cause / fix |
+|---|---|---|---|
+| sign-up rush, 360 users | sign-up + swiping together | brake at ~38 active | new trips' first syncs |
+| setup only, 300 users | creating trips, nobody swiping | broke at ~40 trips: 139 `sync_library` timeouts, lock waits up to 6.6 s | members' syncs of one trip waited on each other → **one sync per trip at a time** (applied) |
+| 273 users sign back in, then waves | opening the app; then swiping | opening: all 273 fine (slowest 5% ~0.5 s); swiping: brake at 40 active | every swipe started a planner run (~30 requests): 1,164 of 1,299 requests in a minute → **planner on matches only** (applied) |
+| the same, again | waves of 40 every 90 s | see below | |
+
+| active users (each swiping every 3–6 s) | median | slowest 5% | failures |
+|---|---|---|---|
+| 40 | 0.17 s | 0.2 s | 0 |
+| 80 | 0.17 s | 0.2 s | 0 |
+| 120 | 0.17 s | 0.33 s | 0 |
+| 160 | 0.2 s | 0.6 s | 0 |
+| 200 | 0.8 s, then the brake | 8.8 s | 0 |
+
+- **The limit now is the machine, not one query.** Postgres itself used ~73 s in 19 min (a swipe: 4 ms), and Supabase's own logs show the same climb at 200 (slowest 5% 7.6 s server-side). At the limit the API was serving ~60 requests a second in total, about 30% of them from the planner (one run of ~30 requests per match). On Supabase the API, auth and realtime run on the project's machine, here the smallest paid size with shared, bursting CPU.
+- **Realtime let in ~200 connections and refused the rest** ("transport failure"): the plan's concurrent-connection limit. Every open phone is one connection.
+- **What 160 active users means.** These users swipe nonstop. If ~5% of users are in the app at the busiest moment, 160 active is about 3,000 users. The ~200 open-phone limit is tighter: with 10% of 2,000 users having the app open at once, it is reached.
+- **Next, in order:**
+  1. The realtime limit: spend cap off (10,000 connections).
+  2. A bigger compute size (Small/Medium for bursts, Large dedicated).
+  3. The planner: one database call per run instead of ~30.
+  4. The library as a static file instead of a copy per trip.
