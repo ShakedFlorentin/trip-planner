@@ -1,6 +1,7 @@
 import { ReactNode, useRef, useState } from 'react'
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
+import { Tabs as SdkTabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from '@ui-sdk/react/drawer'
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
@@ -101,27 +102,23 @@ export function Tabs(props: {
   onPick: (key: string) => void
 }) {
   return (
-    <div className="tabs-bar" role="tablist" aria-label={props.label}>
-      {Object.entries(props.tabs).map(([k, v]) => (
-        <button
-          key={k}
-          role="tab"
-          aria-selected={props.current === k}
-          className={'chip' + (props.current === k ? ' on' : '')}
-          onClick={() => props.onPick(k)}
-        >
-          {typeof v === 'string' ? (
-            v
-          ) : (
-            <>
-              <Icon as={v.icon} />
-              {v.label}
-            </>
-          )}
-          {!!props.counts?.[k] && <span className="count">{props.counts[k]}</span>}
-        </button>
-      ))}
-    </div>
+    <SdkTabs className="tabs-root" value={props.current} onValueChange={(v) => v && props.onPick(v)}>
+      <TabsList className="tabs-bar" aria-label={props.label}>
+        {Object.entries(props.tabs).map(([k, v]) => (
+          <TabsTab key={k} value={k} className={'chip' + (props.current === k ? ' on' : '')}>
+            {typeof v === 'string' ? (
+              v
+            ) : (
+              <>
+                <Icon as={v.icon} />
+                {v.label}
+              </>
+            )}
+            {!!props.counts?.[k] && <span className="count">{props.counts[k]}</span>}
+          </TabsTab>
+        ))}
+      </TabsList>
+    </SdkTabs>
   )
 }
 

@@ -1,4 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
 import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type GuidePlace, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
@@ -176,15 +177,17 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   return (
     <div className={'stack places' + (view === 'map' ? ' map-mode' : '')}>
       {/* one row of controls (40): whose list as one chip at the start, then the kinds of place */}
-      <div className="tabs-bar" role="tablist" aria-label={t('סוג מקום')}>
-        {couples.length > 1 && <WhoMenu couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
-        {Object.entries(tabs).map(([k, v]) => (
-          <button key={k} role="tab" aria-selected={current === k} className={'chip' + (current === k ? ' on' : '')} onClick={() => setCat(k)}>
-            {CATEGORY_ICON[k] && <Icon as={CATEGORY_ICON[k]} />} {v}
-            {!!counts[k] && <span className="count">{counts[k]}</span>}
-          </button>
-        ))}
-      </div>
+      <Tabs className="tabs-root" value={current} onValueChange={(v) => v && setCat(v)}>
+        <TabsList className="tabs-bar" aria-label={t('סוג מקום')}>
+          {couples.length > 1 && <WhoMenu couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
+          {Object.entries(tabs).map(([k, v]) => (
+            <TabsTab key={k} value={k} className={'chip' + (current === k ? ' on' : '')}>
+              {CATEGORY_ICON[k] && <Icon as={CATEGORY_ICON[k]} />} {v}
+              {!!counts[k] && <span className="count">{counts[k]}</span>}
+            </TabsTab>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {view === 'map' ? (
         <>
