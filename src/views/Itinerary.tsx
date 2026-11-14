@@ -112,7 +112,8 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   // on a day with several owners, "הכל" reads as one section per owner (the group first)
   const owners = [...new Set(entries.map((e) => e.who))].sort((a, b) => (a ?? '').localeCompare(b ?? ''))
   const sections = mode === 'all' && owners.length > 1 ? owners : [undefined]
-  const arrivals = entries.filter((e) => e.key.endsWith(':arr'))
+  // a landing that has its steps card (ArrivalCard) is drawn once, as that card, in the landing's place in the list
+  const arrivalCard = (e: Entry) => e.key.endsWith(':arr') && !!e.booking && !!tokyoArrival(e.booking)
   const opened = openId ? entries.find((e) => e.item?.id === openId) : undefined
   // a day only one couple is in Japan is that couple's plan by default
   const defaultWho = info?.who ?? null
@@ -262,14 +263,10 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
           )}
         </div>
         {estimateDay && <div className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</div>}
-        {info?.notes && <div className="notes day-notes">{keepRanges(info.notes)}</div>}
+        {info?.notes && <div className="notes day-notes" dir="auto">{keepRanges(info.notes)}</div>}
       </section>
 
       {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={mode} onChange={setMode} />}
-
-      {arrivals.map((e) => (
-        <ArrivalCard key={e.key} entry={e} dayWho={info?.who ?? null} checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null} />
-      ))}
 
       {entries.length === 0 && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
       {sections.map((owner) => (
@@ -291,6 +288,13 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
               <Fragment key={e.key}>
                 {/* how far the next stop is, as the planner counted it */}
                 {n > 0 && <Hop from={list[n - 1]} to={e} pointOf={pointOf} />}
+                {arrivalCard(e) ? (
+                  <ArrivalCard
+                    entry={e}
+                    dayWho={info?.who ?? null}
+                    checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null}
+                  />
+                ) : (
                 <EntryRow
                   e={e}
                   dayWho={info?.who ?? null}
@@ -303,6 +307,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                   warning={e.item && (warnings.get(e.item.id) ?? (e.item.auto && e.item.place_id ? issues.get(e.item.place_id) : undefined))}
                   onMissed={past && e.item?.place_id && !e.item.done ? missed : undefined}
                 />
+                )}
               </Fragment>
             ))}
         </Fragment>
@@ -580,7 +585,7 @@ function ItemSheet(props: {
             </button>
           )}
         </div>
-        {e.sub && <p className={'notes' + (i.auto ? ' plan-auto-notes' : '')}>{keepRanges(e.sub)}</p>}
+        {e.sub && <p className={'notes' + (i.auto ? ' plan-auto-notes' : '')} dir="auto">{keepRanges(e.sub)}</p>}
         {card ? (
           <CardFull c={card} />
         ) : (
@@ -756,7 +761,7 @@ function ArrivalCard({ entry, checkin, dayWho }: { entry: Entry; checkin: string
         <span className="plan-time">{entry.time}</span>
         <span className="plan-body">
           <span className="plan-title">
-            <Icon as={PlaneLanding} /> {t('נחיתה ב{airport}', { airport: a.name })}
+            <Icon as={PlaneLanding} /> {entry.title}
           </span>
           <span className="plan-sub">
             <span className="plan-kind">{t('{n} צעדים ראשונים אחרי הנחיתה', { n: a.steps.length })}</span>

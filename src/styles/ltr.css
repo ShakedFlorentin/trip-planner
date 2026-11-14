@@ -16,6 +16,7 @@ html[dir='ltr'] .left-count { direction: ltr; }
 
 /* a name in another script lines up with the text around it: on the left */
 html[dir='ltr'] :is(h2, h3, p, div, b, span)[dir="auto"]:not(.show-sub, .show-small, .turn-heard, .turn-text, .turn-back) { text-align: left; }
+html[dir='ltr'] :is(div, p).notes[dir="auto"] { text-align: start; } /* a Hebrew note on the English screen sits on the right, English on the left */
 html[dir='ltr'] .phrase-ja, html[dir='ltr'] .phrase-ro { text-align: left; }
 html[dir='ltr'] .voice-report { direction: ltr; text-align: left; }
 
