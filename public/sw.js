@@ -137,3 +137,41 @@ async function tile(req) {
     return Response.error()
   }
 }
+
+// Notifications (src/push.ts, supabase/functions/notify): the message comes encrypted for this phone; show it, and
+// open the app where it points when it is tapped, in the open window if there is one.
+self.addEventListener('push', (e) => {
+  let m = {}
+  try {
+    m = e.data ? e.data.json() : {}
+  } catch {
+    m = { title: e.data ? e.data.text() : '' }
+  }
+  e.waitUntil(
+    self.registration.showNotification(m.title || 'Toogo', {
+      body: m.body || '',
+      tag: m.tag || undefined,
+      icon: url('icon-192.png'),
+      badge: url('icon-192.png'),
+      data: { url: m.url || self.registration.scope },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  const target = e.notification.data?.url || self.registration.scope
+  // only our own pages: a message can't send the phone anywhere else
+  const to = new URL(target, self.registration.scope)
+  const href = to.href.startsWith(self.registration.scope) ? to.href : self.registration.scope
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => c.url.startsWith(self.registration.scope))
+      if (open) {
+        open.postMessage({ type: 'open', url: href })
+        return open.focus()
+      }
+      return self.clients.openWindow(href)
+    }),
+  )
+})

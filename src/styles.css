@@ -851,7 +851,8 @@ a.pill, button.pill { min-height: 36px; padding-inline: 12px; }
 /* iOS grouped rows (settings, menu): a small grey label, then flat rounded groups of full-width rows */
 .group-label { font-size: 0.8125rem; color: var(--muted); margin: 10px 16px -6px; font-weight: 400; }
 .group-foot { font-size: 0.8125rem; color: var(--muted); margin: -6px 16px 0; line-height: 1.35; }
-.group { background: var(--card); border-radius: 12px; overflow: hidden; }
+/* flex-shrink 0: in a sheet taller than the screen the rows were squeezed and cut, since overflow hidden lets a flex item shrink */
+.group { background: var(--card); border-radius: 12px; overflow: hidden; flex-shrink: 0; }
 .group-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 6px 16px; text-align: start; font-size: 1.0625rem; color: var(--text); }
 .group-row + .group-row, .group-row + .group-block, .group-block + .group-row, .group-block + .group-block { border-top: 0.5px solid var(--line); }
 .group-row > .k { flex: 1; min-width: 0; }

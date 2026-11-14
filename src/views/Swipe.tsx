@@ -6,6 +6,8 @@ import { cityLabel, couplesOf, keepRanges, mutate, safeUrl, useMediaIndex, useTr
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
 import { askForRating } from '../rating'
+import { mayAskForPush, notifyMatch } from '../push'
+import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
 import { EmptyState, Sheet } from '../ui'
@@ -76,10 +78,21 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const [aud, setAud] = useState('')
   const [match, setMatch] = useState<Match | null>(null)
   // a match is a happy moment: once its pop-up is closed, the app may ask for a rating (src/rating.ts decides)
+  const [pushAsk, setPushAsk] = useState<'likes' | 'match' | null>(null)
   const closeMatch = useCallback(() => {
     setMatch(null)
     askForRating()
-  }, [])
+    // the web's notifications offer (the rating prompt is only in the App Store app, so the two never meet)
+    if (members.length > 1) void mayAskForPush().then((ok) => ok && setPushAsk('match'))
+  }, [members.length])
+  // places this phone liked since it opened: a match one of them makes is this phone's to announce (notifyMatch)
+  const likedHere = useRef(new Set<string>())
+  const likesHere = useRef(0)
+  const markLiked = (id: string) => {
+    likedHere.current.add(id)
+    // the third like on a shared trip: the moment notifications are worth offering
+    if (++likesHere.current === 3 && members.length > 1) void mayAskForPush().then((ok) => ok && setPushAsk('likes'))
+  }
   const [history, setHistory] = useState<string[]>([])
   const knownMatches = useRef<Set<string> | null>(null)
   // who each card is for (the couples sleeping near it) and which of them said yes: the database's own rules
@@ -140,6 +153,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       knownMatches.current.add(id + who)
       const c = candidates.find((x) => x.id === id)
       if (c) setMatch({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
+      if (likedHere.current.has(id)) notifyMatch(id)
     }
   }, [matches, loading, swipesLoading, candidates, likes, members])
 
@@ -199,6 +213,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }),
     )
     if (ok) {
+      if (liked) markLiked(c.id)
       setHistory((h) => (h[h.length - 1] === c.id ? h : [...h, c.id]))
       // learn from it for the next cards, and move on in the batch
       setTagWeights((w) => learnTags(w, c, liked))
@@ -268,7 +283,10 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   }, [visible, swipes])
   // a vote from a list or a card opened from search: not part of the deck's undo
   const vote = async (c: Candidate, liked: boolean) => {
-    if (await mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }))) reloadSwipes()
+    if (await mutate(supabase.from('swipes').upsert({ trip_id: trip.id, candidate_id: c.id, user_id: userId, liked, ...(skipCol ? { skipped: false } : {}) }))) {
+      if (liked) markLiked(c.id)
+      reloadSwipes()
+    }
   }
   const me = members.find((m) => m.user_id === userId)?.display_name ?? ''
 
@@ -504,6 +522,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       )}
 
       {match && <MatchPop match={match} onClose={closeMatch} />}
+      {pushAsk && !match && <PushAsk from={pushAsk} onClose={() => setPushAsk(null)} />}
     </div>
   )
 }

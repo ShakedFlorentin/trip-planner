@@ -35,8 +35,9 @@ export function privacyPage(lang) {
 <li><b>Places you add:</b> the place itself (its name, area, address and description, not your notes, likes or who added it) is also kept in Toogo's shared place library. Once another trip adds the same place, it can be shown to everyone who uses Toogo.</li>
 <li><b>Photos you send for a place:</b> kept aside until we check them. An approved photo appears on that place's card for everyone who uses Toogo. We save every photo as a new image file, which drops the location data phones add to photos. An approved photo stays there even if you later delete your account, and it isn't linked to your name.</li>
 <li><b>Problem reports:</b> what you wrote, the screen you were on, the app version and your device and browser type.</li>
+<li><b>Notifications, if you turn them on:</b> the address your phone's browser gives for sending it notifications, the app's language, and which matches you were told about, so you're told once.</li>
 <li><b>How the app is used:</b> which screens are opened, how far people get from the first screen to a saved trip, which outside sites are opened (the site's name only), and errors in the app. It is tied to a random code made on your device, and to your account once you sign in. It never includes what you type. You can turn it off in Settings.</li>
-<li><b>On your phone:</b> a copy of the trip so the app works without signal, your settings, and, if you started without an account, your answers and likes until you sign in.</li>
+<li><b>On your phone:</b> a copy of the trip so the app works without signal (during the trip also the photos and map for today and tomorrow), your settings, and, if you started without an account, your answers and likes until you sign in.</li>
 </ul>
 
 <h2>Personal details in your answers</h2>
@@ -76,6 +77,7 @@ export function privacyPage(lang) {
 <li><b>GitHub Pages:</b> hosts the website and, like any website, sees your IP address.</li>
 <li><b>Esri (ArcGIS):</b> sends the map tiles when you open a map, and sees your IP address and the area on the map.</li>
 <li><b>Speech recognition:</b> when you speak to the translator, your browser recognises the speech. Depending on the browser, your voice may be sent to Google or Apple for that.</li>
+<li><b>Notifications:</b> they reach your phone through its browser's push service (Apple's, Google's or Mozilla's). Each message is encrypted for your phone, so the push service carries it without being able to read it.</li>
 <li><b>Sites you open:</b> when you tap a link to a hotel (Booking.com), a map or a place's website, you go to them and their terms apply. A hotel link may tell the hotel site that you came from Toogo, and may earn us a commission, at no extra cost to you.</li>
 </ul>
 <p>Like any online service, these providers keep short technical logs: IP address, browser type and time.</p>
@@ -84,6 +86,7 @@ export function privacyPage(lang) {
 <ul>
 <li>Your account, answers and trips: while your account exists.</li>
 <li>Usage counting: 12 months.</li>
+<li>A phone's notification address: until you turn notifications off or the phone stops taking them.</li>
 <li>Problem reports: up to 2 years.</li>
 <li>Photos waiting for review: until we check them. A photo we don't approve is deleted.</li>
 <li>Our database provider's backups keep a copy for a limited time after something is deleted.</li>
@@ -178,8 +181,9 @@ export function privacyPage(lang) {
 <li><b>מקומות שהוספתם:</b> המקום עצמו (השם, האזור, הכתובת והתיאור, בלי ההערות שלכם, בלי הלייקים ובלי מי הוסיף אותו) נשמר גם בספריית המקומות המשותפת של Toogo. ברגע שטיול נוסף מוסיף את אותו מקום, הוא יכול להופיע לכל מי שמשתמש ב-Toogo.</li>
 <li><b>תמונות ששלחתם למקום:</b> נשמרות בצד עד שאנחנו בודקים אותן. תמונה שאושרה מופיעה בכרטיס של המקום לכל מי שמשתמש ב-Toogo. כל תמונה נשמרת כקובץ חדש, וכך נמחק ממנה המיקום שהטלפון מוסיף לתמונות. תמונה שאושרה נשארת שם גם אם תמחקו אחר כך את החשבון, והיא לא מקושרת לשם שלכם.</li>
 <li><b>דיווח על בעיה:</b> מה שכתבתם, המסך שבו הייתם, גרסת האפליקציה וסוג המכשיר והדפדפן.</li>
+<li><b>התראות, אם הפעלתם אותן:</b> הכתובת שהדפדפן בטלפון נותן לשליחת התראות אליו, שפת האפליקציה, ועל אילו מאצ׳ים כבר הודענו לכם, כדי שתשמעו על כל אחד פעם אחת.</li>
 <li><b>איך משתמשים באפליקציה:</b> אילו מסכים נפתחים, עד לאן מגיעים מהמסך הראשון ועד טיול שמור, אילו אתרים חיצוניים נפתחים (רק שם האתר), ותקלות באפליקציה. המידע מקושר לקוד אקראי שנוצר במכשיר שלכם, ולחשבון אחרי שאתם מתחברים. הוא אף פעם לא כולל את מה שאתם כותבים. אפשר לכבות את זה בהגדרות.</li>
-<li><b>בטלפון שלכם:</b> עותק של הטיול כדי שהאפליקציה תעבוד גם בלי קליטה, ההגדרות שלכם, ואם התחלתם בלי חשבון, גם התשובות והלייקים עד שתתחברו.</li>
+<li><b>בטלפון שלכם:</b> עותק של הטיול כדי שהאפליקציה תעבוד גם בלי קליטה (בזמן הטיול גם התמונות והמפה של היום ושל מחר), ההגדרות שלכם, ואם התחלתם בלי חשבון, גם התשובות והלייקים עד שתתחברו.</li>
 </ul>
 
 <h2>פרטים אישיים בתשובות</h2>
@@ -219,6 +223,7 @@ export function privacyPage(lang) {
 <li><b>GitHub Pages:</b> מארח את האתר, וכמו כל אתר רואה את כתובת ה-IP שלכם.</li>
 <li><b>Esri (ArcGIS):</b> שולחת את המפה כשאתם פותחים מפה, ורואה את כתובת ה-IP שלכם ואת האזור שבמפה.</li>
 <li><b>זיהוי דיבור:</b> כשאתם מדברים אל המתרגם, הדפדפן מזהה את הדיבור. בהתאם לדפדפן, הקול שלכם יכול להישלח לשם כך ל-Google או ל-Apple.</li>
+<li><b>התראות:</b> מגיעות לטלפון דרך שירות ההתראות של הדפדפן שלו (של Apple, של Google או של Mozilla). כל הודעה מוצפנת לטלפון שלכם, כך שהשירות מעביר אותה בלי יכולת לקרוא אותה.</li>
 <li><b>אתרים שאתם פותחים:</b> כשאתם לוחצים על קישור למלון (Booking.com), למפות או לאתר של מקום, אתם עוברים אליהם והתנאים שלהם חלים. קישור למלון יכול לספר לאתר המלונות שהגעתם מ-Toogo, ואנחנו עשויים לקבל עליו עמלה, בלי שזה עולה לכם יותר.</li>
 </ul>
 <p>כמו כל שירות ברשת, הספקים האלה שומרים יומנים טכניים קצרים: כתובת IP, סוג הדפדפן ושעה.</p>
@@ -227,6 +232,7 @@ export function privacyPage(lang) {
 <ul>
 <li>החשבון, התשובות והטיולים: כל עוד החשבון קיים.</li>
 <li>הספירה של השימוש באפליקציה: 12 חודשים.</li>
+<li>כתובת ההתראות של טלפון: עד שמכבים את ההתראות, או שהטלפון מפסיק לקבל אותן.</li>
 <li>דיווחים על בעיות: עד שנתיים.</li>
 <li>תמונות שמחכות לבדיקה: עד שאנחנו בודקים אותן. תמונה שלא אושרה נמחקת.</li>
 <li>הגיבויים של ספק מסד הנתונים שומרים עותק לזמן מוגבל אחרי שמשהו נמחק.</li>

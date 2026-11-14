@@ -13,16 +13,20 @@ export type Settings = {
   /** google_signin: "Continue with Google" on the sign-in screen, and new accounts through Google (supabase/sql/2026-11-13-google-signin.sql) */
   /** counting: usage events to our own table (src/track.ts, supabase/sql/2026-11-13-events.sql) */
   /** trip_pass: free new places per trip, then the pass (src/pass.ts, supabase/sql/2026-11-14-trip-pass.sql) */
-  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean; google_signin: boolean; counting: boolean; trip_pass: boolean }
+  /** push: notifications, e.g. "it's a match" (src/push.ts, supabase/sql/2026-11-14-push.sql) */
+  features: { share_extension: boolean; rating_prompt: boolean; guest_mode: boolean; google_signin: boolean; counting: boolean; trip_pass: boolean; push: boolean }
   free_places_per_trip: number
   trip_pass_price: { usd: number; ils: number }
+  /** the public half of the notifications key (VAPID), base64url; the private half is the notify function's secret */
+  push_public_key: string
 }
 
 export const DEFAULTS: Settings = {
   swipe_batch_size: 20,
-  features: { share_extension: true, rating_prompt: true, guest_mode: false, google_signin: false, counting: true, trip_pass: false },
+  features: { share_extension: true, rating_prompt: true, guest_mode: false, google_signin: false, counting: true, trip_pass: false, push: false },
   free_places_per_trip: 10,
   trip_pass_price: { usd: 7.99, ils: 29 },
+  push_public_key: '',
 }
 
 const KEY = 'appSettings'
@@ -45,9 +49,11 @@ export function parseSettings(rows: Record<string, unknown>): Settings {
       google_signin: bool(f.google_signin, DEFAULTS.features.google_signin),
       counting: bool(f.counting, DEFAULTS.features.counting),
       trip_pass: bool(f.trip_pass, DEFAULTS.features.trip_pass),
+      push: bool(f.push, DEFAULTS.features.push),
     },
     free_places_per_trip: Math.round(num(rows.free_places_per_trip, DEFAULTS.free_places_per_trip)),
     trip_pass_price: { usd: num(p.usd, DEFAULTS.trip_pass_price.usd), ils: num(p.ils, DEFAULTS.trip_pass_price.ils) },
+    push_public_key: typeof rows.push_public_key === 'string' && /^[A-Za-z0-9_-]{80,100}$/.test(rows.push_public_key) ? rows.push_public_key : DEFAULTS.push_public_key,
   }
 }
 

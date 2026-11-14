@@ -3,6 +3,16 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
+## Notifications (roadmap step 13, 2026-11-14)
+
+- **What is sent:** "It's a match with <name>", to the others who liked the same place, with the plan day it went into ("Place is in your plan, on day 3") or "on your places list". Tapping opens that day of the plan (`?go=plan&day=n&trip=…`, handled in `App.tsx`; while the app is open the service worker passes the link with postMessage).
+- **Web push only** (the website and the app added to the home screen; on an iPhone only from the home screen, iOS 16.4+). The App Store app has no web push: it needs Apple's push service (APNs) and the Apple licence. "You're near a place you saved" needs the phone's location in the background, which only the App Store app can do; it waits for that too.
+- **Pieces:** `supabase/sql/2026-11-14-push.sql` (tables `push_subscriptions`, `notifications_sent`; `push_subscribe`, `push_unsubscribe`; `features.push` off; `push_public_key`), `supabase/functions/notify` (checks membership, the like and the match, tells each person once, max 40 people per sender per hour), `supabase/functions/_shared/webpush.ts` (encryption RFC 8291 and VAPID RFC 8292 with WebCrypto only; tested against the http_ece decoder), `src/push.ts`, `src/views/PushAsk.tsx`, the Notifications group in Settings, `push` and `notificationclick` in `public/sw.js`.
+- **Who sends:** the phone whose swipe made the match calls `notify` (`notifyMatch` in Swipe.tsx, only for places liked on this phone since it opened); the function checks everything again.
+- **When it is offered:** after the third like on a trip with more than one person, or after a match pop-up. At most twice, a week apart, and never after the phone's own "Don't allow". Settings has the switch.
+- **Keys:** `node scripts/push-keys.mjs <file>` made the pair. The public half is in `app_settings.push_public_key`; the private half is the notify function's secret `VAPID_PRIVATE_KEY` (with `VAPID_PUBLIC_KEY`). A new pair makes every phone subscribe again (`syncPush` does it on the next open).
+- **Also fixed:** groups in a sheet taller than the screen were squeezed and their last row cut (`.group` flex-shrink 0).
+
 ## Today and tomorrow on the phone (roadmap step 12, 2026-11-14)
 - `src/ready.ts` + the line on Home (`src/views/Ready.tsx`), from the day before the trip to its last day: whenever the
   app is in front with a connection (at most every 2 hours, or when the days change, or on a tap) it saves ahead:

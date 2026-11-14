@@ -29,6 +29,7 @@ import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
 import { askForRating } from './rating'
+import { syncPush } from './push'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
@@ -385,8 +386,41 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     }
   }, [tripId, attempt])
 
+  // a tapped notification (src/push.ts) points at a screen: ?go=plan&day=3 or ?go=places, for this trip. The day it
+  // names wins over today's, also when the trip loads after it
+  const pointedDay = useRef<number | null>(null)
   useEffect(() => {
-    if (trip) setDay(currentDay(trip.start_date, trip.num_days) ?? 1)
+    const open = (href: string) => {
+      const u = new URL(href, location.href)
+      const go = u.searchParams.get('go')
+      const to = u.searchParams.get('trip')
+      if (!go || (to && to !== tripId)) return
+      const d = Number(u.searchParams.get('day'))
+      if (go === 'plan') {
+        if (d > 0) {
+          pointedDay.current = d
+          setDay(d)
+        }
+        setTab('plan')
+      } else if (go === 'places') setTab('places')
+      track('push_open', { go })
+    }
+    open(location.href)
+    if (new URLSearchParams(location.search).has('go')) history.replaceState(history.state, '', location.pathname + location.hash)
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'open' && typeof e.data.url === 'string') open(e.data.url)
+    }
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker?.removeEventListener('message', onMessage)
+  }, [tripId])
+  // this phone's notifications address, again under whoever is signed in (once the server's switches are known)
+  const pushOn = useSettings().features.push
+  useEffect(() => {
+    if (pushOn) void syncPush()
+  }, [pushOn])
+
+  useEffect(() => {
+    if (trip) setDay(pointedDay.current ?? currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
   if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <Loading />

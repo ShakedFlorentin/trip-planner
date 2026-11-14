@@ -11,6 +11,7 @@ import { countingOn, setCounting } from '../track'
 import { usePassStatus } from '../pass'
 import PassSheet from './Pass'
 import { openExternal, privacyUrl } from '../native'
+import { disablePush, enablePush, pushState, type PushState } from '../push'
 
 /**
  * Settings (62, 63): only what is saved, as iOS grouped rows. "הטיול" (its name and dates, seen by everyone in the
@@ -81,6 +82,8 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
       </div>
       <p className="group-foot">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
 
+      <PushGroup />
+
       <div className="group-label">{t('פרטיות')}</div>
       <div className="group">
         <CountingRow />
@@ -116,6 +119,42 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
 }
 
 /** "Help improve Toogo": usage counting on this device (src/track.ts), on unless turned off. */
+/** Notifications on this phone (src/push.ts): a switch, or why there can't be one here. Hidden where there is no way. */
+function PushGroup() {
+  const [state, setState] = useState<PushState | null>(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    void pushState().then(setState)
+  }, [])
+  if (!state || state === 'unsupported') return null
+  const on = state === 'on'
+  const stuck = state === 'home-screen' || state === 'blocked'
+  const toggle = async () => {
+    if (busy || stuck) return
+    setBusy(true)
+    setState(on ? await disablePush() : await enablePush('settings'))
+    setBusy(false)
+  }
+  return (
+    <>
+      <div className="group-label">{t('התראות')}</div>
+      <div className="group">
+        <button className="group-row" role="switch" aria-checked={on} aria-disabled={stuck || busy} onClick={toggle}>
+          <span className="k">{t('מאצ׳ים בטיול')}</span>
+          <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
+        </button>
+      </div>
+      <p className="group-foot">
+        {state === 'home-screen'
+          ? t('באייפון, התראות עובדות רק כשפותחים את Toogo מהמסך הראשי: בספארי, שיתוף ואז "הוספה למסך הבית".')
+          : state === 'blocked'
+            ? t('ההתראות חסומות בהגדרות הטלפון. אפשר לפתוח אותן שם, תחת Toogo.')
+            : t('התראה כשמישהו מהטיול אוהב מקום שגם אתם אהבתם. רק בטלפון הזה.')}
+      </p>
+    </>
+  )
+}
+
 function CountingRow() {
   const [on, setOn] = useState(countingOn)
   return (
