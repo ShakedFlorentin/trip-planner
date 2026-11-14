@@ -97,3 +97,21 @@ Not answered by this run. No trip used more than 1 new place, because the AI loo
 
 ## Clean-up
 The stress accounts (21 users, 6 trips and their rows) are still in the database. `scratchpad/stress/cleanup.sql` removes exactly those: it is scoped by `toogo.stress.uNN@example.com` and aborts if any real user or the real trip is involved. It also deletes the 17 test invites.
+
+## Run 3 (after fixes 1–3), 14 Nov, 12:02–12:08
+- **Users:** 20 agents started (G01–G04, G12, G13); 17 got into the app and 6 trips formed before the brake. The brake stops everyone when the slowest 5% of small requests take over 5 s, or more than 15% fail.
+- **Compared with run 1:**
+  - 695 requests and **0 failures** (run 1: 13% failed).
+  - **33 deck downloads, 10 MB** in total. In run 1, one phone made 165 deck loads in a minute.
+- **Response times:** the median stayed at 0.2–0.3 s for five minutes. The brake tripped at 5 min 15 s, when the slowest 5% reached 5.4 s.
+- **What slowed it:** the deck query (`select * from candidates where trip_id = …`).
+  - It used 80% of database time: 89 calls averaging 4.2 s under load.
+  - On an idle database the same query takes 64 ms for 496 cards (RLS ~15 ms), so the 4.2 s is waiting for CPU.
+  - Each card is ~2.8 KB as stored and ~2.6 KB as JSON. The English text (`en`, ~880 characters) goes to Hebrew phones too, so a deck is ~1.3 MB of JSON built by Postgres.
+  - The other half of the API traffic was the planner: ~33 `plan-trip` runs, which is one per trip per burst, as expected after fix 3.
+- **Capacity:** the database is the Micro size: 60 connections, 224 MB shared buffers, shared burst CPU. Supabase says sizes up to Medium burst and then drop to a baseline; Large and above are dedicated.
+- **Next, in order of effect:**
+  1. Don't copy the library into every trip. Every trip holds a copy of 240–500 library cards (`sync_library`): 1.3 MB per deck download, and 500 rows written per new trip, each sent through realtime. Serve library cards from a static file (like the guide pages) and keep only the trip's own cards and votes in the database.
+  2. Realtime by Broadcast per trip instead of Postgres Changes, with the changed row sent instead of a reload.
+  3. A bigger compute size before a real launch: Small or Medium to absorb bursts, Large for steady load.
+  4. RLS: `trip_id in (select my_trip_ids())` instead of `is_trip_member(trip_id)` per row (small gain).
