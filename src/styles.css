@@ -1,3 +1,4 @@
+@layer ui-sdk;
 /* Tokens: semantic, light + dark. Accent red is reserved for primary actions and state. */
 /* Apple Music look: content on a plain white/black page, soft grey tiles, one deep pink-red tint.
    --accent is for text and icons; --accent-fill is for solid red surfaces with white text on them. */
@@ -517,37 +518,49 @@ button.chip { min-height: 36px; }
 .add-row.item-edit input { flex: 1; min-width: 0; }
 
 /* Sheet */
+/* ui-sdk's Drawer: it slides the sheet itself and fades the backdrop, so neither has an animation of its own here */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 10;
   background: rgba(0, 0, 0, 0.42);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  animation: fade 0.2s ease-out;
 }
+[data-slot='drawer-backdrop'][data-hidden] { display: none; }
+[data-slot='drawer-viewport'] {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+[data-slot='drawer-viewport'] > * { pointer-events: auto; }
 .sheet {
+  position: relative;
   width: 100%;
   max-width: 640px;
-  max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
+  margin-inline: auto;
+  max-height: calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 16px);
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  color: var(--text);
   border-radius: 20px 20px 0 0;
-  animation: up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
   outline: none;
 }
+/* covers the gap a drag past the bottom edge would open */
+.sheet::after { content: ''; position: absolute; inset-inline: 0; top: 100%; height: 6rem; background: var(--bg); }
 .sheet-head {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   padding: 18px 8px 6px;
   touch-action: none;
   flex: none;
 }
-.sheet-head h2 { font-size: 1.0625rem; line-height: 1.25; text-align: center; max-width: 62vw; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; grid-column: 2; grid-row: 1; }
+.sheet-head h2 { font-size: 1.0625rem; line-height: 1.25; text-align: center; min-width: 0; padding-inline: 4px; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; grid-column: 2; grid-row: 1; }
 .sheet-close { grid-column: 1; grid-row: 1; justify-self: start; min-height: 44px; min-width: 56px; padding: 0 12px; color: var(--accent); font-weight: 500; white-space: nowrap; }
 /* Search sheet */
 .search-field { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--card); color: var(--muted); }

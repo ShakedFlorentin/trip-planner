@@ -1,13 +1,14 @@
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, useRef, useState } from 'react'
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
+import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from '@ui-sdk/react/drawer'
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
 
 /**
- * Bottom sheet: grabber, drag-down to dismiss, Escape, scroll lock, focus return. An edit sheet passes `action`
- * (its "שמירה") and `closeLabel` ("ביטול"): both sit in the title row, as on every iOS edit sheet. `tall` keeps it
- * at full height, for a whole screen shown as a sheet.
+ * Bottom sheet, built on ui-sdk's Drawer: grabber, drag-down to dismiss, Escape, scroll lock, focus return. An edit
+ * sheet passes `action` (its "שמירה") and `closeLabel` ("ביטול"): both sit in the title row, as on every iOS edit
+ * sheet. `tall` keeps it at full height, for a whole screen shown as a sheet.
  */
 export function Sheet(props: {
   title: string
@@ -17,194 +18,36 @@ export function Sheet(props: {
   closeLabel?: string
   tall?: boolean
 }) {
-  const { onClose } = props
-  const ref = useRef<HTMLDivElement>(null)
-  const close = useRef(onClose)
-  close.current = onClose
+  const [open, setOpen] = useState(true)
   const openedAt = useRef(performance.now())
+  // a sheet is mounted while it is open: it slides out first, and the parent hears about it when it has settled
+  const { onClose } = props
 
-  // runs once per opening: re-running on every parent render would pull focus out of the field being typed in
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
-    window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const opener = document.activeElement as HTMLElement | null
-    ref.current?.focus({ preventScroll: true })
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-      opener?.focus?.({ preventScroll: true })
-    }
-  }, [])
-
-  // The keyboard covers the bottom of the screen without resizing the page, and the sheet sits at the bottom: keep
-  // the backdrop to the part still visible (visualViewport), so the sheet ends above the keyboard and its top,
-  // where the field is, stays on screen
-  useEffect(() => {
-    const vv = window.visualViewport
-    const backdrop = ref.current?.parentElement
-    if (!vv || !backdrop) return
-    const fit = () => {
-      const keyboard = window.innerHeight - vv.height > 120
-      backdrop.style.top = keyboard ? `${vv.offsetTop}px` : ''
-      backdrop.style.bottom = keyboard ? 'auto' : ''
-      backdrop.style.height = keyboard ? `${vv.height}px` : ''
-      if (ref.current) ref.current.style.maxHeight = keyboard ? `${vv.height - 8}px` : ''
-    }
-    fit()
-    vv.addEventListener('resize', fit)
-    vv.addEventListener('scroll', fit)
-    return () => {
-      vv.removeEventListener('resize', fit)
-      vv.removeEventListener('scroll', fit)
-    }
-  }, [])
-
-  // Pull down anywhere on the sheet to close it: from the header always, from the content once it is scrolled to
-  // the top. A short fast flick closes it too. Touch listeners are attached by hand because React's are passive
-  // and the pull has to stop the content from scrolling.
-  useEffect(() => {
-    const sheet = ref.current
-    const body = sheet?.querySelector<HTMLElement>('.sheet-body')
-    const backdrop = sheet?.parentElement
-    if (!sheet || !body || !backdrop) return
-    let y0 = 0
-    // where the finger came down, for the page lock below (y0 moves once a pull starts)
-    let fx = 0
-    let fy = 0
-    let t0 = 0
-    let dy = 0
-    let dragging = false
-    let canDrag = false
-    const set = (y: number, animate: boolean) => {
-      sheet.style.transition = animate ? 'transform 0.22s ease-out' : 'none'
-      sheet.style.transform = y ? `translateY(${y}px)` : ''
-    }
-    const release = () => {
-      if (!dragging) return
-      dragging = false
-      const speed = dy / Math.max(1, performance.now() - t0)
-      if (dy > Math.min(120, sheet.offsetHeight * 0.25) || (dy > 30 && speed > 0.5)) {
-        set(sheet.offsetHeight, true)
-        setTimeout(() => close.current(), 200)
-      } else set(0, true)
-    }
-    const start = (y: number, target: EventTarget | null) => {
-      const el = target as HTMLElement
-      // a field being typed in keeps its own gestures (caret, selection), and a long note scrolls itself; any other
-      // field is as good a place to pull from as the text around it, and some sheets are mostly fields
-      const field = el.closest<HTMLElement>('input, textarea, select')
-      const busy = !!field && (field === document.activeElement || field.scrollHeight > field.clientHeight + 1)
-      canDrag = sheet.contains(el) && !busy && !el.closest('.leaflet-container') && (!!el.closest('.sheet-head') || body.scrollTop <= 0)
-      y0 = y
-      dy = 0
-      dragging = false
-    }
-    const move = (y: number) => {
-      if (!canDrag) return false
-      const d = y - y0
-      if (!dragging) {
-        // pulling up means scrolling the content, so leave it to the browser
-        if (d < 0) {
-          canDrag = false
-          return false
-        }
-        // claim a downward pull from its first pixel: once iOS starts its own scroll/bounce, touchmove can no longer
-        // be cancelled and the sheet would never move
-        if (d < 6) return true
-        dragging = true
-        y0 = y
-        t0 = performance.now()
-      }
-      dy = Math.max(0, y - y0)
-      set(dy, false)
-      return true
-    }
-
-    /** Whether something under the finger, inside the sheet, has room to scroll the way the finger is going. */
-    const scrolls = (from: HTMLElement, down: boolean) => {
-      for (let n: HTMLElement | null = from; n && n !== backdrop; n = n.parentElement) {
-        if (n.scrollHeight <= n.clientHeight + 1 || !/auto|scroll/.test(getComputedStyle(n).overflowY)) continue
-        if (down ? n.scrollTop > 0 : n.scrollTop + n.clientHeight < n.scrollHeight - 1) return true
-      }
-      return false
-    }
-    const ts = (e: TouchEvent) => {
-      fx = e.touches[0].clientX
-      fy = e.touches[0].clientY
-      start(fy, e.target)
-    }
-    const tm = (e: TouchEvent) => {
-      const t = e.touches[0]
-      if (move(t.clientY)) {
-        if (e.cancelable) e.preventDefault()
-        return
-      }
-      // The page behind must not scroll. iOS ignores overflow:hidden on the body, and a sheet whose content fits has
-      // nothing of its own to scroll, so a finger moving on it (or on the dimmed page above it) scrolled the page.
-      // A move goes through only when it is sideways (a row of chips, a map) or something in the sheet can scroll.
-      const el = e.target as HTMLElement
-      const dx = t.clientX - fx
-      const dy = t.clientY - fy
-      if (Math.abs(dx) > Math.abs(dy) || el.closest('.leaflet-container')) return
-      if (!scrolls(el, dy > 0) && e.cancelable) e.preventDefault()
-    }
-    // mouse: only from the header, like a window title bar
-    const md = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest('.sheet-head') || (e.target as HTMLElement).closest('button')) return
-      start(e.clientY, e.target)
-      const mm = (ev: MouseEvent) => move(ev.clientY)
-      const mu = () => {
-        release()
-        window.removeEventListener('mousemove', mm)
-        window.removeEventListener('mouseup', mu)
-      }
-      window.addEventListener('mousemove', mm)
-      window.addEventListener('mouseup', mu)
-    }
-    // on the backdrop, not the sheet: a finger on the dimmed page above the sheet must not scroll the page either
-    backdrop.addEventListener('touchstart', ts, { passive: true })
-    backdrop.addEventListener('touchmove', tm, { passive: false })
-    backdrop.addEventListener('touchend', release)
-    backdrop.addEventListener('touchcancel', release)
-    sheet.addEventListener('mousedown', md)
-    return () => {
-      backdrop.removeEventListener('touchstart', ts)
-      backdrop.removeEventListener('touchmove', tm)
-      backdrop.removeEventListener('touchend', release)
-      backdrop.removeEventListener('touchcancel', release)
-      sheet.removeEventListener('mousedown', md)
-    }
-  }, [])
+  // a sheet opened from inside a swipe card still bubbles its pointer events (React's tree) to the card, where a
+  // sideways drift while closing the sheet would swipe the card
+  const isolate = { onPointerDown: stop, onPointerMove: stop, onPointerUp: stop, onPointerCancel: stop }
 
   return (
-    // the click that follows the tap which opened the sheet lands on the backdrop; don't let it close the sheet
-    <div
-      className="backdrop"
-      onClick={() => performance.now() - openedAt.current > 450 && onClose()}
-      // a sheet opened from inside a swipe card is portalled, but React still bubbles its pointer events to the
-      // card, where a sideways drift while closing the sheet would swipe the card
-      onPointerDown={stop}
-      onPointerMove={stop}
-      onPointerUp={stop}
-      onPointerCancel={stop}
+    <Drawer
+      open={open}
+      onOpenChange={(next, details) => {
+        // the click that follows the tap which opened the sheet lands on the backdrop; don't let it close the sheet
+        if (!next && details.reason === 'outside-press' && performance.now() - openedAt.current < 450) return details.cancel()
+        setOpen(next)
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (isOpen) return
+        onClose()
+        // a parent that keeps the sheet mounted after onClose (a refused close) gets it back, as before
+        setOpen(true)
+      }}
     >
-      <div
-        ref={ref}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label={props.title}
-        className={'sheet' + (props.tall ? ' tall' : '')}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <DrawerBackdrop className="backdrop" {...isolate} />
+      <DrawerContent className={'sheet' + (props.tall ? ' tall' : '')} initialFocus="content" {...isolate}>
         <div className="sheet-head">
           <span className="grabber" aria-hidden="true" />
-          <button className="sheet-close" onClick={onClose}>
-            {props.closeLabel ?? t('סגירה')}
-          </button>
-          <h2 dir="auto">{props.title}</h2>
+          <DrawerClose className="sheet-close">{props.closeLabel ?? t('סגירה')}</DrawerClose>
+          <DrawerTitle dir="auto">{props.title}</DrawerTitle>
           {props.action ? (
             <button className="sheet-action" onClick={props.action.onClick} disabled={props.action.disabled}>
               {props.action.label}
@@ -214,8 +57,8 @@ export function Sheet(props: {
           )}
         </div>
         <div className="sheet-body">{props.children}</div>
-      </div>
-    </div>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
