@@ -3,7 +3,7 @@
 Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, deployed by fast-forwarding `main`
 (`git push origin japan-trip:main`; GitHub Pages builds on push). Supabase project `wbofjfwbdewgnwjmcpnv`.
 
-## Load: one shared copy of each trip table (2026-11-14, on the branch, not on main yet)
+## Load: one shared copy of each trip table (2026-11-14, live on main since 11:59)
 
 - **Why:** the stress test (`docs/stress-test-2026-11-14.md`) brought production down at about 20 users. The biggest cause was the app itself: every screen kept its own copy of each table and its own realtime channel, and loaded the whole table again on every change.
 - **Now** (`src/tableStore.ts`, used by `useTripTable` in `src/lib.ts`): one copy, one channel and one load per table and trip, shared by every screen.
@@ -15,6 +15,8 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
 - Test: `npm run test:table`. Checked in the real app against a leftover test trip: Home opens with one `candidates` load (was two), and Home → Discover → swipe → Plan → Places → Home took 4 (each was ~450 KB).
 - **Test accounts removed** (14 Nov, by the owner in the SQL editor); the Japan trip checked equal to its fingerprint before the test.
 - **`sync_library` (fix 2, `supabase/sql/2026-11-14-sync-library-speed.sql`, to apply in the SQL editor):** the old "already in the trip" check ran `same_place_name` for every library card × every trip card (~340,000 calls on the Japan trip) and timed out on every Discover open, so new library cards stopped reaching trips: the Japan trip is missing 66 active cards (48 Tokyo food and 12 cafés from Ptitim, Facebook-group picks). The new version drops cards already there by id or exact name first and splits names into words once; the same 66 cards come out. Once applied, the Japan trip gets them on the next Discover open.
+- **Before fix 1 reached the phones (14 Nov, 11:20–11:55):** the test clean-up deleted ~2,000 cards at once; realtime sends every delete on the table to every phone, and the old app reloaded the whole deck for each one on every screen showing cards. One member's iPhone made ~5,000 deck loads (~450 KB each), 15% timing out, until the backlog ran out. Fix 1 compares a deleted row with the rows on screen, so this can't recur. Before a large delete in production in future, make sure every phone has the new app.
+- **Rerun (14 Nov, 11:52):** stopped within 3 minutes: the container could not reach Supabase at all (requests timed out with no answer, also by curl), partly from that phone's load. Its 17 creator invites are still in `invites` (created by the admin account, no trip, 11:51 UTC); `scratchpad/stress/cleanup-run2.sql` removes them and any run-2 accounts.
 - **Applied 14 Nov** (owner, SQL editor): `2026-11-14-sync-library-speed.sql`; the 53 test events from before sign-in deleted.
 - **Re-plan per swipe (fix 3, `supabase/sql/2026-11-14-replan-while-running.sql`, applied 14 Nov):** plan-trip already runs one planner per trip and marks `plan_state.dirty` for requests that arrive meanwhile, but every swipe still started the edge function just to set that flag. `request_plan` now sets the flag itself while the trip's lease is held. Known gap, older than this: a request that lands in the planner's second round is only flagged, and nothing runs it until the next change. The database's CPU is small and bursts: after the test a plain benchmark ran 5–20× slower than normal for a while.
 
