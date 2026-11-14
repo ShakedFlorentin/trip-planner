@@ -12,8 +12,8 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
   web/apple/grant, `external_id` unique for payment notices), `trip_place_uses` (reserved → settled/refunded),
   `reserve_place/settle_place/refund_place` (service role), `trip_pass_status(trip)` for the app,
   `grant_trip_pass(trip, note)` for admins. The owner's trip got a granted pass (it was "unlimited" under credits).
-- suggest-place uses `_shared/pass.ts`. NOT DEPLOYED YET (waits for the owner's go-ahead); with the switch off the
-  deployed code behaves as before.
+- suggest-place uses `_shared/pass.ts` (deployed v43, 14 Nov 2026; live code checked equal to git). With the switch
+  off it behaves as before.
 - Not built: paying. `buyPass()` in src/pass.ts says "payment opens soon". The website checkout (needs the owner's
   payment company) and Apple's in-app purchase (needs the licence) each add a `trip_passes` row from a server function.
 - Settings shows a "Trip pass" row while the switch is on.
