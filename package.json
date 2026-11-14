@@ -13,7 +13,8 @@
     "test:stay": "node scripts/stay-test.mjs",
     "test:recheck": "node scripts/recheck-test.mjs",
     "test:rating": "node scripts/rating-test.mjs",
-    "test:table": "node scripts/table-test.mjs"
+    "test:table": "node scripts/table-test.mjs",
+    "test:money": "node scripts/money-test.mjs"
   },
   "dependencies": {
     "@capacitor/app-launcher": "^8.0.1",

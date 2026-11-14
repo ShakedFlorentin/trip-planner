@@ -1,0 +1,20 @@
+// English for the money screen's new text and for changes that could not be saved (src/offline.tsx).
+export const EN_MONEY: Record<string, string> = {
+  'זה לא נראה כמו סכום': 'That does not look like an amount',
+  'שינוי אחד לא נשמר': 'One change could not be saved',
+  '{n} שינויים לא נשמרו': '{n} changes could not be saved',
+  'שינויים שלא נשמרו': 'Changes that could not be saved',
+  'השרת סירב לשינויים האלה. אפשר לנסות שוב או לוותר עליהם.': 'The server turned these changes down. You can try again or let them go.',
+  'לנסות שוב': 'Try again',
+  'לוותר': 'Discard',
+  'הוספה: {what}': 'Added: {what}',
+  'עדכון: {what}': 'Changed: {what}',
+  'מחיקה: {what}': 'Deleted: {what}',
+  'הוצאה או החזר': 'Expense or repayment',
+  'פריט בתוכנית': 'Plan item',
+  'מקום': 'Place',
+  'משימה ברשימה': 'List task',
+  'הזמנה': 'Booking',
+  'החלקה על כרטיס': 'Card swipe',
+  'שינוי': 'Change',
+}

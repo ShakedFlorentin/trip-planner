@@ -3,7 +3,7 @@ import { supabase } from '../supabase'
 import type { Expense, Member, Trip } from '../types'
 import { couplesOf, fmtDay, mutate, useTripTable } from '../lib'
 import { t } from '../i18n'
-import { balances, convert, coupleTotals, fmtMoney, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
+import { balances, convert, coupleTotals, fmtAmount, fmtMoney, parseAmount, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
 import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
 import { BedDouble, Check, Handshake, Package, Pencil, Plane, Trash2, ShoppingBag, Ticket, TrainFront, Users, Utensils } from 'lucide-react'
@@ -50,12 +50,6 @@ const FromTo = ({ from, to }: { from: string; to: string }) => <>{t('מ{from} ל
 /** Today by the date in Japan, whatever timezone the phone is still set to. */
 const japanToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
 
-/** What the user typed ("1,200", "12.5") as a number, or NaN. */
-// "1,200" is twelve hundred (thousands separators), "12,5" is twelve and a half
-const parseAmount = (s: string) => {
-  const t = s.trim().replace(/\s/g, '')
-  return Number(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t) ? t.replace(/,/g, '') : t.replace(',', '.'))
-}
 // agorot at most, so a typed 12.345 doesn't leave a half-agora in the books
 const roundFor = (n: number, currency: string) => (currency === 'JPY' ? Math.round(n) : Math.round(n * 100) / 100)
 
@@ -90,7 +84,7 @@ export default function Expenses({ trip, members, userId }: Props) {
     const label = parties.find((p) => p.key === key)?.label
     return label ? t(label) : t('מישהו')
   }
-  const transfers = settleUp(bal, parties, show)
+  const transfers = settleUp(bal, parties, show, rate)
   const toPay = transfers.filter((t) => t.from === mineKey)
   const toGet = transfers.filter((t) => t.to === mineKey)
   const others = transfers.filter((t) => t.from !== mineKey && t.to !== mineKey)
@@ -199,7 +193,7 @@ export default function Expenses({ trip, members, userId }: Props) {
           <div className="exp-details-body">
             {byCouple
               ? couples.map((c) => (
-                  <Balance key={c} name={t(c)} net={totals[c]?.net ?? 0} note={t('שילמו {amount}', { amount: fmtMoney(totals[c]?.paid ?? 0, show) })} cur={show} />
+                  <Balance key={c} name={t(c)} net={totals[c]?.net ?? 0} note={t('שילמו {amount}', { amount: `\u2066${fmtMoney(totals[c]?.paid ?? 0, show)}\u2069` })} cur={show} />
                 ))
               : members.map((m) => <Balance key={m.user_id} name={t(m.display_name)} net={bal[m.user_id] ?? 0} cur={show} />)}
           </div>
@@ -244,7 +238,7 @@ export default function Expenses({ trip, members, userId }: Props) {
                   </span>
                   <span className="exp-amt">
                     <b>
-                      <bdi dir="ltr">{SYMBOL[e.currency] + Number(e.amount).toLocaleString('en-US', { maximumFractionDigits: 2 })}</bdi>
+                      <bdi dir="ltr">{fmtAmount(Number(e.amount), e.currency)}</bdi>
                     </b>
                     <span className="muted small">
                       <bdi dir="ltr">≈ {fmtMoney(toMinor(convert(Number(e.amount), e.currency, flip(e.currency), rate), flip(e.currency)), flip(e.currency))}</bdi>
@@ -333,7 +327,9 @@ function ExpenseForm(props: {
   const toggle = (id: string) => setSplit(split.includes(id) ? split.filter((s) => s !== id) : [...split, id])
 
   const save = async () => {
-    const n = roundFor(parseAmount(amount), currency)
+    const typed = parseAmount(amount)
+    const n = roundFor(typed, currency)
+    if (amount.trim() && Number.isNaN(typed)) return setErr(t('זה לא נראה כמו סכום'))
     if (!(n > 0)) return setErr(t('צריך סכום גדול מאפס'))
     if (!split.length) return setErr(t('בחרו לפחות אדם אחד'))
     setErr('')
@@ -481,7 +477,9 @@ function SettleSheet(props: {
   const [busy, setBusy] = useState(false)
 
   const save = async () => {
-    const n = roundFor(parseAmount(amount), cur)
+    const typed = parseAmount(amount)
+    const n = roundFor(typed, cur)
+    if (amount.trim() && Number.isNaN(typed)) return setErr(t('זה לא נראה כמו סכום'))
     if (!(n > 0)) return setErr(t('צריך סכום גדול מאפס'))
     setBusy(true)
     const fields = { amount: n }

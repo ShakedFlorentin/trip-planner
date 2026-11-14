@@ -15,6 +15,10 @@ type Pending = {
   at: number
   /** who made the change: only that account sends it or sees it */
   uid?: string
+  /** the server refused it (400, 403, 404): kept for the person to retry or discard, never sent again by itself */
+  failed?: number
+  /** a send was already tried, so the server may have it: a retry must not make a second copy */
+  tried?: boolean
 }
 
 const KEY = 'outbox'
@@ -48,9 +52,24 @@ let memory: Pending[] = read()
 // the signed-in account; changes another account left on this device stay put until it is back
 let owner: string | null = null
 const mine = () => (owner ? memory.filter((p) => p.uid === owner) : [])
+const waiting = () => mine().filter((p) => !p.failed)
 
-/** The changes still waiting for a connection. */
+/** The changes still waiting for a connection or refused by the server (`failed`). */
 export const pending = mine
+
+/** The changes the server refused. */
+export const failedChanges = () => mine().filter((p) => p.failed)
+
+/** Clears the failed mark so the change is sent again, then sends. */
+export function retryFailed(id?: string) {
+  write(memory.map((p) => (p.failed && p.uid === owner && (!id || p.id === id) ? { ...p, failed: undefined } : p)))
+  return flush()
+}
+
+/** Gives up on a refused change. */
+export function discardFailed(id: string) {
+  write(memory.filter((p) => !(p.id === id && p.failed)))
+}
 
 /** Who is signed in (null once signed out). Changes left from before accounts were remembered go to the first one. */
 export function setOutboxUser(uid: string | null) {
@@ -80,14 +99,20 @@ function madeUp(method: string, body: string | null, prefer: string | null, acce
   return new Response(null, { status: method === 'POST' ? 201 : 204 })
 }
 
-function enqueue(url: URL, method: string, init: RequestInit, headers: Headers) {
-  const table = tableOf(url)!
-  let body = typeof init.body === 'string' ? init.body : null
-  if (method === 'POST' && body && HAS_ID.has(table)) {
+/** The body of an insert with a row id made here, once, before the first send: every retry then carries the same id. */
+function withIds(table: string, method: string, body: string | null) {
+  if (method !== 'POST' || !body || !HAS_ID.has(table)) return body
+  try {
     const rows = JSON.parse(body)
     const withId = (r: Record<string, unknown>) => ({ id: crypto.randomUUID(), ...r })
-    body = JSON.stringify(Array.isArray(rows) ? rows.map(withId) : withId(rows))
+    return JSON.stringify(Array.isArray(rows) ? rows.map(withId) : withId(rows))
+  } catch {
+    return body
   }
+}
+
+function enqueue(url: URL, method: string, body: string | null, headers: Headers, tried: boolean) {
+  const table = tableOf(url)!
   const item: Pending = {
     id: crypto.randomUUID(),
     table,
@@ -97,6 +122,7 @@ function enqueue(url: URL, method: string, init: RequestInit, headers: Headers) 
     body,
     at: Date.now(),
     uid: owner ?? undefined,
+    tried: tried || undefined,
   }
   write([...memory, item])
   return madeUp(method, body, item.prefer, headers.get('Accept'))
@@ -109,22 +135,44 @@ let apiKey = ''
 let token: () => Promise<string | null> = async () => null
 let flushing: Promise<void> | null = null
 
+/** The ids a change touches (row id in the query, or in the body of an insert), or its table when it has none. */
+function touches(p: Pending) {
+  const keys = new Set<string>()
+  for (const m of p.path.matchAll(/[?&]id=(?:eq|in)\.\(?([^&)]*)/g)) m[1].split(',').forEach((x) => keys.add(x))
+  try {
+    for (const r of p.body ? [].concat(JSON.parse(p.body)) : []) if ((r as { id?: string })?.id) keys.add((r as { id: string }).id)
+  } catch {
+    // not JSON: fall back to the table
+  }
+  if (!keys.size || !HAS_ID.has(p.table)) keys.add(p.table)
+  return keys
+}
+
 /**
- * Sends the waiting changes in order. Stops at the first one the network can't carry (and tries again later);
- * one the server refuses (a duplicate, a row deleted meanwhile) is dropped so it can't block the rest.
+ * Sends the waiting changes in order. A lost connection, 401, 408 or 429 stops and tries again later. A 5xx holds
+ * back only later changes to the same row (an edit must not outrun its insert); others still go. A 409 on an insert
+ * with our own row id means an earlier send arrived: done. A refusal (400, 403, 404) is kept, marked failed, for the
+ * person to retry or discard. Only an unrelated later change goes on past a held-back one.
  */
 export function flush() {
-  if (flushing || !mine().length || !base) return flushing ?? Promise.resolve()
+  if (flushing || !waiting().length || !base) return flushing ?? Promise.resolve()
   flushing = (async () => {
     let sent = 0
-    while (mine().length) {
-      const item = mine()[0]
+    const held = new Set<string>()
+    for (const item of waiting()) {
       const auth = await token()
       // only ever with the token of the account that made the change
       if (!auth || subOf(auth) !== item.uid) break
+      if (!memory.some((p) => p.id === item.id && !p.failed)) continue
+      const keys = touches(item)
+      if ([...keys].some((k) => held.has(k))) continue
       const headers: Record<string, string> = { apikey: apiKey, 'Content-Type': 'application/json' }
       if (auth) headers.Authorization = `Bearer ${auth}`
-      if (item.prefer) headers.Prefer = item.prefer.replace('return=representation', 'return=minimal')
+      let prefer = item.prefer ? item.prefer.replace('return=representation', 'return=minimal') : null
+      // a retry of an insert: if the first send did arrive, the server skips the copy instead of failing
+      if (item.tried && item.method === 'POST' && !prefer?.includes('resolution=')) prefer = (prefer ? prefer + ',' : '') + 'resolution=ignore-duplicates'
+      if (prefer) headers.Prefer = prefer
+      write(memory.map((p) => (p.id === item.id && !p.tried ? { ...p, tried: true } : p)))
       let res: Response
       try {
         res = await realFetch(base + item.path, { method: item.method, headers, body: item.body ?? undefined })
@@ -132,9 +180,20 @@ export function flush() {
         break
       }
       // signed out or the login lapsed: keep it for when the person is back
-      if (res.status === 401) break
-      if (res.status >= 500) break
-      if (!res.ok) console.warn('outbox: dropped', item.table, item.method, res.status, await res.text().catch(() => ''))
+      if (res.status === 401 || res.status === 408 || res.status === 429) break
+      if (res.status >= 500) {
+        keys.forEach((k) => held.add(k))
+        continue
+      }
+      const ownId = item.method === 'POST' && item.body?.includes('"id"')
+      if (res.status === 409 && ownId) {
+        // the first send got through
+      } else if (!res.ok) {
+        console.warn('outbox: refused', item.table, item.method, res.status, await res.text().catch(() => ''))
+        write(memory.map((p) => (p.id === item.id ? { ...p, failed: res.status } : p)))
+        keys.forEach((k) => held.add(k))
+        continue
+      }
       write(memory.filter((p) => p.id !== item.id))
       sent++
     }
@@ -163,12 +222,13 @@ export const outboxFetch: typeof fetch = async (input, init = {}) => {
   if (!WRITES.has(method) || !tableOf(url)) return realFetch(input, init)
   const headers = new Headers(init.headers)
   // a change made after others that are still waiting goes after them
-  if (mine().length && navigator.onLine) await flush()
-  if (!navigator.onLine || mine().length) return enqueue(url, method, init, headers)
+  if (waiting().length && navigator.onLine) await flush()
+  const body = withIds(tableOf(url)!, method, typeof init.body === 'string' ? init.body : null)
+  if (!navigator.onLine || waiting().length) return enqueue(url, method, body, headers, false)
   try {
-    return await realFetch(input, init)
+    return await realFetch(input, body === init.body ? init : { ...init, body })
   } catch (e) {
-    if (offline(e)) return enqueue(url, method, init, headers)
+    if (offline(e)) return enqueue(url, method, body, headers, true)
     throw e
   }
 }
@@ -206,7 +266,7 @@ function matcher(search: string) {
 
 /** The rows of a table as they will be once the waiting changes are sent. */
 export function withPending<T>(table: string, rows: T[]): T[] {
-  const waiting = mine().filter((p) => p.table === table)
+  const waiting = mine().filter((p) => p.table === table && !p.failed)
   if (!waiting.length) return rows
   let out = rows as Record<string, unknown>[]
   for (const p of waiting) {
