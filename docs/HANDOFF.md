@@ -5,6 +5,7 @@ Live: https://shakedflorentin.github.io/trip-planner/ · branch `japan-trip`, de
 
 ## Notifications (roadmap step 13, 2026-11-14)
 
+- **Live (14 Nov):** tables applied, VAPID secrets set, notify deployed (live code checked equal to git), features.push on.
 - **What is sent:** "It's a match with <name>", to the others who liked the same place, with the plan day it went into ("Place is in your plan, on day 3") or "on your places list". Tapping opens that day of the plan (`?go=plan&day=n&trip=…`, handled in `App.tsx`; while the app is open the service worker passes the link with postMessage).
 - **Web push only** (the website and the app added to the home screen; on an iPhone only from the home screen, iOS 16.4+). The App Store app has no web push: it needs Apple's push service (APNs) and the Apple licence. "You're near a place you saved" needs the phone's location in the background, which only the App Store app can do; it waits for that too.
 - **Pieces:** `supabase/sql/2026-11-14-push.sql` (tables `push_subscriptions`, `notifications_sent`; `push_subscribe`, `push_unsubscribe`; `features.push` off; `push_public_key`), `supabase/functions/notify` (checks membership, the like and the match, tells each person once, max 40 people per sender per hour), `supabase/functions/_shared/webpush.ts` (encryption RFC 8291 and VAPID RFC 8292 with WebCrypto only; tested against the http_ece decoder), `src/push.ts`, `src/views/PushAsk.tsx`, the Notifications group in Settings, `push` and `notificationclick` in `public/sw.js`.
