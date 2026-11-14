@@ -1,6 +1,6 @@
 # After the trip: the SQL runbook (owner)
 
-Nothing here is run before 31 Dec 2026. The real trip (a779ec4d-a64a-4fa1-bfee-17fda9e433f6) is never used for a test. All files are idempotent; each has its own header with precheck, verify and rollback. I (the backend agent) wrote them and ran none of them: they are read-reviewed only.
+Nothing here is run before 31 Dec 2026. The real trip (a779ec4d-a64a-4fa1-bfee-17fda9e433f6) is never used for a test. All files are idempotent; each has its own header with precheck, verify and rollback. I (the backend agent) wrote them. On 14 Nov they were rehearsed on a throwaway local Postgres 16 with invented data (section 8); they have NOT been run on Supabase itself.
 
 ## 1. Order
 
@@ -18,9 +18,9 @@ Run one file per sitting, verify, then the next. Not while anyone is editing exp
 
 Never `supabase link`, `db push` or `db dump` against the live ref for a rehearsal. Use a copy with no live data:
 
-- **Local `supabase start` (cheaper: free).** Needs Docker Desktop (a few GB of disk, a few minutes). Start it, open Studio's SQL editor on localhost, run `supabase/sql/2026-11-02-live-baseline.sql`, then the dated files after it in name order, then the five files above in the order of section 1 (file 2 from the other folder). Cost: your time only. Honest caveat: the baseline is a reference snapshot, not a migration; some files patch live text (`pg_get_functiondef` + replace) and may stop on a baseline copy. A stop in an OLD file is a rehearsal-setup problem, not a finding on the new files; note which and continue. I did not test that the baseline loads clean.
+- **Local `supabase start` (cheaper: free).** Needs Docker Desktop (a few GB of disk, a few minutes). Start it, open Studio's SQL editor on localhost, run `supabase/sql/2026-11-02-live-baseline.sql`, then the dated files after it in name order, then the five files above in the order of section 1 (file 2 from the other folder). Cost: your time only. Honest caveat: the baseline is a reference snapshot, not a migration; some files patch live text (`pg_get_functiondef` + replace) and may stop on a baseline copy. A stop in an OLD file is a rehearsal-setup problem, not a finding on the new files; note which and continue. Loading it on a plain Postgres needs the stand-ins in section 8.
 - **Supabase branch (dashboard).** A branch is a separate throwaway database. Branching is a paid-plan feature billed by branch-hours (check the current price on the Supabase pricing page; it is cents for a day). It does not copy live data, and since this repo has no `supabase/migrations`, the branch starts empty: you load the baseline and files into it the same way. Same effort as local, closer to the real server version (Postgres version, vault, storage). Delete the branch afterwards.
-- Recommendation: local first (free); if something behaves differently from what you expect, repeat on a branch for the final dress rehearsal. Run every file twice on the copy; the second run must change nothing and raise nothing (the create_trip one prints a notice and skips).
+- Recommendation: local first (free); if something behaves differently from what you expect, repeat on a branch for the final dress rehearsal. Run every file twice on the copy; the second run must change nothing and raise nothing (the create_trip one prints a notice and skips; the places one prints a NOTICE that places_all does not exist, which is harmless).
 
 On the copy, also run: `node scripts/delete-account-test.mjs` (in the other folder), and as a signed-in test user (not service role) the checks in each file's "VERIFY AFTER".
 
@@ -92,3 +92,19 @@ Supabase dashboard, Authentication, URL Configuration:
 - Site URL: leave as is unless it points at a localhost.
 - Authentication, Email Templates, "Reset password": the text is English by default; change it to Hebrew if wanted (the link variable `{{ .ConfirmationURL }}` stays).
 - Authentication, Providers, Email: confirm "secure password change" matches what you want.
+
+## 8. Rehearsal result, 14 Nov 2026 (local Postgres 16, invented users, no Supabase, no real data)
+
+Setup that a rebuilt copy needs (the repo alone does not rebuild the database):
+- Stand-ins for roles anon/authenticated/service_role, schemas auth (users, uid, role), extensions (pgcrypto), storage (buckets, objects, foldername), vault (decrypted_secrets), net (http_post), realtime (messages, topic, send), and a publication supabase_realtime. `pg_net` itself is not available locally (stubbed `net.http_post`), so 2026-10-28-trip-planner.sql stops at `create extension pg_net`.
+- Load the baseline with `PGOPTIONS='-c check_function_bodies=off'`: it lists functions before the tables they read.
+- The baseline does NOT create eight live tables (`_plan_compare`, `checklist_items`, `essentials`, `expenses`, `geo_cache`, `guide_places`, `join_attempts`, `place_facts`) and writes its foreign keys only as comments. Both had to be stubbed (minimal columns; the FKs rebuilt from the comments). Any rehearsal on a Supabase branch needs the same, or a restore of the live schema (without data).
+- Old files that stop on a baseline copy (expected, not findings): trip-planner (policies/triggers already in the baseline, pg_net), credits and credits-test (policy exists; the test file sorts before credits.sql and calls grant_daily_free first; credits.sql also inserts a fixed trip id), design-review ("baby rule not found": patches live text).
+- `2026-11-14-delete-account.sql` was loaded as an unchanged copy from the other folder, after the older files and before the drafts.
+
+Result: revoke-secret-getters, create-trip-guard, leave-trip, places-insert-via-match each ran twice with no error; every test below passed, no draft needed a change.
+- revoke: on a rebuilt copy get_anthropic_key WAS open to anon and authenticated before the file (proves the repo drift); after it anon/authenticated get "permission denied", service_role reads the secret.
+- create_trip: same trip id on a repeat within 10 s (also with padded spaces), new trip after 10 s, name 81 and blank/null refused (trip_name_invalid), person name 41 and blank refused (display_name_invalid), 80 and 40 accepted, 6th trip in an hour refused (too_many_trips), another user unaffected, anon refused, two simultaneous calls give one trip, constraints reject direct bad writes.
+- leave_trip: non-member and anon refused, creator leaves and the earliest-joined remaining member becomes creator, former_members row written only for people in expenses, their expenses stay and a remaining member can still edit them, their swipes go and a no-couples match that needed their like is removed, last member leaving deletes trip, expenses, candidates, places, shared_plans and trip credit_ledger rows, a second call says not a member, two simultaneous last leavers end as left plus trip_deleted.
+- places: direct member insert worked before and is refused after (also ON CONFLICT, other trip, anon); two likes still create the place through the match path; update and delete by members work, non-members see and change nothing; service_role can still update and insert; no INSERT/ALL policy is left.
+Not proven here: see the report to Atlas (PostgREST behaviour, real data, edge functions, Supabase's own roles and storage).

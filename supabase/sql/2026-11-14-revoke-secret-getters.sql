@@ -1,5 +1,5 @@
 -- Close get_anthropic_key() and get_planner_token() to every role except service_role.
--- DO NOT APPLY BEFORE THE TRIP ENDS (31 Dec 2026): the owner applies it.
+-- APPLIED to the live database on 14 Nov 2026 (owner approved; prechecks were clean). The other 2026-11-14 files still wait until after the trip.
 --
 -- WHAT IT DOES
 --   Both functions are SECURITY DEFINER and return a vault secret (the Anthropic key, the planner token). Postgres gives

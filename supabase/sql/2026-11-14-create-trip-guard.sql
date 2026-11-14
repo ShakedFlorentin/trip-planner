@@ -1,5 +1,5 @@
 -- create_trip guard (name length, double tap, per-user limit) and display_name / trip name length limits.
--- DO NOT APPLY BEFORE THE TRIP ENDS (31 Dec 2026): the owner applies it.
+-- APPLIED to the live database on 14 Nov 2026 (owner approved; prechecks were clean). The other 2026-11-14 files still wait until after the trip.
 --
 -- WHAT IT DOES
 --   1. create_trip(trip_name text, name text, start date) keeps its signature and its return (the new trip's uuid) and gains,
