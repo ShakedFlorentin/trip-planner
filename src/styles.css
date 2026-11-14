@@ -587,22 +587,6 @@ button.chip { min-height: 36px; }
   height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 14px);
   padding-bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom));
 }
-.hud {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 52px;
-  padding: 8px 14px;
-  border-radius: 16px;
-  background: var(--card);
-  text-align: start;
-  flex: none;
-}
-.hud-level { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.hud-level b { font-size: 0.9375rem; }
-.hud-stat { font-size: 0.875rem; color: var(--muted); white-space: nowrap; }
-.hud-stat b { color: var(--text); font-variant-numeric: tabular-nums; }
-.hud-chevron { font-size: 1.2rem; }
 .board { display: flex; flex-direction: column; gap: 14px; }
 .player { display: flex; gap: 10px; align-items: center; background: var(--card); padding: 12px; border-radius: 14px; }
 .player-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -707,7 +691,7 @@ html[dir='rtl'] .ja { text-align: right; }
 .round svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .round svg .fill { fill: currentColor; stroke-width: 1.5; }
 .round:active { transform: scale(0.9); }
-.round.nope { color: var(--nope); }
+.round.nope { color: var(--muted); }
 .round.like { color: var(--accent); }
 .small-round { width: 44px; height: 44px; }
 .small-round svg { width: 20px; height: 20px; stroke-width: 2.2; color: var(--muted); }

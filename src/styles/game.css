@@ -1,7 +1,5 @@
 /* Swipe game, places and add-place: icon-driven details that sit on top of styles.css */
 .card-emoji { top: 50%; transform: translate(-50%, -62%); opacity: 0.4; filter: none; stroke-width: 1.25; width: 92px; height: 92px; }
-.hud-chevron { display: inline-grid; place-items: center; color: var(--muted); }
-.hud-stat .ic { color: var(--accent); }
 .rank {
   flex: none;
   width: 32px;
@@ -70,12 +68,6 @@
 /* the "more places?" card at the end of a batch */
 .more-batch { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 32px 20px; }
 
-/* Level bar (23): the next level under the bar, and a label under each number */
-.hud-level .hud-next { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.hud-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.15; }
-.hud-stat b { font-size: 1.0625rem; }
-.hud-stat small { font-size: 0.6875rem; display: inline-flex; align-items: center; gap: 3px; }
-.hud-stat small .ic { width: 0.95em; height: 0.95em; }
 
 /* Ranking (25, 61): the bar is votes, labelled; how a match works in three lines */
 .votes-bar { display: flex; align-items: center; gap: 10px; }

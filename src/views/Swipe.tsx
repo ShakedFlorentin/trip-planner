@@ -341,7 +341,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
           onClose={() => setPrefsOpen(false)}
         />
       )}
-      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="deck" onClose={() => setAdding(false)} />}
+      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} onClose={() => setAdding(false)} />}
 
       {vetoOpen && (
         <Sheet title={t('לא בשבילנו')} onClose={() => setVetoOpen(false)}>

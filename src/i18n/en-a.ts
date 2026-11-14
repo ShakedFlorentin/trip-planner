@@ -435,7 +435,7 @@ export const EN_A: Record<string, string> = {
   'כרטיס לטיול ב-{price}': 'Get the trip pass for {price}',
   'התשלום ייפתח בקרוב. בינתיים אפשר להוסיף מקומות שכבר יש ב-Toogo, בחיפוש לפי שם.': 'Payment opens soon. Meanwhile you can add places already in Toogo by searching their name.',
   'לטיול הזה יש כרטיס: מקומות חדשים בלי הגבלה, לכל מי שבטיול.': 'This trip has a pass: unlimited new places for everyone on it.',
-  'אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. בלי מה שאתם כותבים, ובלי כלים חיצוניים.': "We count which screens are opened, where people get stuck and how long each card is looked at, to improve the app and the order of the cards. Never what you type, and no outside tools.",
+  'אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. לא אוספים שמות, מיילים או מה שאתם כותבים. דוחות שגיאה נחתכים קצר, ולעיתים נדירות עשויים לכלול קצת טקסט מהמסך. בלי כלים חיצוניים. אפשר לכבות את זה למעלה.': "We count which screens are opened, where people get stuck and how long each card is looked at, to improve the app and the order of the cards. We don't collect names, emails or what you type. Error reports are cut short and may rarely include a bit of screen text. No outside tools. You can switch this off above.",
   "ההתראות חסומות בהגדרות הטלפון. אפשר לפתוח אותן שם, תחת Toogo.": "Notifications are blocked in the phone's settings. You can allow them there, under Toogo.",
   "לא הצלחתי להפעיל התראות. אפשר לנסות שוב מההגדרות.": "I couldn't turn notifications on. You can try again from Settings.",
   "התראות על מאצ׳ים": "Match notifications",

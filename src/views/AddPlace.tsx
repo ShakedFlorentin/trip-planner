@@ -32,8 +32,6 @@ type Props = {
   tripId: string
   userId: string
   me: string
-  /** no longer used: a new place always goes to the game (Discover) as a candidate, never straight to the list */
-  defaultTo?: 'deck' | 'list'
   /** a link shared into the app (iOS Share menu): filled in, not looked up until the person taps */
   initial?: string
   onClose: () => void

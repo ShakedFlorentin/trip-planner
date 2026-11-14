@@ -94,7 +94,7 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
           <Icon as={ChevronLeft} className="chev flip-ltr" />
         </button>
       </div>
-      <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. בלי מה שאתם כותבים, ובלי כלים חיצוניים.')}</p>
+      <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. לא אוספים שמות, מיילים או מה שאתם כותבים. דוחות שגיאה נחתכים קצר, ולעיתים נדירות עשויים לכלול קצת טקסט מהמסך. בלי כלים חיצוניים. אפשר לכבות את זה למעלה.')}</p>
 
       <PassRow tripId={trip.id} />
       <WalletRow tripId={trip.id} onOpen={() => setWallet(true)} />
