@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState } from 'react'
+import { ReactNode, useLayoutEffect, useRef, useState } from 'react'
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
 import { Tabs as SdkTabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
@@ -45,21 +45,53 @@ export function Sheet(props: {
     >
       <DrawerBackdrop className="backdrop" {...isolate} />
       <DrawerContent className={'sheet' + (props.tall ? ' tall' : '')} initialFocus="content" {...isolate}>
-        <div className="sheet-head">
-          <span className="grabber" aria-hidden="true" />
-          <DrawerClose className="sheet-close">{props.closeLabel ?? t('סגירה')}</DrawerClose>
-          <DrawerTitle dir="auto">{props.title}</DrawerTitle>
-          {props.action ? (
-            <button className="sheet-action" onClick={props.action.onClick} disabled={props.action.disabled}>
-              {props.action.label}
-            </button>
-          ) : (
-            <span />
-          )}
-        </div>
+        <SheetHead title={props.title} closeLabel={props.closeLabel} action={props.action} />
         <div className="sheet-body">{props.children}</div>
       </DrawerContent>
     </Drawer>
+  )
+}
+
+/**
+ * The title row. The title is one line between the side buttons; when it would not fit there, the row becomes an iOS
+ * large-title header: the buttons on top (cancel at the start, the action at the end), the title full width under
+ * them and free to wrap. A hidden copy of the title gives its one-line width to compare against the room.
+ */
+function SheetHead(props: { title: string; closeLabel?: string; action?: { label: string; onClick: () => void; disabled?: boolean } }) {
+  const head = useRef<HTMLDivElement>(null)
+  const [stacked, setStacked] = useState(false)
+  useLayoutEffect(() => {
+    const el = head.current
+    if (!el) return
+    const measure = () => {
+      const natural = el.querySelector<HTMLElement>('.sheet-measure')?.offsetWidth ?? 0
+      const sides = [...el.querySelectorAll<HTMLElement>('.sheet-close, .sheet-action')].map((x) => x.offsetWidth)
+      const cs = getComputedStyle(el)
+      const inner = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      const room = inner - 2 * Math.max(56, ...sides) - 2 * 8
+      setStacked(natural > room)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [props.title, props.closeLabel, props.action?.label])
+  return (
+    <div className="sheet-head" ref={head} data-stacked={stacked ? '' : undefined}>
+      <span className="grabber" aria-hidden="true" />
+      <DrawerClose className="sheet-close">{props.closeLabel ?? t('סגירה')}</DrawerClose>
+      <DrawerTitle dir="auto">{props.title}</DrawerTitle>
+      <span className="sheet-measure" aria-hidden="true">
+        {props.title}
+      </span>
+      {props.action ? (
+        <button className="sheet-action" onClick={props.action.onClick} disabled={props.action.disabled}>
+          {props.action.label}
+        </button>
+      ) : (
+        <span />
+      )}
+    </div>
   )
 }
 
@@ -74,6 +106,17 @@ export function Field(props: { label: string; children: ReactNode }) {
 
 export function Empty(props: { children: ReactNode }) {
   return <p className="empty">{props.children}</p>
+}
+
+/** Rows' worth of grey placeholders while a list loads. */
+export function Skeleton(props: { rows?: number }) {
+  return (
+    <div className="skeleton" aria-hidden="true">
+      {Array.from({ length: props.rows ?? 3 }, (_, i) => (
+        <div key={i} className="skeleton-row" />
+      ))}
+    </div>
+  )
 }
 
 /** An empty screen, Apple style: a grey line icon that fits the case, a bold title, one line and one button. */

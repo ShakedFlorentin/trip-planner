@@ -3,10 +3,10 @@ import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { supabase } from '../supabase'
 import { itemDone, type ChecklistItem, type Member } from '../types'
 import { couplesOf, keepRanges, mutate, useTripTable } from '../lib'
-import { Empty } from '../ui'
+import { EmptyState } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react'
 import { SwipeRow } from '../swipe'
 import { useQuickAdd } from '../quickAdd'
 
@@ -173,7 +173,7 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
         </div>
       )}
 
-      {items.length === 0 && <Empty>{t('הרשימה ריקה')}</Empty>}
+      {items.length === 0 && <EmptyState icon={ListChecks} title={t('הרשימה ריקה')} />}
       {items.map((i) => {
         const isDone = done(i)
         return (

@@ -8,6 +8,7 @@ import { Icon } from '../icons'
 import { StarsInput, useRatings } from './Ratings'
 import { useProfile } from './Onboarding'
 import '../styles/ratings.css'
+import { say } from '../toast'
 
 // The day after a visit Home asks, once, how it was: stars and one quick question. Never required: the card can be
 // dismissed, and a dismissal is remembered on this phone only.
@@ -123,7 +124,7 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
     // the answers column isn't there yet: keep the stars
     if (error && /answers/.test(error.message)) ({ error } = await table().upsert(row, { onConflict: 'library_id,user_id' }))
     setBusy(false)
-    if (error) return alert(errorText(error.message))
+    if (error) return void say(errorText(error.message), { error: true })
     ratings.put({ library_id: card!.library_id!, trip_id: tripId, stars, user_id: userId, note: null, answers, updated_at: new Date().toISOString() })
     setStars(0)
     setAnswers({})

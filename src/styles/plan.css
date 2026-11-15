@@ -1,54 +1,54 @@
 /* Day plan and trip-day home: couple tags, booking rows, arrival card, "next" hero */
 .who-pill {
   display: inline-block;
-  margin-inline-start: 8px;
-  padding: 0 8px;
-  border-radius: 999px;
+  margin-inline-start: var(--s-2);
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: var(--fs-caption);
   font-weight: 600;
 }
-.plan-owner { margin: 8px 2px 0; font-size: 0.9375rem; color: var(--muted); }
+.plan-owner { margin: var(--s-2) 2px 0; font-size: var(--fs-subhead); color: var(--muted); }
 /* bookings are read-only: a tinted card with the kind's icon where the checkbox would be */
 .plan-booking { background: color-mix(in srgb, var(--ok) 9%, var(--card)); }
 .plan-booking .item-body { cursor: default; }
 .plan-icon { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: 1px 0; color: var(--ok); }
 /* tinted, not solid: one per plan item, so a solid red button on every row drowned out the plan itself */
-.action.nav-btn { gap: 6px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.item-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.action.nav-btn { gap: var(--s-2); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.item-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: 8px; }
 .arrival summary { cursor: pointer; font-weight: 700; min-height: 32px; }
-.arrival ul { margin: 8px 0 0; padding-inline-start: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9375rem; }
-.arrival li { display: flex; align-items: flex-start; gap: 10px; }
+.arrival ul { margin: var(--s-2) 0 0; padding-inline-start: 0; list-style: none; display: flex; flex-direction: column; gap: var(--s-3); font-size: var(--fs-subhead); }
+.arrival li { display: flex; align-items: flex-start; gap: var(--s-3); }
 .arrival li .ic { margin-top: 0.2em; color: var(--muted); }
 
-.next-card { border-radius: 20px; padding: 20px; box-shadow: var(--raised); }
-.next-label { font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
-.next-time { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-top: 8px; direction: ltr; text-align: start; font-variant-numeric: tabular-nums; }
-.next-title { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px; }
+.next-card { border-radius: var(--r-lg); padding: var(--s-5); box-shadow: var(--raised); }
+.next-label { font-size: var(--fs-footnote); font-weight: 600; color: var(--accent); }
+.next-time { font-size: var(--fs-large); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-top: 8px; direction: ltr; text-align: start; font-variant-numeric: tabular-nums; }
+.next-title { font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px; }
 .next-card .primary, .next-card .secondary { margin-top: 10px; text-decoration: none; }
 .item-title .ic, .next-title .ic { color: var(--muted); }
 .next-card .primary { min-height: 50px; }
-.today-row { display: flex; gap: 10px; align-items: baseline; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+.today-row { display: flex; gap: var(--s-3); align-items: baseline; padding: var(--s-3) 0; border-bottom: 0.5px solid var(--line); }
 .today-row:last-of-type { border-bottom: 0; }
 .today-row.past { color: var(--muted); }
 .today-row .time { flex: none; }
-.todo-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 8px 0; text-align: start; border-bottom: 0.5px solid var(--line); }
+.todo-row { display: flex; align-items: flex-start; gap: var(--s-3); width: 100%; min-height: 48px; padding: var(--s-2) 0; text-align: start; border-bottom: 0.5px solid var(--line); }
 .todo-row:last-child { border-bottom: 0; }
-.todo-row > .ic { flex: none; color: var(--muted); }
+.todo-row > .ic { flex: none; color: var(--muted); margin-top: 2px; }
 .todo-row b { display: block; font-weight: 600; }
-.todo-row b.count-chips { font-weight: 400; display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 2px; }
-.count-chip { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.todo-row b.count-chips { font-weight: 400; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); margin-bottom: 2px; }
+.count-chip { display: inline-flex; align-items: center; gap: var(--s-1); white-space: nowrap; }
 /* minmax(0, 1fr): a long English word (Emergency) shrinks its tile instead of pushing the row past the screen */
-.shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); }
 /* tiles: tinted icon on top, label under it, like the mockup's tonight/expenses tiles */
-.shortcuts .secondary { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px; min-height: 0; padding: 14px 16px; border-radius: 24px; text-align: start; }
+.shortcuts .secondary { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: var(--s-2); min-height: 0; padding: var(--s-4) var(--s-4); border-radius: var(--r-lg); text-align: start; }
 .shortcuts .secondary { align-items: center; justify-content: center; color: var(--accent); font-weight: 500; }
 .shortcuts .secondary .ic { width: 24px; height: 24px; color: var(--accent); }
-.shortcuts .secondary { min-width: 0; padding-inline: 8px; font-size: clamp(0.85rem, 4vw, 1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shortcuts .secondary { min-width: 0; padding-inline: var(--s-2); font-size: clamp(0.85rem, 4vw, 1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Music Search-style tiles: a colour block per city, bold name in the corner */
-.shelf-title { margin: 8px 0 10px; }
-.city-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.shelf-title { margin: var(--s-2) 0 var(--s-3); }
+.city-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
 .city-tile {
   position: relative;
   isolation: isolate;
@@ -59,20 +59,20 @@
   justify-content: flex-end;
   align-items: flex-start;
   gap: 2px;
-  padding: 12px 14px;
-  border-radius: 14px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
   background: var(--tile-soft);
   color: var(--tile-ink);
   text-align: start;
-  transition: transform 100ms ease-out;
+  transition: transform var(--dur-1) var(--ease);
 }
 .city-tile:active { transform: scale(0.97); }
-.city-tile b { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1.1; }
-.city-tile .small { opacity: 0.92; }
+.city-tile b { font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.015em; line-height: 1.1; }
+.city-tile .small { opacity: 1; }
 /* Music's category look: a greyscale photo multiplied into the tile colour. In light mode the tile is a pale tint
    with a faded photo and dark text, washing toward white at the label; in dark mode the deep colour, white text */
 .city-tile img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(0.9) brightness(1.3); opacity: 0.6; mix-blend-mode: multiply; pointer-events: none; }
-.city-tile.has-photo::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(transparent 35%, rgba(255, 255, 255, 0.75)); pointer-events: none; }
+.city-tile.has-photo::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.85) 60%); pointer-events: none; }
 :is(.city-tile, .day-banner).c0 { --tile: #c2253f; --tile-soft: #f2cfd5; --tile-ink: #781727; }
 :is(.city-tile, .day-banner).c1 { --tile: #b4501a; --tile-soft: #eed8cd; --tile-ink: #703210; }
 :is(.city-tile, .day-banner).c2 { --tile: #1f7a73; --tile-soft: #cee2e0; --tile-ink: #134c47; }
@@ -87,20 +87,16 @@
   .city-tile.has-photo::after { background: linear-gradient(transparent 45%, rgba(0, 0, 0, 0.35)); }
 }
 /* iOS Settings-style icon squares */
-.tile { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; color: #fff; }
+.tile { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-xs); color: #fff; }
 .tile .ic { width: 18px; height: 18px; color: #fff; }
-.tile.orange { background: #ff9500; }
-.tile.indigo { background: #5856d6; }
+.tile.orange { background: var(--sys-orange); }
+.tile.indigo { background: var(--sys-indigo); }
 .tile.red { background: var(--accent-fill); }
-@media (prefers-color-scheme: dark) {
-  .tile.orange { background: #ff9f0a; }
-  .tile.indigo { background: #5e5ce6; }
-  .tile.red { background: #ff453a; }
-}
+@media (prefers-color-scheme: dark) { .tile.red { background: var(--sys-red); } }
 /* .time is its own ltr box inside RTL text, so its end margin lands on the wrong side */
-.item-title .time, .next-label .time { margin-inline-end: 0; margin-inline-start: 8px; }
+.item-title .time, .next-label .time { margin-inline-end: 0; margin-inline-start: var(--s-2); }
 .arrival summary .time { margin-inline: 0 0; }
-.count-chips { display: flex; flex-wrap: wrap; gap: 4px 12px; font-weight: 400; }
+.count-chips { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); font-weight: 400; }
 .count-chips span { white-space: nowrap; }
 
 /* the planner's rough time: lighter, so a time someone set stands out */
@@ -108,10 +104,10 @@
 /* plan rows show the first lines; the whole note is one tap away in the item's sheet */
 .plan-notes { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .plan-auto-notes { color: var(--muted); }
-.plan-warn { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.875rem; font-weight: 600; color: var(--accent); }
+.plan-warn { display: flex; align-items: center; gap: var(--s-2); margin-top: 6px; font-size: var(--fs-footnote); font-weight: 600; color: var(--accent); }
 .spare summary { cursor: pointer; font-weight: 600; min-height: 32px; }
-.spare ul { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.spare li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.spare ul { margin: var(--s-2) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--s-2); }
+.spare li { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 .spare li .action { flex: none; }
 /* the kind of place ("food · ramen in chicken broth") stays one line; the couple pill never gets cut */
 .plan-meta { display: flex; align-items: center; min-width: 0; }
@@ -122,25 +118,25 @@
 /* an opened plan item: its card, then what else is around it */
 .plan-back { align-self: flex-start; min-height: 36px; padding: 0; }
 .plan-near { margin-top: 20px; }
-.plan-near h3 { margin: 0 2px 8px; font-size: 0.9375rem; color: var(--muted); }
-.plan-near-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 0; text-align: start; border-bottom: 0.5px solid var(--line); }
+.plan-near h3 { margin: 0 2px var(--s-2); font-size: var(--fs-subhead); color: var(--muted); }
+.plan-near-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: 52px; padding: var(--s-3) 0; text-align: start; border-bottom: 0.5px solid var(--line); }
 .plan-near-row:last-child { border-bottom: 0; }
 .plan-near-row > .ic { flex: none; color: var(--muted); }
 .plan-near-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .plan-near-text b { font-weight: 600; }
 .plan-near-text .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.plan-near-liked { margin-inline-start: 6px; color: var(--accent); width: 0.9em; height: 0.9em; }
+.plan-near-liked { margin-inline-start: var(--s-2); color: var(--accent); width: 0.9em; height: 0.9em; }
 .plan-near-mins { flex: none; white-space: nowrap; }
 /* the way between two stops in a row: a quiet line in the gap, not a card of its own */
-.plan-hop { display: flex; align-items: center; gap: 6px; margin: -4px 0; padding-inline-start: 18px; text-decoration: none; width: fit-content; }
+.plan-hop { display: flex; align-items: center; gap: var(--s-2); margin: -4px 0; padding-inline-start: var(--s-4); text-decoration: none; width: fit-content; }
 .plan-hop-go { opacity: 0.6; }
 
 /* sharing the plan (views/Share.tsx) */
-.share-stops { margin: 0; padding-inline-start: 1.25em; display: grid; gap: 6px; }
-.check-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.share-stops { margin: 0; padding-inline-start: 1.25em; display: grid; gap: var(--s-2); }
+.check-row { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
 .check-row input[type=checkbox] { flex: none; width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0; border: none; accent-color: var(--accent); }
 /* where we sleep */
-.stays-open { margin-top: 8px; align-self: flex-start; gap: 6px; }
+.stays-open { margin-top: 8px; align-self: flex-start; gap: var(--s-2); }
 .stay-row { display: block; width: 100%; text-align: start; font: inherit; color: inherit; cursor: pointer; }
 .stay-row > * + * { margin-top: 4px; }
 
@@ -148,17 +144,17 @@
    (their size and fade come from the row's position, see SwipeRow) */
 /* a plain row icon (search results): grey line icon, no coloured square */
 .tile.neutral .ic { color: var(--muted); }
-.todo-grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.todo-grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--s-2); }
 .bar.thin { height: 4px; }
 /* the liked-but-not-planned row (33): heart, one line, an iOS chevron that turns up when open */
-.spare summary { list-style: none; display: flex; align-items: center; gap: 10px; }
+.spare summary { list-style: none; display: flex; align-items: center; gap: var(--s-3); }
 .spare summary::-webkit-details-marker { display: none; }
 .spare summary span { flex: 1; min-width: 0; }
 .spare summary .lead { color: var(--accent); flex: none; }
-.spare summary .chev { color: var(--muted); flex: none; transition: transform 0.2s; }
+.spare summary .chev { color: var(--muted); flex: none; transition: transform var(--dur-2); }
 .spare[open] summary .chev { transform: rotate(180deg); }
 /* the time above the name (27) */
-.item-time { display: block; margin: 0 0 1px; font-size: 0.8125rem; }
+.item-time { display: block; margin: 0 0 1px; font-size: var(--fs-footnote); }
 /* navigate: a small round arrow at the card's far end (29) */
 .nav-round { position: relative; flex: none; align-self: center; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--accent); }
 .nav-round .ic { width: 18px; height: 18px; }
@@ -167,110 +163,111 @@
 /* Home, tonight's hotel: the name never breaks inside itself; a long one ends in … */
 .tonight-hotel { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* the photo hero at the top of Home (19) */
-.city-tile.hero-tile { aspect-ratio: auto; min-height: 210px; width: 100%; padding: 16px 18px; border-radius: 20px; gap: 3px; }
+.city-tile.hero-tile { aspect-ratio: auto; min-height: 210px; width: 100%; padding: var(--s-4) var(--s-4); border-radius: var(--r-lg); gap: 3px; }
 .hero-tile b { font-size: 2.25rem; letter-spacing: -0.02em; }
-.hero-tile .hero-kicker { font-weight: 600; opacity: 0.85; }
-.hero-tile .hero-line { font-size: 1.0625rem; font-weight: 600; }
-.hero-tile .hero-clock { display: inline-flex; align-items: center; gap: 5px; opacity: 0.85; margin-top: 4px; }
+.hero-tile .hero-kicker { font-weight: 600; opacity: 1; }
+.hero-tile .hero-line { font-size: var(--fs-body); font-weight: 600; }
+.hero-tile .hero-clock { display: inline-flex; align-items: center; gap: var(--s-1); opacity: 1; margin-top: 4px; }
 /* an odd number of route tiles: the last one spans the row (16) */
 .city-grid > .city-tile:last-child:nth-child(odd) { grid-column: 1 / -1; aspect-ratio: 32 / 9; }
 
 /* ---- the promo video's look: the day's title over a photo of its city, then calm grey rows ---- */
-.day-head { display: flex; flex-direction: column; gap: 8px; cursor: auto; }
-.day-title { margin: 2px 2px 0; font-size: 1.375rem; font-weight: 800; letter-spacing: -0.015em; }
-.day-banner { position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; height: 150px; padding: 0; border-radius: 18px; background: var(--tile); text-align: start; }
+.day-head { display: flex; flex-direction: column; gap: var(--s-2); cursor: auto; }
+.day-title { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.015em; }
+.day-banner { position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; height: 150px; padding: 0; border-radius: var(--r-lg); background: var(--tile); text-align: start; }
 .day-banner img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .day-banner.has-photo::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.42)); pointer-events: none; }
-.day-banner-city { position: absolute; bottom: 11px; inset-inline-start: 16px; color: #fff; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.015em; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
+.day-banner-city { position: absolute; bottom: 11px; inset-inline-start: 16px; color: #fff; font-size: var(--fs-large); font-weight: 700; letter-spacing: -0.015em; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
 .day-banner-edit { position: absolute; top: 10px; inset-inline-end: 10px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; background: rgba(0, 0, 0, 0.3); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .day-banner-edit .ic { width: 15px; height: 15px; }
 .day-banner:active { opacity: 0.92; }
 .day-edit { align-self: flex-start; min-height: 32px; padding: 0; }
-.day-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; margin: 0 2px; }
+.day-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s-3); margin: 0; }
 .day-meta .day-who { margin: 0; }
 .day-bed span { min-width: 0; }
 /* the hotel name never breaks inside itself: it drops to the next line whole, or ends in … if it is wider than the line; bdi keeps its direction apart from the text around it */
 .day-bed .bed-name { display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
-.day-bed { max-width: 100%; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 44px; margin-block: -7px; padding: 0; font-size: 0.8125rem; color: var(--muted); text-align: start; }
+.day-bed { max-width: 100%; display: inline-flex; align-items: center; gap: var(--s-1); min-width: 0; min-height: 44px; margin-block: -7px; padding: 0; font-size: var(--fs-footnote); color: var(--muted); text-align: start; }
 .day-bed .ic { flex: none; width: 15px; height: 15px; }
 .day-bed .chev { width: 13px; height: 13px; opacity: 0.6; }
-.day-notes { margin: 0 2px; font-size: 0.875rem; }
+.day-notes { margin: 0; font-size: var(--fs-footnote); }
 
-.plan-row { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 10px 16px; border-radius: 16px; background: var(--card); }
-.plan-time { flex: none; min-width: 44px; font-size: 1rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; text-align: start; }
-.plan-time.approx { font-weight: 500; opacity: 0.85; }
+.plan-row { display: flex; align-items: center; gap: var(--s-3); min-height: 62px; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--card); }
+.plan-time { flex: none; width: 3.6em; min-width: 0; font-size: var(--fs-subhead); font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; text-align: start; }
+.plan-time.approx { font-weight: 500; }
 .plan-body { flex: 1; min-width: 0; cursor: pointer; }
 /* up to three lines: "Check-in · Richmond Hotel Yokohama-Bashamichi" is whole before it is cut */
-.plan-title { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.125rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; overflow-wrap: normal; }
-.plan-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
+.plan-title { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--fs-body); font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; overflow-wrap: normal; }
+.plan-sub { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); min-width: 0; margin-top: 2px; font-size: var(--fs-footnote); color: var(--muted); }
 /* a sub-line wraps to a second line before it is cut with ... */
 .plan-sub .plan-kind { flex: 0 1 auto; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: normal; overflow-wrap: anywhere; }
 .plan-sub .who-pill { flex: none; margin-inline-start: 0; }
-.plan-row .check { width: 28px; height: 28px; margin: 0; border: 2px solid var(--line); }
-.plan-row .check[aria-pressed='true'] { background: var(--accent-fill); border-color: var(--accent-fill); }
+.plan-sub .plan-kind { flex-basis: 100%; }
+.plan-row .check { width: 28px; height: 28px; margin: 0; border: 2px solid var(--control-edge); }
+.plan-row .check[aria-pressed='true'] { background: var(--ok); border-color: var(--ok); }
 .plan-row .check .ic { width: 15px; height: 15px; }
 .plan-row.plan-booking { background: var(--card); }
 .plan-row .plan-icon { color: var(--accent); }
 .plan-booking .plan-body { cursor: default; }
 .plan-missed { margin-top: 6px; }
-.plan-row .plan-warn { margin-top: 4px; font-size: 0.8125rem; }
+.plan-row .plan-warn { margin-top: 4px; font-size: var(--fs-footnote); }
 /* the arrival card: one row like the stops, its first steps open under it */
-.arrival { padding: 10px 16px; border-radius: 16px; background: var(--card); }
-.arrival summary { display: flex; align-items: center; gap: 12px; min-height: 42px; list-style: none; font-weight: 400; }
+.arrival { padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--card); }
+.arrival summary { display: flex; align-items: center; gap: var(--s-3); min-height: 42px; list-style: none; font-weight: 400; }
 .arrival summary::-webkit-details-marker { display: none; }
 .arrival summary .plan-body { display: flex; flex-direction: column; }
 .arrival .plan-title .ic { width: 17px; height: 17px; color: var(--accent); vertical-align: -0.15em; }
-.arrival .chev { flex: none; width: 18px; height: 18px; color: var(--muted); transition: transform 0.2s; }
+.arrival .chev { flex: none; width: 18px; height: 18px; color: var(--muted); transition: transform var(--dur-2); }
 .arrival[open] .chev { transform: rotate(180deg); }
-.arrival ul { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--line); gap: 8px; font-size: 0.875rem; color: var(--muted); }
+.arrival ul { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--line); gap: var(--s-2); font-size: var(--fs-footnote); color: var(--muted); }
 .arrival li .ic { width: 16px; height: 16px; }
-.spare { border-radius: 16px; }
+.spare { border-radius: var(--r-md); }
 
 /* where to sleep: the recommended area of a stretch with no hotel (plan-trip/stay.ts), with a hotel search there.
    A grey card like the stay rows; the red stays on the mark, the day-trip line and the search button */
-.stay-rec { display: flex; flex-direction: column; gap: 12px; }
-.stay-rec-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.stay-rec-mark { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+.stay-rec { display: flex; flex-direction: column; gap: var(--s-3); }
+.stay-rec-head { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.stay-rec-mark { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--accent); }
 .stay-rec-mark .ic { width: 20px; height: 20px; }
 .stay-rec-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.stay-rec-text b { font-size: 1.0625rem; font-weight: 700; line-height: 1.3; }
-.stay-rec-why { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; line-height: 1.4; color: var(--muted); }
-.stay-rec-hub { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 500; }
+.stay-rec-text b { font-size: var(--fs-body); font-weight: 700; line-height: 1.3; }
+.stay-rec-why { display: flex; flex-direction: column; gap: var(--s-1); font-size: var(--fs-footnote); line-height: 1.4; color: var(--muted); }
+.stay-rec-hub { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--accent); font-weight: 500; }
 .stay-rec-hub .ic { width: 16px; height: 16px; }
-.stay-rec-alts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.stay-rec-alts .chip { min-height: 32px; padding: 4px 12px; font-size: 0.8125rem; }
+.stay-rec-alts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.stay-rec-alts .chip { min-height: 32px; padding: var(--s-1) var(--s-3); font-size: var(--fs-footnote); }
 .stay-rec .primary { min-height: 46px; }
 /* one line, centred with its icon, whatever the area's name */
 .stay-rec .primary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* nights per city: the city, and − n nights + */
-.nights-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 16px; }
-.nights-step { display: flex; align-items: center; gap: 4px; }
+.nights-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4); }
+.nights-step { display: flex; align-items: center; gap: var(--s-1); }
 .nights-step span { min-width: 5.5em; text-align: center; font-variant-numeric: tabular-nums; }
-.nights-step button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--fill); color: var(--accent); }
+.nights-step button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--fill); color: var(--accent); }
 .nights-step button:disabled { color: var(--muted); opacity: 0.5; }
 .nights-step .ic { width: 18px; height: 18px; }
 /* the first step of splitting the trip between cities: three ways in, as rows */
-.split-start { display: flex; flex-direction: column; gap: 12px; }
-.split-ways { display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--fill); }
-.split-way { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; text-align: start; font: inherit; color: inherit; }
-.split-way + .split-way { border-top: 1px solid var(--line); }
+.split-start { display: flex; flex-direction: column; gap: var(--s-3); }
+.split-ways { display: flex; flex-direction: column; }
+.split-way { display: flex; align-items: center; gap: var(--s-3); width: 100%; padding: var(--s-3) var(--s-4); text-align: start; font: inherit; color: inherit; }
+.split-way + .split-way { border-top: 0.5px solid var(--line); }
 .split-way > .ic:first-child { flex: none; width: 22px; height: 22px; color: var(--accent); }
 .split-way > span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .split-way .chev { flex: none; color: var(--muted); }
 .split-later { align-self: center; }
 
 /* the landing row: the ride to the hotel, one calm line under the title */
-.arrival-ride { display: block; margin-top: 2px; font-size: 0.8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.arrival-ride { display: block; margin-top: 2px; font-size: var(--fs-footnote); color: var(--muted); font-variant-numeric: tabular-nums; }
 /* leaving the bags is a hint, not a stop: its icon is plain and muted, with no circle to tap */
 .plan-row .plan-icon.quiet { color: var(--muted); opacity: 0.7; }
 /* in the trip: a slim photo band, and who / bed / note as one quiet block, so the first stop sits high */
-.day-head.on-trip { gap: 6px; }
-.day-head.on-trip .day-banner { height: 60px; border-radius: 14px; }
-.day-head.on-trip .day-banner-city { bottom: 8px; inset-inline-start: 14px; font-size: 1.125rem; }
+.day-head.on-trip { gap: var(--s-2); }
+.day-head.on-trip .day-banner { height: 60px; border-radius: var(--r-md); }
+.day-head.on-trip .day-banner-city { bottom: 8px; inset-inline-start: 14px; font-size: var(--fs-body); }
 .day-head.on-trip .day-banner-edit { top: 15px; width: 30px; height: 30px; }
-.day-head.on-trip .day-block { display: flex; flex-direction: column; gap: 2px; padding: 6px 12px; border-radius: 12px; background: var(--card); }
+.day-head.on-trip .day-block { display: flex; flex-direction: column; gap: 2px; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--card); }
 .day-head.on-trip .day-meta { margin: 0; }
-.day-head.on-trip .day-notes { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.day-head.on-trip .day-notes { margin: 0; font-size: var(--fs-footnote); color: var(--muted); }
 .day-head:not(.on-trip) .day-block { display: contents; }
 /* the + is fixed at the bottom: Plan's last row ends above it with room to spare */
 main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }

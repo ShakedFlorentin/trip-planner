@@ -177,6 +177,7 @@ export type Place = {
   photos?: string[] | null
   /** whose list it is on: a couple, or null for the whole group */
   who?: string | null
+  auto_planned?: boolean
 }
 
 export type ChecklistItem = {

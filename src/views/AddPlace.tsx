@@ -8,6 +8,7 @@ import { isEn, t } from '../i18n'
 import { ArrowRight, Check, Heart, LoaderCircle, Search, Star, X } from 'lucide-react'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
+import { say } from '../toast'
 
 type Draft = Partial<Candidate> & { link?: string }
 /** A place already in the trip that looks like the one being added. */
@@ -417,7 +418,7 @@ export default function AddPlace({ tripId, userId, me, initial = '', onClose }: 
     // 23505: someone added the same name a moment ago
     if (error?.code === '23505') return 'dup'
     if (error) {
-      alert(t('שגיאה: {msg}', { msg: error.message }))
+      say(t('שגיאה: {msg}', { msg: error.message }), { error: true })
       return 'error'
     }
     // suggesting a place counts as liking it

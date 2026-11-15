@@ -1,37 +1,37 @@
 /* Shared expenses */
-.exp-hero { display: flex; flex-direction: column; gap: 6px; }
-.exp-big { font-size: 1.875rem; font-weight: 800; line-height: 1.2; }
+.exp-hero { display: flex; flex-direction: column; gap: var(--s-2); }
+.exp-big { font-size: var(--fs-large); font-weight: 700; line-height: 1.2; }
 .exp-big.plus, .exp-num.plus { color: var(--ok); }
 .exp-big.minus, .exp-num.minus { color: var(--nope); }
 .exp-cur { flex: none; width: 96px; }
 .exp-cur button { min-height: 44px; }
-.exp-link { min-height: 44px; padding: 4px 8px; }
-.exp-h { font-size: 1rem; margin: 0 0 4px; }
+.exp-link { min-height: 44px; padding: var(--s-1) var(--s-2); }
+.exp-h { font-size: var(--fs-subhead); margin: 0 0 var(--s-1); }
 
 .exp-transfer, .exp-bal {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 8px 0;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
   border-top: 1px solid var(--line);
 }
 .exp-transfer:first-of-type, .exp-bal:first-of-type { border-top: 0; }
-.exp-transfer-who { display: flex; flex-direction: column; min-width: 0; font-size: 0.9375rem; }
+.exp-transfer-who { display: flex; flex-direction: column; min-width: 0; font-size: var(--fs-subhead); }
 .exp-num { font-weight: 700; font-variant-numeric: tabular-nums; }
 .exp-transfer .pill { flex: none; min-height: 44px; }
 
-.exp-day { gap: 8px; }
+.exp-day { gap: var(--s-2); }
 .exp-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-3);
   width: 100%;
-  padding: 12px 14px;
+  padding: var(--s-3) var(--s-4);
   text-align: start;
   color: inherit;
 }
-.exp-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--fill); color: var(--muted); }
+.exp-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-sm); background: var(--fill); color: var(--muted); }
 .exp-bal b.exp-num { white-space: nowrap; }
 .chips .chip .ic { margin-inline-end: 2px; }
 .exp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -39,7 +39,7 @@
 .exp-amt { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
 
 /* amount field next to its currency toggle in the form */
-.exp-amount { display: flex; gap: 10px; align-items: flex-end; }
+.exp-amount { display: flex; gap: var(--s-3); align-items: flex-end; }
 .exp-amount .field { flex: 1; }
 .exp-amount .exp-cur { margin-bottom: 1px; }
 .exp-amount .exp-cur button { min-height: 44px; }
@@ -47,15 +47,14 @@
 .exp-rate { margin-top: 2px; }
 .exp-transfer .link { flex: none; }
 /* everyone's balance, folded away: what to pay is already in the card above */
-.exp-details .exp-details-body { padding: 0 16px 6px; }
-.exp-settle-who { margin: 0; font-size: 1.125rem; }
+.exp-details .exp-details-body { padding: 0 var(--s-4) var(--s-2); }
+.exp-settle-who { margin: 0; font-size: var(--fs-body); }
 /* the balance (53): a sentence, one big amount, a plain full-width button; orange when you owe, green when owed */
-.exp-owe { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 4px; }
+.exp-owe { display: flex; flex-direction: column; gap: var(--s-1); padding: var(--s-2) 0 var(--s-1); }
 .exp-owe + .exp-owe { border-top: 1px solid var(--line); padding-top: 12px; }
-.exp-owe-line { font-size: 1rem; font-weight: 600; }
-.exp-owe .exp-big { font-size: 2rem; }
-.exp-owe.minus .exp-big { color: #e07800; }
+.exp-owe-line { font-size: var(--fs-subhead); font-weight: 600; }
+.exp-owe .exp-big { font-size: var(--fs-large); }
+.exp-owe.minus .exp-big { color: var(--warn); }
 .exp-owe.plus .exp-big { color: var(--ok); }
 .exp-owe .secondary { margin-top: 6px; width: 100%; }
-@media (prefers-color-scheme: dark) { .exp-owe.minus .exp-big { color: #ff9f0a; } }
 .exp-guess { margin: -4px 4px 0; }

@@ -13,9 +13,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   overflow: hidden;
-  transition: flex-basis 0.28s ease, opacity 0.2s ease;
+  transition: flex-basis var(--dur-2) var(--ease), opacity var(--dur-2) var(--ease);
 }
 .login:focus-within > .lc { flex-basis: 0; opacity: 0; }
 /* the strip runs to the screen's edges and fades out there */
@@ -38,14 +38,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
-  font-size: 0.875rem;
+  gap: var(--s-2);
+  font-size: var(--fs-footnote);
   font-weight: 600;
   color: var(--text);
 }
 .lc-cap > span:first-child { animation: lc-in 0.32s ease both; }
-.lc-pager { display: flex; gap: 6px; }
-.lc-pager i { width: 6px; height: 6px; border-radius: 3px; background: var(--muted); opacity: 0.35; transition: width 0.25s ease, opacity 0.25s ease, background 0.25s ease; }
+.lc-pager { display: flex; gap: var(--s-2); }
+.lc-pager i { width: 6px; height: 6px; border-radius: 3px; background: var(--muted); opacity: 0.35; transition: width 0.25s var(--ease), opacity 0.25s var(--ease), background 0.25s var(--ease); }
 .lc-pager i.on { width: 16px; background: var(--accent); opacity: 1; }
 @keyframes lc-in { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) {

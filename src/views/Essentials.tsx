@@ -4,11 +4,12 @@ import type { Booking, Essential, Member, Trip } from '../types'
 import { TOGETHER } from '../types'
 import { couplesOf, mutate, useTripTable } from '../lib'
 import { isEn, t } from '../i18n'
-import { Empty, Field, LoadNote, Sheet } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet } from '../ui'
 import { PHRASES, type Phrase } from '../phrases'
 import { Icon, type LucideIcon } from '../icons'
 import { Baby, Car, Copy, Lightbulb, Luggage, MapPin, Snowflake, Utensils, ExternalLink, FileText, Hotel, Phone, Pin, Plus, ReceiptText, ShieldAlert, ShieldCheck, StickyNote, Users, X, Check, Volume2, Maximize2 } from 'lucide-react'
 import '../styles/info.css'
+import { askDelete, say } from '../toast'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -189,9 +190,11 @@ export default function Essentials({ trip, members, userId }: Props) {
         )}
         {error && <LoadNote onRetry={reload} />}
         {!loading && !error && rows.length === 0 && (
-          <Empty>
-            {t('כאן שומרים כתובות מלונות ביפנית, מספרי פוליסה, טלפונים ומסמכים. מוסיפים ידנית או מייבאים את המלונות מההזמנות.')}
-          </Empty>
+          <EmptyState
+            icon={FileText}
+            title={t('עוד אין פרטים שמורים')}
+            line={t('כאן שומרים כתובות מלונות ביפנית, מספרי פוליסה, טלפונים ומסמכים. מוסיפים ידנית או מייבאים את המלונות מההזמנות.')}
+          />
         )}
         {KIND_ORDER.map((k) => {
           const items = rows.filter((r) => (KINDS[r.kind] ? r.kind : 'other') === k)
@@ -260,7 +263,7 @@ function EssentialCard(props: { item: Essential; onEdit: () => void; onShow: () 
       setTimeout(() => setCopied(false), 1500)
     } catch {
       // clipboard is blocked in some browsers; the value is still on screen to select
-      alert(t('ההעתקה נחסמה. אפשר לסמן את הטקסט ידנית.'))
+      say(t('ההעתקה נחסמה. אפשר לסמן את הטקסט ידנית.'), { error: true })
     }
   }
   return (
@@ -319,7 +322,7 @@ function EditSheet(props: { trip: Trip; couples: string[]; rows: Essential[]; it
     if (ok) props.onClose()
   }
   const remove = async () => {
-    if (f.id && confirm(t('למחוק את "{title}"?', { title: f.title ?? '' })) && (await mutate(supabase.from('essentials').delete().eq('id', f.id)))) props.onClose()
+    if (f.id && (await askDelete(t('למחוק את "{title}"?', { title: f.title ?? '' }))) && (await mutate(supabase.from('essentials').delete().eq('id', f.id)))) props.onClose()
   }
 
   return (

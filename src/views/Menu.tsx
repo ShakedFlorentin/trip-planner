@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowLeftRight, BookOpen, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Drawer, DrawerBackdrop, DrawerContent, DrawerTitle } from '@ui-sdk/react/drawer'
+import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck } from 'lucide-react'
 import { Icon, type LucideIcon } from '../icons'
 import { t } from '../i18n'
 import { MORE_TABS, type MoreTab } from './More'
@@ -9,7 +10,7 @@ import { openExternal, privacyUrl } from '../native'
 import SignOutSheet from './SignOutSheet'
 
 // the tools' tile colours, like iOS Settings: one colour per tool, white glyph
-const TOOL_COLOR: Record<MoreTab, string> = { money: '#34a853', lists: '#f0a020', info: '#e5484d', say: '#3b82f6', baby: '#a259d9' }
+const TOOL_TONE: Record<MoreTab, string> = { money: 'green', lists: 'orange', info: 'red', say: 'blue', baby: 'purple' }
 
 type Props = {
   me: string
@@ -28,34 +29,34 @@ type Props = {
  * the ☰ button is on (left in Hebrew, right in English).
  */
 export default function Menu(props: Props) {
-  const panel = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(true)
   const [signingOut, setSigningOut] = useState(false)
-  const signing = useRef(false)
-  signing.current = signingOut
-  const close = useRef(props.onClose)
-  close.current = props.onClose
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !signing.current && close.current()
-    window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    panel.current?.focus({ preventScroll: true })
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [])
-  // every row closes the menu first, so the screen it opens sits over the page, not over the menu
-  const go = (f: () => void) => () => {
-    props.onClose()
-    f()
+  // a row closes the menu first, so the screen it opens sits over the page, not over the menu; it runs when the
+  // menu has slid out
+  const after = useRef<(() => void) | null>(null)
+  const go = (f?: () => void) => () => {
+    after.current = f ?? null
+    setOpen(false)
   }
   const tools = MORE_TABS.filter((x) => x.id !== 'baby' || props.hasBaby)
   const initial = props.me.trim()[0] ?? ''
   return (
-    <>
-      <div className="menu-backdrop" onClick={props.onClose}>
-        <div ref={panel} className="menu-panel" role="dialog" aria-modal="true" aria-label={t('תפריט')} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+    <Drawer
+      open={open}
+      side="end"
+      onOpenChange={(next) => setOpen(next)}
+      onOpenChangeComplete={(isOpen) => {
+        if (isOpen) return
+        props.onClose()
+        const f = after.current
+        after.current = null
+        f?.()
+      }}
+    >
+      <DrawerBackdrop className="backdrop menu-backdrop" />
+      <DrawerContent className="menu-panel" initialFocus="content">
+        <div className="menu-scroll">
+          <DrawerTitle className="sr-only">{t('תפריט')}</DrawerTitle>
           <div className="menu-me">
             <span className="avatar" aria-hidden="true">
               {initial}
@@ -69,15 +70,15 @@ export default function Menu(props: Props) {
           </div>
           <div className="group">
             {tools.map((x) => (
-              <MenuRow key={x.id} icon={x.icon} color={TOOL_COLOR[x.id]} label={x.label} onClick={go(() => props.onTool(x.id))} />
+              <MenuRow key={x.id} icon={x.icon} tone={TOOL_TONE[x.id]} label={x.label} chevron onClick={go(() => props.onTool(x.id))} />
             ))}
           </div>
           <div className="group">
-            <MenuRow icon={SettingsIcon} color="#8e8e93" label={t('הגדרות')} chevron onClick={go(props.onSettings)} />
-            <MenuRow icon={ArrowLeftRight} color="#8e8e93" label={t('מעבר לטיול אחר')} onClick={go(props.onLeave)} />
-            {GUIDE_READY && <MenuRow icon={BookOpen} color="#8e8e93" label={t('מדריך')} onClick={go(openGuide)} />}
-            <MenuRow icon={MessageSquareWarning} color="#8e8e93" label={t('דיווח על בעיה')} onClick={go(props.onReport)} />
-            <MenuRow icon={ShieldCheck} color="#8e8e93" label={t('פרטיות ותנאי שימוש')} onClick={go(() => openExternal(privacyUrl()))} />
+            <MenuRow icon={SettingsIcon} label={t('הגדרות')} chevron onClick={go(props.onSettings)} />
+            <MenuRow icon={ArrowLeftRight} label={t('מעבר לטיול אחר')} chevron onClick={go(props.onLeave)} />
+            {GUIDE_READY && <MenuRow icon={BookOpen} label={t('מדריך')} chevron onClick={go(openGuide)} />}
+            <MenuRow icon={MessageSquareWarning} label={t('דיווח על בעיה')} chevron onClick={go(props.onReport)} />
+            <MenuRow icon={ShieldCheck} label={t('פרטיות ותנאי שימוש')} external onClick={go(() => openExternal(privacyUrl()))} />
             <PhotoReviewRow />
           </div>
           <div className="group">
@@ -86,20 +87,21 @@ export default function Menu(props: Props) {
             </button>
           </div>
         </div>
-      </div>
-      {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
-    </>
+        {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
+      </DrawerContent>
+    </Drawer>
   )
 }
 
-function MenuRow(props: { icon: LucideIcon; color: string; label: string; chevron?: boolean; onClick: () => void }) {
+function MenuRow(props: { icon: LucideIcon; tone?: string; label: string; chevron?: boolean; external?: boolean; onClick: () => void }) {
   return (
     <button className="group-row" onClick={props.onClick}>
-      <span className="menu-tile" style={{ background: props.color }}>
+      <span className="menu-tile" data-tone={props.tone ?? 'gray'}>
         <Icon as={props.icon} />
       </span>
       <span className="k">{props.label}</span>
       {props.chevron && <Icon as={ChevronLeft} className="chev flip-ltr" />}
+      {props.external && <Icon as={ArrowUpRight} className="chev" />}
     </button>
   )
 }

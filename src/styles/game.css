@@ -8,74 +8,74 @@
   background: var(--fill);
   display: grid;
   place-items: center;
-  font-size: 0.9375rem;
+  font-size: var(--fs-subhead);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.fact-label { display: inline-flex; align-items: center; gap: 5px; }
+.fact-label { display: inline-flex; align-items: center; gap: var(--s-1); }
 .stamp { text-transform: none; }
-.more-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-.scores span, .tags .verdict { display: inline-flex; align-items: center; gap: 4px; }
+.more-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-1); }
+.scores span, .tags .verdict { display: inline-flex; align-items: center; gap: var(--s-1); }
 .meta .ic { vertical-align: -0.15em; }
-.segmented button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-.chip { gap: 6px; }
+.segmented button { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
+.chip { gap: var(--s-2); }
 .fab { display: grid; place-items: center; }
 .check .ic { display: block; margin: auto; color: #fff; }
 .thumb .ic { color: var(--muted); }
-.primary, .secondary { gap: 6px; }
-.link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.primary, .secondary { gap: var(--s-2); }
+.link { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
 .item-title + .meta { margin-top: 2px; }
 
 /* add-place: picking from a post that names several places */
-.pick-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; cursor: pointer; }
+.pick-row { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3) var(--s-4); cursor: pointer; }
 .pick-row input { flex: none; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); }
-.pick-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pick-body { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
 /* add-place: the steps of a lookup as they happen, each with what it learned */
-.steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-.step { display: grid; grid-template-columns: 22px 1fr; column-gap: 10px; align-items: start; }
+.steps { list-style: none; margin: var(--s-1) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-4); }
+.step { display: grid; grid-template-columns: 22px 1fr; column-gap: var(--s-3); align-items: start; }
 .step-title { font-weight: 600; line-height: 22px; }
 .step.wait .step-title { color: var(--muted); font-weight: 500; }
-.step-body { grid-column: 2; display: flex; flex-direction: column; gap: 4px; margin-top: 2px; min-width: 0; font-size: 0.875rem; color: var(--muted); overflow-wrap: anywhere; }
+.step-body { grid-column: 2; display: flex; flex-direction: column; gap: var(--s-1); margin-top: 2px; min-width: 0; font-size: var(--fs-footnote); color: var(--muted); overflow-wrap: anywhere; }
 .step-mark { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
 .step-mark.done { background: var(--ok); color: #fff; }
 .step-mark.now { color: var(--accent); }
 .step-mark.wait { border: 1.5px solid color-mix(in srgb, var(--muted) 55%, transparent); }
 .step-mark.fail { background: var(--fill); color: var(--accent); }
 .step-mark .ic { display: block; }
-.step-quote { color: var(--text); padding-inline-start: 8px; border-inline-start: 2px solid var(--line); quotes: none; }
-.step-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.step-quote { color: var(--text); padding-inline-start: var(--s-2); border-inline-start: 2px solid var(--line); quotes: none; }
+.step-line { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .step-line .ic { flex: none; }
-.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.step-list li { display: flex; align-items: flex-start; gap: 8px; }
+.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.step-list li { display: flex; align-items: flex-start; gap: var(--s-2); }
 .step-list .step-mark { width: 18px; height: 18px; }
 .step-place { color: var(--text); min-width: 0; line-height: 18px; }
 .spin { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 /* the other couple already liked this card: it waits on our vote */
-.liked-by { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-bottom: 6px; padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); color: #fff; font-size: 0.8125rem; font-weight: 600; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.liked-by { display: inline-flex; align-items: center; gap: var(--s-1); align-self: flex-start; margin-bottom: 6px; padding: 3px var(--s-3); border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.2); color: #fff; font-size: var(--fs-footnote); font-weight: 600; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 
 /* places someone said no to */
-.veto-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+.veto-row { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: 0.5px solid var(--line); }
 .veto-row:last-child { border-bottom: 0; }
 .veto-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.veto-votes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.veto-votes .verdict { gap: 4px; padding: 2px 9px; font-weight: 600; }
+.veto-votes { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: 4px; }
+.veto-votes .verdict { gap: var(--s-1); padding: 2px var(--s-2); font-weight: 600; }
 .veto-row .pill { flex: none; min-height: 44px; }
 .veto-row .veto-text { text-align: start; }
 .sheet-decide .round.chosen { box-shadow: 0 0 0 3px currentColor; }
 
 /* the "more places?" card at the end of a batch */
-.more-batch { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 32px 20px; }
+.more-batch { display: grid; gap: var(--s-4); justify-items: center; text-align: center; padding: var(--s-8) var(--s-5); }
 
 
 /* Ranking (25, 61): the bar is votes, labelled; how a match works in three lines */
-.votes-bar { display: flex; align-items: center; gap: 10px; }
+.votes-bar { display: flex; align-items: center; gap: var(--s-3); }
 .votes-bar .bar { flex: 1; }
 .votes-bar .small { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.how-title { font-size: 1.0625rem; margin: 18px 0 8px; }
-.how.card, .how { list-style: none; margin: 0 0 10px; padding: 4px 0; counter-reset: how; }
-.how li { counter-increment: how; display: flex; gap: 10px; align-items: flex-start; padding: 9px 14px; font-size: 0.9375rem; line-height: 1.35; }
+.how-title { font-size: var(--fs-body); margin: var(--s-4) 0 var(--s-2); }
+.how.card, .how { list-style: none; margin: 0 0 var(--s-3); padding: var(--s-1) 0; counter-reset: how; }
+.how li { counter-increment: how; display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-2) var(--s-4); font-size: var(--fs-subhead); line-height: 1.35; }
 .how li + li { border-top: 0.5px solid var(--line); }
 .how li::before {
   content: counter(how);
@@ -86,17 +86,17 @@
   border-radius: 50%;
   background: var(--accent-fill);
   color: var(--on-accent);
-  font-size: 0.8125rem;
+  font-size: var(--fs-footnote);
   font-weight: 700;
   display: grid;
   place-items: center;
 }
 
 /* Empty screens (20): grey icon, bold title, one line, one button */
-.empty-state { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; max-width: 300px; margin: 0 auto; }
-.empty-state .empty-icon { color: var(--muted); opacity: 0.7; margin-bottom: 6px; stroke-width: 1.4; }
-.empty-state b { font-size: 1.1875rem; color: var(--text); }
-.empty-state p { margin: 0; color: var(--muted); font-size: 0.9375rem; line-height: 1.4; }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); text-align: center; max-width: 300px; margin: 0 auto; }
+.empty-state .empty-icon { color: var(--muted); margin-bottom: 6px; stroke-width: 1.4; }
+.empty-state b { font-size: var(--fs-title); color: var(--text); }
+.empty-state p { margin: 0; color: var(--muted); font-size: var(--fs-subhead); line-height: 1.4; }
 .empty-state .primary { margin-top: 10px; width: auto; padding-inline: 22px; }
 
 /* Discover's + (22) sits in the same spot as on the other tabs; the vote buttons sit just above it */
@@ -104,4 +104,4 @@
 main.tab-swipe:has(.fab) { padding-bottom: 0; }
 /* a card with no photo keeps its icon tile, about half as tall (the title still sits at the bottom) */
 .card-hero.no-photo { height: 130px; }
-.card-hero.no-photo .card-emoji { width: 64px; height: 64px; top: 38%; }
+.card-hero.no-photo .card-emoji { width: 44px; height: 44px; top: 16px; left: auto; inset-inline-end: 16px; transform: none; }

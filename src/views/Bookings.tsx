@@ -3,7 +3,7 @@ import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Pla
 import { supabase } from '../supabase'
 import { BOOKING_KINDS, BOOKING_TABS, type Booking, type Member, type Trip } from '../types'
 import { aiError, couplesOf, errorText, normName, fmtDateTime, fromInputDateTime, mapsUrl, mutate, replan, safeUrl, toInputDateTime, useTripTable } from '../lib'
-import { Empty, Field, LoadNote, Sheet, Tabs, useRemembered } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet, Skeleton, Tabs, useRemembered } from '../ui'
 import { BOOKING_ICON, Icon } from '../icons'
 import { isEn, locale, t } from '../i18n'
 import { isNative, openExternal } from '../native'
@@ -12,6 +12,7 @@ import { WhoChips, shows, validWho, type Who } from '../who'
 import QuickFab from './QuickFab'
 import { takeBookingKind, useQuickAdd } from '../quickAdd'
 import { DOC_ACCEPT, isDocType, saveDoc, savedDoc } from '../docs'
+import { askDelete, say } from '../toast'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -62,59 +63,59 @@ export default function Bookings({ trip, members, userId }: Props) {
       {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
       {error && <LoadNote onRetry={reload} />}
       {!loading && !error && items.length === 0 && (
-        <Empty>
-          {isEn && current === 'other'
-            ? t('אין הזמנות אחרות')
-            : t('אין {kind}', { kind: isEn ? BOOKING_TABS[current].toLowerCase() : BOOKING_TABS[current] })}
-          {whose !== 'all' && ' ' + t('בסינון הזה')}. {t('אפשר להוסיף מאישור הזמנה או ידנית.')}
-        </Empty>
+        <EmptyState
+          icon={BOOKING_ICON[current] ?? BOOKING_ICON.other}
+          title={
+            (isEn && current === 'other'
+              ? t('אין הזמנות אחרות')
+              : t('אין {kind}', { kind: isEn ? BOOKING_TABS[current].toLowerCase() : BOOKING_TABS[current] })) +
+            (whose !== 'all' ? ' ' + t('בסינון הזה') : '')
+          }
+          line={t('אפשר להוסיף מאישור הזמנה או ידנית.')}
+        />
       )}
+      {loading && !items.length && <Skeleton rows={3} />}
       {/* the promo video's booking rows: a red tile with the kind's icon, the name in bold over one quiet line, and the
           confirmation code in a small mono chip on the far side. A tap opens the booking (the boarding pass for flights) */}
       <div className="stack bk-list">
         {items.map((b) => (
-          <div
-            key={b.id}
-            className="bk-row"
-            role="button"
-            tabIndex={0}
-            onClick={() => setOpenId(b.id)}
-            onKeyDown={(e) => e.target === e.currentTarget && e.key === 'Enter' && setOpenId(b.id)}
-          >
-            {/* the kind's icon only on the mixed "other" tab; on a one-kind tab it would repeat on every row */}
-            {current === 'other' && (
-              <span className="bk-ic" aria-hidden="true">
-                <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+          <div key={b.id} className="bk-row">
+            {/* one real button for the whole row (Space and Enter both open it); the "+ code" button sits beside it, not inside */}
+            <button className="bk-main" onClick={() => setOpenId(b.id)}>
+              {/* the kind's icon only on the mixed "other" tab; on a one-kind tab it would repeat on every row */}
+              {current === 'other' && (
+                <span className="bk-ic" aria-hidden="true">
+                  <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+                </span>
+              )}
+              <span className="bk-body">
+                <span className="bk-title" dir="auto">
+                  {bookingTitle(b)}
+                </span>
+                <span className="bk-sub">
+                  <span className="bk-line">{bookingLine(b)}</span>
+                  {/* whose it is, while the list shows everyone's */}
+                  {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill" dir="auto">{t(b.who)}</span>}
+                </span>
               </span>
-            )}
-            <div className="bk-body">
-              <div className="bk-title" dir="auto">
-                {bookingTitle(b)}
-              </div>
-              <div className="bk-sub">
-                <span className="bk-line">{bookingLine(b)}</span>
-                {/* whose it is, while the list shows everyone's */}
-                {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill" dir="auto">{t(b.who)}</span>}
-              </div>
-            </div>
+              {b.confirmation && (
+                <span className="bk-code" dir="ltr">
+                  {b.confirmation}
+                </span>
+              )}
+            </button>
             {b.file_path && <DocSaver path={b.file_path} />}
-            {b.confirmation ? (
-              <span className="bk-code" dir="ltr">
-                {b.confirmation}
-              </span>
-            ) : (
+            {!b.confirmation && (
               // no code yet: a way to add it (39)
               <button
                 className="link bk-add"
                 aria-label={t('הוספת קוד אישור להזמנה: {name}', { name: bookingTitle(b) })}
-                onKeyDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation()
+                onClick={() => {
                   setFocusConf(true)
                   setEdit(b)
                 }}
               >
-                + {t('קוד אישור')}
+                + {isEn ? t('קוד') : t('קוד אישור')}
               </button>
             )}
           </div>
@@ -160,7 +161,7 @@ async function openFile(path: string) {
   if (isNative) {
     const { data } = navigator.onLine ? await supabase.storage.from('docs').createSignedUrl(path, 600) : { data: null }
     if (data) return openExternal(data.signedUrl)
-    return alert(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'))
+    return void say(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'), { error: true })
   }
   // open the tab synchronously so mobile popup blockers allow it
   const win = window.open('', '_blank')
@@ -176,7 +177,7 @@ async function openFile(path: string) {
   const { data, error } = await supabase.storage.from('docs').createSignedUrl(path, 600)
   if (error || !data) {
     win?.close()
-    alert(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'))
+    say(navigator.onLine ? t('אי אפשר לפתוח את הקובץ') : t('אין חיבור, והמסמך לא שמור לאופליין'), { error: true })
   } else go(data.signedUrl)
 }
 
@@ -320,7 +321,7 @@ function BookingForm(props: {
     let filePath = f.file_path ?? null
     if (file) {
       if (!isDocType(file.type)) {
-        alert(t('העלאת הקובץ נכשלה: {msg}', { msg: 'PDF, JPG, PNG' }))
+        say(t('העלאת הקובץ נכשלה: {msg}', { msg: 'PDF, JPG, PNG' }), { error: true })
         setBusy(false)
         return
       }
@@ -328,7 +329,7 @@ function BookingForm(props: {
       const path = `${tripId}/${crypto.randomUUID()}.${ext}`
       const { error } = await supabase.storage.from('docs').upload(path, file, { contentType: file.type })
       if (error) {
-        alert(t('העלאת הקובץ נכשלה: {msg}', { msg: error.message }))
+        say(t('העלאת הקובץ נכשלה: {msg}', { msg: error.message }), { error: true })
         setBusy(false)
         return
       }
@@ -349,8 +350,8 @@ function BookingForm(props: {
     }
     const { error } = await (f.id ? supabase.from('bookings').update(row).eq('id', f.id) : supabase.from('bookings').insert(row))
     const ok = !error
-    if (error?.code === '23505') alert(t('כבר יש הזמנה כזו: אותו מספר אישור באותה שעה, או אותו שם, שעה וזוג.'))
-    else if (error) alert(t('שגיאה: {msg}', { msg: error.message }))
+    if (error?.code === '23505') say(t('כבר יש הזמנה כזו: אותו מספר אישור באותה שעה, או אותו שם, שעה וזוג.'), { error: true })
+    else if (error) say(t('שגיאה: {msg}', { msg: error.message }), { error: true })
     if (ok) {
       // the old attachment goes only once the row points at the new one
       if (file && f.file_path && f.id) await removeDocIfUnused(tripId, f.file_path, f.id)
@@ -362,7 +363,7 @@ function BookingForm(props: {
   }
 
   const remove = async () => {
-    if (!f.id || !confirm(t('למחוק את ההזמנה?'))) return
+    if (!f.id || !(await askDelete(t('למחוק את ההזמנה?')))) return
     if (!(await mutate(supabase.from('bookings').delete().eq('id', f.id)))) return
     // the database announces new and changed bookings to the planner, not deleted ones
     replan(tripId)
@@ -603,7 +604,7 @@ function bookingLine(b: Booking) {
   if (!b.starts_at) return BOOKING_KINDS[b.kind] ?? BOOKING_KINDS.other
   const f = b.kind === 'flight' ? flightParts(b) : null
   // kept left to right, or Hebrew turns "TLV → MUC" around
-  if (f) return [`\u2066${f.from} → ${f.to}\u2069`, dayMonth(b.starts_at), flightTimes(b)].filter(Boolean).join(' · ')
+  if (f) return [`\u2066${f.from}\u00a0→\u00a0${f.to}\u2069`, dayMonth(b.starts_at), flightTimes(b)].filter(Boolean).join(' · ')
   if (b.kind === 'hotel' && b.ends_at) {
     const n = Math.round((Date.parse(b.ends_at.slice(0, 10)) - Date.parse(b.starts_at.slice(0, 10))) / 86400000)
     const nights = n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''
@@ -709,7 +710,7 @@ const flightTimes = (b: Booking) => {
   const from = hm(b.starts_at)
   if (!from) return ''
   const to = hm(b.ends_at)
-  return `\u2066${from}${to ? ` → ${to}` : ''}\u2069`
+  return `\u2066${from}${to ? `\u00a0→\u00a0${to}` : ''}\u2069`
 }
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'numeric' })

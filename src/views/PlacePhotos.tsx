@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
-import { Empty, Sheet } from '../ui'
+import { EmptyState, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
 import { Camera } from 'lucide-react'
@@ -137,7 +137,7 @@ export function PhotoReviewRow() {
       {open && (
         <Sheet title={t('תמונות לאישור')} onClose={() => setOpen(false)}>
           {err && <p className="msg" role="alert">{err}</p>}
-          {!rows.length && <Empty>{t('אין תמונות שממתינות לאישור')}</Empty>}
+          {!rows.length && <EmptyState icon={Camera} title={t('אין תמונות שממתינות לאישור')} />}
           {rows.map((r) => (
             <div key={r.id} className="photo-review">
               {r.url && <img className="photo-preview" src={r.url} alt="" />}

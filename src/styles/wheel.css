@@ -2,13 +2,13 @@
 .quick-fab { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .quick-fab.open { transform: scale(0.92); }
 /* scrolling down slides the + off the bottom edge (translate, so the press scale on transform is untouched); the distance clears the tab bar */
-.fab.quick-fab { transition: transform 100ms ease-out, translate 220ms cubic-bezier(0.3, 0.7, 0.2, 1), opacity 220ms ease; }
+.fab.quick-fab { transition: transform var(--dur-1) var(--ease), translate var(--dur-2) cubic-bezier(0.3, 0.7, 0.2, 1), opacity var(--dur-2) var(--ease); }
 .fab.quick-fab.fab-away { translate: 0 calc(var(--tabbar-h) + 16px + 52px + 28px + env(safe-area-inset-bottom)); opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .fab.quick-fab { transition: opacity 150ms linear; }
   .fab.quick-fab.fab-away { translate: none; }
 }
-.quick-fab svg { transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+.quick-fab svg { transition: transform var(--dur-2) cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 .quick-fab.open svg { transform: rotate(45deg); }
 
 .wheel-layer { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; pointer-events: none; }
@@ -25,7 +25,7 @@
   position: relative;
   perspective: 700px;
   transform: scale(1) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
-  transition: transform 0.12s ease-out;
+  transition: transform var(--dur-1) var(--ease);
   animation: wheel-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.45) both;
   filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.18));
 }
@@ -40,11 +40,11 @@
 
 .wheel .rim { fill: color-mix(in srgb, var(--bg) 70%, transparent); stroke: color-mix(in srgb, var(--text) 7%, transparent); }
 .wheel .divider { stroke: color-mix(in srgb, var(--text) 12%, transparent); stroke-width: 1.5; }
-.wheel .wedge { opacity: 0; transition: opacity 0.15s; }
-.wheel .arc { fill: none; stroke: color-mix(in srgb, var(--text) 18%, transparent); stroke-width: 5; stroke-linecap: round; transition: stroke 0.15s, stroke-width 0.15s; }
+.wheel .wedge { opacity: 0; transition: opacity var(--dur-1); }
+.wheel .arc { fill: none; stroke: color-mix(in srgb, var(--text) 18%, transparent); stroke-width: 5; stroke-linecap: round; transition: stroke var(--dur-1), stroke-width var(--dur-1); }
 .wheel .bubble { transform-box: fill-box; transform-origin: center; transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4); color: var(--text); }
-.wheel .bubble circle { fill: var(--bg); stroke: color-mix(in srgb, var(--text) 8%, transparent); transition: fill 0.15s; }
-.wheel text { font: 700 15px/1 var(--font, inherit); fill: var(--text); transition: fill 0.15s; }
+.wheel .bubble circle { fill: var(--bg); stroke: color-mix(in srgb, var(--text) 8%, transparent); transition: fill var(--dur-1); }
+.wheel text { font: 700 15px/1 var(--font, inherit); fill: var(--text); transition: fill var(--dur-1); }
 .wheel .quarter.off text { fill: var(--muted); }
 .wheel .quarter.on .wedge { opacity: 1; }
 .wheel .quarter.on .arc { stroke: var(--accent); stroke-width: 7; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 70%, transparent)); }
@@ -55,7 +55,7 @@
 .wheel .dot { fill: var(--text); opacity: 0.16; }
 .wheel .ticks { stroke: var(--text); stroke-opacity: 0.28; stroke-width: 1.4; transform-origin: 0 0; animation: wheel-spin 40s linear infinite; }
 @keyframes wheel-spin { to { transform: rotate(360deg); } }
-.wheel .needle { transition: opacity 0.12s; }
+.wheel .needle { transition: opacity var(--dur-1); }
 .wheel .needle line { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
 .wheel .needle path { fill: var(--accent); }
 .wheel .hub { fill: var(--bg); stroke: color-mix(in srgb, var(--text) 8%, transparent); }

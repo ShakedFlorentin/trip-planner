@@ -3,6 +3,7 @@ import { Copy, Languages, Mic, Square, Volume2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { Icon } from '../icons'
 import { isEn, t } from '../i18n'
+import { askDelete, say as toastSay } from '../toast'
 
 /*
  * Voice translator between Hebrew and Japanese. Tap the language you are speaking, speak, tap again: the phone's
@@ -359,7 +360,7 @@ export default function Translator({ tripId }: { tripId: string }) {
             <button
               className="link"
               disabled={listening || busy}
-              onClick={() => confirm(t('למחוק את השיחה מהטלפון?')) && setTurns([])}
+              onClick={async () => (await askDelete(t('למחוק את השיחה מהטלפון?'))) && setTurns([])}
             >
               {t('ניקוי השיחה')}
             </button>
@@ -370,7 +371,7 @@ export default function Translator({ tripId }: { tripId: string }) {
         <details className="voice-details">
           <summary>{t('פרטים טכניים')}</summary>
           <pre className="voice-report">{report}</pre>
-          <button className="link" onClick={() => navigator.clipboard.writeText(report).then(() => alert(t('הועתק. אפשר להדביק לי בצ׳אט')))}>
+          <button className="link" onClick={() => navigator.clipboard.writeText(report).then(() => toastSay(t('הועתק. אפשר להדביק לי בצ׳אט')))}>
             <Icon as={Copy} /> {t('העתקת הפרטים')}
           </button>
         </details>

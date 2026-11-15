@@ -14,7 +14,6 @@ import {
   Ticket,
   TrainFront,
   Utensils,
-  UtensilsCrossed,
   Wine,
 } from 'lucide-react'
 
@@ -38,7 +37,7 @@ export function Icon({ as: As, label, size = '1.15em', className, ...rest }: { a
 /** Places and itinerary items (see CATEGORIES). */
 export const CATEGORY_ICON: Record<string, LucideIcon> = {
   sight: Landmark,
-  food: UtensilsCrossed,
+  food: Utensils,
   shopping: ShoppingBag,
   nightlife: Wine,
   transport: TrainFront,
@@ -47,7 +46,7 @@ export const CATEGORY_ICON: Record<string, LucideIcon> = {
 
 /** Swipe-game cards (see CARD_STYLE). */
 export const CARD_ICON: Record<string, LucideIcon> = {
-  food: UtensilsCrossed,
+  food: Utensils,
   cafe: Coffee,
   sight: Landmark,
   shopping: ShoppingBag,

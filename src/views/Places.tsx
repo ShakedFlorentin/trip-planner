@@ -6,7 +6,7 @@ import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type GuidePlace, t
 import { cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, normName, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
 import { Baby as BabyIcon, Star, BookOpen, CalendarCheck, Check, ChevronDown, ChevronLeft, Heart, Lightbulb, List, Map as MapIcon, MapPin, Pencil, Plus, Trash2, Undo2 } from 'lucide-react'
-import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
+import { EmptyState, Field, Skeleton, LoadNote, Sheet, useRemembered } from '../ui'
 import { CATEGORY_ICON, Icon } from '../icons'
 import '../styles/game.css'
 import { MediaActions, Thumb } from '../media'
@@ -19,6 +19,7 @@ import { AREAS, areaOf } from '../areas'
 import { shows, validWho, whoChoices, whoLabel, type Who } from '../who'
 import QuickFab from './QuickFab'
 import { takeSharedLink, useQuickAdd } from '../quickAdd'
+import { askDelete, say } from '../toast'
 
 const PLACE_TABS: Record<string, string> = {
   '': t('הכל'),
@@ -157,7 +158,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
     if (ok && !p.visited && libOf(p)) setRateId(p.id)
   }
   const remove = async (p: Place) => {
-    if (confirm(t('למחוק את "{name}"?', { name: p.name }))) await mutate(supabase.from('places').delete().eq('id', p.id))
+    if (await askDelete(t('למחוק את "{name}"?', { name: p.name }))) await mutate(supabase.from('places').delete().eq('id', p.id))
   }
   const likedByMe = new Set(swipes.filter((s) => s.user_id === userId && s.liked && !s.skipped).map((s) => s.candidate_id))
   const row = (p: Place, first = false) => (
@@ -201,8 +202,9 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
       ) : (
         <>
           {error && <LoadNote onRetry={reload} />}
+          {loading && !rows.length && <Skeleton rows={4} />}
           {!loading && !error && shown.length === 0 && (
-            <Empty>{rows.length ? t('אין מקומות בסינון הזה') : t('עוד אין מקומות. מקום שקיבל מאצ׳ בגילוי יופיע כאן')}</Empty>
+            <EmptyState icon={MapPin} title={rows.length ? t('אין מקומות בסינון הזה') : t('עוד אין מקומות')} line={rows.length ? undefined : t('מקום שקיבל מאצ׳ בגילוי יופיע כאן')} />
           )}
           {[...groups].map(([c, areas]) => (
             <section key={c} className="stack">
@@ -332,7 +334,7 @@ async function setVisited(p: Place) {
   const row = 'visited_at' in p ? { visited: next, visited_at: next ? new Date().toISOString() : null } : { visited: next }
   let { error } = await supabase.from('places').update(row).eq('id', p.id)
   if (error && /visited_at/.test(error.message)) ({ error } = await supabase.from('places').update({ visited: next }).eq('id', p.id))
-  if (error) alert(errorText(error.message))
+  if (error) say(errorText(error.message), { error: true })
   return !error
 }
 
@@ -599,7 +601,7 @@ function PlaceForm(props: { hasBaby: boolean; tripId: string; me: string; place:
   }
 
   const remove = async () => {
-    if (f.id && confirm(t('למחוק את "{name}"?', { name: f.name ?? '' })) && (await mutate(supabase.from('places').delete().eq('id', f.id)))) props.onClose()
+    if (f.id && (await askDelete(t('למחוק את "{name}"?', { name: f.name ?? '' }))) && (await mutate(supabase.from('places').delete().eq('id', f.id)))) props.onClose()
   }
 
   return (
@@ -828,7 +830,7 @@ function GuideCard({ g, tripId, userId, me, onClose }: { g: GuidePlace; tripId: 
     if (error) {
       if (error.code !== '23505') {
         setState('')
-        alert(errorText(error.message))
+        say(errorText(error.message), { error: true })
         return
       }
       // already in the game: find that card and like it, same as AddPlace's "same place"
@@ -842,7 +844,7 @@ function GuideCard({ g, tripId, userId, me, onClose }: { g: GuidePlace; tripId: 
     const { error: likeErr } = await supabase.from('swipes').upsert({ trip_id: tripId, candidate_id: id, user_id: userId, liked: true })
     if (likeErr) {
       setState('')
-      alert(errorText(likeErr.message))
+      say(errorText(likeErr.message), { error: true })
       return
     }
     setState(error ? 'there' : 'added')

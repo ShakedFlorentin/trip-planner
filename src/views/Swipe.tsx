@@ -18,7 +18,7 @@ import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
-import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
+import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
@@ -407,7 +407,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         {!loading && !prefsLoading && deck.length === 0 && (
           <div className="empty">
             {!candidates.length ? (
-              <EmptyState icon={Compass} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
+              <EmptyState icon={Flame} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
             ) : !visible.length ? (
               <EmptyState icon={SlidersHorizontal} title={t('אף מקום לא מתאים להעדפות')} line={t('ההעדפות שלך מסתירות את כל המקומות.')} action={{ label: t('שינוי ההעדפות'), onClick: () => setPrefsOpen(true) }} />
             ) : visible.some((c) => !mine.has(c.id) && forMe(c)) ? (

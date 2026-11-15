@@ -81,10 +81,13 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
           {saved === 'me' && <span className="saved">✓ {t('נשמר')}</span>}
           <input value={myName} onChange={(e) => setMyName(e.target.value)} onBlur={saveMyName} onKeyDown={done} enterKeyHint="done" dir="auto" />
         </label>
+      </div>
+      <p className="group-foot">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
+
+      <div className="group">
         <LangPicker />
         <ThemePicker />
       </div>
-      <p className="group-foot">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
 
       <PushGroup />
 
@@ -407,7 +410,7 @@ export function CreditWallet({ tripId }: { tripId: string }) {
 }
 
 const THEMES = [
-  { id: 'auto', label: t('כמו בטלפון'), icon: SunMoon },
+  { id: 'auto', label: isEn ? t('מערכת') : t('כמו בטלפון'), icon: SunMoon },
   { id: 'light', label: t('בהיר'), icon: Sun },
   { id: 'dark', label: t('כהה'), icon: Moon },
 ] as const
