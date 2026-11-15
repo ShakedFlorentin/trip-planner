@@ -1,0 +1,61 @@
+/* Places: the quiet list, the List / Map switch, "Been there", and the place card. Tokens only. */
+.pl-screen { gap: var(--s-4); }
+.who-text.static { color: var(--muted); }
+
+.pl-seg { position: relative; display: inline-flex; isolation: isolate; padding: 2px; gap: 0; background: var(--fill); border-radius: var(--r-pill); }
+.pl-seg-item { display: inline-flex; align-items: center; gap: var(--s-1); min-height: 36px; padding: 0 var(--s-3); border-radius: var(--r-pill); font-size: var(--fs-footnote); font-weight: 500; color: var(--muted); position: relative; }
+.pl-seg-item::after { content: ''; position: absolute; inset: -4px 0; }
+.pl-seg-item[data-checked] { color: var(--text); font-weight: 600; }
+.pl-seg-ind { position: absolute; z-index: -1; top: var(--segmented-control-indicator-top); left: var(--segmented-control-indicator-left); width: var(--segmented-control-indicator-width); height: var(--segmented-control-indicator-height); background: var(--card); border-radius: var(--r-pill); box-shadow: var(--elev-1); transition: left var(--dur-2) var(--ease), width var(--dur-2) var(--ease); }
+
+.pl-city-block { display: flex; flex-direction: column; gap: var(--s-2); }
+.pl-city { margin: 0; }
+.pl-city-n { font-weight: 500; font-variant-numeric: tabular-nums; margin-inline-start: var(--s-1); }
+.pl-group { display: flex; flex-direction: column; }
+.pl-row { background: var(--card); }
+.pl-main { position: relative; display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: var(--row-h); padding: var(--s-2) var(--s-4); text-align: start; color: var(--text); }
+.pl-tile { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--fill); color: var(--muted); }
+.pl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pl-name { font-size: var(--fs-subhead); font-weight: 600; overflow-wrap: anywhere; }
+.pl-sub { font-size: var(--fs-footnote); color: var(--muted); overflow-wrap: anywhere; }
+.pl-tag { flex: none; padding: 1px var(--s-2); border-radius: var(--r-pill); background: var(--fill); color: var(--muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pl-heart { flex: none; color: var(--accent); fill: var(--accent); }
+.pl-row.visited .pl-name { font-weight: 500; }
+.map-picked .pl-row { background: var(--bg); border-radius: var(--r-md); box-shadow: var(--elev-2); }
+
+.pl-been-head { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 0; }
+.pl-been-head .ic { transition: transform var(--dur-2) var(--ease); }
+.pl-been-head[data-open] .ic { transform: rotate(180deg); }
+.pl-been [data-slot='collapsible-panel'] { padding-top: var(--s-2); }
+@media (prefers-reduced-motion: reduce) { .pl-been-head .ic, .pl-seg-ind { transition: none; } }
+
+/* the place card */
+.pc-photo { display: block; flex: none; width: calc(100% + var(--s-8)); max-width: none; margin: calc(var(--s-2) * -1) calc(var(--s-4) * -1) var(--s-3); height: 200px; object-fit: cover; }
+.pc-photo[hidden] { display: none; }
+.pc { display: flex; flex-direction: column; gap: var(--s-4); }
+.pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-3); }
+.pc-sub { min-width: 0; font-size: var(--fs-subhead); color: var(--muted); padding-top: var(--s-2); }
+.pc-sub > div + div { font-size: var(--fs-footnote); }
+.pc-acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: var(--s-2); }
+.pc-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-1); min-height: 64px; padding: var(--s-2); border-radius: var(--r-md); background: var(--fill); color: var(--text); font-size: var(--fs-caption); font-weight: 600; text-align: center; }
+.pc-act.primary { background: var(--accent-fill); color: var(--on-accent); }
+.pc-act[aria-pressed='true'] { color: var(--ok); }
+.pc-info { --row-inset: calc(var(--s-4) + var(--icon-s) + var(--s-3)); }
+.pc-info .group-row > .ic:first-child { color: var(--muted); flex: none; }
+.pc-info .group-row .k { flex: none; font-size: var(--fs-subhead); }
+.pc-info .group-row > .v { flex: 1; min-width: 0; }
+.pc-info .pc-link { color: var(--accent); font-weight: 600; }
+.pc-info .group-row > .v { text-align: end; }
+.pc-what { margin: 0; font-size: var(--fs-body); }
+.pc-callout { margin: 0; display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3) var(--s-4); border-radius: var(--r-sm); background: var(--fill); font-size: var(--fs-subhead); white-space: pre-wrap; }
+.pc-callout > .ic { flex: none; margin-top: 0.15em; color: var(--muted); }
+
+/* the area map in "More details": a still tile grid, the pin on top */
+.am { position: relative; display: block; flex: none; height: 180px; border-radius: var(--r-md); overflow: hidden; background: var(--fill); direction: ltr; }
+.am-tiles { position: absolute; inset: 0; }
+.am-tiles img { position: absolute; top: 50%; left: 50%; width: 256px; height: 256px; max-width: none; margin: 0; }
+.am-pin { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; transform: translate(-50%, -100%); color: var(--accent); }
+.am-pin .ic { fill: var(--accent); stroke: var(--bg); }
+.am-credit { position: absolute; inset-block-end: var(--s-1); inset-inline-end: var(--s-2); padding: 0 var(--s-1); border-radius: var(--r-xs); background: color-mix(in srgb, var(--bg) 75%, transparent); color: var(--muted); font-size: var(--fs-micro); }
+.am-none { display: flex; align-items: center; gap: var(--s-3); height: auto; min-height: 52px; padding: var(--s-2) var(--s-4); background: var(--card); color: var(--text); font-size: var(--fs-subhead); direction: inherit; }
+.am-none span { flex: 1; min-width: 0; }

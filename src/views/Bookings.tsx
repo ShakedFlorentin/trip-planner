@@ -1,20 +1,27 @@
 import { useEffect, useState } from 'react'
-import { Check, Download, Link as LinkIcon, Mail, Map as MapIcon, Paperclip, Plane, Wand2 } from 'lucide-react'
+import { Check, ChevronLeft, Copy, Download, Link as LinkIcon, LogOut, Mail, Map as MapIcon, Paperclip, Plane, Plus, Wand2 } from 'lucide-react'
+import { Timeline, TimelineConnector, TimelineDescription, TimelineItem, TimelineMarker, TimelineTime, TimelineTitle } from '@ui-sdk/react/timeline'
 import { supabase } from '../supabase'
 import { BOOKING_KINDS, BOOKING_TABS, type Booking, type Member, type Trip } from '../types'
 import { aiError, couplesOf, errorText, normName, fmtDateTime, fromInputDateTime, mapsUrl, mutate, replan, safeUrl, toInputDateTime, useTripTable } from '../lib'
-import { EmptyState, Field, LoadNote, Sheet, Skeleton, Tabs, useRemembered } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
 import { BOOKING_ICON, Icon } from '../icons'
 import { isEn, locale, t } from '../i18n'
 import { isNative, openExternal } from '../native'
 import { RingsIcon } from '../rings'
-import { WhoChips, shows, validWho, type Who } from '../who'
-import QuickFab from './QuickFab'
+import { shows, validWho, type Who } from '../who'
+import UnderlineTabs from './UnderlineTabs'
+import WhoTextMenu from './WhoTextMenu'
 import { takeBookingKind, useQuickAdd } from '../quickAdd'
 import { DOC_ACCEPT, isDocType, saveDoc, savedDoc } from '../docs'
 import { askDelete, say } from '../toast'
+import '../styles/redesign.css'
+import '../styles/bookings.css'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
+
+/** One line on the day timeline: a booking on its day, or a hotel's check-out on the day it ends. */
+type Entry = { key: string; day: string; time: string; b: Booking; checkout?: boolean }
 
 export default function Bookings({ trip, members, userId }: Props) {
   const tripId = trip.id
@@ -33,93 +40,117 @@ export default function Bookings({ trip, members, userId }: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
   const opened = openId ? rows.find((b) => b.id === openId) : undefined
   const kindOf = (b: Booking) => (BOOKING_TABS[b.kind] ? b.kind : 'other')
-  const count = (k: string) => shown.filter((b) => kindOf(b) === k).length
-  const tabs = Object.keys(BOOKING_TABS).filter((k, i) => i < 4 || rows.some((b) => kindOf(b) === k))
-  const [tab, pick] = useRemembered('bookingsTab', 'flight')
-  const current = tabs.includes(tab) ? tab : 'flight'
+  // "all" first, then the first four kinds always and the rest once they have bookings
+  const kinds = Object.keys(BOOKING_TABS).filter((k, i) => i < 4 || rows.some((b) => kindOf(b) === k))
+  const [tab, pick] = useRemembered('bookingsTab', 'all')
+  const current = tab === 'all' || kinds.includes(tab) ? tab : 'all'
   useQuickAdd('booking', () => {
     // asked for a kind (Plan's "We booked hotels"): the form and the tab open on it
     const kind = takeBookingKind()
     if (kind && BOOKING_TABS[kind]) pick(kind)
-    setEdit({ kind: kind ?? current, who: myCouple })
+    setEdit({ kind: kind ?? (current === 'all' ? 'flight' : current), who: myCouple })
   })
-  // by date, then whose; bookings with no date go last
-  const items = shown
-    .filter((b) => kindOf(b) === current)
-    .sort((a, b) => (a.starts_at ?? '~').localeCompare(b.starts_at ?? '~') || (a.who ?? '').localeCompare(b.who ?? ''))
+  const items = shown.filter((b) => current === 'all' || kindOf(b) === current)
+  const days = dayGroups(items)
 
   return (
-    <div className="stack">
-      <Tabs
+    <div className="stack bk-screen">
+      <div className="lt-bar">
+        {couples.length > 1 ? (
+          <WhoTextMenu label={t('של מי')} couples={couples} mine={myCouple} value={whose} onChange={setWhose} />
+        ) : (
+          <span />
+        )}
+        <button className="icon-btn accent" aria-label={t('הזמנה חדשה')} onClick={() => setEdit({ kind: current === 'all' ? 'flight' : current, who: myCouple })}>
+          <Plus size={22} strokeWidth={2} aria-hidden="true" />
+        </button>
+      </div>
+      <UnderlineTabs
         label={t('סוג הזמנה')}
-        tabs={Object.fromEntries(tabs.map((k) => [k, { label: BOOKING_TABS[k], icon: BOOKING_ICON[k] }]))}
-        current={current}
-        counts={Object.fromEntries(tabs.map((k) => [k, count(k)]))}
-        onPick={pick}
+        tabs={[['all', t('הכל')], ...kinds.map((k): [string, string] => [k, BOOKING_TABS[k]])]}
+        value={current}
+        onChange={pick}
       />
-      <button className="secondary" onClick={() => setImporting(true)}>
-        <Icon as={Mail} /> {t('הוספה מאישור הזמנה')}
-      </button>
-      {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
       {error && <LoadNote onRetry={reload} />}
       {!loading && !error && items.length === 0 && (
         <EmptyState
           icon={BOOKING_ICON[current] ?? BOOKING_ICON.other}
           title={
-            (isEn && current === 'other'
-              ? t('אין הזמנות אחרות')
-              : t('אין {kind}', { kind: isEn ? BOOKING_TABS[current].toLowerCase() : BOOKING_TABS[current] })) +
-            (whose !== 'all' ? ' ' + t('בסינון הזה') : '')
+            current === 'all'
+              ? t('עוד אין הזמנות')
+              : (isEn && current === 'other'
+                  ? t('אין הזמנות אחרות')
+                  : t('אין {kind}', { kind: isEn ? BOOKING_TABS[current].toLowerCase() : BOOKING_TABS[current] })) + (whose !== 'all' ? ' ' + t('בסינון הזה') : '')
           }
           line={t('אפשר להוסיף מאישור הזמנה או ידנית.')}
         />
       )}
       {loading && !items.length && <Skeleton rows={3} />}
-      {/* the promo video's booking rows: a red tile with the kind's icon, the name in bold over one quiet line, and the
-          confirmation code in a small mono chip on the far side. A tap opens the booking (the boarding pass for flights) */}
-      <div className="stack bk-list">
-        {items.map((b) => (
-          <div key={b.id} className="bk-row">
-            {/* one real button for the whole row (Space and Enter both open it); the "+ code" button sits beside it, not inside */}
-            <button className="bk-main" onClick={() => setOpenId(b.id)}>
-              {/* the kind's icon only on the mixed "other" tab; on a one-kind tab it would repeat on every row */}
-              {current === 'other' && (
-                <span className="bk-ic" aria-hidden="true">
-                  <Icon as={BOOKING_ICON[b.kind] ?? BOOKING_ICON.other} />
+      {/* every booking in date order across kinds, under its day, as Plan's day rows do (node, time over the title,
+          the confirmation code at the end), but each booking is its own card: two flights on one day are two trips, so no rail joins them. A hotel is on its check-in day and again, quietly,
+          on its check-out day. */}
+      {days.map(([day, entries]) => (
+        <section key={day} className="tl-day-block">
+          <h3 className="tl-day">{day === '~' ? t('ללא תאריך') : dayHead(day)}</h3>
+          {entries.map((e) => (
+            <div key={e.key} className="tl-card">
+              {!e.checkout && !!e.b.who && couples.length > 1 && whose === 'all' && (
+                <span className="who-pill tl-who">
+                  <RingsIcon one /> {t(e.b.who)}
                 </span>
               )}
-              <span className="bk-body">
-                <span className="bk-title" dir="auto">
-                  {bookingTitle(b)}
-                </span>
-                <span className="bk-sub">
-                  <span className="bk-line">{bookingLine(b)}</span>
-                  {/* whose it is, while the list shows everyone's */}
-                  {couples.length > 1 && whose === 'all' && b.who && <span className="who-pill" dir="auto">{t(b.who)}</span>}
-                </span>
-              </span>
-              {b.confirmation && (
-                <span className="bk-code" dir="ltr">
-                  {b.confirmation}
-                </span>
-              )}
-            </button>
-            {b.file_path && <DocSaver path={b.file_path} />}
-            {!b.confirmation && (
-              // no code yet: a way to add it (39)
-              <button
-                className="link bk-add"
-                aria-label={t('הוספת קוד אישור להזמנה: {name}', { name: bookingTitle(b) })}
-                onClick={() => {
-                  setFocusConf(true)
-                  setEdit(b)
-                }}
-              >
-                + {isEn ? t('קוד') : t('קוד אישור')}
-              </button>
-            )}
-          </div>
-        ))}
+              <Timeline className="pt tl" aria-label={e.checkout ? t('צ׳ק-אאוט: {name}', { name: e.b.title }) : bookingTitle(e.b)}>
+              <TimelineItem className="pt-item" data-done={e.checkout ? '' : undefined}>
+                <TimelineConnector className="pt-line" />
+                <TimelineMarker className={'pt-node pt-dot' + (e.checkout ? ' quiet' : '')}>
+                  <Icon as={e.checkout ? LogOut : (BOOKING_ICON[e.b.kind] ?? BOOKING_ICON.other)} />
+                </TimelineMarker>
+                <div className="pt-content">
+                  {/* one real button for the row (Space and Enter open it); the code buttons sit beside it, not inside */}
+                  <button className="pt-main tl-main" onClick={() => setOpenId(e.b.id)}>
+                    {e.time && <TimelineTime className="pt-time" dateTime={e.time}>{e.time}</TimelineTime>}
+                    <TimelineTitle className="pt-title" dir="auto">
+                      {e.checkout ? t('צ׳ק-אאוט: {name}', { name: e.b.title }) : bookingTitle(e.b)}
+                    </TimelineTitle>
+                    <TimelineDescription className="pt-sub tl-sub">
+                      {e.checkout ? checkoutLine(e.b) : bookingLine(e.b, true)}
+                    </TimelineDescription>
+                  </button>
+                  <span className="tl-end">
+                    {!e.checkout && e.b.file_path && <DocSaver path={e.b.file_path} />}
+                    {!e.checkout &&
+                      (e.b.confirmation ? (
+                        <span className="tl-code">
+                          <span className="bk-code" dir="ltr">{e.b.confirmation}</span>
+                          <CopyCode code={e.b.confirmation} />
+                        </span>
+                      ) : (
+                        <button
+                          className="link tl-add"
+                          aria-label={t('הוספת קוד אישור להזמנה: {name}', { name: bookingTitle(e.b) })}
+                          onClick={() => {
+                            setFocusConf(true)
+                            setEdit(e.b)
+                          }}
+                        >
+                          + {isEn ? t('קוד') : t('קוד אישור')}
+                        </button>
+                      ))}
+                  </span>
+                </div>
+              </TimelineItem>
+              </Timeline>
+            </div>
+          ))}
+        </section>
+      ))}
+      {/* the email import: a grouped-list row at the foot */}
+      <div className="group">
+        <button className="group-row tl-import" onClick={() => setImporting(true)}>
+          <Icon as={Mail} size={18} />
+          <span className="k">{t('הוספה מאישור הזמנה')}</span>
+          <Icon as={ChevronLeft} className="chev flip-ltr" size={18} />
+        </button>
       </div>
       {opened && (
         <BookingSheet
@@ -133,7 +164,6 @@ export default function Bookings({ trip, members, userId }: Props) {
           }}
         />
       )}
-      <QuickFab label={t('הזמנה חדשה')} onTap={() => setEdit({ kind: current, who: myCouple })} />
       {edit && (
         <BookingForm
           trip={trip}
@@ -152,6 +182,57 @@ export default function Bookings({ trip, members, userId }: Props) {
       )}
       {importing && <ImportSheet trip={trip} couples={couples} myCouple={myCouple} onClose={() => setImporting(false)} />}
     </div>
+  )
+}
+
+/** The bookings by day, in date order: a hotel again on its check-out day; undated ones last under "~". */
+function dayGroups(list: Booking[]): [string, Entry[]][] {
+  const entries: Entry[] = []
+  for (const b of list) {
+    entries.push({ key: b.id, day: b.starts_at ? b.starts_at.slice(0, 10) : '~', time: hm(b.starts_at), b })
+    if (b.kind === 'hotel' && b.starts_at && b.ends_at && b.ends_at.slice(0, 10) > b.starts_at.slice(0, 10))
+      entries.push({ key: b.id + ':out', day: b.ends_at.slice(0, 10), time: hm(b.ends_at), b, checkout: true })
+  }
+  // a whole-day item (no time) first, then by time, then whose
+  entries.sort(
+    (a, b) =>
+      Number(a.day === '~') - Number(b.day === '~') ||
+      a.day.localeCompare(b.day) ||
+      a.time.localeCompare(b.time) ||
+      Number(!!a.checkout) - Number(!!b.checkout) ||
+      (a.b.who ?? '').localeCompare(b.b.who ?? ''),
+  )
+  const out = new Map<string, Entry[]>()
+  for (const e of entries) out.set(e.day, [...(out.get(e.day) ?? []), e])
+  return [...out]
+}
+
+/** "Fri 11.12": the day header. The stored times are wall-clock, read as UTC like everywhere on this screen. */
+function dayHead(day: string) {
+  const d = new Date(day + 'T00:00:00Z')
+  return `${d.toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short' })} ${d.getUTCDate()}.${d.getUTCMonth() + 1}`
+}
+
+/** The code's copy button, 44px to tap; the tick shows for a moment. */
+function CopyCode({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      className="icon-btn"
+      aria-label={t('העתקת מספר האישור: {code}', { code })}
+      onClick={() =>
+        navigator.clipboard
+          .writeText(code)
+          .then(() => {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+            say(t('הקוד הועתק'))
+          })
+          .catch(() => say(t('אפשר להעתיק את הקוד מכאן'), { error: true }))
+      }
+    >
+      <Icon as={copied ? Check : Copy} size={18} />
+    </button>
   )
 }
 
@@ -600,17 +681,43 @@ function bookingTitle(b: Booking) {
 }
 
 /** The quiet line under a booking's name: the route and day of a flight, the nights of a hotel, else its day and hour. */
-function bookingLine(b: Booking) {
+function bookingLine(b: Booking, underDay = false) {
   if (!b.starts_at) return BOOKING_KINDS[b.kind] ?? BOOKING_KINDS.other
   const f = b.kind === 'flight' ? flightParts(b) : null
   // kept left to right, or Hebrew turns "TLV → MUC" around
-  if (f) return [`\u2066${f.from}\u00a0→\u00a0${f.to}\u2069`, dayMonth(b.starts_at), flightTimes(b)].filter(Boolean).join(' · ')
-  if (b.kind === 'hotel' && b.ends_at) {
-    const n = Math.round((Date.parse(b.ends_at.slice(0, 10)) - Date.parse(b.starts_at.slice(0, 10))) / 86400000)
-    const nights = n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''
-    return [dayMonth(b.starts_at), nights, hm(b.starts_at) && t('צ׳ק-אין {time}', { time: hm(b.starts_at) })].filter(Boolean).join(' · ')
+  if (f) {
+    const route = `\u2066${f.from}\u00a0→\u00a0${f.to}\u2069`
+    // under its day: the route, then the times on their own line (the day is already the header)
+    return underDay ? [route, flightTimes(b) && `\u2066${flightTimes(b)}\u2069`].filter(Boolean).join('\n') : [route, dayMonth(b.starts_at), flightTimes(b)].filter(Boolean).join(' · ')
   }
-  return [dayMonth(b.starts_at), hm(b.starts_at)].filter(Boolean).join(' · ')
+  if (b.kind === 'hotel' && b.ends_at) {
+    const n = nightsOf(b)
+    const nights = n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''
+    // the range first, so both ends of the stay read at once: "12–14.12 · 2 nights"
+    const range = '\u2066' + hotelRange(b) + '\u2069'
+    const times = [hm(b.starts_at) && t('צ׳ק-אין {time}', { time: hm(b.starts_at) }), hm(b.ends_at) && t('צ׳ק-אאוט {time}', { time: hm(b.ends_at) })].filter(Boolean).join(underDay ? '\n' : ' · ')
+    // on the timeline: the stay (range and nights), then check-in and check-out each on its own line
+    return underDay ? [[range, nights].filter(Boolean).join(' · '), times].filter(Boolean).join('\n') : [range, nights, times].filter(Boolean).join(' · ')
+  }
+  return [!underDay && dayMonth(b.starts_at), !underDay && hm(b.starts_at)].filter(Boolean).join(' · ') || BOOKING_KINDS[b.kind] || BOOKING_KINDS.other
+}
+
+const nightsOf = (b: Booking) =>
+  b.starts_at && b.ends_at ? Math.round((Date.parse(b.ends_at.slice(0, 10)) - Date.parse(b.starts_at.slice(0, 10))) / 86400000) : 0
+
+/** "12–14.12" (same month) or "28.12–2.1": the stay as a range. */
+function hotelRange(b: Booking) {
+  if (!b.starts_at || !b.ends_at) return ''
+  const a = new Date(b.starts_at)
+  const z = new Date(b.ends_at)
+  if (a.getUTCMonth() === z.getUTCMonth()) return `${a.getUTCDate()}\u2013${dayMonth(b.ends_at)}`
+  return `${dayMonth(b.starts_at)}\u2013${dayMonth(b.ends_at)}`
+}
+
+/** The quiet line on a hotel's check-out day. */
+function checkoutLine(b: Booking) {
+  const n = nightsOf(b)
+  return [hm(b.ends_at) && t('צ׳ק-אאוט {time}', { time: hm(b.ends_at) }), n === 1 ? t('לילה אחד') : n > 1 ? t('{n} לילות', { n }) : ''].filter(Boolean).join(' · ') || t('צ׳ק-אאוט')
 }
 
 /** "12.12": the row's short date (the sheet has the weekday). */
@@ -622,6 +729,16 @@ const dayMonth = (iso: string) => new Date(iso).toLocaleDateString(locale, { tim
  */
 function BookingSheet({ b, who, onClose, onEdit }: { b: Booking; who?: string | null; onClose: () => void; onEdit: (focusConfirmation: boolean) => void }) {
   const pass = b.kind === 'flight' && flightParts(b)
+  const [copied, setCopied] = useState(false)
+  const copyCode = () =>
+    navigator.clipboard
+      .writeText(b.confirmation ?? '')
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+        say(t('הקוד הועתק'))
+      })
+      .catch(() => say(t('אפשר להעתיק את הקוד מכאן'), { error: true }))
   return (
     <Sheet title={bookingTitle(b)} onClose={onClose} action={{ label: t('עריכה'), onClick: () => onEdit(false) }}>
       <div className="bk-sheet">
@@ -649,9 +766,10 @@ function BookingSheet({ b, who, onClose, onEdit }: { b: Booking; who?: string | 
         {b.confirmation ? (
           <div className="bk-conf">
             <span className="muted small">{t('מספר אישור')}</span>
-            <b className="code" dir="ltr">
+            <button className="code" dir="ltr" onClick={copyCode} aria-label={t('העתקת מספר האישור: {code}', { code: b.confirmation })}>
               {b.confirmation}
-            </b>
+              <Icon as={copied ? Check : Copy} />
+            </button>
           </div>
         ) : (
           <div className="small muted no-conf">

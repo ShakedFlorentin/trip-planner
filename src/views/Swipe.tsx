@@ -10,7 +10,7 @@ import { mayAskForPush, notifyMatch } from '../push'
 import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
 import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
-import { t } from '../i18n'
+import { isEn, t } from '../i18n'
 import { EmptyState, Sheet } from '../ui'
 import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
@@ -18,10 +18,11 @@ import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
-import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
+import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
+import AreaMap from './AreaMap'
 
 type CardInterest = { base: InterestBase; cards: Record<string, Interest> }
 
@@ -634,7 +635,8 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
       onPointerUp={top ? up : undefined}
       onPointerCancel={top ? cancel : undefined}
     >
-      <div className={'card-hero' + (cur ? '' : ' no-photo')} style={{ background: style.bg }}>
+      {/* a photo card keeps its category colour behind the photo; no photo means a calm flat header, not a fake picture */}
+      <div className={'card-hero' + (cur ? '' : ' no-photo')} style={cur ? { background: style.bg } : undefined}>
         {cur ? (
           <img
             key={cur}
@@ -739,6 +741,8 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
       {more &&
         createPortal(
           <Sheet title={c.name} onClose={() => setMore(false)}>
+            {/* no photo: the place's spot on a map, here only (never on the swipe card) */}
+            {!cur && <AreaMap name={c.name_ja || c.name} lat={c.lat} lng={c.lng} area={c.area} />}
             <div className="card-full">
               <CardFull c={c} prior={prior} />
             </div>
@@ -764,9 +768,18 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
   const hasBaby = useTripHasBaby(c.trip_id)
   const avoidsPork = useTripAvoidsPorkSeafood(c.trip_id)
   const [addPhoto, setAddPhoto] = useState(false)
+  // the planner's two facts: the card's own language, else the English kept in `en` (a row may carry only that)
+  const planLine = ((isEn ? c.en?.plan_line : null) ?? c.plan_line)?.trim()
+  const babyBlock = hasBaby ? ((isEn ? c.en?.baby_block : null) ?? c.baby_block)?.trim() : null
   return (
     <>
       <Tags c={c} />
+      {planLine && (
+        <p className="warn-line" dir="auto">
+          <Icon as={Info} />
+          <span>{keepRanges(planLine)}</span>
+        </p>
+      )}
       {c.serves && (
         <div className="fact">
           <Label icon={Utensils}>{t('מה מגישים')}</Label>
@@ -822,10 +835,16 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
           <p dir="auto">{keepRanges(c.kosher_note)}</p>
         </div>
       )}
-      {hasBaby && c.baby_notes && (
+      {hasBaby && (c.baby_notes || babyBlock) && (
         <div className="fact">
           {c.audience === 'adults' ? <Label icon={Wine}>{t('למה בלי התינוק')}</Label> : <Label icon={Baby}>{t('עם תינוק')}</Label>}
-          <p dir="auto">{keepRanges(c.baby_notes)}</p>
+          {c.baby_notes && <p dir="auto">{keepRanges(c.baby_notes)}</p>}
+          {babyBlock && (
+            <p className="warn-line" dir="auto">
+              <Icon as={Info} />
+              <span>{keepRanges(babyBlock)}</span>
+            </p>
+          )}
         </div>
       )}
       {c.tip && (

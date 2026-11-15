@@ -1,22 +1,26 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@ui-sdk/react/menu'
-import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
 import { supabase } from '../supabase'
 import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type GuidePlace, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
-import { cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, normName, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
+import { cityHe, cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, safeUrl, normName, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
-import { Baby as BabyIcon, Star, BookOpen, CalendarCheck, Check, ChevronDown, ChevronLeft, Heart, Lightbulb, List, Map as MapIcon, MapPin, Pencil, Plus, Trash2, Undo2 } from 'lucide-react'
+import { Baby as BabyIcon, Star, BookOpen, CalendarCheck, Check, ChevronLeft, Clock, Globe, Heart, Lightbulb, List, Map as MapIcon, MapPin, Navigation, Pencil, Play, Plus, Trash2, Undo2 } from 'lucide-react'
 import { EmptyState, Field, Skeleton, LoadNote, Sheet, useRemembered } from '../ui'
 import { CATEGORY_ICON, Icon } from '../icons'
 import '../styles/game.css'
-import { MediaActions, Thumb } from '../media'
+import { VideoSheet, videoEmbed } from '../media'
 import PlacesMap from './PlacesMap'
 import AddPlace from './AddPlace'
 import { RateBox, StarsInput, useRatings, type Ratings } from './Ratings'
 import { SwipeRow } from '../swipe'
 import { RingsIcon } from '../rings'
 import { AREAS, areaOf } from '../areas'
-import { shows, validWho, whoChoices, whoLabel, type Who } from '../who'
+import { shows, validWho, type Who } from '../who'
+import UnderlineTabs from './UnderlineTabs'
+import WhoTextMenu from './WhoTextMenu'
+import { BeenThere, PlaceHero, PlaceMenu } from './PlaceCardParts'
+import '../styles/redesign.css'
+import '../styles/places.css'
 import QuickFab from './QuickFab'
 import { takeSharedLink, useQuickAdd } from '../quickAdd'
 import { askDelete, say } from '../toast'
@@ -106,7 +110,6 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   const tabs = Object.fromEntries(
     Object.entries(PLACE_TABS).filter(([k]) => !['transport', 'other', 'nightlife'].includes(k) || rows.some((p) => p.category === k)),
   )
-  const counts = Object.fromEntries(Object.keys(tabs).map((k) => [k, filtered.filter((p) => !k || p.category === k).length]))
   const current = tabs[cat] ? cat : ''
   const shown = filtered.filter((p) => !current || p.category === current)
   const picked = shown.find((p) => p.id === pickedId) ?? null
@@ -120,36 +123,23 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
     return guide.filter((g) => (!current || guideTab(g) === current) && !mine.has(g.name.toLowerCase()))
   }, [showGuide, guide, rows, current])
 
-  // city → clean neighbourhood (47) → places; a place whose area fits none keeps its own heading
-  const groups = new Map<string, Map<string, { title: ReactNode; ps: Place[] }>>()
-  // cities in route order, neighbourhoods in their list's order, places not yet visited first
+  // city → places. One flat list per city (the neighbourhood is on each row's quiet line); the places already
+  // been to fold away under "Been there" at the bottom. The city is the Hebrew name whichever way the row stores it.
+  const cityRank = (p: Place) => rank(cityHe(p.city))
   const areaRank = (p: Place) => {
-    const a = areaOf(p.city, p.area)
-    const i = a ? (AREAS[p.city ?? ''] ?? []).indexOf(a) : -1
+    const a = areaOf(cityHe(p.city), p.area)
+    const i = a ? (AREAS[cityHe(p.city)] ?? []).indexOf(a) : -1
     return i === -1 ? 99 : i
   }
-  for (const p of [...shown].sort((a, b) => rank(a.city) - rank(b.city) || areaRank(a) - areaRank(b) || Number(a.visited) - Number(b.visited))) {
-    const c = p.city || 'אחר' // he-only
-    if (!groups.has(c)) groups.set(c, new Map())
-    const areas = groups.get(c)!
-    const area = areaOf(p.city, p.area)
-    const key = area?.key ?? p.area ?? '—'
-    if (!areas.has(key))
-      areas.set(key, {
-        title: area ? (
-          isEn ? (
-            area.en
-          ) : (
-            <>
-              {area.he} <span className="area-en">{area.en}</span>
-            </>
-          )
-        ) : (
-          <bdi>{p.area}</bdi>
-        ),
-        ps: [],
-      })
-    areas.get(key)!.ps.push(p)
+  const groups = new Map<string, Place[]>()
+  const been: Place[] = []
+  for (const p of [...shown].sort((a, b) => cityRank(a) - cityRank(b) || areaRank(a) - areaRank(b))) {
+    if (p.visited) {
+      been.push(p)
+      continue
+    }
+    const c = cityHe(p.city) || 'אחר' // he-only
+    groups.set(c, [...(groups.get(c) ?? []), p])
   }
 
   const visit = async (p: Place) => {
@@ -161,11 +151,14 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
     if (await askDelete(t('למחוק את "{name}"?', { name: p.name }))) await mutate(supabase.from('places').delete().eq('id', p.id))
   }
   const likedByMe = new Set(swipes.filter((s) => s.user_id === userId && s.liked && !s.skipped).map((s) => s.candidate_id))
-  const row = (p: Place, first = false) => (
+  const row = (p: Place, first = false, withCity = false) => (
     <PlaceRow
       key={p.id}
       hint={first}
       p={p}
+      withCity={withCity}
+      day={plannedDay.get(p.id)}
+      start={trip.start_date}
       liked={p.candidate_id ? likedByMe.has(p.candidate_id) : p.added_by === me}
       onOpen={() => setReadId(p.id)}
       onEdit={() => setEdit(p)}
@@ -176,19 +169,32 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   let firstRow = true
 
   return (
-    <div className={'stack places' + (view === 'map' ? ' map-mode' : '')}>
-      {/* one row of controls (40): whose list as one chip at the start, then the kinds of place */}
-      <Tabs className="tabs-root" value={current} onValueChange={(v) => v && setCat(v)}>
-        <TabsList className="tabs-bar" aria-label={t('סוג מקום')}>
-          {couples.length > 1 && <WhoMenu couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
-          {Object.entries(tabs).map(([k, v]) => (
-            <TabsTab key={k} value={k} className={'chip' + (current === k ? ' on' : '')}>
-              {CATEGORY_ICON[k] && <Icon as={CATEGORY_ICON[k]} />} {v}
-              {!!counts[k] && <span className="count">{counts[k]}</span>}
-            </TabsTab>
-          ))}
-        </TabsList>
-      </Tabs>
+    <div className={'stack places pl-screen' + (view === 'map' ? ' map-mode' : '')}>
+      {/* whose places as a quiet text menu at the start, the List / Map switch at the end */}
+      <div className="lt-bar">
+        {couples.length > 1 ? (
+          <WhoTextMenu
+            label={t('של מי')}
+            couples={couples}
+            mine={myCouple}
+            value={whose}
+            onChange={setWhose}
+            suffix={shown.length === 1 ? t('מקום אחד') : t('{n} מקומות', { n: shown.length })}
+          />
+        ) : (
+          <span className="who-text static">{shown.length === 1 ? t('מקום אחד') : t('{n} מקומות', { n: shown.length })}</span>
+        )}
+        <SegmentedControl className="pl-seg" aria-label={t('תצוגה')} value={view} onValueChange={(v) => v && setView(v as 'list' | 'map')}>
+          <SegmentedControlIndicator className="pl-seg-ind" />
+          <SegmentedControlItem value="list" className="pl-seg-item">
+            <Icon as={List} size={18} /> {t('רשימה')}
+          </SegmentedControlItem>
+          <SegmentedControlItem value="map" className="pl-seg-item">
+            <Icon as={MapIcon} size={18} /> {t('מפה')}
+          </SegmentedControlItem>
+        </SegmentedControl>
+      </div>
+      <UnderlineTabs label={t('סוג מקום')} tabs={Object.entries(tabs).map(([k, v]): [string, string] => [k, v])} value={current} onChange={setCat} />
 
       {view === 'map' ? (
         <>
@@ -197,7 +203,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
             <Icon as={BookOpen} /> {t('המפה של פתיתים')} {showGuide && guideShown.length ? `(${guideShown.length})` : ''}
           </button>
           {guidePick && !picked && <GuideCard g={guidePick} tripId={trip.id} userId={userId} me={me} onClose={() => setGuidePick(null)} />}
-          {picked && <div className="map-picked">{row(picked)}</div>}
+          {picked && <div className="map-picked">{row(picked, false, true)}</div>}
         </>
       ) : (
         <>
@@ -206,33 +212,29 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
           {!loading && !error && shown.length === 0 && (
             <EmptyState icon={MapPin} title={rows.length ? t('אין מקומות בסינון הזה') : t('עוד אין מקומות')} line={rows.length ? undefined : t('מקום שקיבל מאצ׳ בגילוי יופיע כאן')} />
           )}
-          {[...groups].map(([c, areas]) => (
-            <section key={c} className="stack">
-              <h2 className="group-title">{cityLabel(c)}</h2>
-              {[...areas].map(([a, g]) => (
-                <div key={a} className="stack">
-                  {a !== '—' && (
-                    <div className="area-title">
-                      <span>{g.title}</span>
-                      <span className="area-count">{g.ps.length}</span>
-                    </div>
-                  )}
-                  {g.ps.map((p) => {
-                    const r = row(p, firstRow)
-                    firstRow = false
-                    return r
-                  })}
-                </div>
-              ))}
+          {[...groups].map(([c, ps]) => (
+            <section key={c} className="pl-city-block">
+              <h2 className="pl-city">
+                {cityLabel(c)} <span className="pl-city-n">{ps.length}</span>
+              </h2>
+              <div className="group pl-group">
+                {ps.map((p) => {
+                  const r = row(p, firstRow)
+                  firstRow = false
+                  return r
+                })}
+              </div>
             </section>
           ))}
+          {been.length > 0 && (
+            <BeenThere count={been.length}>
+              <div className="group pl-group">{been.map((p) => row(p, false, true))}</div>
+            </BeenThere>
+          )}
         </>
       )}
 
-      {/* list or map: a floating button above the tab bar, Airbnb style (40, 49) */}
-      <button className="view-toggle glass" onClick={() => setView(view === 'map' ? 'list' : 'map')}>
-        <Icon as={view === 'map' ? List : MapIcon} /> {view === 'map' ? t('רשימה') : t('מפה')}
-      </button>
+      {/* the + is the shared quick-add button; the page pads for it, so it covers no row */}
       <QuickFab
         label={t('הוספת מקום')}
         onTap={() => {
@@ -256,6 +258,10 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
           onEdit={() => {
             setReadId(null)
             setEdit(read)
+          }}
+          onRemove={() => {
+            setReadId(null)
+            void remove(read)
           }}
           onVisit={() => visit(read)}
           onPlan={() => setPlanning(read)}
@@ -293,29 +299,6 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   )
 }
 
-/** "שלנו ▾": whose places, as one chip that opens the choices (40). */
-function WhoMenu({ couples, mine, value, onChange }: { couples: string[]; mine: string | null; value: Who; onChange: (w: Who) => void }) {
-  return (
-    <Menu>
-      <MenuTrigger className={'chip' + (value !== 'all' ? ' on' : '')}>
-        {whoLabel(value)} <Icon as={ChevronDown} />
-      </MenuTrigger>
-      <MenuContent className="who-menu-list" side="bottom" align="start" sideOffset={6}>
-        <MenuRadioGroup value={value} onValueChange={(w) => onChange(w as Who)}>
-          {whoChoices(couples, mine).map((w) => (
-            <MenuRadioItem key={w} value={w} closeOnSelect>
-              <span>{whoLabel(w)}</span>
-              <MenuItemIndicator>
-                <Icon as={Check} />
-              </MenuItemIndicator>
-            </MenuRadioItem>
-          ))}
-        </MenuRadioGroup>
-      </MenuContent>
-    </Menu>
-  )
-}
-
 /** Who liked a place: the names of everyone who said yes to its card. */
 function likersOf(p: Place, swipes: Swipe[], members: Member[]) {
   if (!p.candidate_id) return []
@@ -338,11 +321,6 @@ async function setVisited(p: Place) {
   return !error
 }
 
-/** "במסלול: יום ג׳, 15.12" (42), or the day number when the trip has no dates. */
-function plannedText(day: number, start: string | null) {
-  return t('במסלול: {day}', { day: start ? fmtDay(dayDate(start, day)) : t('יום {day}', { day }) })
-}
-
 /** The card's "what it is" line (46): what's special about it, else its short description. */
 function whatLine(card?: Candidate) {
   const c = card && localizeCard(card)
@@ -350,22 +328,28 @@ function whatLine(card?: Candidate) {
 }
 
 /**
- * A place in the list. No circle (48): "ביקרנו" is a swipe toward the start side (like "read" in Mail), or the button in
- * the read view; edit and remove are the swipe toward the end side. A tap opens the read view (44).
+ * A place in the list (the quiet list): a category tile, the name, one quiet line (neighbourhood and kind), the plan
+ * day as a small tag, a small heart when you liked it, and a chevron. No photo thumbnails: a weak photo is worse than
+ * none, and the big photo is on the place's own card. "ביקרנו" is a swipe toward the start side (like "read" in
+ * Mail), or the button on the card; edit and remove are the swipe toward the end side.
  */
 function PlaceRow(props: {
   p: Place
   hint?: boolean
   /** you liked its card (or added it yourself) */
   liked: boolean
+  /** the city goes in the quiet line (the Been-there list and the map card mix cities) */
+  withCity?: boolean
+  day?: number
+  start: string | null
   onOpen: () => void
   onEdit: () => void
   onRemove: () => void
   onVisit: () => void
 }) {
   const { p } = props
-  const area = areaOf(p.city, p.area)
-  const sub = [area ? (isEn ? area.en : area.he) : p.area, p.category !== 'other' && CATEGORIES[p.category]].filter(Boolean).join(' · ')
+  const area = areaOf(cityHe(p.city), p.area)
+  const sub = [props.withCity && cityLabel(p.city), area ? (isEn ? area.en : area.he) : p.area, p.category !== 'other' && CATEGORIES[p.category]].filter(Boolean).join(' · ')
   return (
     <SwipeRow
       hint={props.hint}
@@ -375,30 +359,31 @@ function PlaceRow(props: {
         { label: t('מחיקה'), icon: Trash2, tone: 'del', onClick: props.onRemove },
       ]}
     >
-      {/* the promo video's place row: photo, bold name, one quiet line, a green "visited" badge once visited, and a heart (red when
-          you liked it). What it is, the tip, the plan day, the links and the stars are in the place's sheet (a tap) */}
-      <div className={'place-row' + (p.visited ? ' visited' : '')} onClick={props.onOpen}>
-        <Thumb photos={p.photos} icon={CATEGORY_ICON[p.category] ?? MapPin} />
-        <div className="place-body">
-          <div className="place-name" dir="auto">
-            {p.name}
-          </div>
-          {sub && <div className="place-sub">{sub}</div>}
-          {p.visited && (
-            <span className="place-been">
-              <Icon as={Check} /> {t('ביקרנו')}
+      <div className={'pl-row' + (p.visited ? ' visited' : '')}>
+        {/* a real button for the row, so Space and Enter open it; the swipe works around it */}
+        <button className="pl-main" onClick={props.onOpen}>
+          <span className="pl-tile" aria-hidden="true">
+            <Icon as={CATEGORY_ICON[p.category] ?? MapPin} size={18} />
+          </span>
+          <span className="pl-body">
+            <span className="pl-name" dir="auto">
+              {p.name}
             </span>
-          )}
-        </div>
-        <Heart className={'place-heart' + (props.liked ? ' on' : '')} aria-label={props.liked ? t('אהבתם') : undefined} aria-hidden={!props.liked} />
+            {sub && <span className="pl-sub">{sub}</span>}
+          </span>
+          {props.day ? <span className="pl-tag">{props.start ? fmtDay(dayDate(props.start, props.day)) : t('יום {day}', { day: props.day })}</span> : null}
+          {props.liked && <Icon as={Heart} className="pl-heart" size={18} aria-label={t('אהבתם')} />}
+          <Icon as={ChevronLeft} className="chev flip-ltr" size={18} />
+        </button>
       </div>
     </SwipeRow>
   )
 }
 
 /**
- * The place opened (44): to read before anything else. Photo, name, city and neighbourhood, its plan day, what it is,
- * the whole tip and the baby note, who liked it, map/site/video, and "ביקרנו". "עריכה" in the title row opens the form.
+ * The place opened, as a place card (Apple Maps): its photo on top when it is a good one, the subtitle, four labelled
+ * actions (Directions is the one filled button), an inset list (In the plan, Takes, On the list of, Liked by), what
+ * it is, the tip and the baby note as quiet callouts. Edit and Delete are behind "⋯".
  */
 function PlaceSheet(props: {
   p: Place
@@ -412,65 +397,119 @@ function PlaceSheet(props: {
   tripId: string
   userId: string
   onEdit: () => void
+  onRemove: () => void
   onVisit: () => void
   onPlan: () => void
   onOpenDay: (day: number) => void
   onClose: () => void
 }) {
   const { p, card, day } = props
+  const [video, setVideo] = useState(false)
   const notes = notesFor(p.notes, card, props.hasBaby)
   const tip = notesShown(notes)
   const baby = props.hasBaby ? babyLine(notes) : null
-  const area = areaOf(p.city, p.area)
+  const area = areaOf(cityHe(p.city), p.area)
   const where = [cityLabel(p.city), area ? (isEn ? area.en : area.he) : p.area].filter(Boolean).join(' · ')
   const tags = [p.category !== 'other' && CATEGORIES[p.category], p.audience && AUDIENCES[p.audience]].filter(Boolean).join(' · ')
   const what = whatLine(card)
+  // the saved Google Maps link, else a search for the name when the place has a known spot
+  const maps = safeUrl(p.url) || (p.lat != null ? mapsUrl(p.name) : null)
+  const website = safeUrl(card?.website_url)
+  const vid = videoEmbed(p)
+  const takes = card?.time_needed
+  const who = p.who ? p.who.split(' + ').map((w) => t(w)).join(' + ') : ''
   return (
-    <Sheet title={p.name} onClose={props.onClose} action={{ label: t('עריכה'), onClick: props.onEdit }}>
-      {!!p.photos?.length && <img className="place-photo" src={p.photos[0]} alt="" referrerPolicy="no-referrer" />}
-      <div className="place-read">
-        {where && <div className="muted">{where}</div>}
-        {tags && <div className="muted small">{tags}</div>}
-        {day ? (
-          <button className="place-status" onClick={() => props.onOpenDay(day)}>
-            <Icon as={CalendarCheck} /> {plannedText(day, props.start)} <Icon as={ChevronLeft} className="flip-ltr" />
+    <Sheet title={p.name} onClose={props.onClose}>
+      {!!p.photos?.[0] && <PlaceHero src={p.photos[0]} />}
+      <div className="pc">
+        <div className="pc-top">
+          <div className="pc-sub">
+            {where && <div dir="auto">{where}</div>}
+            {tags && <div>{tags}</div>}
+          </div>
+          <PlaceMenu onEdit={props.onEdit} onDelete={props.onRemove} />
+        </div>
+        <div className="pc-acts">
+          {maps && (
+            <a className="pc-act primary" href={maps} target="_blank" rel="noreferrer">
+              <Icon as={Navigation} size={22} />
+              <span>{t('ניווט')}</span>
+            </a>
+          )}
+          <button className="pc-act" aria-pressed={p.visited} onClick={props.onVisit}>
+            <Icon as={p.visited ? Undo2 : Check} size={22} />
+            <span>{p.visited ? t('לא ביקרנו') : t('ביקרנו')}</span>
           </button>
-        ) : (
-          !p.visited && (
-            <button className="action plan-add" onClick={props.onPlan}>
-              <Icon as={Plus} /> {t('הוספה למסלול')}
+          {website && (
+            <a className="pc-act" href={website} target="_blank" rel="noreferrer">
+              <Icon as={Globe} size={22} />
+              <span>{t('אתר')}</span>
+            </a>
+          )}
+          {vid && (
+            <button className="pc-act" onClick={() => setVideo(true)}>
+              <Icon as={Play} size={22} />
+              <span>{t('סרטון')}</span>
             </button>
-          )
+          )}
+        </div>
+        {(day || !p.visited || takes || who || props.likedBy.length > 0) && (
+          <div className="group pc-info">
+            {day ? (
+              <button className="group-row" onClick={() => props.onOpenDay(day)}>
+                <Icon as={CalendarCheck} size={18} />
+                <span className="k">{t('במסלול')}</span>
+                <span className="v">{props.start ? fmtDay(dayDate(props.start, day)) : t('יום {day}', { day })}</span>
+                <Icon as={ChevronLeft} className="chev flip-ltr" size={18} />
+              </button>
+            ) : (
+              !p.visited && (
+                <button className="group-row" onClick={props.onPlan}>
+                  <Icon as={Plus} size={18} />
+                  <span className="k pc-link">{t('הוספה למסלול')}</span>
+                  <Icon as={ChevronLeft} className="chev flip-ltr" size={18} />
+                </button>
+              )
+            )}
+            {takes && (
+              <div className="group-row">
+                <Icon as={Clock} size={18} />
+                <span className="k">{t('לוקח')}</span>
+                <span className="v" dir="auto">{takes}</span>
+              </div>
+            )}
+            {who && (
+              <div className="group-row">
+                <RingsIcon one />
+                <span className="k">{t('ברשימה של')}</span>
+                <span className="v"><bdi>{who}</bdi></span>
+              </div>
+            )}
+            {props.likedBy.length > 0 && (
+              <div className="group-row">
+                <Icon as={Heart} size={18} />
+                <span className="k">{t('נאהב על ידי')}</span>
+                <span className="v">{props.likedBy.map((n) => t(n)).join(' · ')}</span>
+              </div>
+            )}
+          </div>
         )}
-        {what && <p className="place-what">{keepRanges(what)}</p>}
+        {what && <p className="pc-what" dir="auto">{keepRanges(what)}</p>}
         {tip && (
-          <p className="notes place-tip" dir="auto">
-            <Icon as={Lightbulb} />
+          <p className="pc-callout" dir="auto">
+            <Icon as={Lightbulb} size={18} />
             <span>{keepRanges(tip)}</span>
           </p>
         )}
         {baby && (
-          <p className="notes place-tip" dir="auto">
-            <Icon as={BabyIcon} />
+          <p className="pc-callout" dir="auto">
+            <Icon as={BabyIcon} size={18} />
             <span>{keepRanges(baby)}</span>
           </p>
         )}
-        {p.who && (
-          <div className="muted small">
-            <RingsIcon one /> <bdi>{p.who.split(' + ').map((w) => t(w)).join(' + ')}</bdi>
-          </div>
-        )}
-        {props.likedBy.length > 0 && (
-          <div className="muted small">
-            <Icon as={Heart} /> {t('אהבו: {names}', { names: props.likedBy.map((n) => t(n)).join(' · ') })}
-          </div>
-        )}
-        <MediaActions name={p.name} maps={p.url || null} m={{ ...p, lat: p.url ? null : p.lat, lng: p.url ? null : p.lng }} round />
-        <button className={p.visited ? 'secondary' : 'primary'} onClick={props.onVisit}>
-          <Icon as={p.visited ? Undo2 : Check} /> {p.visited ? t('לא ביקרנו') : t('ביקרנו')}
-        </button>
         {p.visited && props.libraryId && <RateBox libraryId={props.libraryId} tripId={props.tripId} userId={props.userId} ratings={props.ratings} />}
       </div>
+      {video && vid && <VideoSheet media={vid} title={p.name} onClose={() => setVideo(false)} />}
     </Sheet>
   )
 }
@@ -579,7 +618,7 @@ function PlaceForm(props: { hasBaby: boolean; tripId: string; me: string; place:
   const tripCities = [...new Set([...days.flatMap((d) => (d.city ?? '').split(' / ').map((c) => c.trim())), ...props.places.map((p) => p.city ?? '')].filter(Boolean))].sort(
     (a, b) => rank(a) - rank(b),
   )
-  const area = areaOf(f.city, f.area)
+  const area = areaOf(cityHe(f.city), f.area)
 
   const save = async () => {
     // editing only: a place gets into the trip through the game (swipe and match), never from this form

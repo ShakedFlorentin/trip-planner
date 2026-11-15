@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { DayInfo, GuidePlace, Place } from '../types'
-import { cityLabel, currentDay, useTripTable } from '../lib'
+import { cityHe, cityLabel, currentDay, useTripTable } from '../lib'
 import { t } from '../i18n'
 
 export const PIN_COLORS: Record<string, string> = {
@@ -56,7 +56,7 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
   const pts = useMemo(() => places.filter((p) => p.lat != null && p.lng != null), [places])
   const cities = useMemo(() => {
     const n = new Map<string, number>()
-    for (const p of pts) if (p.city) n.set(p.city, (n.get(p.city) ?? 0) + 1)
+    for (const p of pts) if (p.city) n.set(cityHe(p.city), (n.get(cityHe(p.city)) ?? 0) + 1)
     return [...n].sort((a, b) => rank(a[0]) - rank(b[0]))
   }, [pts])
   const today = currentDay(start, numDays)
@@ -127,7 +127,7 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
   useEffect(() => {
     const m = map.current
     if (!m) return
-    const inCity = pts.filter((p) => p.city === shownCity)
+    const inCity = pts.filter((p) => cityHe(p.city) === shownCity)
     const frame = inCity.length ? inCity : pts
     if (frame.length) m.fitBounds(L.latLngBounds(frame.map((p) => [p.lat!, p.lng!])), { padding: [40, 40], maxZoom: 15 })
   }, [shownCity, pts.length]) // eslint-disable-line react-hooks/exhaustive-deps

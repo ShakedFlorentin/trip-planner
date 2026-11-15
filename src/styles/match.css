@@ -14,7 +14,7 @@
   animation: match-in 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25);
 }
 @keyframes match-in { from { transform: scale(0.82); opacity: 0; } }
-.match-photo { width: calc(100% + 44px); margin: 0 -22px; height: 160px; object-fit: cover; display: block; }
+.match-photo { flex: none; width: calc(100% + 44px); margin: 0 -22px; height: 160px; object-fit: cover; display: block; }
 .match-rings { position: relative; width: 150px; height: 84px; margin-top: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
 .match-photo + .match-rings { margin-top: 6px; }
 .match-pop > .match-rings:first-child { margin-top: 22px; }
