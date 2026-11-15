@@ -17,4 +17,13 @@ export const EN_MONEY: Record<string, string> = {
   'הזמנה': 'Booking',
   'החלקה על כרטיס': 'Card swipe',
   'שינוי': 'Change',
+  '{name} · אתם': '{name} · you',
+  'חלק {name} מהתשלומים': "{name}'s share of the payments",
+  'הוצאה אחת': '1 expense',
+  '{n} הוצאות': '{n} expenses',
+  'שילם: {name}': 'Paid by: {name}',
+  'על מה? למשל: ראמן בשינג׳וקו': 'What for? e.g. Ramen in Shinjuku',
+  'קטגוריה': 'Category',
+  'הטיול · נראה לכל מי שבטיול': 'Trip · seen by everyone',
+  'בטלפון הזה': 'On this phone',
 }

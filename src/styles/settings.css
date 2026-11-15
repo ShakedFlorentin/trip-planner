@@ -1,0 +1,13 @@
+/* Settings: the iPhone Settings look, on the shared grouped list (.group, .group-label, .group-foot in styles.css) */
+.set { display: flex; flex-direction: column; gap: var(--s-2); }
+.set > .group + .group, .set > .group-foot + .group { margin-top: var(--s-4); }
+.set .group > .group-row > input { text-align: end; }
+
+.set-profile .group-row { min-height: 76px; gap: var(--s-4); }
+.set-profile-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.set-profile-text input { width: 100%; min-height: 28px; padding: 0; border: 0; background: none; font-size: var(--fs-body); font-weight: 600; text-align: start; unicode-bidi: normal; }
+.set-foot-in { font-size: var(--fs-footnote); line-height: 1.3; color: var(--muted); }
+
+/* a Select row: the value in the text colour at the end, the up-down mark after it */
+.set-select .v { color: var(--text); font-size: var(--fs-body); }
+.set-select .chev { width: var(--icon-s); height: var(--icon-s); }

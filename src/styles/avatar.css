@@ -1,0 +1,10 @@
+/* Avatar (src/avatar.tsx): one round initial, sized and looked by attribute */
+.ava { flex: none; display: inline-grid; place-items: center; border-radius: 50%; font-weight: 600; line-height: 1; user-select: none; overflow: hidden; background: var(--fill); color: var(--text); }
+.ava > [data-slot="avatar-fallback"] { display: grid; place-items: center; width: 100%; height: 100%; }
+.ava[data-size="s"] { width: 24px; height: 24px; font-size: var(--fs-caption); }
+.ava[data-size="m"] { width: 32px; height: 32px; font-size: var(--fs-footnote); }
+.ava[data-size="l"] { width: 52px; height: 52px; font-size: var(--fs-title); }
+.ava[data-look="outlined"] { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 55%, transparent); }
+.ava[data-look="ink"] { background: var(--text); color: var(--bg); }
+.ava[data-look="accent"] { background: var(--accent-fill); color: var(--on-accent); }
+.ava .ic { width: var(--icon-s); height: var(--icon-s); }
