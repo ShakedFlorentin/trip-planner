@@ -1,3 +1,4 @@
+@layer ui-sdk;
 /* Tokens: semantic, light + dark. Accent red is reserved for primary actions and state. */
 /* Apple Music look: content on a plain white/black page, soft grey tiles, one deep pink-red tint.
    --accent is for text and icons; --accent-fill is for solid red surfaces with white text on them. */
@@ -426,10 +427,9 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env
 }
 .card .chip { background: var(--fill); }
 button.chip { min-height: 36px; }
-/* the look stays 36 high; the tap area is 44 (5px above and below, measured from inside the 1px border). Scroll rows keep 4px of padding so it is not clipped */
-button.chip, a.chip { position: relative; }
-button.chip::before, a.chip::before { content: ''; position: absolute; inset: -5px -2px; }
-button.chip.tiny::before { content: none; }
+/* the pill stays 36px high; the part that takes a tap is 44px (measured from inside the 1px border). Scroll rows keep 4px of padding so it is not clipped */
+:where(button.chip, a.chip) { position: relative; }
+button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; inset: -5px -2px; }
 .chip.on { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
 .chip.tiny { min-height: 0; font-size: 0.75rem; padding: 1px 8px; margin-inline-start: 6px; background: var(--fill); }
 .chip-sep { flex: none; width: 1px; height: 24px; align-self: center; background: var(--line); }
@@ -522,27 +522,39 @@ button.chip.tiny::before { content: none; }
 .add-row.item-edit input { flex: 1; min-width: 0; }
 
 /* Sheet */
+/* ui-sdk's Drawer: it slides the sheet itself and fades the backdrop, so neither has an animation of its own here */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 10;
   background: rgba(0, 0, 0, 0.42);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  animation: fade 0.2s ease-out;
 }
+[data-slot='drawer-backdrop'][data-hidden] { display: none; }
+[data-slot='drawer-viewport'] {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+[data-slot='drawer-viewport'] > * { pointer-events: auto; }
 .sheet {
+  position: relative;
   width: 100%;
   max-width: 640px;
-  max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
+  margin-inline: auto;
+  max-height: calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 16px);
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  color: var(--text);
   border-radius: 20px 20px 0 0;
-  animation: up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
   outline: none;
 }
+/* covers the gap a drag past the bottom edge would open */
+.sheet::after { content: ''; position: absolute; inset-inline: 0; top: 100%; height: 6rem; background: var(--bg); }
 .sheet-head {
   position: relative;
   display: grid;
@@ -763,6 +775,7 @@ html[dir='rtl'] .ja { text-align: right; }
 .chip.add-chip { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
 .dishes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 /* bookings: one tab per kind, pinned under the top bar */
+.tabs-root { display: contents; }
 .tabs-bar {
   position: sticky;
   top: calc(var(--top-h) + env(safe-area-inset-top));
@@ -818,7 +831,7 @@ a.pill, button.pill { min-height: 36px; padding-inline: 12px; }
    the Hebrew around it, instead of jumping to the left edge. Not the full-screen card (centred) or chat bubbles. */
 :is(h2, h3, p, div, b, span)[dir="auto"]:not(.show-sub, .show-small, .turn-heard, .turn-text, .turn-back) { text-align: right; }
 /* settings: light / dark / like the phone, three equal targets */
-.theme-picker button { min-height: 44px; }
+.group-block .segmented button { min-height: 44px; }
 .field:has(> .theme-picker) { margin-top: 10px; }
 
 /* text only screen readers hear */
@@ -953,12 +966,11 @@ html[dir='rtl'] .pass-plane { transform: rotate(-135deg); }
 .actions-end { margin-inline-start: auto; display: flex; gap: 8px; }
 
 /* Places (40-51) */
-.who-menu { position: relative; flex: none; display: inline-flex; }
-.who-menu > .chip { display: inline-flex; align-items: center; gap: 4px; }
-.who-menu-shade { position: fixed; inset: 0; z-index: 6; background: rgba(0, 0, 0, 0.12); }
-.who-menu-list { position: fixed; z-index: 7; min-width: 200px; display: flex; flex-direction: column; background: var(--bg); border-radius: 14px; box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22), 0 0 0 0.5px var(--line); overflow: hidden; }
-.who-menu-list button { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; padding: 0 16px; text-align: start; font-size: 1rem; }
-.who-menu-list button + button { border-top: 0.5px solid var(--line); }
+/* ui-sdk's Menu places the list under the chip itself */
+.who-menu-list { z-index: 7; min-width: 200px; padding: 0; margin: 0; border: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--text); border-radius: 14px; box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22), 0 0 0 0.5px var(--line); overflow: hidden; }
+.who-menu-list [data-slot='menu-radio-item'] { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; padding: 0 16px; text-align: start; font-size: 1rem; cursor: pointer; outline: none; }
+.who-menu-list [data-slot='menu-radio-item'] + [data-slot='menu-radio-item'] { border-top: 0.5px solid var(--line); }
+.who-menu-list [data-slot='menu-radio-item'][data-highlighted] { background: var(--fill); }
 .who-menu-list .ic { color: var(--accent); }
 .area-title { justify-content: space-between; }
 .area-en { font-size: 0.75rem; font-weight: 400; color: var(--muted); opacity: 0.85; margin-inline-start: 4px; }
@@ -1108,9 +1120,10 @@ html[dir='ltr'] .place-row { padding: 12px 14px 12px 16px; }
 .pass-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .pass-lines li { display: flex; align-items: center; gap: 10px; }
 .pass-lines .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
-/* an on/off switch at the end of a settings row (role="switch" on the row itself) */
-.switch { flex: none; position: relative; width: 46px; height: 28px; margin-inline-start: auto; border-radius: 999px; background: var(--fill); transition: background 0.2s; }
-.switch::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: inset-inline-start 0.2s; }
-.switch.on { background: #34c759; }
-.switch.on::after { inset-inline-start: 21px; }
-@media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
+/* an on/off switch at the end of a settings row (ui-sdk Switch inside the row's label) */
+.switch { flex: none; position: relative; width: 46px; height: 28px; min-height: 0; margin-inline-start: auto; padding: 0; border-radius: 999px; background: var(--fill); transition: background 0.2s; }
+.switch-thumb { position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: inset-inline-start 0.2s; }
+.switch[data-checked] { background: #34c759; }
+.switch[data-checked] .switch-thumb { inset-inline-start: 21px; }
+/* the visible track is 28px tall; the part that takes a tap is the whole 48px row, through its label */
+@media (prefers-reduced-motion: reduce) { .switch, .switch-thumb { transition: none; } }

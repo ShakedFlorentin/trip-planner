@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { supabase } from '../supabase'
 import { itemDone, type ChecklistItem, type Member } from '../types'
 import { couplesOf, keepRanges, mutate, useTripTable } from '../lib'
@@ -114,20 +115,22 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
   return (
     <div className="stack">
       {/* each list's progress is a ring in its own tab (56): Toogo red, a full green ring and ✓ once it's all done */}
-      <div className="segmented list-tabs" role="tablist">
-        {LISTS.map((l) => {
-          const all = inList(l.id)
-          const left = all.filter((i) => !done(i)).length
-          const finished = all.length > 0 && left === 0
-          return (
-            <button key={l.id} role="tab" aria-selected={list === l.id} className={list === l.id ? 'on' : ''} onClick={() => setList(l.id)}>
-              <Ring part={all.length ? (all.length - left) / all.length : 0} done={finished} />
-              <span className="list-name">{l.label}</span>
-              {finished ? <Icon as={Check} className="list-ok" /> : left > 0 && <span className="list-left">{left}</span>}
-            </button>
-          )
-        })}
-      </div>
+      <Tabs className="tabs-root" value={list} onValueChange={(v) => v && setList(v)}>
+        <TabsList className="segmented list-tabs" aria-label={t('רשימות')}>
+          {LISTS.map((l) => {
+            const all = inList(l.id)
+            const left = all.filter((i) => !done(i)).length
+            const finished = all.length > 0 && left === 0
+            return (
+              <TabsTab key={l.id} value={l.id} className={list === l.id ? 'on' : ''}>
+                <Ring part={all.length ? (all.length - left) / all.length : 0} done={finished} />
+                <span className="list-name">{l.label}</span>
+                {finished ? <Icon as={Check} className="list-ok" /> : left > 0 && <span className="list-left">{left}</span>}
+              </TabsTab>
+            )
+          })}
+        </TabsList>
+      </Tabs>
       {perCouple && myCouple && <p className="muted small">{t('הציוד של {who}. לכל זוג רשימה משלו.', { who: t(myCouple) })}</p>}
 
       <form className="add-row" onSubmit={add}>

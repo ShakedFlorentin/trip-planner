@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@ui-sdk/react/menu'
+import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { supabase } from '../supabase'
 import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type GuidePlace, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
 import { cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, normName, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
@@ -176,15 +177,17 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   return (
     <div className={'stack places' + (view === 'map' ? ' map-mode' : '')}>
       {/* one row of controls (40): whose list as one chip at the start, then the kinds of place */}
-      <div className="tabs-bar" role="tablist" aria-label={t('סוג מקום')}>
-        {couples.length > 1 && <WhoMenu couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
-        {Object.entries(tabs).map(([k, v]) => (
-          <button key={k} role="tab" aria-selected={current === k} className={'chip' + (current === k ? ' on' : '')} onClick={() => setCat(k)}>
-            {CATEGORY_ICON[k] && <Icon as={CATEGORY_ICON[k]} />} {v}
-            {!!counts[k] && <span className="count">{counts[k]}</span>}
-          </button>
-        ))}
-      </div>
+      <Tabs className="tabs-root" value={current} onValueChange={(v) => v && setCat(v)}>
+        <TabsList className="tabs-bar" aria-label={t('סוג מקום')}>
+          {couples.length > 1 && <WhoMenu couples={couples} mine={myCouple} value={whose} onChange={setWhose} />}
+          {Object.entries(tabs).map(([k, v]) => (
+            <TabsTab key={k} value={k} className={'chip' + (current === k ? ' on' : '')}>
+              {CATEGORY_ICON[k] && <Icon as={CATEGORY_ICON[k]} />} {v}
+              {!!counts[k] && <span className="count">{counts[k]}</span>}
+            </TabsTab>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {view === 'map' ? (
         <>
@@ -290,42 +293,24 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
 
 /** "שלנו ▾": whose places, as one chip that opens the choices (40). */
 function WhoMenu({ couples, mine, value, onChange }: { couples: string[]; mine: string | null; value: Who; onChange: (w: Who) => void }) {
-  const [at, setAt] = useState<{ top: number; start: number } | null>(null)
-  const btn = useRef<HTMLButtonElement>(null)
-  const open = () => {
-    const r = btn.current!.getBoundingClientRect()
-    // under the chip, lined up with its start edge (right in Hebrew, left in English)
-    setAt({ top: r.bottom + 6, start: isEn ? r.left : window.innerWidth - r.right })
-  }
   return (
-    <span className="who-menu">
-      <button ref={btn} className={'chip' + (value !== 'all' ? ' on' : '')} aria-haspopup="menu" aria-expanded={!!at} onClick={open}>
+    <Menu>
+      <MenuTrigger className={'chip' + (value !== 'all' ? ' on' : '')}>
         {whoLabel(value)} <Icon as={ChevronDown} />
-      </button>
-      {at &&
-        createPortal(
-          <>
-            <span className="who-menu-shade" onClick={() => setAt(null)} />
-            <span className="who-menu-list" role="menu" style={{ top: at.top, insetInlineStart: at.start }}>
-              {whoChoices(couples, mine).map((w) => (
-                <button
-                  key={w}
-                  role="menuitemradio"
-                  aria-checked={value === w}
-                  onClick={() => {
-                    onChange(w)
-                    setAt(null)
-                  }}
-                >
-                  <span>{whoLabel(w)}</span>
-                  {value === w && <Icon as={Check} />}
-                </button>
-              ))}
-            </span>
-          </>,
-          document.body,
-        )}
-    </span>
+      </MenuTrigger>
+      <MenuContent className="who-menu-list" side="bottom" align="start" sideOffset={6}>
+        <MenuRadioGroup value={value} onValueChange={(w) => onChange(w as Who)}>
+          {whoChoices(couples, mine).map((w) => (
+            <MenuRadioItem key={w} value={w} closeOnSelect>
+              <span>{whoLabel(w)}</span>
+              <MenuItemIndicator>
+                <Icon as={Check} />
+              </MenuItemIndicator>
+            </MenuRadioItem>
+          ))}
+        </MenuRadioGroup>
+      </MenuContent>
+    </Menu>
   )
 }
 

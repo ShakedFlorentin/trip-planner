@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Switch, SwitchThumb } from '@ui-sdk/react/switch'
+import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
 import { ChevronLeft, Moon, Sun, SunMoon } from 'lucide-react'
 import { supabase } from '../supabase'
 import type { Trip } from '../types'
@@ -149,10 +151,12 @@ function PushGroup() {
     <>
       <div className="group-label">{t('התראות')}</div>
       <div className="group">
-        <button className="group-row" role="switch" aria-checked={on} aria-disabled={stuck || busy} onClick={toggle}>
+        <label className="group-row">
           <span className="k">{t('מאצ׳ים בטיול')}</span>
-          <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
-        </button>
+          <Switch className="switch" checked={on} readOnly={stuck || busy} onCheckedChange={toggle}>
+            <SwitchThumb className="switch-thumb" />
+          </Switch>
+        </label>
       </div>
       <p className="group-foot">
         {state === 'home-screen'
@@ -168,18 +172,19 @@ function PushGroup() {
 function CountingRow() {
   const [on, setOn] = useState(countingOn)
   return (
-    <button
-      className="group-row"
-      role="switch"
-      aria-checked={on}
-      onClick={() => {
-        setCounting(!on)
-        setOn(!on)
-      }}
-    >
+    <label className="group-row">
       <span className="k">{t('עזרה בשיפור Toogo')}</span>
-      <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
-    </button>
+      <Switch
+        className="switch"
+        checked={on}
+        onCheckedChange={(next) => {
+          setCounting(next)
+          setOn(next)
+        }}
+      >
+        <SwitchThumb className="switch-thumb" />
+      </Switch>
+    </label>
   )
 }
 
@@ -433,13 +438,13 @@ export function ThemePicker() {
   return (
     <div className="group-block">
       <span id="theme-label">{t('מראה')}</span>
-      <div className="segmented theme-picker" role="radiogroup" aria-labelledby="theme-label">
+      <SegmentedControl className="segmented theme-picker" aria-labelledby="theme-label" value={theme} onValueChange={(v) => v && pick(v)}>
         {THEMES.map((t) => (
-          <button key={t.id} role="radio" aria-checked={theme === t.id} className={theme === t.id ? 'on' : ''} onClick={() => pick(t.id)}>
+          <SegmentedControlItem key={t.id} value={t.id} className={theme === t.id ? 'on' : ''}>
             <Icon as={t.icon} /> {t.label}
-          </button>
+          </SegmentedControlItem>
         ))}
-      </div>
+      </SegmentedControl>
     </div>
   )
 }
@@ -449,13 +454,13 @@ export function LangPicker() {
   return (
     <div className="group-block">
       <span id="lang-label">שפה · Language</span> {/* he-only: each language names itself */}
-      <div className="segmented" role="radiogroup" aria-labelledby="lang-label">
+      <SegmentedControl className="segmented" aria-labelledby="lang-label" value={lang} onValueChange={(v) => v && v !== lang && setLang(v as typeof lang)}>
         {LANGS.map((l) => (
-          <button key={l.id} role="radio" lang={l.id} aria-checked={lang === l.id} className={lang === l.id ? 'on' : ''} onClick={() => l.id !== lang && setLang(l.id)}>
+          <SegmentedControlItem key={l.id} value={l.id} lang={l.id} className={lang === l.id ? 'on' : ''}>
             {l.label}
-          </button>
+          </SegmentedControlItem>
         ))}
-      </div>
+      </SegmentedControl>
     </div>
   )
 }
