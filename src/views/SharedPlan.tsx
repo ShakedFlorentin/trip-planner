@@ -6,6 +6,7 @@ import { t } from '../i18n'
 import { Field } from '../ui'
 import { PlanList, type SharedSnapshot } from './Share'
 import { Loading } from '../rings'
+import { say } from '../toast'
 
 // The public, read-only page behind ?share=<slug>. It runs before the login gate and talks to the database only
 // through get_shared_plan, which hands back the published snapshot (or nothing once sharing was stopped).
@@ -87,7 +88,7 @@ export default function SharedPlan({ slug }: { slug: string }) {
   if (!state.snap)
     return (
       <div className="center stack" role="alert">
-        <p>{state.failed ? t('אין חיבור לשרת. בדקו את האינטרנט.') : t('הקישור הזה כבר לא משותף.')}</p>
+        <p>{state.failed ? t('אין חיבור לשרת. בדקו את האינטרנט.') : t('הקישור הזה כבר לא פעיל. ייתכן שהשיתוף הופסק או שהקישור הועתק לא נכון. אפשר לבקש מהשולח קישור חדש.')}</p>
         <button className="secondary" onClick={toApp}>{t('לאפליקציה')}</button>
       </div>
     )
@@ -141,7 +142,7 @@ export function ImportShared(props: { slug: string; userId: string; snap?: Share
   if (!snap)
     return (
       <div className="center stack" role="alert">
-        <p>{t('הקישור הזה כבר לא משותף.')}</p>
+        <p>{t('הקישור הזה כבר לא פעיל. ייתכן שהשיתוף הופסק או שהקישור הועתק לא נכון. אפשר לבקש מהשולח קישור חדש.')}</p>
         <button className="secondary" onClick={props.onSkip}>{t('לא עכשיו')}</button>
       </div>
     )
@@ -176,7 +177,7 @@ export function ImportShared(props: { slug: string; userId: string; snap?: Share
     const { error } = rows.length ? await supabase.from('candidates').insert(rows) : { error: null }
     setBusy(false)
     // the trip exists either way; the places can be added again by hand if the copy failed
-    if (error) alert(errorText(error.message))
+    if (error) say(errorText(error.message), { error: true })
     try {
       localStorage.setItem('tripId', tripId)
     } catch {

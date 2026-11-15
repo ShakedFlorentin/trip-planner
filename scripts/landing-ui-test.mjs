@@ -12,7 +12,7 @@ const out = await build({
 const { roundUp5, arrivalOf, arrivalLine } = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'))
 
 const tr = (k, v = {}) => k.replace(/\{(\w+)\}/g, (_, n) => String(v[n]))
-const fmt = (v) => tr('עד המלון כ-{n} דק׳ · שם בסביבות {time}', v)
+const fmt = (v) => tr('מהשדה עד המלון כ-{n} דק׳. אחרי הגבול והמזוודות, שם בסביבות {time}', v)
 let fails = 0
 const check = (name, ok, got) => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  got: ' + JSON.stringify(got)}`)
@@ -30,7 +30,7 @@ eq('undefined -> null', roundUp5(undefined), null)
 
 const day = { 'Maor': { airport: 'HND', ride_min: 46, ready: '11:21' } }
 const line = arrivalLine(day.Maor, fmt)
-eq('line with arrival', line, 'עד המלון כ-46 דק׳ · שם בסביבות 11:25')
+eq('line with arrival', line, 'מהשדה עד המלון כ-46 דק׳. אחרי הגבול והמזוודות, שם בסביבות 11:25')
 check('no "undefined" in the line', !String(line).includes('undefined'), line)
 eq('arrivalOf by name', arrivalOf(day, 'Maor')?.airport, 'HND')
 eq('arrivalOf no owner, one party', arrivalOf(day, null)?.airport, 'HND')

@@ -2,8 +2,9 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { BedDouble, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
 import { supabase } from '../supabase'
 import { CATEGORIES, CITY_HE, TOGETHER, whoOptions, type Booking, type Candidate, type DayInfo, type Member, type Place, type PlanSummary, type Trip } from '../types'
-import { cityLabel, couplesOf, currentDay, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
+import { cityLabel, couplesOf, currentDay, errorText, useTokyoHM, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
+import { ask, say } from '../toast'
 import { Empty, Field, Sheet, useRemembered } from '../ui'
 import { WhoChips, validWho } from '../who'
 import { RingsIcon } from '../rings'
@@ -24,6 +25,7 @@ import {
   hotelNights,
   nightLines,
   navUrl,
+  nextStop,
   visible,
   ymd,
   type Entry,
@@ -38,7 +40,7 @@ type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: M
 
 export default function Itinerary({ trip, day, setDay, members = [], userId }: Props) {
   const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
-  const { rows: items } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
+  const { rows: items, put: putItems } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
   const { rows: bookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
   const couples = couplesOf(members)
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
@@ -91,27 +93,56 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   // a day that has passed: a place nobody ticked can go back to the planner for a day still ahead
   const today = currentDay(trip.start_date, trip.num_days)
   const past = today != null && day < today
-  const missed = async (i: PlanItem) => {
-    if (!(await mutate(supabase.from('itinerary_items').delete().eq('id', i.id)))) return
-    // a new place to the planner again, not one somebody took out
-    if (!i.place_id) return
-    await mutate(supabase.from('places').update({ auto_planned: false }).eq('id', i.place_id))
+  // the planner's flag on a place (types.ts doesn't list it)
+  const autoPlannedOf = (i: PlanItem) => places.find((p) => p.id === i.place_id)?.auto_planned
+  // a stop taken out of the plan can come back: the same row goes in again and its place gets the flag it had
+  const bringBack = async (i: PlanItem, autoPlanned: boolean | undefined) => {
+    if (!(await mutate(supabase.from('itinerary_items').insert(i)))) return
+    if (i.place_id && autoPlanned != null) await mutate(supabase.from('places').update({ auto_planned: autoPlanned }).eq('id', i.place_id))
     replan(trip.id)
   }
-  // swipe-to-remove, after a confirm: the stop is deleted and its place is marked as one the planner already had
-  // (auto_planned). A place so marked with no stop is how the planner knows somebody took it out, so it leaves it out
-  // and plans the rest of the day again. "Didn't make it" above does the opposite on purpose.
-  const remove = async (i: PlanItem) => {
-    if (!confirm(t('להסיר מהמסלול?'))) return
+  const missed = async (i: PlanItem) => {
+    const was = autoPlannedOf(i)
     if (!(await mutate(supabase.from('itinerary_items').delete().eq('id', i.id)))) return
-    if (!i.place_id) return
-    await mutate(supabase.from('places').update({ auto_planned: true }).eq('id', i.place_id))
-    replan(trip.id)
+    // a new place to the planner again, not one somebody took out
+    if (i.place_id) {
+      await mutate(supabase.from('places').update({ auto_planned: false }).eq('id', i.place_id))
+      replan(trip.id)
+    }
+    say(t('הסרנו: {name}', { name: i.title }), { undo: () => void bringBack(i, was) })
+  }
+  // swipe-to-remove: the stop is deleted and its place is marked as one the planner already had (auto_planned). A place
+  // so marked with no stop is how the planner knows somebody took it out, so it leaves it out and plans the rest of
+  // the day again. "Didn't make it" above does the opposite on purpose. No question first: Undo is on the message.
+  const remove = async (i: PlanItem) => {
+    const was = autoPlannedOf(i)
+    if (!(await mutate(supabase.from('itinerary_items').delete().eq('id', i.id)))) return
+    if (i.place_id) {
+      await mutate(supabase.from('places').update({ auto_planned: true }).eq('id', i.place_id))
+      replan(trip.id)
+    }
+    say(t('הסרנו מהמסלול: {name}', { name: i.title }), { undo: () => void bringBack(i, was) })
+  }
+  // the round tick: on screen at once; if saving fails it goes back and says so
+  const tick = async (i: PlanItem) => {
+    const done = !i.done
+    putItems([{ ...i, done }])
+    const { error } = await supabase.from('itinerary_items').update({ done }).eq('id', i.id)
+    if (error) {
+      putItems([i])
+      say(t('הסימון לא נשמר, ולכן החזרנו אותו.'), { error: true, description: errorText(error.message), duration: 6000 })
+      return
+    }
+    // ticking a stop also marks its place visited (48); unticking leaves the place as it is
+    if (done && i.place_id) await mutate(supabase.from('places').update({ visited: true }).eq('id', i.place_id))
   }
   const date = trip.start_date ? ymd(dayDate(trip.start_date, day)!) : ''
   // the planner's landing data for this day (none in a plan made before it was added: then nothing extra shows)
   const dayArrival = summary?.days?.find((d) => d.day === day)?.arrival
   const entries = dayEntries(items, bookings, day, date, mode, myCouple, dayArrival)
+  // today's next stop still ahead gets a "Next" mark (the same one Home's card shows)
+  const nowHM = useTokyoHM()
+  const nextKey = today === day ? nextStop(entries, nowHM)?.key : undefined
   // a day inside the trip dates: a slim header, so the first stop sits high on the screen
   const onTrip = today != null
   // on a day with several owners, "הכל" reads as one section per owner (the group first)
@@ -175,13 +206,14 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
           const parts = dayParts(dayDate(trip.start_date, d))
           const apart = !!days.find((x) => x.day === d)?.who
           return (
-            <button key={d} className={'day-chip' + (d === day ? ' active' : '')} onClick={() => setDay(d)}>
+            <button key={d} className={'day-chip' + (d === day ? ' active' : '')} aria-current={d === today ? 'date' : undefined} onClick={() => setDay(d)}>
               {/* a day not everyone is together: the one-ring mark in the corner, not a dashed frame (31) */}
               {apart && (
                 <span className="day-chip-apart" aria-label={t('יום שלא כולם ביחד')}>
                   <RingsIcon one />
                 </span>
               )}
+              {d === today && <span className="day-chip-today">{t('היום')}</span>}
               <span className="day-chip-weekday">{parts?.weekday ?? ''}</span>
               <b>{parts?.date ?? d}</b>
               <span className="small day-chip-city">{cityLabel(days.find((x) => x.day === d)?.city)}</span>
@@ -195,7 +227,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         </p>
       )}
 
-      {noCity.length > 0 && !later && (
+      {noCity.length > 0 && !later && !onTrip && (
         <SplitStart
           open={noCity.length}
           onBooked={() => requestAddBooking('hotel')}
@@ -219,7 +251,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         {mainCity ? (
           <button
             className={'day-banner c' + cityColor(mainCity) + (dayPhoto ? ' has-photo' : '')}
-            aria-label={t('עריכת היום')}
+            aria-label={t('{city}, עריכת היום', { city: mainCity })}
             onClick={() => setEditDay(true)}
           >
             {dayPhoto && <img src={dayPhoto} alt="" />}
@@ -242,7 +274,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
               </>
             ) : (
               <>
-                <RingsIcon /> {t('ביחד')}
+                <RingsIcon /> {t('כולם היום')}
               </>
             )}
           </span>
@@ -300,6 +332,9 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                     entry={e}
                     dayWho={info?.who ?? null}
                     arrival={arrivalOf(dayArrival, e.who)}
+                    hideMine={mode === 'mine'}
+                    mine={myCouple}
+                    hotel={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.location ?? null}
                     checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null}
                   />
                 ) : (
@@ -314,6 +349,10 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                   away={((c) => (c && c !== mainCity && c !== lodging ? c : undefined))(awayCity(e.item))}
                   warning={e.item && (warnings.get(e.item.id) ?? (e.item.auto && e.item.place_id ? issues.get(e.item.place_id) : undefined))}
                   onMissed={past && e.item?.place_id && !e.item.done ? missed : undefined}
+                  onTick={tick}
+                  isNext={e.key === nextKey}
+                  mineOnly={mode === 'mine'}
+                  mine={myCouple}
                 />
                 )}
               </Fragment>
@@ -342,6 +381,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
             setOpenId(null)
             setEditItem(i)
           }}
+          onRemove={remove}
           onClose={() => setOpenId(null)}
         />
       )}
@@ -398,9 +438,16 @@ export function EntryRow(props: {
   /** the city this place is in, when the planner put it on a day the people sleep in another city */
   away?: string
   onMissed?: (i: PlanItem) => void
+  onTick: (i: PlanItem) => void
+  /** the next stop still ahead today */
+  isNext?: boolean
+  /** the filter is "Ours" and this is my couple */
+  mineOnly?: boolean
+  mine?: string | null
 }) {
-  const { e, kind, onOpen, onEdit, onRemove, warning, away, onMissed, dayWho = null, hint } = props
-  const ownTag = e.who !== dayWho
+  const { e, kind, onOpen, onEdit, onRemove, warning, away, onMissed, onTick, isNext, dayWho = null, hint } = props
+  // with "Ours" on, a row that is ours says nothing new, so it carries no couple pill
+  const ownTag = e.who !== dayWho && !(props.mineOnly && e.who === props.mine)
   const i = e.item
   // the promo video's row (a grey card): the time on the start side, the name in bold with one quiet line under it,
   // and the round tick on the end side (red with a white check once done). The note, the card and the way there are
@@ -413,7 +460,25 @@ export function EntryRow(props: {
         {e.time ? (i?.auto ? '~' + e.time : e.time) : ''}
       </span>
       <div className="plan-body" onClick={i ? () => onOpen(i) : undefined}>
-        <div className="plan-title">{e.title}</div>
+        {/* the stop's name is the control for keyboard and VoiceOver (the whole body also opens it on a tap) */}
+        <div
+          className="plan-title"
+          {...(i
+            ? {
+                role: 'button',
+                tabIndex: 0,
+                onKeyDown: (ev: React.KeyboardEvent) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault()
+                    onOpen(i)
+                  }
+                },
+              }
+            : {})}
+        >
+          {isNext && <span className="next-mark">{t('הבא')}</span>}
+          {e.title}
+        </div>
         <div className="plan-sub">
           <span className="plan-kind">{keepRanges(sub)}</span>
           {ownTag &&
@@ -450,13 +515,9 @@ export function EntryRow(props: {
       {i ? (
         <button
           className="check"
-          aria-label={t('בוצע')}
+          aria-label={t('בוצע: {name}', { name: e.title })}
           aria-pressed={i.done}
-          onClick={async () => {
-            const ok = await mutate(supabase.from('itinerary_items').update({ done: !i.done }).eq('id', i.id))
-            // ticking a stop also marks its place visited (48); unticking leaves the place as it is
-            if (ok && !i.done && i.place_id) await mutate(supabase.from('places').update({ visited: true }).eq('id', i.place_id))
-          }}
+          onClick={() => onTick(i)}
         >
           {i.done && <Check size="1em" strokeWidth={3.2} aria-hidden="true" />}
         </button>
@@ -552,6 +613,7 @@ function ItemSheet(props: {
   cards: Candidate[]
   places: Place[]
   onEdit: (i: PlanItem) => void
+  onRemove: (i: PlanItem) => void
   onClose: () => void
 }) {
   const { e, place, card, cards, places } = props
@@ -590,6 +652,15 @@ function ItemSheet(props: {
           {e.location && <NavLink to={e.location} />}
           <button className="action" onClick={() => props.onEdit(i)}>
             <Icon as={Pencil} /> {t('עריכה')}
+          </button>
+          <button
+            className="action"
+            onClick={() => {
+              props.onClose()
+              props.onRemove(i)
+            }}
+          >
+            <Icon as={Trash2} /> {t('הסרה מהמסלול')}
           </button>
           {/* the card can run long: what is around it is one tap away, not a long scroll */}
           {near.length > 0 && (
@@ -762,12 +833,12 @@ function Spare({ trip, day, spare, places }: { trip: Trip; day: number; spare: P
 }
 
 /** First steps after landing; the check-in line gives the day's hotel booking hour when there is one. */
-function ArrivalCard({ entry, checkin, dayWho, arrival }: { entry: Entry; checkin: string | null; dayWho: string | null; arrival: Arrival | null }) {
+function ArrivalCard({ entry, checkin, hotel, dayWho, arrival, hideMine, mine }: { entry: Entry; checkin: string | null; hotel: string | null; dayWho: string | null; arrival: Arrival | null; hideMine?: boolean; mine?: string | null }) {
   const b = entry.booking!
   const airport = tokyoArrival(b)
   if (!airport) return null
   const a = ARRIVAL[airport]
-  const ride = arrivalLine(arrival, (v) => t('עד המלון כ-{n} דק׳ · שם בסביבות {time}', v))
+  const ride = arrivalLine(arrival, (v) => t('מהשדה עד המלון כ-{n} דק׳. אחרי הגבול והמזוודות, שם בסביבות {time}', v))
   return (
     // closed to one row like the day's stops (the video's calm list); the first steps open under it
     <details className="arrival">
@@ -779,10 +850,15 @@ function ArrivalCard({ entry, checkin, dayWho, arrival }: { entry: Entry; checki
           </span>
           <span className="plan-sub">
             <span className="plan-kind">{t('{n} צעדים ראשונים אחרי הנחיתה', { n: a.steps.length })}</span>
-            {b.who && b.who !== dayWho && <span className="who-pill">{t(b.who)}</span>}
+            {b.who && b.who !== dayWho && !(hideMine && b.who === mine) && <span className="who-pill">{t(b.who)}</span>}
           </span>
           {ride && <span className="plan-sub arrival-ride">{ride}</span>}
         </span>
+        {hotel && (
+          <a className="nav-round" href={navUrl(hotel)} target="_blank" rel="noreferrer" aria-label={t('ניווט למלון')} onClick={(ev) => ev.stopPropagation()}>
+            <Icon as={Navigation} />
+          </a>
+        )}
         <Icon as={ChevronDown} className="chev" />
       </summary>
       <ul>
@@ -820,8 +896,9 @@ function ItemForm(props: { tripId: string; start: string | null; numDays: number
   }
 
   const remove = async () => {
-    if (f.id && confirm(t('למחוק?')) && (await mutate(supabase.from('itinerary_items').delete().eq('id', f.id))))
-      props.onClose()
+    if (!f.id) return
+    if (!(await ask({ title: t('למחוק את הפעילות?'), description: f.title ? String(f.title) : undefined, confirmLabel: t('מחיקה'), danger: true }))) return
+    if (await mutate(supabase.from('itinerary_items').delete().eq('id', f.id))) props.onClose()
   }
 
   return (

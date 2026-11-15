@@ -139,6 +139,11 @@ export function itemEntry(i: PlanItem): Entry {
 
 const byEntryTime = (a: Entry, b: Entry) => (a.time ?? '99').localeCompare(b.time ?? '99')
 
+/** The next thing still ahead today (Home's card and Plan's "Next" mark): timed ones from now on, then untimed ones. */
+export function nextStop(entries: Entry[], nowHM: string) {
+  return entries.find((e) => !e.done && e.time && e.time >= nowHM) ?? entries.find((e) => !e.done && !e.time)
+}
+
 /** A day as one timeline: plan items and bookings merged by time, filtered by whose they are. */
 export function dayEntries(items: PlanItem[], bookings: Booking[], day: number, date: string, mode: WhoMode, mine: string | null, arrival?: Record<string, Arrival> | null) {
   const own = items.filter((i) => i.day === day).sort((a, b) => a.sort - b.sort).map(itemEntry)

@@ -82,7 +82,7 @@ function FailedSheet({ onClose }: { onClose: () => void }) {
   }, [list.length, onClose])
   return (
     <Sheet title={t('שינויים שלא נשמרו')} onClose={onClose} closeLabel={t('סגירה')}>
-      <p className="muted small">{t('השרת סירב לשינויים האלה. אפשר לנסות שוב או לוותר עליהם.')}</p>
+      <p className="muted small">{t('השרת לא קיבל את השינויים האלה. אפשר לנסות שוב או לוותר עליהם.')}</p>
       <div className="stack">
         {list.map((p) => (
           <div key={p.id} className="card">
@@ -130,16 +130,12 @@ export function OfflineBanner({ since }: { since: number | null }) {
   const lead = parts.join(' · ')
   return (
     <>
-    <div
-      role="status"
-      className="small"
-      style={{ background: 'var(--accent-soft)', color: 'var(--accent)', padding: '6px 20px', textAlign: 'center' }}
-    >
-      {lead}
+    <div role="status" className="net-bar small" data-state={failed > 0 ? 'failed' : 'waiting'}>
+      {lead && <span>{lead}</span>}
       {failed > 0 && (
         <>
-          {lead && ' · '}
-          <button className="link" style={{ color: 'inherit', textDecoration: 'underline' }} onClick={() => setShowFailed(true)}>
+          {lead && <span aria-hidden="true">·</span>}
+          <button className="link" onClick={() => setShowFailed(true)}>
             {failed === 1 ? t('שינוי אחד לא נשמר') : t('{n} שינויים לא נשמרו', { n: failed })}
           </button>
         </>

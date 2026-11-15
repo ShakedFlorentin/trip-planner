@@ -5,6 +5,7 @@ import { EN_A } from './en-a'
 import { EN_B } from './en-b'
 import { EN_C } from './en-c'
 import { EN_MONEY } from './en-money'
+import { EN_UX } from './en-ux'
 import { EN_SHARED } from './en-shared'
 
-export const EN: Record<string, string> = { ...EN_SHARED, ...EN_A, ...EN_B, ...EN_C, ...EN_MONEY }
+export const EN: Record<string, string> = { ...EN_SHARED, ...EN_A, ...EN_B, ...EN_C, ...EN_MONEY, ...EN_UX }

@@ -3,7 +3,8 @@ import { Link2, MapPin } from 'lucide-react'
 import { supabase } from '../supabase'
 import { CARD_STYLE, CATEGORIES, CITY_HE, type Candidate, type DayInfo, type Place, type Trip } from '../types'
 import { cityLabel, errorText, mutate } from '../lib'
-import { isEn, t } from '../i18n'
+import { isEn, locale, t } from '../i18n'
+import { ask } from '../toast'
 import { Icon } from '../icons'
 import { Sheet } from '../ui'
 import type { PlanItem } from './planUtils'
@@ -78,7 +79,7 @@ export function buildSnapshot(opts: {
         city = sorted[0][0]  // already in Hebrew
       }
     }
-    if (stops.length) out.push({ day: d, city, stops })
+    if (stops.length) out.push({ day: d, city: city ? (CITY_HE[city] ?? city) : city, stops })
   }
   const snap: SharedSnapshot = { v: 1, num_days: trip.num_days, days: out }
   if (opts.withName && trip.name.trim()) snap.name = trip.name.trim().slice(0, NAME_MAX)
@@ -104,7 +105,7 @@ export function PlanList({ snap }: { snap: SharedSnapshot }) {
         <section key={d.day} className="card">
           <h3>
             {t('יום {day}', { day: d.day })}
-            {d.city ? ` · ${cityLabel(d.city)}` : ''}
+            {d.city ? ` · ${cityLabel(CITY_HE[d.city] ?? d.city)}` : ''}
           </h3>
           <ol className="share-stops">
             {d.stops.map((s, n) => (
@@ -162,6 +163,7 @@ export function ShareSheet(props: {
   }, [trip.id])
 
   const snap = useMemo(() => buildSnapshot({ ...props, withName, withTips }), [props.days, props.items, props.places, props.cards, trip, withName, withTips])
+  const anyTips = useMemo(() => buildSnapshot({ ...props, withName: false, withTips: true }).days.some((d) => d.stops.some((x) => x.tip)), [props.days, props.items, props.places, props.cards, trip])
   const total = snap.days.reduce((n, d) => n + d.stops.length, 0)
 
   const publish = async () => {
@@ -184,7 +186,8 @@ export function ShareSheet(props: {
   }
 
   const stop = async () => {
-    if (!active || !confirm(t('להפסיק את השיתוף? הקישור יפסיק לעבוד.'))) return
+    if (!active) return
+    if (!(await ask({ title: t('להפסיק את השיתוף?'), description: t('הקישור יפסיק לעבוד לכל מי שקיבל אותו.'), confirmLabel: t('הפסקת שיתוף'), danger: true }))) return
     if (!navigator.onLine) return setNote(t('אין אינטרנט. נסו שוב כשיש קליטה.'))
     if (await mutate(supabase.from('shared_plans').update({ revoked_at: new Date().toISOString() }).eq('slug', active.slug))) setActive(null)
   }
@@ -212,6 +215,7 @@ export function ShareSheet(props: {
         ) : active ? (
           <>
             <p>{t('המסלול משותף. כל מי שיש לו את הקישור יכול לראות אותו, בלי להתחבר.')}</p>
+            <p className="muted small">{t('שותף ב-{date}', { date: new Date(active.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) })}</p>
             <input readOnly dir="ltr" value={shareUrl(active.slug)} onFocus={(e) => e.currentTarget.select()} aria-label={t('קישור לשיתוף')} />
             <div className="row">
               <button className="primary" onClick={() => send(shareUrl(active.slug))}>
@@ -229,9 +233,11 @@ export function ShareSheet(props: {
             <label className="check-row">
               <input type="checkbox" checked={withName} onChange={(e) => setWithName(e.target.checked)} /> {t('להציג את שם הטיול')}
             </label>
-            <label className="check-row">
-              <input type="checkbox" checked={withTips} onChange={(e) => setWithTips(e.target.checked)} /> {t('לצרף טיפים קצרים מהכרטיסים')}
-            </label>
+            {anyTips && (
+              <label className="check-row">
+                <input type="checkbox" checked={withTips} onChange={(e) => setWithTips(e.target.checked)} /> {t('לצרף טיפים קצרים מהכרטיסים')}
+              </label>
+            )}
             <h3>{t('תצוגה מקדימה')}</h3>
             {snap.name && <div className="big" dir="auto">{snap.name}</div>}
             {total === 0 ? (

@@ -18,7 +18,6 @@ import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
 import Menu from './views/Menu'
 import Settings from './views/Settings'
 import ReportSheet from './views/Report'
-import { Sheet } from './ui'
 import SwipeGame from './views/Swipe'
 import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
@@ -31,7 +30,8 @@ import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
-import { askForRating } from './rating'
+import { OverlayLayer, ask, say } from './toast'
+import { toast } from '@ui-sdk/react/toast'
 import { syncPush } from './push'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
@@ -274,23 +274,28 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [settings, setSettings] = useState(false)
   const [prefs, setPrefs] = useState(false)
   const [reporting, setReporting] = useState(false)
-  // a short message at the bottom ("מעדכנים את המסלול…")
-  const [toast, setToast] = useState('')
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(
     () => () => {
       wandRun.current?.stop()
-      clearTimeout(toastTimer.current)
     },
     [tripId],
   )
-  // once the trip has started, the wand asks first (a stray tap must not re-plan the days ahead)
-  const [askWand, setAskWand] = useState(false)
+  // the wand always asks first (a stray tap must not re-plan the days ahead). The planner keeps every earlier day,
+  // today, ticked stops and anything added or edited by hand (plan-trip/index.ts: fixedItems), and never touches bookings
+  const askThenWand = async () => {
+    if (wandRun.current) return
+    const started = !!trip && currentDay(trip.start_date, trip.num_days) != null
+    const yes = await ask({
+      title: t('לסדר מחדש את הימים הבאים?'),
+      description: started ? t('היום, ימים שעברו ושינויים שעשיתם נשארים כמו שהם.') : t('מה שהוספתם או שינתם בעצמכם נשאר כמו שהוא.'),
+      confirmLabel: t('סדר מחדש'),
+    })
+    if (yes) wand()
+  }
   const wand = () => {
     if (wandRun.current) return
-    clearTimeout(toastTimer.current)
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | undefined
     const run = {
@@ -301,12 +306,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       },
     }
     wandRun.current = run
-    const finish = (msg: string) => {
+    const progress = say(t('מעדכנים את המסלול, כמה שניות…'), { duration: 30_000 })
+    const finish = (msg: string, error = false) => {
       run.stop()
-      setToast(msg)
-      toastTimer.current = setTimeout(() => setToast(''), 2000)
+      toast.dismiss(progress)
+      say(msg, { error, duration: 2500 })
     }
-    setToast(t('מעדכנים את המסלול, כמה שניות…'))
     const read = async () => {
       try {
         const { data } = await supabase.from('plan_state').select('ran_at, dirty, error').eq('trip_id', tripId).maybeSingle()
@@ -325,13 +330,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
-          finish(t('המסלול עודכן'))
-          // a finished plan is a good moment: after the message, the app may ask for a rating (src/rating.ts)
-          return askForRating(2400)
+          // no rating prompt here: a re-plan is not a moment of delight
+          return finish(t('המסלול עודכן'))
         }
-        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
         timer = setTimeout(poll, 1000)
       }
       timer = setTimeout(poll, 1000)
@@ -485,7 +489,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
-            onClick={() => (trip && currentDay(trip.start_date, trip.num_days) != null ? setAskWand(true) : wand())}
+            onClick={() => void askThenWand()}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -508,6 +512,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
             onOpenDay={openDay}
             onOpenMore={openMore}
             onOpenPlaces={() => setTab('places')}
+            onOpenBookings={() => setTab('bookings')}
             onOpenSettings={() => setSettings(true)}
           />
         )}
@@ -527,11 +532,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           </button>
         ))}
       </nav>
-      {toast && (
-        <div className="toast" role="status">
-          {toast}
-        </div>
-      )}
+      <OverlayLayer />
       {menu && (
         <Menu
           me={me}
@@ -543,22 +544,6 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           onLeave={props.onLeave}
           onReport={() => setReporting(true)}
         />
-      )}
-      {askWand && (
-        <Sheet
-          title={t('לסדר מחדש את הימים שלפנינו?')}
-          closeLabel={t('ביטול')}
-          onClose={() => setAskWand(false)}
-          action={{
-            label: t('סידור מחדש'),
-            onClick: () => {
-              setAskWand(false)
-              wand()
-            },
-          }}
-        >
-          <p className="muted">{t('ימים שעברו נשארים כמו שהם.')}</p>
-        </Sheet>
       )}
       {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
       {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}

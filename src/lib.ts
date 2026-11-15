@@ -5,6 +5,7 @@ import type { CardText, Member } from './types'
 import { isEn, locale, t } from './i18n'
 import { CACHE_PREFIX, readCache, writeCache } from './cache'
 import { dropTableStores, tableStore } from './tableStore'
+import { say } from './toast'
 
 export { readCache, writeCache }
 
@@ -139,16 +140,18 @@ export const keepRanges = (s: string) =>
     // word, instead of the hyphen sticking to the English before it ("Shibuya Sky-ו teamLab") (78)
     .replace(/([\u05D0-\u05EA])-(?=[A-Za-z0-9])/g, '$1-\u200F')
 
-/** A save failed: say so in plain Hebrew, and say it's the connection when there's no network. */
+/** A save failed: plain words in the app's language. Never the server's raw text (policies, SQL, codes). */
 export function errorText(message: string) {
-  return !navigator.onLine || /failed to fetch|network|load failed/i.test(message)
-    ? t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
-    : t('שגיאה: {message}', { message })
+  if (!navigator.onLine || /failed to fetch|network|load failed|timeout|timed out/i.test(message)) return t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
+  if (/row-level security|violates row|permission denied|not allowed|jwt|unauthori[sz]ed|forbidden/i.test(message)) return t('אין לכם הרשאה לשינוי הזה בטיול.')
+  if (/duplicate key|already exists|unique/i.test(message)) return t('זה כבר קיים.')
+  if (/violates (check|foreign key|not-null)|invalid input|null value/i.test(message)) return t('משהו בפרטים לא תקין, ולכן לא נשמר.')
+  return t('לא הצלחנו לשמור. נסו שוב בעוד רגע.')
 }
 
 export async function mutate(promise: PromiseLike<{ error: { message: string } | null }>) {
   const { error } = await promise
-  if (error) alert(errorText(error.message))
+  if (error) say(errorText(error.message), { error: true, duration: 6000 })
   return !error
 }
 
@@ -193,6 +196,17 @@ export function dayParts(d: Date | null) {
 }
 
 /** Today's trip day (1-based) by the date in Japan, or null when not currently on the trip. */
+/** Tokyo's clock as "HH:MM", refreshed every 30 seconds. */
+export function useTokyoHM() {
+  const hm = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  const [v, setV] = useState(hm)
+  useEffect(() => {
+    const id = setInterval(() => setV(hm()), 30000)
+    return () => clearInterval(id)
+  }, [])
+  return v
+}
+
 export function currentDay(start: string | null, numDays: number): number | null {
   if (!start) return null
   // the trip runs on Japan's calendar, whatever timezone the phone is still set to

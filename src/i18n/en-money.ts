@@ -4,7 +4,7 @@ export const EN_MONEY: Record<string, string> = {
   'שינוי אחד לא נשמר': 'One change could not be saved',
   '{n} שינויים לא נשמרו': '{n} changes could not be saved',
   'שינויים שלא נשמרו': 'Changes that could not be saved',
-  'השרת סירב לשינויים האלה. אפשר לנסות שוב או לוותר עליהם.': 'The server turned these changes down. You can try again or let them go.',
+  'השרת לא קיבל את השינויים האלה. אפשר לנסות שוב או לוותר עליהם.': 'The server did not accept these changes. You can try again or let them go.',
   'לנסות שוב': 'Try again',
   'לוותר': 'Discard',
   'הוספה: {what}': 'Added: {what}',

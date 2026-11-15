@@ -3,6 +3,7 @@ import { supabase } from '../supabase'
 import type { Expense, Member, Trip } from '../types'
 import { couplesOf, fmtDay, mutate, useTripTable } from '../lib'
 import { t } from '../i18n'
+import { ask } from '../toast'
 import { balances, convert, coupleTotals, fmtAmount, fmtMoney, parseAmount, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
 import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
@@ -212,7 +213,7 @@ export default function Expenses({ trip, members, userId }: Props) {
                   ? setSettle({ t: { from: e.paid_by, to: e.split_among[0], amount: toMinor(Number(e.amount), e.currency) }, row: e })
                   : setEdit(e)
               const remove = async () => {
-                if (confirm(t('למחוק את "{title}"?', { title: settlement ? t('החזר') : e.title }))) await mutate(supabase.from('expenses').delete().eq('id', e.id))
+                if (await ask({ title: t('למחוק את "{title}"?', { title: settlement ? t('החזר') : e.title }), confirmLabel: t('מחיקה'), danger: true })) await mutate(supabase.from('expenses').delete().eq('id', e.id))
               }
               return (
                 <SwipeRow
@@ -359,10 +360,10 @@ function ExpenseForm(props: {
         .limit(1)
         .maybeSingle()
       const by = t(members.find((m) => m.user_id === twin?.created_by)?.display_name ?? '')
-      const ask = by
-        ? t('כבר יש הוצאה "{title}" באותו סכום וביום, נרשמה על ידי {by}. לרשום שוב?', { title: twin?.title ?? '', by })
-        : t('כבר יש הוצאה "{title}" באותו סכום וביום. לרשום שוב?', { title: twin?.title ?? '' })
-      if (twin && !confirm(ask)) {
+      const twinText = by
+        ? t('כבר יש הוצאה "{title}" באותו סכום וביום, נרשמה על ידי {by}.', { title: twin?.title ?? '', by })
+        : t('כבר יש הוצאה "{title}" באותו סכום וביום.', { title: twin?.title ?? '' })
+      if (twin && !(await ask({ title: t('לרשום שוב?'), description: twinText, confirmLabel: t('לרשום שוב') }))) {
         setBusy(false)
         return
       }
@@ -377,12 +378,18 @@ function ExpenseForm(props: {
   }
 
   const remove = async () => {
-    if (!x.id || !confirm(t('למחוק את "{title}"?', { title: x.title ?? '' }))) return
+    if (!x.id || !(await ask({ title: t('למחוק את "{title}"?', { title: x.title ?? '' }), confirmLabel: t('מחיקה'), danger: true }))) return
     if (await mutate(supabase.from('expenses').delete().eq('id', x.id))) props.onClose()
   }
 
   return (
-    <Sheet title={x.id ? t('עריכת הוצאה') : t('הוצאה חדשה')} onClose={props.onClose}>
+    <Sheet
+      title={x.id ? t('עריכת הוצאה') : t('הוצאה חדשה')}
+      onClose={props.onClose}
+      closeLabel={t('ביטול')}
+      action={{ label: busy ? t('שומר…') : t('שמירה'), onClick: save, disabled: busy }}
+    >
+      {err && <p className="msg" role="alert">{err}</p>}
       <div className="exp-amount">
         <Field label={t('סכום')}>
           <input
@@ -448,10 +455,6 @@ function ExpenseForm(props: {
       <Field label={t('תאריך')}>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </Field>
-      {err && <p className="msg" role="alert">{err}</p>}
-      <button className="primary" onClick={save} disabled={busy}>
-        {busy ? t('שומר…') : t('שמירה')}
-      </button>
       {x.id && (
         <button className="danger" onClick={remove}>
           {t('מחיקה')}
@@ -503,7 +506,8 @@ function SettleSheet(props: {
   }
 
   const remove = async () => {
-    if (row && confirm(t('למחוק את ההחזר?')) && (await mutate(supabase.from('expenses').delete().eq('id', row.id)))) props.onClose()
+    if (!row || !(await ask({ title: t('למחוק את ההחזר?'), confirmLabel: t('מחיקה'), danger: true }))) return
+    if (await mutate(supabase.from('expenses').delete().eq('id', row.id))) props.onClose()
   }
 
   return (
