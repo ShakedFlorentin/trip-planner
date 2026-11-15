@@ -221,7 +221,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
           <Icon as={Languages} /> {t('תרגום')}
         </button>
         <button className="secondary" onClick={() => onOpenMore('money')}>
-          <Icon as={Wallet} /> {t('כסף')}
+          <Icon as={Wallet} /> {t('הוצאות')}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
       )}
 
       <section className="card">
-        <h3>{t('משתתפים')}</h3>
+        <h3 className="card-h3">{t('משתתפים')}</h3>
         <div className="chips">
           {members.map((m) => (
             <span key={m.user_id} className="chip">

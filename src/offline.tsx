@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { CircleAlert, CloudUpload, WifiOff } from 'lucide-react'
 import { t } from './i18n'
+import { Icon } from './icons'
 import { discardFailed, failedChanges, onOutbox, pending, retryFailed } from './outbox'
 import { Sheet } from './ui'
 
@@ -131,6 +133,7 @@ export function OfflineBanner({ since }: { since: number | null }) {
   return (
     <>
     <div role="status" className="net-bar small" data-state={failed > 0 ? 'failed' : 'waiting'}>
+      <Icon as={failed > 0 ? CircleAlert : !online ? WifiOff : CloudUpload} />
       {lead && <span>{lead}</span>}
       {failed > 0 && (
         <>

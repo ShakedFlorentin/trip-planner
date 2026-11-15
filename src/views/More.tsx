@@ -12,7 +12,7 @@ import { Sheet } from '../ui'
 import { Baby as BabyIcon, Languages, ListChecks, ShieldAlert, Wallet } from 'lucide-react'
 
 export const MORE_TABS = [
-  { id: 'money', label: t('כסף'), icon: Wallet },
+  { id: 'money', label: t('הוצאות'), icon: Wallet },
   { id: 'lists', label: t('רשימות'), icon: ListChecks },
   { id: 'info', label: t('חירום'), icon: ShieldAlert },
   { id: 'say', label: t('תרגום'), icon: Languages },

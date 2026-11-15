@@ -16,7 +16,9 @@ import Bookings from './views/Bookings'
 import Places from './views/Places'
 import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
 import Menu from './views/Menu'
+import { Avatar } from './avatar'
 import Settings from './views/Settings'
+import { ReplanSheet } from './views/Replan'
 import ReportSheet from './views/Report'
 import SwipeGame from './views/Swipe'
 import Onboarding, { useProfile } from './views/Onboarding'
@@ -30,7 +32,7 @@ import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
-import { OverlayLayer, ask, say } from './toast'
+import { OverlayLayer, say } from './toast'
 import { toast } from '@ui-sdk/react/toast'
 import { syncPush } from './push'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
@@ -284,15 +286,10 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   )
   // the wand always asks first (a stray tap must not re-plan the days ahead). The planner keeps every earlier day,
   // today, ticked stops and anything added or edited by hand (plan-trip/index.ts: fixedItems), and never touches bookings
-  const askThenWand = async () => {
+  const [replanning, setReplanning] = useState(false)
+  const askThenWand = () => {
     if (wandRun.current) return
-    const started = !!trip && currentDay(trip.start_date, trip.num_days) != null
-    const yes = await ask({
-      title: t('לסדר מחדש את הימים הבאים?'),
-      description: started ? t('היום, ימים שעברו ושינויים שעשיתם נשארים כמו שהם.') : t('מה שהוספתם או שינתם בעצמכם נשאר כמו שהוא.'),
-      confirmLabel: t('סדר מחדש'),
-    })
-    if (yes) wand()
+    setReplanning(true)
   }
   const wand = () => {
     if (wandRun.current) return
@@ -489,15 +486,13 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
-            onClick={() => void askThenWand()}
+            onClick={askThenWand}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
           </button>
         )}
-        <button className="menu-btn" aria-label={t('תפריט')} onClick={() => setMenu(true)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+        <button className="menu-btn" aria-label={me ? t('חשבון') + ', ' + me : t('חשבון')} aria-haspopup="dialog" aria-expanded={menu} onClick={() => setMenu(true)}>
+          <Avatar name={me} size="m" look="accent" decorative />
         </button>
       </header>
       <OfflineBanner since={stale ? syncedAt : null} />
@@ -536,6 +531,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       {menu && (
         <Menu
           me={me}
+          trip={trip}
           hasBaby={hasBaby}
           onClose={() => setMenu(false)}
           onTool={setTool}
@@ -547,6 +543,15 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       )}
       {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
       {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}
+      {replanning && trip && (
+        <ReplanSheet
+          trip={trip}
+          onClose={(go) => {
+            setReplanning(false)
+            if (go) wand()
+          }}
+        />
+      )}
       {prefs && <PrefsSheet userId={props.userId} onClose={() => setPrefs(false)} />}
       {reporting && (
         <ReportSheet trip={trip} me={me} from={(tool && MORE_LABEL[tool]) || TABS.find((x) => x.id === tab)?.label || tab} onClose={() => setReporting(false)} />
@@ -556,7 +561,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   )
 }
 
-const MORE_LABEL: Record<MoreTab, string> = { money: t('כסף'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
+const MORE_LABEL: Record<MoreTab, string> = { money: t('הוצאות'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
 
 
 function LoadError({ onRetry }: { onRetry: () => void }) {

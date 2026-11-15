@@ -1,4 +1,4 @@
-import { ReactNode, useLayoutEffect, useRef, useState } from 'react'
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
 import { Tabs as SdkTabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
@@ -19,7 +19,12 @@ export function Sheet(props: {
   closeLabel?: string
   tall?: boolean
 }) {
-  const [open, setOpen] = useState(true)
+  // mount closed and open on the next frame, so every sheet slides up (a sheet mounted open just appears)
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setOpen(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
   const openedAt = useRef(performance.now())
   // a sheet is mounted while it is open: it slides out first, and the parent hears about it when it has settled
   const { onClose } = props
@@ -89,7 +94,7 @@ function SheetHead(props: { title: string; closeLabel?: string; action?: { label
           {props.action.label}
         </button>
       ) : (
-        <span />
+        <span className="sheet-end" data-sheet-end />
       )}
     </div>
   )

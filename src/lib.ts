@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { supabase } from './supabase'
 import { onOutbox, withPending } from './outbox'
-import type { CardText, Member } from './types'
+import { CITY_HE, type CardText, type Member } from './types'
 import { isEn, locale, t } from './i18n'
 import { CACHE_PREFIX, readCache, writeCache } from './cache'
 import { dropTableStores, tableStore } from './tableStore'
@@ -310,7 +310,13 @@ export function localizeCard<T extends object>(row: T): T {
 
 /** A city as the app shows it: the Hebrew names the database keeps ("טוקיו / קיוטו"), in the app's language. */
 export function cityLabel(city: string | null | undefined) {
-  return city ? city.split(' / ').map((c) => t(c.trim())).join(' / ') : ''
+  return city ? city.split(' / ').map((c) => t(cityHe(c))).join(' / ') : ''
+}
+
+/** A stored city as its Hebrew name: some rows keep the English slug ("yokohama"), which has to read "Yokohama" in English. */
+export function cityHe(city: string | null | undefined) {
+  const c = (city ?? '').trim()
+  return CITY_HE[c.toLowerCase()] ?? c
 }
 
 /** The couples in the trip, in a stable order. */

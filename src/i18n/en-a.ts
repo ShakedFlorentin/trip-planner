@@ -178,7 +178,6 @@ export const EN_A: Record<string, string> = {
   'מראה': 'Appearance',
 
   // More
-  'כסף': 'Money',
   'רשימות': 'Lists',
   'תינוק': 'Baby',
 

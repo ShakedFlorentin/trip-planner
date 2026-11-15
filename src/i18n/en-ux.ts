@@ -1,5 +1,7 @@
 // English text for the UX-review fixes (messages, questions, plan marks)
 export const EN_UX: Record<string, string> = {
+  'העתקת מספר האישור: {code}': 'Copy the confirmation number: {code}',
+  'אפשר להעתיק את הקוד מכאן': 'You can copy the code from here',
   'הודעות': 'Messages',
   'ביטול הפעולה': 'Undo',
   'לסדר מחדש את הימים הבאים?': 'Re-plan the coming days?',

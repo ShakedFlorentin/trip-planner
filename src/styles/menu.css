@@ -1,0 +1,32 @@
+/* The account sheet (views/Menu.tsx): the shared Sheet, with Done at the end in the accent colour like the approved mock */
+.sheet:has(.acct) .sheet-close { grid-column: 3; justify-self: end; color: var(--accent); font-weight: 600; }
+.sheet:has(.acct) .sheet-body { gap: 0; padding-top: var(--s-2); padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom)); }
+.acct { display: flex; flex-direction: column; gap: var(--s-4); }
+/* rows: the shared group rows, with an icon at the start, so the hairline starts at the text */
+.acct-group { --row-inset: calc(var(--s-4) + var(--icon-s) + var(--s-3)); }
+.acct-group .group-row .ic { width: var(--icon-s); height: var(--icon-s); }
+.acct-group .group-row > .lead { color: var(--muted); }
+.acct-group .group-row.danger { font-weight: 400; }
+.acct-group .group-row:focus-visible { outline-offset: -3px; }
+
+/* the person: a 52px avatar, the name at title size, the trip and its dates under it; the preferences row follows */
+.acct-id { display: flex; align-items: center; gap: var(--s-3); min-height: 72px; padding: var(--s-3) var(--s-4); }
+.acct-id-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.acct-id-text b { font-size: var(--fs-title); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.acct-id-text small { font-size: var(--fs-footnote); color: var(--muted); }
+.acct .acct-id + .group-row::before { inset-inline-start: var(--s-4); }
+
+/* "More": the rarely used rows fold under it; the trigger is a plain row whose chevron turns */
+.acct-more-trigger > .k { color: var(--text); }
+.acct .acct-more-trigger { padding-inline-start: calc(var(--s-4) + var(--icon-s) + var(--s-3)); }
+.acct-more-chev { transition: rotate var(--dur-2) var(--ease); }
+.acct-more-trigger[data-open] .acct-more-chev { rotate: 180deg; }
+.acct-more [data-slot='collapsible-panel'] { height: var(--collapsible-panel-height); overflow: hidden; transition: height var(--dur-2) var(--ease); }
+.acct-more [data-slot='collapsible-panel']:is([data-starting-style], [data-ending-style]) { height: 0; }
+
+/* the photo-review row (views/PlacePhotos.tsx, shown to the admin only) wears the same plain icon, not a grey tile */
+.acct-group .menu-tile { width: var(--icon-s); height: var(--icon-s); display: grid; place-items: center; background: none !important; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-more-chev, .acct-more [data-slot='collapsible-panel'] { transition: none; }
+}
