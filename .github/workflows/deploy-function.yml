@@ -49,7 +49,7 @@ jobs:
         run: |
           case "$FUNCTION" in
             plan-trip|card-photos|card-facts) JWT_FLAG="--no-verify-jwt" ;;
-            parse-booking|suggest-place) JWT_FLAG="--verify-jwt" ;;
+            parse-booking|suggest-place) JWT_FLAG="" ;;
             *) echo "unknown function: $FUNCTION"; exit 1 ;;
           esac
           supabase functions deploy "$FUNCTION" --project-ref "$PROJECT_REF" $JWT_FLAG --use-api --yes
