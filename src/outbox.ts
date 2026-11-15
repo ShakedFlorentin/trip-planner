@@ -24,8 +24,9 @@ type Pending = {
 const KEY = 'outbox'
 const WRITES = new Set(['POST', 'PATCH', 'DELETE'])
 // tables whose rows have a uuid `id`: a row added offline gets its id here, so a later edit or delete of it, made
-// before it reached the server, points at the same row
-const HAS_ID = new Set(['itinerary_items', 'places', 'expenses', 'checklist_items', 'bookings', 'essentials', 'candidates', 'reports', 'trip_stays'])
+// before it reached the server, points at the same row. Not `reports`: the database lets the app write only its
+// text columns there, so a row id made here would be refused
+const HAS_ID = new Set(['itinerary_items', 'places', 'expenses', 'checklist_items', 'bookings', 'essentials', 'candidates', 'trip_stays'])
 // the columns that make a row unique, for laying an upsert over the rows on screen
 const ROW_KEY: Record<string, string[]> = { swipes: ['trip_id', 'candidate_id', 'user_id'], day_info: ['trip_id', 'day'] }
 

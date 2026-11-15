@@ -26,4 +26,5 @@ export const EN_MONEY: Record<string, string> = {
   'קטגוריה': 'Category',
   'הטיול · נראה לכל מי שבטיול': 'Trip · seen by everyone',
   'בטלפון הזה': 'On this phone',
+  'שפה': 'Language',
 }

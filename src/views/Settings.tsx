@@ -468,7 +468,7 @@ export function ThemeRow() {
 
 /** Hebrew or English for the whole app, on this phone. Each option is written in its own language. */
 export function LangRow() {
-  return <SelectRow label="שפה · Language" /* he-only: each language names itself */ value={lang} items={[...LANGS]} onPick={(v) => v !== lang && setLang(v as typeof lang)} />
+  return <SelectRow label={t('שפה')} value={lang} items={[...LANGS]} onPick={(v) => v !== lang && setLang(v as typeof lang)} />
 }
 const LANGS = [
   { value: 'he', label: 'עברית', lang: 'he' }, // he-only
