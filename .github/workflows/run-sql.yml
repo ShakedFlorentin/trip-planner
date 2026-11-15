@@ -1,0 +1,43 @@
+# Runs ONE SQL file from supabase/sql/ on the live database. Started only by hand, from main, after the owner said yes.
+# Uses the Supabase Management API with the repo secret SUPABASE_ACCESS_TOKEN.
+name: Run SQL file
+
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: Path of the SQL file, e.g. supabase/sql/2026-11-16-library-poisoning.sql
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: run-sql
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      PROJECT_REF: wbofjfwbdewgnwjmcpnv
+      FILE: ${{ inputs.file }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check the file
+        run: |
+          [[ "$FILE" =~ ^supabase/sql/[0-9A-Za-z._-]+\.sql$ ]] || { echo "only files in supabase/sql/"; exit 1; }
+          [ -f "$FILE" ] || { echo "no such file"; exit 1; }
+          echo "sha256 $(sha256sum "$FILE")"
+      - name: Run it
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          jq -Rs '{query: .}' "$FILE" > body.json
+          code=$(curl -sS -o out.json -w '%{http_code}' -X POST \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H 'Content-Type: application/json' --data @body.json)
+          echo "HTTP $code"; head -c 2000 out.json; echo
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
