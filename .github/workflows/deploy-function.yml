@@ -48,8 +48,8 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           case "$FUNCTION" in
-            plan-trip|suggest-place|card-photos|card-facts) JWT_FLAG="--no-verify-jwt" ;;
-            parse-booking) JWT_FLAG="--verify-jwt" ;;
+            plan-trip|card-photos|card-facts) JWT_FLAG="--no-verify-jwt" ;;
+            parse-booking|suggest-place) JWT_FLAG="--verify-jwt" ;;
             *) echo "unknown function: $FUNCTION"; exit 1 ;;
           esac
           supabase functions deploy "$FUNCTION" --project-ref "$PROJECT_REF" $JWT_FLAG --use-api --yes
