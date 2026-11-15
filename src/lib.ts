@@ -161,6 +161,30 @@ export function safeUrl(u: string | null | undefined) {
   return v && /^https?:\/\//i.test(v) ? v : undefined
 }
 
+// Photo hosts we render: our own Storage (cards, approved traveller photos) and Google's photo CDN, which the
+// shipped media.json uses for 245 place photos. Anything else could be a tracking pixel or an offensive image.
+const PHOTO_HOSTS = ['lh3.googleusercontent.com']
+const storageHost = (() => {
+  try {
+    return new URL(import.meta.env.VITE_SUPABASE_URL ?? '').hostname
+  } catch {
+    return ''
+  }
+})()
+
+/** A photo address we are willing to put in an <img>: https on our Storage or a known photo CDN, else undefined (the card keeps its icon tile). */
+export function safePhoto(u: string | null | undefined) {
+  const v = u?.trim()
+  if (!v) return undefined
+  try {
+    const x = new URL(v)
+    if (x.protocol !== 'https:' || x.username || x.password) return undefined
+    return x.hostname === storageHost || PHOTO_HOSTS.includes(x.hostname) ? v : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function mapsUrl(query: string) {
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query)
 }

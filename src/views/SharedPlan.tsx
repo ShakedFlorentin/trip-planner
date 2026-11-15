@@ -173,6 +173,8 @@ export function ImportShared(props: { slug: string; userId: string; snap?: Share
         lng: s.lng ?? null,
         tip: s.tip ?? null,
         added_by: name.trim(),
+        // needs the candidates.source column (backend migration); marks the copy so it does not count as a vote for the library
+        source: 'shared_import',
       }))
     const { error } = rows.length ? await supabase.from('candidates').insert(rows) : { error: null }
     setBusy(false)

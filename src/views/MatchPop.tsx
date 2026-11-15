@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Candidate } from '../types'
 import { t } from '../i18n'
+import { safePhoto } from '../lib'
 import '../styles/match.css'
 
 export type Match = { c: Candidate; names: string[]; who: string | null }
@@ -24,7 +25,7 @@ function letters(names: string[]) {
 }
 
 export default function MatchPop({ match, onClose }: { match: Match; onClose: () => void }) {
-  const photo = match.c.photos?.find(Boolean)
+  const photo = match.c.photos?.map(safePhoto).find(Boolean)
   const [broken, setBroken] = useState(false)
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()

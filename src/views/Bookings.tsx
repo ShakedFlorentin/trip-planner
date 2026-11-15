@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, ChevronLeft, Copy, Download, Link as LinkIcon, LogOut, Mail, Map as MapIcon, Paperclip, Plane, Plus, Wand2 } from 'lucide-react'
+import { AlertTriangle, Check, ChevronLeft, Copy, Download, Link as LinkIcon, LogOut, Mail, Map as MapIcon, Paperclip, Plane, Plus, Wand2 } from 'lucide-react'
 import { Timeline, TimelineConnector, TimelineDescription, TimelineItem, TimelineMarker, TimelineTime, TimelineTitle } from '@ui-sdk/react/timeline'
 import { supabase } from '../supabase'
 import { BOOKING_KINDS, BOOKING_TABS, type Booking, type Member, type Trip } from '../types'
@@ -538,6 +538,27 @@ function wallClock(v: string | null, time: string) {
 }
 
 /** Paste a confirmation email or attach its PDF/screenshot; Claude reads it and the bookings are added. */
+type ParsedBooking = Extracted & { who: string | null }
+
+/** The site a link leads to, in plain text ("booking.com"), so a look-alike address stands out. */
+function hostOf(u: string | null | undefined) {
+  const href = safeUrl(u)
+  try {
+    return href ? new URL(href).hostname.replace(/^www\./, '') : ''
+  } catch {
+    return ''
+  }
+}
+
+/** A booking more than 3 days before the trip starts or after it ends is probably not this trip's. */
+function outsideTrip(trip: Trip, b: Extracted) {
+  if (!trip.start_date) return false
+  const day = (v: string | null) => (v ? Date.parse(v.slice(0, 10)) : null)
+  const first = Date.parse(trip.start_date) - 3 * 86400000
+  const last = Date.parse(trip.start_date) + (trip.num_days - 1 + 3) * 86400000
+  return [day(b.starts_at), day(b.ends_at)].some((d) => d != null && (d < first || d > last))
+}
+
 function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | null; onClose: () => void }) {
   const { trip, onClose } = props
   // a confirmation usually covers one couple, so start from the importer's
@@ -549,6 +570,8 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
   const [skipped, setSkipped] = useState(0)
   const [docLost, setDocLost] = useState(false)
   const [err, setErr] = useState('')
+  // what the reader found, shown for a check before anything is saved; a confirmation can be a forged forward
+  const [review, setReview] = useState<{ b: ParsedBooking; ticked: boolean; outside: boolean }[] | null>(null)
 
   const run = async () => {
     if (!text.trim() && !file) return
@@ -569,7 +592,8 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       return
     }
     // times come back as local wall-clock "YYYY-MM-DDTHH:mm", sometimes as a bare date
-    const bookings = (data.bookings as Extracted[]).map((b) => ({
+    // the reader also returns `flags` for review; only booking columns are kept, or the insert would be refused
+    const bookings = (data.bookings as (Extracted & { flags?: unknown })[]).map(({ flags: _flags, ...b }) => ({
       ...b,
       starts_at: wallClock(b.starts_at, b.kind === 'hotel' ? '15:00' : '00:00'),
       ends_at: wallClock(b.ends_at, b.kind === 'hotel' ? '11:00' : '00:00'),
@@ -610,7 +634,19 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       return
     }
 
-    // keep the original confirmation with the booking
+    setSkipped(skipped)
+    setReview(fresh.map((b) => {
+      const outside = outsideTrip(trip, b)
+      return { b, ticked: !outside, outside }
+    }))
+    setBusy(false)
+  }
+
+  /** Saves only the ticked bookings, with the original confirmation kept beside them. */
+  const save = async () => {
+    const chosen = (review ?? []).filter((r) => r.ticked).map((r) => r.b)
+    if (!chosen.length) return
+    setBusy(true)
     let filePath: string | null = null
     let lost = false
     if (file && !isDocType(file.type)) lost = true
@@ -625,13 +661,12 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
     }
     const ok = await mutate(
       supabase.from('bookings').insert(
-        fresh.map((b) => ({ trip_id: trip.id, ...b, file_path: filePath })),
+        chosen.map((b) => ({ trip_id: trip.id, ...b, url: safeUrl(b.url) ?? null, file_path: filePath })),
       ),
     )
     if (ok) {
-      setSkipped(skipped)
       setDocLost(lost)
-      setDone(fresh.map((b) => ({ kind: b.kind, title: b.title })))
+      setDone(chosen.map((b) => ({ kind: b.kind, title: b.title })))
     }
     setBusy(false)
   }
@@ -654,6 +689,53 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
     )
   }
 
+  if (review) {
+    const n = review.filter((r) => r.ticked).length
+    return (
+      <Sheet
+        title={t('בדיקה לפני שמירה')}
+        onClose={onClose}
+        closeLabel={t('ביטול')}
+        action={{ label: n === 1 ? t('שמירת הזמנה אחת') : t('שמירת {n} הזמנות', { n }), onClick: save, disabled: busy || n === 0 }}
+      >
+        <p className="muted small">{t('מייל שהועבר אליכם יכול להיות מזויף. סמנו רק הזמנות שאתם מזהים, ובדקו לאיזה אתר הקישור מוביל.')}</p>
+        {err && <p className="msg">{err}</p>}
+        <div className="group imp-list">
+          {review.map((r, i) => {
+            const host = hostOf(r.b.url)
+            // kept left to right, or Hebrew turns the range around
+            const dates = [fmtDateTime(r.b.starts_at), r.b.ends_at && fmtDateTime(r.b.ends_at)].filter(Boolean).join(' – ')
+            return (
+              <label key={i} className="group-row imp-row">
+                <input
+                  type="checkbox"
+                  checked={r.ticked}
+                  onChange={(e) => setReview(review.map((x, j) => (j === i ? { ...x, ticked: e.target.checked } : x)))}
+                />
+                <span className="k">
+                  <span className="imp-title" dir="auto">
+                    {r.b.title}
+                  </span>
+                  <span className="imp-sub">{[BOOKING_KINDS[r.b.kind] ?? BOOKING_KINDS.other, dates && `\u2066${dates}\u2069`, r.b.confirmation && `\u2066${r.b.confirmation}\u2069`].filter(Boolean).join(' · ')}</span>
+                  {host && (
+                    <span className="imp-sub">
+                      {t('קישור:')} <bdi dir="ltr">{host}</bdi>
+                    </span>
+                  )}
+                  {r.outside && (
+                    <span className="imp-sub imp-warn">
+                      <Icon as={AlertTriangle} /> {t('מחוץ לתאריכי הטיול')}
+                    </span>
+                  )}
+                </span>
+              </label>
+            )
+          })}
+        </div>
+      </Sheet>
+    )
+  }
+
   return (
     <Sheet title={t('הוספה מאישור הזמנה')} onClose={onClose}>
       <p className="muted small">
@@ -668,7 +750,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       </Field>
       {err && <p className="msg">{err}</p>}
       <button className="primary" onClick={run} disabled={busy || (!text.trim() && !file)}>
-        {busy ? t('קורא את האישור…') : t('קריאה והוספה')}
+        {busy ? t('קורא את האישור…') : t('קריאה ובדיקה')}
       </button>
     </Sheet>
   )

@@ -10,4 +10,11 @@ export const EN_REDESIGN: Record<string, string> = {
   'לוקח': 'Takes',
   'ברשימה של': 'On the list of',
   'נאהב על ידי': 'Liked by',
+  'בדיקה לפני שמירה': 'Check before saving',
+  'שמירת הזמנה אחת': 'Save 1 booking',
+  'שמירת {n} הזמנות': 'Save {n} bookings',
+  'מייל שהועבר אליכם יכול להיות מזויף. סמנו רק הזמנות שאתם מזהים, ובדקו לאיזה אתר הקישור מוביל.': 'A forwarded email can be fake. Tick only bookings you recognise, and check which site the link goes to.',
+  'קישור:': 'Link:',
+  'מחוץ לתאריכי הטיול': 'Outside the trip dates',
+  'קריאה ובדיקה': 'Read and check',
 }

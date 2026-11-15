@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { ExternalLink, Globe, MapPin, Play } from 'lucide-react'
 import { Sheet } from './ui'
 import { t } from './i18n'
-import { mapsUrl, safeUrl } from './lib'
+import { mapsUrl, safePhoto, safeUrl } from './lib'
 import { Icon, type LucideIcon } from './icons'
 
 type Media = {
@@ -17,13 +17,25 @@ type Media = {
 
 /** Embed URL for an Instagram post/reel or TikTok video; null when the id can't be parsed. */
 export function videoEmbed(m: Media): { embed: string | null; href: string; kind: 'instagram' | 'tiktok' } | null {
-  if (m.instagram_url) {
-    const id = m.instagram_url.match(/instagram\.com\/(?:p|reel|reels|tv)\/([\w-]+)/i)?.[1]
-    return { kind: 'instagram', href: m.instagram_url, embed: id ? `https://www.instagram.com/p/${id}/embed` : null }
+  // the link must really be on that site (a plain pattern match lets "https://evil.com/?instagram.com/p/x" through)
+  const on = (u: string | null | undefined, site: string) => {
+    const href = safeUrl(u)
+    try {
+      const h = href ? new URL(href).hostname : ''
+      return href && (h === site || h.endsWith('.' + site)) ? href : null
+    } catch {
+      return null
+    }
   }
-  if (m.tiktok_url) {
-    const id = m.tiktok_url.match(/tiktok\.com\/.*?\/video\/(\d+)/i)?.[1]
-    return { kind: 'tiktok', href: m.tiktok_url, embed: id ? `https://www.tiktok.com/embed/v2/${id}` : null }
+  const ig = on(m.instagram_url, 'instagram.com')
+  if (ig) {
+    const id = ig.match(/instagram\.com\/(?:p|reel|reels|tv)\/([\w-]+)/i)?.[1]
+    return { kind: 'instagram', href: ig, embed: id ? `https://www.instagram.com/p/${id}/embed` : null }
+  }
+  const tt = on(m.tiktok_url, 'tiktok.com')
+  if (tt) {
+    const id = tt.match(/tiktok\.com\/.*?\/video\/(\d+)/i)?.[1]
+    return { kind: 'tiktok', href: tt, embed: id ? `https://www.tiktok.com/embed/v2/${id}` : null }
   }
   return null
 }
@@ -116,7 +128,7 @@ export function MediaActions(props: {
 /** Square thumbnail: first photo, else a quiet category icon tile. */
 export function Thumb({ photos, icon }: { photos?: string[] | null; icon: LucideIcon }) {
   const [bad, setBad] = useState(false)
-  const src = photos?.[0]
+  const src = safePhoto(photos?.[0])
   return (
     <span className="thumb" aria-hidden="true">
       {src && !bad ? (

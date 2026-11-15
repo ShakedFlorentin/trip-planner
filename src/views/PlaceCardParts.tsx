@@ -4,6 +4,7 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@ui-sdk/react
 import { ChevronDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { Icon } from '../icons'
 import { t } from '../i18n'
+import { safePhoto } from '../lib'
 import type { ReactNode } from 'react'
 
 /**
@@ -11,8 +12,10 @@ import type { ReactNode } from 'react'
  * card without blurring (600px), and not be a sliver. Until it passes (and when it never does) nothing shows,
  * because no photo beats a weak one.
  */
-export function PlaceHero({ src }: { src: string }) {
+export function PlaceHero({ src: raw }: { src: string }) {
   const [ok, setOk] = useState(false)
+  const src = safePhoto(raw)
+  if (!src) return null
   return (
     <img
       className="pc-photo"

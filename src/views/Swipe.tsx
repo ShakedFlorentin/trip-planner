@@ -2,7 +2,7 @@ import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
-import { cityLabel, couplesOf, keepRanges, mutate, readCache, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
+import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
 import { askForRating } from '../rating'
@@ -481,7 +481,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   const moved = useRef(false)
   const onInfo = useRef(false)
   const style = CARD_STYLE[c.category] ?? CARD_STYLE.sight
-  const photos = (c.photos ?? []).filter((u) => !broken.has(u))
+  const photos = (c.photos ?? []).filter((u) => safePhoto(u) && !broken.has(u))
   const cur = photos[Math.min(photo, photos.length - 1)]
   useEffect(() => () => stop.current?.(), [])
   // how long the top card is looked at, and whether its photos and details are opened (src/look.ts, step 11)
