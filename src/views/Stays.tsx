@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { DrawerClose } from '@ui-sdk/react/drawer'
 import { BedDouble, Bus, CalendarRange, ChevronLeft, Lock, MapPin, Minus, Plus, Search, Ticket, TrainFront, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { askSplit, suggestSplits, type NightCount, type SplitAlt } from '../stays'
@@ -247,33 +248,47 @@ export function SplitStart({ open, onBooked, onNights, onSuggest, onLater }: { o
     { icon: CalendarRange, title: t('יודעים כמה לילות בכל עיר'), line: t('בוחרים ערים ולילות, ואנחנו מסדרים לפי הטיסות'), go: onNights },
     { icon: Wand2, title: t('רק טיסות, תציעו לנו'), line: t('חלוקה לפי הטיסות ומה שמקובל בכל עיר'), go: onSuggest },
   ]
+  // one quiet row keeps the day below it in view; the three ways open in a sheet, and the chosen one runs once the sheet has slid out
+  const [asking, setAsking] = useState(false)
+  const pending = useRef<(() => void) | null>(null)
   return (
-    <section className="card split-start" aria-labelledby="split-start-title">
-      <div className="stay-rec-head">
-        <span className="stay-rec-mark">
+    <>
+      <div className="group split-start">
+        <button className="group-row split-row" onClick={() => setAsking(true)}>
           <Icon as={BedDouble} />
-        </span>
-        <div className="stay-rec-text">
-          <b id="split-start-title">{t('איך מחלקים את הטיול בין ערים?')}</b>
-          <span className="small muted">{open === 1 ? t('ללילה אחד עוד אין עיר') : t('ל-{n} לילות עוד אין עיר', { n: open })}</span>
-        </div>
+          <span className="k">{open === 1 ? t('ללילה אחד עוד אין עיר') : t('ל-{n} לילות עוד אין עיר', { n: open })}</span>
+          <Icon as={ChevronLeft} className="chev flip-ltr" />
+        </button>
       </div>
-      <div className="split-ways">
-        {ways.map((w) => (
-          <button key={w.title} className="split-way" onClick={w.go}>
-            <Icon as={w.icon} />
-            <span>
-              <b>{w.title}</b>
-              <span className="small muted">{w.line}</span>
-            </span>
-            <Icon as={ChevronLeft} className="chev flip-ltr" />
-          </button>
-        ))}
-      </div>
-      <button className="link split-later" onClick={onLater}>
-        {t('אחר כך')}
-      </button>
-    </section>
+      {asking && (
+        <Sheet
+          title={t('איך מחלקים את הטיול בין ערים?')}
+          closeLabel={t('ביטול')}
+          onClose={() => {
+            setAsking(false)
+            const go = pending.current
+            pending.current = null
+            go?.()
+          }}
+        >
+          <div className="split-ways">
+            {ways.map((w) => (
+              <DrawerClose key={w.title} className="split-way" onClick={() => (pending.current = w.go)}>
+                <Icon as={w.icon} />
+                <span>
+                  <b>{w.title}</b>
+                  <span className="small muted">{w.line}</span>
+                </span>
+                <Icon as={ChevronLeft} className="chev flip-ltr" />
+              </DrawerClose>
+            ))}
+          </div>
+          <DrawerClose className="link split-later" onClick={() => (pending.current = onLater)}>
+            {t('אחר כך')}
+          </DrawerClose>
+        </Sheet>
+      )}
+    </>
   )
 }
 

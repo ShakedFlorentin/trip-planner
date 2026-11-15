@@ -1,14 +1,18 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { BedDouble, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
+import { Checkbox, CheckboxIndicator } from '@ui-sdk/react/checkbox'
+import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@ui-sdk/react/menu'
+import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
+import { Timeline, TimelineConnector, TimelineDescription, TimelineItem, TimelineMarker, TimelineTime, TimelineTitle } from '@ui-sdk/react/timeline'
+import { Toolbar, ToolbarButton } from '@ui-sdk/react/toolbar'
 import { supabase } from '../supabase'
 import { CATEGORIES, CITY_HE, TOGETHER, whoOptions, type Booking, type Candidate, type DayInfo, type Member, type Place, type PlanSummary, type Trip } from '../types'
 import { cityLabel, couplesOf, currentDay, errorText, useTokyoHM, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
 import { ask, say } from '../toast'
 import { Empty, Field, Sheet, useRemembered } from '../ui'
-import { WhoChips, validWho } from '../who'
+import { validWho, whoChoices, whoLabel } from '../who'
 import { RingsIcon } from '../rings'
-import { cityColor, cityPhoto } from '../cities'
 import { CARD_ICON, Icon } from '../icons'
 import { reducedMotion } from '../spring'
 import { SwipeRow } from '../swipe'
@@ -183,8 +187,6 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   const topAway = [...awayCounts].sort((a, b) => b[1] - a[1])[0]
   const mainCity = topAway && topAway[1] > homeCount ? topAway[0] : lodging
   const sleepAway = !!lodging && mainCity !== lodging
-  // the city's photo for the day's banner (the same photos as Home's tiles), in colour
-  const dayPhoto = cityPhoto(mainCity || info?.city)
   const nights = hotelNights(nightLines(info?.hotel ?? null, bookings, date, couples, stays, cities).filter((l) => visible(l.who, mode, myCouple)))
   // the legend for the one-ring mark shows the first few times Plan opens on this phone
   const [legend] = useState(() => {
@@ -198,29 +200,34 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   })
   useStripShrink(stripRef)
 
+  const dayTitle = trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })
+
   return (
     <div className="stack">
-      <div className="day-strip" ref={stripRef}>
-        {Array.from({ length: trip.num_days }, (_, i) => i + 1).map((d) => {
-          // the date and weekday lead; the trip's day number only stands in when there is no start date
-          const parts = dayParts(dayDate(trip.start_date, d))
-          const apart = !!days.find((x) => x.day === d)?.who
-          return (
-            <button key={d} className={'day-chip' + (d === day ? ' active' : '')} aria-current={d === today ? 'date' : undefined} onClick={() => setDay(d)}>
-              {/* a day not everyone is together: the one-ring mark in the corner, not a dashed frame (31) */}
-              {apart && (
-                <span className="day-chip-apart" aria-label={t('יום שלא כולם ביחד')}>
-                  <RingsIcon one />
-                </span>
-              )}
-              {d === today && <span className="day-chip-today">{t('היום')}</span>}
-              <span className="day-chip-weekday">{parts?.weekday ?? ''}</span>
-              <b>{parts?.date ?? d}</b>
-              <span className="small day-chip-city">{cityLabel(days.find((x) => x.day === d)?.city)}</span>
-            </button>
-          )
-        })}
-      </div>
+      {/* the days as a plain strip: the date, the weekday above it, today marked, the chosen day filled */}
+      <Tabs className="tabs-root" value={String(day)} onValueChange={(v) => v && setDay(Number(v))}>
+        <TabsList className="day-strip dtabs" ref={stripRef} aria-label={t('ימי הטיול')}>
+          {Array.from({ length: trip.num_days }, (_, i) => i + 1).map((d) => {
+            // the date and weekday lead; the trip's day number only stands in when there is no start date
+            const parts = dayParts(dayDate(trip.start_date, d))
+            const apart = !!days.find((x) => x.day === d)?.who
+            return (
+              <TabsTab key={d} value={String(d)} className="dtab" aria-current={d === today ? 'date' : undefined}>
+                <span className="dtab-wd">{parts?.weekday ?? ''}</span>
+                <b className="dtab-n">{dayDate(trip.start_date, d)?.getDate() ?? d}</b>
+                {/* a day not everyone is together: the one-ring mark under the date */}
+                {apart ? (
+                  <span className="dtab-mark" role="img" aria-label={t('יום שלא כולם ביחד')}>
+                    <RingsIcon one />
+                  </span>
+                ) : (
+                  d === today && <span className="dtab-mark dtab-today">{t('היום')}</span>
+                )}
+              </TabsTab>
+            )
+          })}
+        </TabsList>
+      </Tabs>
       {legend && days.some((x) => x.who) && (
         <p className="strip-legend muted small">
           <RingsIcon one /> {t('יום שלא כולם ביחד')}
@@ -244,29 +251,12 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         />
       )}
 
-      {/* the day as in the promo video: its title, then a photo of the day's city with the name on it; whose day it is and
-          where you sleep sit small under the photo. The photo (or the pencil in its corner) opens the day's details */}
-      <section className={'day-head' + (onTrip ? ' on-trip' : '')}>
-        {!onTrip && <h2 className="day-title">{trip.start_date ? fmtDayLong(dayDate(trip.start_date, day)) : t('יום {day}', { day })}</h2>}
-        {mainCity ? (
-          <button
-            className={'day-banner c' + cityColor(mainCity) + (dayPhoto ? ' has-photo' : '')}
-            aria-label={t('{city}, עריכת היום', { city: mainCity })}
-            onClick={() => setEditDay(true)}
-          >
-            {dayPhoto && <img src={dayPhoto} alt="" />}
-            <span className="day-banner-city">{mainCity}</span>
-            <span className="day-banner-edit" aria-hidden="true">
-              <Icon as={Pencil} />
-            </span>
-          </button>
-        ) : (
-          <button className="link day-edit" onClick={() => setEditDay(true)}>
-            <Icon as={Pencil} /> {t('עריכת היום')}
-          </button>
-        )}
-        <div className="day-block">
-        <div className="day-meta">
+      {/* the day: the city, the date and who it is for under it; the filter and the edit button in one toolbar; where you sleep as a hairline row */}
+      <section className="plan-head">
+        <h2 className="plan-city" dir="auto">{mainCity || dayTitle}</h2>
+        <p className="plan-date muted">
+          {mainCity ? dayTitle : null}
+          {mainCity ? ' · ' : null}
           <span className="day-who">
             {info?.who ? (
               <>
@@ -278,12 +268,37 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
               </>
             )}
           </span>
-          {/* where you sleep: one quiet line; a tap opens the stays sheet */}
+        </p>
+        <Toolbar className="plan-tools" aria-label={t('פעולות היום')}>
+          {couples.length > 1 && (
+            <Menu>
+              <ToolbarButton className="chip plan-who" render={<MenuTrigger />}>
+                <span className="plan-who-label">{t('מציג:')}</span> {whoLabel(mode)} <Icon as={ChevronDown} />
+              </ToolbarButton>
+              <MenuContent className="who-menu-list" side="bottom" align="start" sideOffset={6}>
+                <MenuRadioGroup value={mode} onValueChange={(w) => setMode(w as WhoMode)}>
+                  {whoChoices(couples, myCouple).map((w) => (
+                    <MenuRadioItem key={w} value={w} closeOnSelect>
+                      <span>{whoLabel(w)}</span>
+                      <MenuItemIndicator>
+                        <Icon as={Check} />
+                      </MenuItemIndicator>
+                    </MenuRadioItem>
+                  ))}
+                </MenuRadioGroup>
+              </MenuContent>
+            </Menu>
+          )}
+          <ToolbarButton className="plan-edit" aria-label={t('עריכת היום')} onClick={() => setEditDay(true)}>
+            <Icon as={Pencil} />
+          </ToolbarButton>
+        </Toolbar>
+        <div className="plan-hotels">
           {nights.length > 0 ? (
             nights.map((l) => (
-              <button key={l.text} className="day-bed" onClick={() => setShowStays(true)}>
+              <button key={l.text} className="plan-hotel" onClick={() => setShowStays(true)}>
                 <Icon as={BedDouble} />
-                <span>
+                <span className="plan-hotel-text">
                   {l.who && mode === 'all' && <>{t(l.who)}: </>}
                   {sleepAway && <>{t('לינה ב{city}', { city: lodging })} · </>}
                   <bdi className="bed-name">{l.text}</bdi>
@@ -293,72 +308,96 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
               </button>
             ))
           ) : (
-            <button className="day-bed" onClick={() => setShowStays(true)}>
+            <button className="plan-hotel" onClick={() => setShowStays(true)}>
               <Icon as={BedDouble} />
-              <span>{((a) => (a ? t('מומלץ לישון ב{area}', { area: a }) : t('איפה ישנים')))(recommendedArea(summary?.stay_areas, date, info?.who ?? null))}</span>
+              <span className="plan-hotel-text">{((a) => (a ? t('מומלץ לישון ב{area}', { area: a }) : t('איפה ישנים')))(recommendedArea(summary?.stay_areas, date, info?.who ?? null))}</span>
               <Icon as={ChevronLeft} className="chev flip-ltr" />
             </button>
           )}
         </div>
-        {estimateDay && <div className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</div>}
+        {estimateDay && <p className="muted small">{t('השעות הן הערכה עד שמזמינים מלון.')}</p>}
         {info?.notes && <div className="notes day-notes" dir="auto">{keepRanges(info.notes)}</div>}
-        </div>
       </section>
 
-      {couples.length > 1 && <WhoChips couples={couples} mine={myCouple} value={mode} onChange={setMode} />}
-
       {entries.length === 0 && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
-      {sections.map((owner) => (
-        <Fragment key={owner ?? 'all'}>
-          {owner !== undefined && (
-            <h3 className="plan-owner">
-              {owner ? (
-                t(owner)
-              ) : (
-                <>
-                  <Icon as={Users} /> {t(TOGETHER)}
-                </>
-              )}
-            </h3>
-          )}
-          {entries
-            .filter((e) => owner === undefined || e.who === owner)
-            .map((e, n, list) => (
-              <Fragment key={e.key}>
-                {/* how far the next stop is, as the planner counted it */}
-                {n > 0 && <Hop from={list[n - 1]} to={e} pointOf={pointOf} />}
-                {arrivalCard(e) ? (
-                  <ArrivalCard
-                    entry={e}
-                    dayWho={info?.who ?? null}
-                    arrival={arrivalOf(dayArrival, e.who)}
-                    hideMine={mode === 'mine'}
-                    mine={myCouple}
-                    hotel={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.location ?? null}
-                    checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null}
-                  />
+      {sections.map((owner) => {
+        const list = entries.filter((e) => owner === undefined || e.who === owner)
+        // today: the thin "now" line sits before the first stop that has not started yet
+        const nowAt = today === day ? list.findIndex((e) => e.time && e.time > nowHM) : -1
+        return (
+          <Fragment key={owner ?? 'all'}>
+            {owner !== undefined && (
+              <h3 className="plan-owner">
+                {owner ? (
+                  t(owner)
                 ) : (
-                <EntryRow
-                  e={e}
-                  dayWho={info?.who ?? null}
-                  hint={n === 0 && owner === sections[0]}
-                  kind={cardOf(placeOf(e.item))?.serves}
-                  onOpen={(i) => setOpenId(i.id)}
-                  onEdit={setEditItem}
-                  onRemove={remove}
-                  away={((c) => (c && c !== mainCity && c !== lodging ? c : undefined))(awayCity(e.item))}
-                  warning={e.item && (warnings.get(e.item.id) ?? (e.item.auto && e.item.place_id ? issues.get(e.item.place_id) : undefined))}
-                  onMissed={past && e.item?.place_id && !e.item.done ? missed : undefined}
-                  onTick={tick}
-                  isNext={e.key === nextKey}
-                  mineOnly={mode === 'mine'}
-                  mine={myCouple}
-                />
+                  <>
+                    <Icon as={Users} /> {t(TOGETHER)}
+                  </>
                 )}
-              </Fragment>
-            ))}
-        </Fragment>
-      ))}
+              </h3>
+            )}
+            {list.length > 0 && (
+              <Timeline className="pt" aria-label={t('ציר היום')}>
+                {list.map((e, n) => (
+                  <Fragment key={e.key}>
+                    {nowAt > 0 && n === nowAt && (
+                      <TimelineItem className="pt-item pt-now">
+                        <TimelineConnector className="pt-line" />
+                        <TimelineMarker className="pt-node pt-now-dot" />
+                        <div className="pt-content">
+                          <TimelineTitle className="pt-now-title">{t('עכשיו')}</TimelineTitle>{' '}
+                          <TimelineTime className="pt-now-time">{nowHM}</TimelineTime>
+                        </div>
+                      </TimelineItem>
+                    )}
+                    <TimelineItem className="pt-item" data-next={e.key === nextKey ? '' : undefined} data-done={e.done ? '' : undefined}>
+                      <TimelineConnector className="pt-line" />
+                      {arrivalCard(e) ? (
+                        <>
+                          <TimelineMarker className="pt-node pt-dot">
+                            <Icon as={PlaneLanding} />
+                          </TimelineMarker>
+                          <div className="pt-content">
+                            {n > 0 && <Hop from={list[n - 1]} to={e} pointOf={pointOf} />}
+                            <ArrivalCard
+                              entry={e}
+                              dayWho={info?.who ?? null}
+                              arrival={arrivalOf(dayArrival, e.who)}
+                              hideMine={mode === 'mine'}
+                              mine={myCouple}
+                              hotel={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.location ?? null}
+                              checkin={entries.find((x) => x.key.endsWith(':in') && (!x.who || !e.who || x.who === e.who))?.booking?.starts_at?.slice(11, 16) ?? null}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <StopItem
+                          e={e}
+                          ride={n > 0 ? <Hop from={list[n - 1]} to={e} pointOf={pointOf} /> : null}
+                          dayWho={info?.who ?? null}
+                          hint={n === 0 && owner === sections[0]}
+                          kind={cardOf(placeOf(e.item))?.serves}
+                          onOpen={(i) => setOpenId(i.id)}
+                          onEdit={setEditItem}
+                          onRemove={remove}
+                          away={((c) => (c && c !== mainCity && c !== lodging ? c : undefined))(awayCity(e.item))}
+                          warning={e.item && (warnings.get(e.item.id) ?? (e.item.auto && e.item.place_id ? issues.get(e.item.place_id) : undefined))}
+                          onMissed={past && e.item?.place_id && !e.item.done ? missed : undefined}
+                          onTick={tick}
+                          next={e.key === nextKey ? nextLabel(e, nowHM) : undefined}
+                          mineOnly={mode === 'mine'}
+                          mine={myCouple}
+                        />
+                      )}
+                    </TimelineItem>
+                  </Fragment>
+                ))}
+              </Timeline>
+            )}
+          </Fragment>
+        )
+      })}
 
       {spare.length > 0 && <Spare trip={trip} day={day} spare={spare} places={places} />}
 
@@ -422,9 +461,33 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   )
 }
 
-/** One line of the day: a plan item you can tick, open and edit, or a booking moment that is read-only here. */
-export function EntryRow(props: {
+/** Minutes from the Tokyo clock to a stop's time, or null when the stop has no time or has started. */
+function minutesUntil(time: string | null | undefined, nowHM: string) {
+  if (!time) return null
+  const mins = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5))
+  const n = mins(time) - mins(nowHM)
+  return n >= 0 && Number.isFinite(n) ? n : null
+}
+
+/** "Next · in 12 min": a "~" in front of the number when the time is the planner's guess; plain "Next" when no time is ahead. */
+function nextLabel(e: Entry, nowHM: string) {
+  const n = minutesUntil(e.time, nowHM)
+  if (n == null) return t('הבא')
+  const guess = e.item?.auto ? '~' : ''
+  // each number is kept left to right, or Hebrew turns "~12" around
+  const dur = n < 60 ? t('{n} דק׳', { n: `⁦${guess}${n}⁩` }) : t('{h}:{m} ש׳', { h: `⁦${guess}${Math.floor(n / 60)}`, m: `${String(n % 60).padStart(2, '0')}⁩` })
+  return t('הבא · בעוד {n}', { n: dur })
+}
+
+/**
+ * One stop on the day's thread: a plan item you can tick, open and edit, or a booking moment that is read-only here.
+ * The round node on the thread is the tick (a checkbox) for an item and the kind's icon for a booking; the time and the
+ * name sit beside it, the one quiet line under them, and a Directions button (one tap, 44px) when the stop has a place.
+ */
+function StopItem(props: {
   e: Entry
+  /** the ride from the stop before, drawn on the thread above this one */
+  ride?: ReactNode
   /** whose day it is (null: everyone together): a stop shows its own tag only when it differs (28) */
   dayWho?: string | null
   /** the day's first stop: the first time Plan opens it slides open a little, to show that rows swipe (29) */
@@ -439,30 +502,28 @@ export function EntryRow(props: {
   away?: string
   onMissed?: (i: PlanItem) => void
   onTick: (i: PlanItem) => void
-  /** the next stop still ahead today */
-  isNext?: boolean
+  /** the "Next · in N min" line, on the next stop still ahead today */
+  next?: string
   /** the filter is "Ours" and this is my couple */
   mineOnly?: boolean
   mine?: string | null
 }) {
-  const { e, kind, onOpen, onEdit, onRemove, warning, away, onMissed, onTick, isNext, dayWho = null, hint } = props
-  // with "Ours" on, a row that is ours says nothing new, so it carries no couple pill
+  const { e, ride, kind, onOpen, onEdit, onRemove, warning, away, onMissed, onTick, next, dayWho = null, hint } = props
+  // with "Ours" on, a stop that is ours says nothing new, so it carries no couple pill
   const ownTag = e.who !== dayWho && !(props.mineOnly && e.who === props.mine)
   const i = e.item
-  // the promo video's row (a grey card): the time on the start side, the name in bold with one quiet line under it,
-  // and the round tick on the end side (red with a white check once done). The note, the card and the way there are
-  // in the stop's sheet; directions are also the swipe toward the start side
+  const bags = e.key.endsWith(':bags')
   const sub = i ? [CATEGORIES[i.category] ?? i.category, kind && firstSentence(kind)].filter(Boolean).join(' · ') : e.sub || t('הזמנה')
-  const body = (
-    <div className={'plan-row' + (i ? '' : ' plan-booking') + (e.done ? ' done' : '')}>
+  const main = (
+    <div className="pt-main">
       {/* the planner's time is a rough guess: it shows as such until someone sets one */}
-      <span className={'plan-time' + (i?.auto ? ' approx' : '')} title={i?.auto ? t('שעה משוערת') : undefined}>
+      <TimelineTime className={'pt-time' + (i?.auto ? ' approx' : '')} title={i?.auto ? t('שעה משוערת') : undefined}>
         {e.time ? (i?.auto ? '~' + e.time : e.time) : ''}
-      </span>
-      <div className="plan-body" onClick={i ? () => onOpen(i) : undefined}>
+      </TimelineTime>
+      {next && <div className="pt-next">{next}</div>}
+      <TimelineTitle className="pt-title" onClick={i ? () => onOpen(i) : undefined}>
         {/* the stop's name is the control for keyboard and VoiceOver (the whole body also opens it on a tap) */}
-        <div
-          className="plan-title"
+        <span
           {...(i
             ? {
                 role: 'button',
@@ -476,79 +537,82 @@ export function EntryRow(props: {
               }
             : {})}
         >
-          {isNext && <span className="next-mark">{t('הבא')}</span>}
           {e.title}
-        </div>
-        <div className="plan-sub">
-          <span className="plan-kind">{keepRanges(sub)}</span>
-          {ownTag &&
-            (e.who ? (
-              <span className="who-pill">{t(e.who)}</span>
-            ) : (
-              <span className="who-pill">
-                <RingsIcon /> {t('ביחד')}
-              </span>
-            ))}
-          {away && (
-            <span className="who-pill away-pill" title={t('בעיר אחרת מזו שישנים בה היום')}>
-              {t('ב{city}', { city: away })}
+        </span>
+      </TimelineTitle>
+      <TimelineDescription className="pt-sub" onClick={i ? () => onOpen(i) : undefined}>
+        <span className="plan-kind">{keepRanges(sub)}</span>
+        {ownTag &&
+          (e.who ? (
+            <span className="who-pill">{t(e.who)}</span>
+          ) : (
+            <span className="who-pill">
+              <RingsIcon /> {t('ביחד')}
             </span>
-          )}
+          ))}
+        {away && (
+          <span className="who-pill away-pill" title={t('בעיר אחרת מזו שישנים בה היום')}>
+            {t('ב{city}', { city: away })}
+          </span>
+        )}
+      </TimelineDescription>
+      {warning && (
+        <div className="plan-warn">
+          <Icon as={CircleAlert} /> {warning}
         </div>
-        {warning && (
-          <div className="plan-warn">
-            <Icon as={CircleAlert} /> {warning}
-          </div>
+      )}
+      <div className="pt-actions">
+        {/* the way there: one tap, for every stop still ahead; the next one is the day's one filled button */}
+        {e.location && !e.done && !bags && (
+          <a
+            className={'stop-nav' + (next ? ' primary-nav' : '')}
+            href={navUrl(e.location)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={t('ניווט אל {name}', { name: e.title })}
+          >
+            <Icon as={Navigation} /> {t('ניווט')}
+          </a>
         )}
         {i && onMissed && (
-          <button
-            className="action plan-missed"
-            onClick={(ev) => {
-              ev.stopPropagation()
-              onMissed(i)
-            }}
-          >
+          <button className="action plan-missed" onClick={() => onMissed(i)}>
             <Icon as={Undo2} /> {t('לא הגענו')}
           </button>
         )}
       </div>
-      {i ? (
-        <button
-          className="check"
-          aria-label={t('בוצע: {name}', { name: e.title })}
-          aria-pressed={i.done}
-          onClick={() => onTick(i)}
-        >
-          {i.done && <Check size="1em" strokeWidth={3.2} aria-hidden="true" />}
-        </button>
-      ) : e.key.endsWith(':bags') ? (
-        // leaving the bags is a hint, not a stop to tick or navigate to: a quiet icon with no circle
-        <span className="plan-icon quiet" aria-hidden="true">
-          <Icon as={e.icon} />
-        </span>
-      ) : e.location ? (
-        // a booking moment has no sheet: its round icon is the way there
-        <NavLink to={e.location} round icon={e.icon} />
-      ) : (
-        <span className="plan-icon" aria-hidden="true">
-          <Icon as={e.icon} />
-        </span>
-      )}
     </div>
   )
-  return i ? (
-    <SwipeRow
-      hint={hint}
-      start={e.location ? { label: t('ניווט'), icon: Navigation, tone: 'ok', onClick: () => openLink(navUrl(e.location!)) } : undefined}
-      end={[
-        { label: t('עריכה'), icon: Pencil, tone: 'edit', onClick: () => onEdit(i) },
-        { label: t('הסרה'), icon: Trash2, tone: 'del', onClick: () => onRemove(i) },
-      ]}
-    >
-      {body}
-    </SwipeRow>
-  ) : (
-    body
+  return (
+    <>
+      {i ? (
+        <Checkbox className="pt-node pt-tick" checked={!!i.done} onCheckedChange={() => onTick(i)} aria-label={t('בוצע: {name}', { name: e.title })}>
+          <CheckboxIndicator>
+            <Check size="1em" strokeWidth={3.2} aria-hidden="true" />
+          </CheckboxIndicator>
+        </Checkbox>
+      ) : (
+        <TimelineMarker className={'pt-node pt-dot' + (bags ? ' quiet' : '')}>
+          <Icon as={e.icon} />
+        </TimelineMarker>
+      )}
+      <div className="pt-content">
+        {ride}
+        {i ? (
+          <SwipeRow
+            hint={hint}
+            start={e.location ? { label: t('ניווט'), icon: Navigation, tone: 'ok', onClick: () => openLink(navUrl(e.location!)) } : undefined}
+            end={[
+              { label: t('עריכה'), icon: Pencil, tone: 'edit', onClick: () => onEdit(i) },
+              { label: t('הסרה'), icon: Trash2, tone: 'del', onClick: () => onRemove(i) },
+            ]}
+          >
+            {main}
+          </SwipeRow>
+        ) : (
+          main
+        )}
+      </div>
+    </>
   )
 }
 
@@ -580,7 +644,7 @@ function Hop({ from, to, pointOf }: { from: Entry; to: Entry; pointOf: (e: Entry
   // the names Maps knows the places by; the coordinates when a stop has none
   const url = navUrl(to.location || at(b), from.location || at(a), h.walk ? 'walking' : 'transit')
   return (
-    <a className="plan-hop muted small" href={url} target="_blank" rel="noreferrer">
+    <a className="plan-hop pt-ride muted small" href={url} target="_blank" rel="noreferrer">
       <Icon as={h.walk ? Footprints : Route} /> {h.walk ? t('{range} דק׳ הליכה', { range }) : t('{range} דק׳ נסיעה', { range })}
       <Icon as={ChevronLeft} className="plan-hop-go flip-ltr" />
     </a>
@@ -690,7 +754,7 @@ function ItemSheet(props: {
                       {n.name}
                       {n.liked && <Icon as={Heart} className="plan-near-liked" label={t('ברשימה שלכם')} />}
                     </b>
-                    {n.line && <span className="muted small">{keepRanges(n.line)}</span>}
+                    {n.line && <span className="muted small" dir="auto">{keepRanges(n.line)}</span>}
                   </span>
                   {n.mins != null && <span className="muted small plan-near-mins">{t('{n} דק׳ הליכה', { n: n.mins })}</span>}
                 </>
