@@ -4,7 +4,7 @@ import { Share } from '@capacitor/share'
 import { AppLauncher } from '@capacitor/app-launcher'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { Keyboard } from '@capacitor/keyboard'
-import { requestAddLink } from './quickAdd'
+import { requestAdd, requestAddLink, requestGo } from './quickAdd'
 import { settings } from './settings'
 import { isEn } from './i18n'
 import { track } from './track'
@@ -69,8 +69,27 @@ async function takeShared() {
   }
 }
 
+/** The app's own plugin (ios/App/App/QuickAction.swift): what a home-screen quick action, a toogo:// link (widgets) or Siri asked for. */
+const QuickAction = registerPlugin<{
+  take(): Promise<{ action?: string }>
+  addListener(event: 'action', cb: () => void): Promise<PluginListenerHandle>
+}>('QuickAction')
+
+/** Quick action, widget tap or Siri: open the new-expense form, the Translate tool, or the Plan tab at today. */
+async function takeAction() {
+  try {
+    const { action } = await QuickAction.take()
+    if (action === 'add-expense') requestAdd('expense')
+    else if (action === 'translate' || action === 'plan') requestGo(action)
+  } catch {
+    // an app build from before quick actions has no such plugin
+  }
+}
+
 if (isNative) {
   void takeShared()
+  void takeAction()
+  void QuickAction.addListener('action', () => void takeAction()).catch(() => {})
   void ShareInbox.addListener('shared', () => void takeShared()).catch(() => {})
 
   // no web form bar (✓ ∨ ∧) above the keyboard: it made the app look like a website

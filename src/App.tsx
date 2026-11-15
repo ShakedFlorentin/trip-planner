@@ -25,7 +25,9 @@ import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
 import { Loading } from './rings'
-import { useQuickAddRoute } from './quickAdd'
+import { useGoRoute, useQuickAddRoute } from './quickAdd'
+import { widgetsOn } from './widgetData'
+import WidgetSync from './views/WidgetSync'
 import { useSettings, useSettingsKnown } from './settings'
 import { isNative } from './native'
 import Guest from './views/Guest'
@@ -354,6 +356,16 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     setTool(null)
     setTab(kind === 'place' ? 'places' : 'bookings')
   })
+  // a home-screen quick action, a widget or Siri (src/native.ts): Plan at today, or the Translate tool
+  useGoRoute((target) => {
+    setMenu(false)
+    setSearching(false)
+    if (target === 'translate') return setTool('say')
+    setTool(null)
+    const today = trip ? currentDay(trip.start_date, trip.num_days) : null
+    if (today) setDay(today)
+    setTab('plan')
+  })
   useEffect(() => {
     const onScroll = () => setCompact(window.scrollY > 34)
     onScroll()
@@ -471,6 +483,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
 
   return (
     <div className="app">
+      {widgetsOn && <WidgetSync trip={trip} members={members} userId={props.userId} />}
       <header className={'topbar' + (compact ? ' compact' : '')}>
         <span className="topbar-title" aria-hidden={!compact}>
           {TABS.find((t) => t.id === tab)?.label}

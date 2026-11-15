@@ -44,6 +44,25 @@
 	<string>Take a photo of a place or a booking document to add it to the trip.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo of a place or a booking document to add it to the trip.</string>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.shakedflorentin.tripplanner.add-expense</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>ShortcutAddExpense</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>plus.circle</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.shakedflorentin.tripplanner.translate</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>ShortcutTranslate</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>character.bubble</string>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

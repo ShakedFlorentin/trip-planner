@@ -74,3 +74,30 @@ export function useQuickAdd(kind: QuickKind, open: () => void) {
     return () => removeEventListener(EVENT, take)
   }, [kind])
 }
+
+/** Screens a quick action, a widget or Siri opens straight away: the Plan tab at today, the Translate tool. */
+export type GoTarget = 'plan' | 'translate'
+const GO_EVENT = 'go-to'
+// like the wheel's choice, it waits for TripApp when the app was opened signed out or still loading
+let pendingGo: GoTarget | null = null
+
+export function requestGo(target: GoTarget) {
+  pendingGo = target
+  dispatchEvent(new CustomEvent(GO_EVENT))
+}
+
+/** App's side of requestGo: takes the waiting request once, now or when it comes. */
+export function useGoRoute(open: (target: GoTarget) => void) {
+  const cb = useRef(open)
+  cb.current = open
+  useEffect(() => {
+    const take = () => {
+      const target = pendingGo
+      pendingGo = null
+      if (target) cb.current(target)
+    }
+    take()
+    addEventListener(GO_EVENT, take)
+    return () => removeEventListener(GO_EVENT, take)
+  }, [])
+}
