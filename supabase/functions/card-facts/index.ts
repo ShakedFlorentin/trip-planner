@@ -92,14 +92,18 @@ async function fill(admin: SupabaseClient, cid: string, token: string) {
       ...(c.lat == null && f.lat != null ? { lat: f.lat, lng: f.lng } : {}),
     })
     .eq('id', cid)
-  // the library card it came from: every other trip's copy gets it on its next sync
+  // The library card it came from gets the facts only when THIS card created it (place_library.added_from_trip is this
+  // trip): the lookup was fed the card's member-written text, so it must not write into a shared card another trip
+  // made or an admin curated. The re-check below (refresh) is fed no free text, only the card's name, area, address and hours as fenced data, and may write to the library.
   if (c.library_id) {
-    const { data: lib } = await admin.from('place_library').select('en').eq('id', c.library_id).maybeSingle<{ en: Record<string, unknown> | null }>()
-    await admin
-      .from('place_library')
-      .update({ ...columns, address: f.address, en: { ...(lib?.en ?? {}), ...english }, ...(f.tags.length ? { tags: f.tags } : {}) })
-      .eq('id', c.library_id)
-      .is('facts_at', null)
+    const { data: lib } = await admin.from('place_library').select('en,added_from_trip').eq('id', c.library_id).maybeSingle<{ en: Record<string, unknown> | null; added_from_trip: string | null }>()
+    if (lib && lib.added_from_trip === c.trip_id) {
+      await admin
+        .from('place_library')
+        .update({ ...columns, address: f.address, en: { ...(lib.en ?? {}), ...english }, ...(f.tags.length ? { tags: f.tags } : {}) })
+        .eq('id', c.library_id)
+        .is('facts_at', null)
+    }
   }
   // a card already matched waits in the plan on defaults: plan again with the real hours
   await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/plan-trip`, {

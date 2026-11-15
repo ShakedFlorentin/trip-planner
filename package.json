@@ -15,7 +15,9 @@
     "test:rating": "node scripts/rating-test.mjs",
     "test:table": "node scripts/table-test.mjs",
     "test:money": "node scripts/money-test.mjs",
-    "test:widget": "node scripts/widget-test.mjs"
+    "test:widget": "node scripts/widget-test.mjs",
+    "test:suggest-guard": "node scripts/suggest-place-guard-test.mjs",
+    "test:guard": "node scripts/guard-test.mjs"
   },
   "dependencies": {
     "@capacitor/app-launcher": "^8.0.1",

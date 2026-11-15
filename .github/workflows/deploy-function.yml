@@ -11,6 +11,10 @@ on:
         type: choice
         options:
           - plan-trip
+          - suggest-place
+          - card-photos
+          - card-facts
+          - parse-booking
 
 permissions:
   contents: read
@@ -31,8 +35,21 @@ jobs:
       - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           version: 3.1.0
-      # plan-trip checks the planner token or trip membership itself, so the gateway JWT check stays off (as it is live)
+      # The gateway JWT flag, per function:
+      #  - plan-trip, suggest-place: check the planner token / the signed-in user and trip membership themselves (the browser's
+      #    preflight carries no JWT), so the gateway check is off.
+      #  - card-photos, card-facts: called by database triggers through pg_net with the planner token (x-plan-token) and no user
+      #    JWT, and check that token themselves, so the gateway check is off.
+      #  - parse-booking: the app calls it with the member's session JWT and the function runs getUser() on it, so the gateway
+      #    check stays ON (no flag). Before the first deploy of any of these, look at the function's live verify_jwt setting:
+      #    this step sets it to what is written here.
       - name: Deploy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy "$FUNCTION" --project-ref "$PROJECT_REF" --no-verify-jwt --use-api --yes
+        run: |
+          case "$FUNCTION" in
+            plan-trip|suggest-place|card-photos|card-facts) JWT_FLAG="--no-verify-jwt" ;;
+            parse-booking) JWT_FLAG="--verify-jwt" ;;
+            *) echo "unknown function: $FUNCTION"; exit 1 ;;
+          esac
+          supabase functions deploy "$FUNCTION" --project-ref "$PROJECT_REF" $JWT_FLAG --use-api --yes
