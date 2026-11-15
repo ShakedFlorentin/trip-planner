@@ -35,6 +35,57 @@ for (const u of ['http://example.com/', 'https://localhost/', 'https://127.0.0.1
   'https://8.8.8.8/', 'https://example.com:8443/', 'https://u:p@example.com/', 'https://metadata.google.internal/', 'https://intranet/', 'https://printer.local/', 'file:///etc/passwd', 'ftp://example.com/', 'javascript:alert(1)', 'https://[::ffff:7f00:1]/'])
   same(G.publicHttpsAllowed(U(u)), false, `refused: ${u}`)
 
+// ---- DNS check: a public name must not resolve to a private address, on every hop ----
+{
+  for (const ip of ['127.0.0.1', '10.0.0.1', '169.254.169.254', '100.64.0.1', '192.168.1.1', '172.16.0.1', '0.0.0.0', '224.0.0.1', '::', '::1', 'fe80::1', 'fd00::1', 'fc00::1', 'fec0::1', 'ff02::1',
+    '::ffff:127.0.0.1', '::ffff:7f00:1', '0:0:0:0:0:ffff:7f00:1', '::ffff:10.0.0.1', '64:ff9b::1', '2002::1', '::127.0.0.1', 'zzzz::1', 'not-an-ip', '1.2.3', ''])
+    same(G.addressBlocked(ip), true, `addressBlocked: ${JSON.stringify(ip)}`)
+  for (const ip of ['93.184.216.34', '2606:2800:220:1::1', '2606:2800:220:1:248:1893:25c8:1946', '::ffff:808:808'])
+    same(G.addressBlocked(ip), false, `addressBlocked allows: ${ip}`)
+
+  const nf = () => Object.assign(new Error('no records'), { name: 'NotFound' })
+  const fake = (map) => async (h, t) => { const v = map[h]; if (v instanceof Error) throw v; const r = (v ?? {})[t]; if (!r) throw nf(); return r }
+  const warns = []
+  const realWarn = console.warn
+  console.warn = (...a) => warns.push(a.join(' '))
+  const dns = (map, host = 'a.example') => G.dnsAllowed(host, fake(map))
+  same(await dns({ 'a.example': { A: ['93.184.216.34'], AAAA: ['2606:2800:220:1::1'] } }), true, 'dnsAllowed: public A and AAAA')
+  same(await dns({ 'a.example': { A: ['93.184.216.34'] } }), true, 'dnsAllowed: A ok, AAAA NotFound')
+  same(await dns({ 'a.example': { AAAA: ['2606:2800:220:1::1'] } }), true, 'dnsAllowed: AAAA ok, A NotFound')
+  same(await dns({ 'a.example': { A: ['93.184.216.34', '10.0.0.1'] } }), false, 'dnsAllowed: mixed public and private A')
+  same(await dns({ 'a.example': { A: ['93.184.216.34'], AAAA: ['::ffff:127.0.0.1'] } }), false, 'dnsAllowed: public A, private AAAA')
+  same(await dns({}), false, 'dnsAllowed: both NotFound')
+  same(await dns({ 'a.example': { A: [], AAAA: [] } }), false, 'dnsAllowed: empty answers')
+  same(warns.length, 0, 'no warning for the cases above')
+  same([await dns({ 'a.example': new Error('SERVFAIL') }), warns.length, warns[0]?.startsWith('guard: dns check unavailable')], [false, 1, true], 'dnsAllowed: throwing resolver, exactly one warning')
+  warns.length = 0
+  same([await G.dnsAllowed('a.example'), warns.length], [false, 1], 'dnsAllowed: no Deno.resolveDns in node, refused with one warning')
+  warns.length = 0
+  const t0 = Date.now()
+  same(await G.dnsAllowed('a.example', () => new Promise(() => {})), false, 'dnsAllowed: a hanging resolver is refused')
+  same([Date.now() - t0 >= 2900, Date.now() - t0 < 4500, warns.length], [true, true, 1], 'the hang was cut off after about 3 s, one warning')
+  console.warn = realWarn
+
+  // fetchLimited / followRedirects: the resolver is asked on every hop
+  const asked = []
+  const go = async (map, url, table = {}) => {
+    asked.length = 0
+    const seen = []
+    const doFetch = async (u) => { seen.push(u.href); return table[u.href]?.() ?? new Response('xxxxx', { status: 200, headers: { 'content-type': 'image/jpeg' } }) }
+    const resolve = async (h, t) => { asked.push(`${h}/${t}`); return fake(map)(h, t) }
+    const got = await G.fetchLimited(doFetch, url, { max: 1000, typeOk: G.isImageType, resolve })
+    return { got, seen, a: asked.filter((x) => x.endsWith('/A')) }
+  }
+  const redir = (to) => () => new Response(null, { status: 302, headers: { location: to } })
+  const map = { 'a.example': { A: ['93.184.216.34'] }, 'b.example': { A: ['10.0.0.7'] }, 'c.example': { A: ['93.184.216.35'] } }
+  let r = await go(map, 'https://b.example/i.jpg')
+  same([r.got, r.seen], [null, []], 'a first address resolving private is never fetched')
+  r = await go(map, 'https://a.example/i.jpg', { 'https://a.example/i.jpg': redir('https://b.example/x.jpg') })
+  same([r.got, r.seen, r.a], [null, ['https://a.example/i.jpg'], ['a.example/A', 'b.example/A']], 'redirect to a name resolving private: not fetched, resolver called once per hop')
+  r = await go(map, 'https://a.example/i.jpg', { 'https://a.example/i.jpg': redir('https://c.example/x.jpg') })
+  same([!!r.got, r.seen.length, r.a], [true, 2, ['a.example/A', 'c.example/A']], 'redirect to a public name: followed, both hops resolved')
+}
+
 // ---- readCapped ----
 {
   const mk = (n, headers = {}) => new Response(new Uint8Array(n), { headers })
@@ -58,7 +109,7 @@ for (const u of ['http://example.com/', 'https://localhost/', 'https://127.0.0.1
       const r = table[u.href]
       return typeof r === 'function' ? r() : r ?? new Response('', { status: 404 })
     }
-    return G.fetchLimited(doFetch, start, { max: 1000, typeOk: G.isImageType, ...opt }).then((got) => ({ got, seen }))
+    return G.fetchLimited(doFetch, start, { max: 1000, typeOk: G.isImageType, resolve: async () => ['93.184.216.34'], ...opt }).then((got) => ({ got, seen }))
   }
   let r = await run({ 'https://a.example/i.jpg': () => reply(new Uint8Array(50), 'image/jpeg') }, 'https://a.example/i.jpg')
   same([r.got?.type, r.got?.bytes.length], ['image/jpeg', 50], 'a plain image is fetched')

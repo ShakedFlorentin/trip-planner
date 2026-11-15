@@ -72,7 +72,7 @@ for (const u of ['http://scontent.cdninstagram.com/a.jpg', 'https://evil.com/a.j
     const r = map[u.href]
     return r ? new Response(null, { status: r[0], headers: r[1] ? { location: r[1] } : {} }) : new Response('ok', { status: 200 })
   }
-  const run = (map, start) => { calls.length = 0; return G.followRedirects(answer(map), U(start), G.redirectAllowed) }
+  const run = (map, start) => { calls.length = 0; return G.followRedirects(answer(map), U(start), G.redirectAllowed, {}, undefined, async () => ['93.184.216.34']) }
 
   let r = await run({ 'https://vm.tiktok.com/a': [302, 'https://www.tiktok.com/@x/video/9'] }, 'https://vm.tiktok.com/a')
   same([r?.url.href, calls.map((c) => c.redirect)], ['https://www.tiktok.com/@x/video/9', ['manual', 'manual']], 'a good short link is followed by hand')

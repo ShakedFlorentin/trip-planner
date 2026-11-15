@@ -1,5 +1,5 @@
 // Pure guards shared by the edge functions (suggest-place, card-photos, card-facts, parse-booking): what may be fetched,
-// what may be sent to Claude as data, and what may be kept from Claude's answer. No imports and no Deno APIs, so the
+// what may be sent to Claude as data, and what may be kept from Claude's answer. No imports (the one Deno API, resolveDns, is reached through globalThis and injectable), so the
 // same file runs in the edge functions and in scripts/suggest-place-guard-test.mjs (npm run test:suggest-guard) and
 // scripts/guard-test.mjs (npm run test:guard).
 //
@@ -129,10 +129,92 @@ export function publicHttpsAllowed(u: URL): boolean {
 
 export const MAX_HOPS = 5
 
+/** DNS lookup of one record type; rejects with an error named 'NotFound' when there are no records. */
+export type Resolver = (host: string, type: 'A' | 'AAAA') => Promise<string[]>
+
+const denoResolver: Resolver = (host, type) => {
+  const d = (globalThis as { Deno?: { resolveDns?: Resolver } }).Deno
+  if (typeof d?.resolveDns !== 'function') throw new Error('Deno.resolveDns is not available')
+  return d.resolveDns(host, type)
+}
+
+/** The eight 16-bit groups of an IPv6 address in any written form (:: and a trailing dotted IPv4 included), or null. */
+function v6groups(ip: string): number[] | null {
+  let s = ip.toLowerCase().split('%')[0]
+  const dotted = s.match(/^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (dotted) {
+    const [a, b, c, d] = dotted.slice(2).map(Number)
+    if ([a, b, c, d].some((x) => x > 255)) return null
+    s = `${dotted[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`
+  }
+  const halves = s.split('::')
+  if (halves.length > 2) return null
+  const part = (x: string) => (x ? x.split(':') : [])
+  const head = part(halves[0])
+  const tail = halves.length === 2 ? part(halves[1]) : []
+  const fill = 8 - head.length - tail.length
+  if (halves.length === 2 ? fill < 1 : fill !== 0) return null
+  const all = [...head, ...Array(halves.length === 2 ? fill : 0).fill('0'), ...tail]
+  if (all.length !== 8 || !all.every((x) => /^[0-9a-f]{1,4}$/.test(x))) return null
+  return all.map((x) => parseInt(x, 16))
+}
+
+/** A resolved address (as text) the server must never connect to; anything that is not a clean IP is refused too. */
+export function addressBlocked(ip: string): boolean {
+  if (typeof ip !== 'string') return true
+  if (!ip.includes(':')) return !/^\d{1,3}(?:\.\d{1,3}){3}$/.test(ip) || isPrivateHost(ip)
+  const g = v6groups(ip)
+  if (!g) return true
+  if (g.slice(0, 5).every((x) => x === 0)) {
+    if (g[5] === 0xffff) return isPrivateHost(`${g[6] >> 8}.${g[6] & 255}.${g[7] >> 8}.${g[7] & 255}`) // IPv4-mapped
+    if (g[5] === 0) return true // ::, ::1 and the old IPv4-compatible range
+  }
+  return (
+    (g[0] & 0xfe00) === 0xfc00 || // fc00::/7 unique local
+    (g[0] & 0xffc0) === 0xfe80 || // fe80::/10 link-local
+    (g[0] & 0xffc0) === 0xfec0 || // fec0::/10 site-local
+    (g[0] >> 8) === 0xff || // ff00::/8 multicast
+    (g[0] === 0x64 && g[1] === 0xff9b) || // NAT64: can reach any IPv4 address
+    g[0] === 0x2002 || // 6to4: embeds an IPv4 address
+    (g[0] === 0x2001 && g[1] === 0) // Teredo
+  )
+}
+
 /**
- * GET with redirects followed by hand: every hop (the first address included) must pass `allow`, at most `max`
- * redirects, and the redirect is never handed to fetch to follow. Null when a hop is refused, there is no Location, or
- * there are too many hops. `doFetch` is fetch (a fake in the tests).
+ * Whether the name behind `host` resolves only to public addresses. False when it has no addresses, any address is
+ * private / loopback / link-local / shared / multicast / metadata, or the lookup fails or takes over 3 seconds (fail closed).
+ */
+export async function dnsAllowed(host: string, resolve: Resolver = denoResolver): Promise<boolean> {
+  const one = async (type: 'A' | 'AAAA') => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      const wait = new Promise<never>((_, rej) => {
+        timer = setTimeout(() => rej(new Error('dns lookup timed out')), 3000)
+      })
+      return await Promise.race([Promise.resolve().then(() => resolve(host, type)), wait])
+    } catch (e) {
+      if ((e as { name?: string } | null)?.name === 'NotFound') return []
+      throw e
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  try {
+    // fetch does its own DNS lookup afterwards, so the address checked here cannot be pinned for the request
+    const [a, aaaa] = await Promise.all([one('A'), one('AAAA')])
+    const all = [...a, ...aaaa]
+    return all.length > 0 && !all.some(addressBlocked)
+  } catch (e) {
+    console.warn(`guard: dns check unavailable (${host}): ${(e as Error)?.message ?? e}`)
+    return false
+  }
+}
+
+/**
+ * GET with redirects followed by hand: every hop (the first address included) must pass `allow` and then resolve only
+ * to public addresses (`resolve`, the Deno resolver unless a test passes a fake), at most `max` redirects, and the
+ * redirect is never handed to fetch to follow. Null when a hop is refused, there is no Location, or there are too many
+ * hops. `doFetch` is fetch (a fake in the tests).
  */
 export async function followRedirects(
   doFetch: (u: URL, init: { redirect: 'manual'; [k: string]: unknown }) => Promise<Response>,
@@ -140,10 +222,12 @@ export async function followRedirects(
   allow: (u: URL) => boolean,
   init: Record<string, unknown> = {},
   max = MAX_HOPS,
+  resolve?: Resolver,
 ): Promise<{ res: Response; url: URL } | null> {
   let url = start
   for (let hop = 0; hop <= max; hop++) {
     if (!allow(url)) return null
+    if (!(await dnsAllowed(url.hostname, resolve))) return null
     const res = await doFetch(url, { ...init, redirect: 'manual' })
     if (res.status < 300 || res.status >= 400) return { res, url }
     await res.body?.cancel()
@@ -200,7 +284,7 @@ export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export async function fetchLimited(
   doFetch: (u: URL, init: { redirect: 'manual'; [k: string]: unknown }) => Promise<Response>,
   start: string | URL,
-  o: { max: number; typeOk: (type: string) => boolean; allow?: (u: URL) => boolean; init?: Record<string, unknown> },
+  o: { max: number; typeOk: (type: string) => boolean; allow?: (u: URL) => boolean; init?: Record<string, unknown>; resolve?: Resolver },
 ): Promise<{ bytes: Uint8Array; type: string; url: URL } | null> {
   let first: URL
   try {
@@ -208,7 +292,7 @@ export async function fetchLimited(
   } catch {
     return null
   }
-  const hop = await followRedirects(doFetch, first, o.allow ?? publicHttpsAllowed, o.init ?? {})
+  const hop = await followRedirects(doFetch, first, o.allow ?? publicHttpsAllowed, o.init ?? {}, MAX_HOPS, o.resolve)
   if (!hop || !hop.res.ok) {
     await hop?.res.body?.cancel()
     return null
