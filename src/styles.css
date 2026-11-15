@@ -206,8 +206,9 @@ form.card, .login .card { display: flex; flex-direction: column; gap: 12px; widt
 .invite { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .invite p { margin: 0; }
 .invite-link input { flex: 1; min-width: 0; font-size: 0.8125rem; }
-.invite-code { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-weight: 700; padding: 3px 8px; margin-inline-start: 4px; border-radius: 8px; background: var(--fill); vertical-align: middle; }
+.invite-code { position: relative; display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-weight: 700; padding: 3px 8px; margin-inline-start: 4px; border-radius: 8px; background: var(--fill); vertical-align: middle; }
 .invite-code .ic { color: var(--muted); }
+.invite-code::before { content: ''; position: absolute; inset: -11px -6px; } /* 44pt tap area */
 
 /* App shell */
 .app { max-width: 640px; margin: 0 auto; min-height: 100dvh; }
@@ -404,8 +405,8 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env
 .chips.scroll {
   flex-wrap: nowrap;
   overflow-x: auto;
-  margin: 0 -20px;
-  padding: 2px 20px;
+  margin: -2px -20px;
+  padding: 4px 20px;
   scrollbar-width: none;
   scroll-padding-inline: 20px;
 }
@@ -425,6 +426,10 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env
 }
 .card .chip { background: var(--fill); }
 button.chip { min-height: 36px; }
+/* the look stays 36 high; the tap area is 44 (5px above and below, measured from inside the 1px border). Scroll rows keep 4px of padding so it is not clipped */
+button.chip, a.chip { position: relative; }
+button.chip::before, a.chip::before { content: ''; position: absolute; inset: -5px -2px; }
+button.chip.tiny::before { content: none; }
 .chip.on { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
 .chip.tiny { min-height: 0; font-size: 0.75rem; padding: 1px 8px; margin-inline-start: 6px; background: var(--fill); }
 .chip-sep { flex: none; width: 1px; height: 24px; align-self: center; background: var(--line); }
@@ -498,7 +503,7 @@ button.chip { min-height: 36px; }
   display: grid;
   place-items: center;
 }
-.check::after { content: ''; position: absolute; inset: -9px; } /* 46pt hit area */
+.check::after { content: ''; position: absolute; inset: -11px; } /* 46pt hit area: the inset is measured from inside the 2px border */
 .item.done .check, .check[aria-pressed='true'] { background: var(--ok); border-color: var(--ok); }
 .booking { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
 
@@ -541,13 +546,16 @@ button.chip { min-height: 36px; }
 .sheet-head {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* the side buttons keep their own width; the title takes the room between them and wraps (two lines, then ...)
+     instead of running under them. A short title stays centred because the two outer columns share what is left. */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  column-gap: 8px;
   align-items: center;
   padding: 18px 8px 6px;
   touch-action: none;
   flex: none;
 }
-.sheet-head h2 { font-size: 1.0625rem; line-height: 1.25; text-align: center; max-width: 62vw; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; grid-column: 2; grid-row: 1; }
+.sheet-head h2 { font-size: 1.0625rem; line-height: 1.25; text-align: center; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; grid-column: 2; grid-row: 1; }
 .sheet-close { grid-column: 1; grid-row: 1; justify-self: start; min-height: 44px; min-width: 56px; padding: 0 12px; color: var(--accent); font-weight: 500; white-space: nowrap; }
 /* Search sheet */
 .search-field { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--card); color: var(--muted); }
@@ -677,7 +685,7 @@ html[dir='rtl'] .ja { text-align: right; }
 .verdict.local { background: #fff1f2; color: #be123c; }
 .scores { display: flex; gap: 14px; font-size: 0.875rem; color: var(--muted); }
 
-.swipe-buttons { flex: none; display: flex; justify-content: center; align-items: center; gap: 22px; position: relative; direction: ltr; /* nope on the left, like on the right, matching swipe-right = like */ min-height: 76px; }
+.swipe-buttons { flex: none; display: flex; justify-content: center; align-items: center; gap: 18px; position: relative; direction: ltr; /* nope on the left, like on the right, matching swipe-right = like */ min-height: 76px; }
 .round {
   display: grid;
   place-items: center;
@@ -696,7 +704,7 @@ html[dir='rtl'] .ja { text-align: right; }
 .small-round { width: 44px; height: 44px; }
 .small-round svg { width: 20px; height: 20px; stroke-width: 2.2; color: var(--muted); }
 .small-round:disabled { opacity: 0.35; }
-.left-count { position: absolute; left: 0; max-width: calc(50% - 145px); line-height: 1.2; direction: rtl; font-size: 0.8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.left-count { position: absolute; left: 0; white-space: nowrap; line-height: 1.2; direction: rtl; font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .center-modal { align-items: center; }
 .confetti { font-size: 1.8rem; letter-spacing: 4px; }
 @keyframes pop { from { transform: scale(0.6); opacity: 0; } }
@@ -906,7 +914,7 @@ html[dir='ltr'] .cal-day.last { --range-out: left; }
 .booking-title, .booking b, .item-title { overflow-wrap: normal; word-break: normal; hyphens: none; }
 .booking-title { display: block; }
 .no-conf { display: flex; align-items: center; gap: 8px; }
-.no-conf .link { padding: 0; min-height: 28px; font-size: inherit; color: var(--accent); }
+.no-conf .link { padding: 0 4px; min-height: 44px; margin-block: -8px; font-size: inherit; color: var(--accent); }
 .pass { display: flex; flex-direction: column; gap: 10px; }
 .pass-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pass-top .who-tag { margin: 0; }
@@ -1068,7 +1076,7 @@ html[dir='ltr'] .place-row { padding: 12px 14px 12px 16px; }
 /* the route and date first; a long couple name drops to its own line instead of being cut off */
 .bk-sub .who-pill { flex: 0 1 auto; max-width: 100%; }
 .bk-code { flex: none; max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 8px; border-radius: 8px; background: var(--bg); font-family: ui-monospace, 'SF Mono', monospace; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.02em; }
-.bk-add { flex: none; min-height: 32px; padding: 0 2px; font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
+.bk-add { flex: none; min-height: 44px; margin-block: -7px; padding: 0 2px; font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
 /* a booking opened */
 .bk-sheet { display: flex; flex-direction: column; gap: 14px; }
 .bk-sheet-head { display: flex; align-items: flex-start; gap: 14px; }

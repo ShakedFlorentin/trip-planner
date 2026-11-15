@@ -160,8 +160,9 @@
 /* the time above the name (27) */
 .item-time { display: block; margin: 0 0 1px; font-size: 0.8125rem; }
 /* navigate: a small round arrow at the card's far end (29) */
-.nav-round { flex: none; align-self: center; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--accent); }
+.nav-round { position: relative; flex: none; align-self: center; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--accent); }
 .nav-round .ic { width: 18px; height: 18px; }
+.nav-round::before { content: ''; position: absolute; inset: -4px; } /* 44pt tap area */
 .who-pill .rings-ic { vertical-align: -0.15em; }
 /* Home, tonight's hotel: the name never breaks inside itself; a long one ends in … */
 .tonight-hotel { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -190,7 +191,7 @@
 .day-bed span { min-width: 0; }
 /* the hotel name never breaks inside itself: it drops to the next line whole, or ends in … if it is wider than the line; bdi keeps its direction apart from the text around it */
 .day-bed .bed-name { display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
-.day-bed { max-width: 100%; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 30px; padding: 0; font-size: 0.8125rem; color: var(--muted); text-align: start; }
+.day-bed { max-width: 100%; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 44px; margin-block: -7px; padding: 0; font-size: 0.8125rem; color: var(--muted); text-align: start; }
 .day-bed .ic { flex: none; width: 15px; height: 15px; }
 .day-bed .chev { width: 13px; height: 13px; opacity: 0.6; }
 .day-notes { margin: 0 2px; font-size: 0.875rem; }
@@ -199,10 +200,12 @@
 .plan-time { flex: none; min-width: 44px; font-size: 1rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; text-align: start; }
 .plan-time.approx { font-weight: 500; opacity: 0.85; }
 .plan-body { flex: 1; min-width: 0; cursor: pointer; }
-.plan-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.125rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; overflow-wrap: normal; }
-.plan-sub { display: flex; align-items: center; min-width: 0; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
-.plan-sub .plan-kind { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.plan-sub .who-pill { flex: none; }
+/* up to three lines: "Check-in · Richmond Hotel Yokohama-Bashamichi" is whole before it is cut */
+.plan-title { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.125rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; overflow-wrap: normal; }
+.plan-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; margin-top: 2px; font-size: 0.875rem; color: var(--muted); }
+/* a sub-line wraps to a second line before it is cut with ... */
+.plan-sub .plan-kind { flex: 0 1 auto; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: normal; overflow-wrap: anywhere; }
+.plan-sub .who-pill { flex: none; margin-inline-start: 0; }
 .plan-row .check { width: 28px; height: 28px; margin: 0; border: 2px solid var(--line); }
 .plan-row .check[aria-pressed='true'] { background: var(--accent-fill); border-color: var(--accent-fill); }
 .plan-row .check .ic { width: 15px; height: 15px; }
