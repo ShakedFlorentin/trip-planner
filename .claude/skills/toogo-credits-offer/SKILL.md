@@ -28,3 +28,6 @@ Credits are an AI-cost wallet, priced to cover cost plus a little. Affiliate hot
 ## Open questions for the owner
 - Packs only, or a yearly pass too? (Scout's inference: packs suit people who travel once or twice a year. Not backed by data.)
 - RevenueCat or StoreKit directly for Israel? If RevenueCat: one offering per app version (`toogo-app-review`).
+
+## Added 2026-11-16 from @danh.app
+- His in-app purchase screen in the review reel (https://www.instagram.com/danh.app/reel/Dfy_BeWSnqN/, second 44) lists Monthly $4.99, Yearly $39.99, Lifetime $79.99, all marked "Missing Metadata". When Toogo adds credit packs through Apple in-app purchase for Israel, every product needs its metadata and review screenshot before submission (see `toogo-app-review`). Nothing else on pricing or paywalls was found in his reels; his subscription prices are not advice for Toogo.

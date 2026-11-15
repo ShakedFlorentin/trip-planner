@@ -47,3 +47,9 @@ Places, plan items and bookings should open in the same bottom-sheet shape with 
 - **UI SDK** (`vercel-labs/ui`, beta): behaviours for popups, lists, typeahead. The `ui-sdk` skill is in `.claude/skills/ui-sdk` (added 2026-11-14) and loaded for ux and frontend. The package itself is not installed: its React package needs React 19; Toogo is on 18.3.
 
 Follows `toogo-rules`: every change in Hebrew and English, checked mirrored.
+
+## Added 2026-11-16 from @danh.app (design-tips reels, burned-in captions read)
+- **"Your app sucks" test: first impression in seconds** (reel DfvTxL5ScLH, https://www.instagram.com/danh.app/reel/DfvTxL5ScLH/). His order: study reference apps for the screen you are about to build, then micro-animations for the key moments (his list: a click, a transition, a check mark, a screen change), then keep everything else quiet: "Good UI design is often the ones that go completely unnoticed". This matches section 2 (four levels of feedback): spend animation effort on the few key moments only.
+- **Reference first, then build** (same reel, seconds 62-68: "never run out of design inspiration again", Mobbin and Dribbble open on screen). Same advice as the Mobbin tool above; nothing new to install.
+- **Liquid Glass, Apple's own guidance** (reel Dfor0jxSp3c, https://www.instagram.com/danh.app/reel/Dfor0jxSp3c/, he shows Apple's WWDC25 page and the "Adopting Liquid Glass" doc): "If your app uses standard components from UIKit or AppKit, your interface picks up the latest look"; "reduce your use of custom backgrounds in controls and navigation elements". Toogo's screens are web content in a WebView, so they do **not** pick the new look up automatically. Practical rule: do not stack custom opaque backgrounds on top of the system bars and sheets, and ask the owner before any change that mimics glass in CSS (no change made here).
+- **Dropped:** the reel's chat-naming and AI-workflow tips are not design; see `toogo-indie-launch`.

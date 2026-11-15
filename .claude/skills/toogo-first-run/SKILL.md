@@ -21,3 +21,8 @@ Toogo has no analytics (2026-11-14). Without it, onboarding work is blind: he la
 ## Checks for any first-run change
 - Works signed out, in Hebrew and English, on a fresh install with no local storage.
 - An invite link (`inviteInUrl()` in `Login.tsx`) and a shared plan (`?share=`) still land where they should.
+
+## Added 2026-11-16 from @danh.app
+- **Ask what the person wants, as chips, after the first look** (reel DfjiPD2yHB8, seconds 50-53: Rallio asks "What brings you to Rallio?" with four choices: keep a record of my tennis, share matches with friends, play more consistently, find courts and players). For Toogo: one screen with 3-4 chips ("who am I travelling with", "what I want most: food, sights, calm") that only re-orders Discover cards. Plain code over the cards, no AI per user (`toogo-rules` 2). Toogo's `src/views/Onboarding.tsx` has no such question today.
+- **Sign-in screen with both providers** (reel DfvTxL5ScLH, second 19: "Continue with Apple / Continue with Google"). Matches the owner's wish for Google and Apple; they go in together (`toogo-app-review` row 4).
+- **Dropped:** the Mealo "Enjoying Mealo? Tap star to rate it on the App Store" box with "Not Now" (reel DfrQoL-SwEG, second 11, https://www.instagram.com/danh.app/reel/DfrQoL-SwEG/). A home-made star box in front of Apple's prompt is the pattern Apple disallows, and `toogo-rules` already say Apple's own prompt only. `src/rating.ts` + `AppReview.swift` do it the allowed way.

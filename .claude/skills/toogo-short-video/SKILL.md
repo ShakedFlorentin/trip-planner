@@ -33,3 +33,10 @@ A question as the hook, friends' own phone footage, a short app demo on the beat
 - Paid influencer deals before organic works.
 
 Deliverable: for each idea, the hook line (Hebrew and English), the 6 slides or shot list, the caption, and which Toogo screen is shown.
+
+## Added 2026-11-16 from @danh.app (read frame by frame; view counts are what Instagram showed on his Reels tab, matched to reels by order, so treat the mapping as approximate)
+His 12 reel slots show 3.6K, 3.5K, 1.5K, 1.4K, 1.3K and the rest under 600, on 304 followers. Two best performers, https://www.instagram.com/danh.app/reel/Dfy_BeWSnqN/ ("Apple rejected my app because it SUCKED", 3.6K) and https://www.instagram.com/danh.app/reel/DfvTxL5ScLH/ ("Your app SUCKS", UI tips, 3.5K), both open with a blunt line and then give concrete steps shown on real screens. His claims, not proof.
+- **Format he repeats:** a bold line in the first second ("POV: your mobile app UI SUCKS", reel Dfor0jxSp3c), then a numbered or stepwise list over **screen recordings of real documents and app screens** (Apple's pages, App Store Connect), word-by-word captions, and a closing "save THIS ONE". A numbered series ("10 mistakes I made building apps", parts seen in Dfy_BeWSnqN and DfrQoL-SwEG) gives a reason to follow.
+- **Toogo version:** a shared Japan-planning series with real screens ("3 things that cost us a day in Kyoto", each shown on a card or the map), hook in Hebrew first, English second. Still the other-person-plus-conflict hook first (above); his negative hooks are a second option, not a replacement. Keep honest: no insults to viewers, no clickbait that the reel does not pay off.
+- **Reposting matters** (same content, two posts: reel DfjiPD2yHB8 about 130 views, reel DfjiLpUyvbG about 1.3K). Re-post a clip with a new caption or cover rather than deleting it; consistent with the TripBFF note above.
+- **Dropped:** his "comment for the guide" type calls and Meta-ads testing (reel DfmHAznyNKB, caption only): Toogo has no ad budget (`toogo-rules` 7, and above).
