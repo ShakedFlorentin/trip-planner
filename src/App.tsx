@@ -36,7 +36,7 @@ import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
 import { OverlayLayer, say } from './toast'
 import { toast } from '@ui-sdk/react/toast'
-import { syncPush } from './push'
+import { forgetPushSync, syncPush } from './push'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
@@ -53,6 +53,7 @@ type Tab = (typeof TABS)[number]['id']
 
 // who was signed in, so the app still opens when an expired login can't be refreshed without a network
 const UID_KEY = 'userId'
+const SESSION_WAIT_MS = 3000
 
 // a shared plan's link (?share=…) opens the read-only page for anyone, before the login gate.
 // The guide video plays over everything the first time the app opens on this device (after the opening rings, before
@@ -79,7 +80,9 @@ function AppMain() {
   const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data, error }) => {
+    let settled = false
+    const apply = ({ data, error }: Awaited<ReturnType<typeof supabase.auth.getSession>>) => {
+      settled = true
       const id = data.session?.user.id ?? null
       if (id) writeCache(UID_KEY, id)
       // a refresh that failed for lack of network is not a sign-out: carry on as the same user
@@ -88,19 +91,34 @@ function AppMain() {
       setFresh(isNewOAuth(data.session?.user))
       setOutboxUser(id ?? offlineId ?? null)
       setUserId(id ?? offlineId ?? null)
-    })
+    }
+    // a token refresh with no data can take a minute before it gives up: after a few seconds open as the same user
+    // as last time (what the offline case above does); the real answer still lands when it comes
+    const slow = setTimeout(() => {
+      const cached = readCache<string>(UID_KEY)?.data
+      if (settled || !cached) return
+      setOutboxUser(cached)
+      setUserId(cached)
+    }, SESSION_WAIT_MS)
+    supabase.auth.getSession().then(apply).finally(() => clearTimeout(slow))
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
       // the first event repeats getSession above, which also knows about the offline case
       if (e === 'INITIAL_SESSION') return
+      settled = true
       if (e === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (e === 'SIGNED_OUT' || e === 'SIGNED_IN') forgetPushSync()
       if (e === 'SIGNED_OUT') {
         setRecovering(false)
         clearCache()
-        window.caches?.delete('docs').catch(() => {})
-        // nothing of this account is left for whoever signs in next on this device
+        // saved booking documents, map tiles and place photos: the next person on this phone starts clean
+        for (const c of ['docs', 'tiles', 'photos']) window.caches?.delete(c).catch(() => {})
+        // nothing of this account is left for whoever signs in next on this device (theme and language stay;
+        // changes not sent yet stay too, kept for their own account by the outbox)
         forgetPendingShare()
         try {
-          for (const k of ['tripId', 'invite', 'translator-turns', 'guest']) localStorage.removeItem(k)
+          for (const k of ['tripId', 'lastTrip', 'invite', 'translator-turns', 'guest', 'reviewDismissed'])
+            localStorage.removeItem(k)
+          for (const k of Object.keys(localStorage)) if (/^(notnow|splitStartLater|replanned):/.test(k)) localStorage.removeItem(k)
         } catch {
           // nothing remembered to forget
         }
@@ -112,7 +130,10 @@ function AppMain() {
       setOutboxUser(s?.user.id ?? null)
       setUserId(s?.user.id ?? null)
     })
-    return () => data.subscription.unsubscribe()
+    return () => {
+      clearTimeout(slow)
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   if (userId === undefined) return <Loading />
@@ -183,11 +204,21 @@ function savedTrip() {
   }
 }
 
+function lastTrip() {
+  try {
+    return localStorage.getItem('lastTrip')
+  } catch {
+    return null
+  }
+}
+
 function TripGate({ userId, invited = false }: { userId: string; invited?: boolean }) {
   // open on the last trip at once (no waiting for a network that may not be there); the check below corrects it
   const [tripId, setTripId] = useState<string | null | undefined>(() => savedTrip() ?? undefined)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  // the trips this account is in, for the list in the picker (the last answer is kept, so it also shows with no network)
+  const [tripIds, setTripIds] = useState<string[]>(() => readCache<string[]>('memberTrips:' + userId)?.data ?? [])
   // a shared plan the person asked to copy before signing in: offered once they are in
   const [offer, setOffer] = useState(pendingShare)
   // what a visitor answered and liked before making the account: carried into it once the trip is known. Someone who
@@ -201,6 +232,8 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
     try {
       // '' remembers that the trip was left on purpose, so the next launch opens the trip list instead of it
       localStorage.setItem('tripId', id ?? '')
+      // the trip to go back to from the picker, and to open when the list can't be loaded
+      if (id) localStorage.setItem('lastTrip', id)
     } catch {
       // the choice just won't be remembered
     }
@@ -215,14 +248,19 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
       .eq('user_id', userId)
       .then(({ data, error }) => {
         const saved = savedTrip()
-        if (saved === '') return setTripId(null)
         // offline or a server hiccup is not "you have no trip": keep the last trip, or offer a retry
         if (error) {
+          // left on purpose and nothing to list (no saved answer): the picker would be a dead end, so open the last trip
+          if (saved === '') return setTripId(tripIds.length ? null : lastTrip() || null)
           if (saved) setTripId(saved)
           else setFailed(true)
           return
         }
         const ids = (data ?? []).map((m) => m.trip_id as string)
+        setTripIds(ids)
+        writeCache('memberTrips:' + userId, ids)
+        // '' means the trip was left on purpose: the picker, with the list of trips to go to
+        if (saved === '') return setTripId(null)
         choose(saved && ids.includes(saved) ? saved : (ids[0] ?? null))
       })
   }, [userId, attempt])
@@ -256,7 +294,10 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
         }}
       />
     )
-  if (!tripId) return <TripPicker onPick={choose} />
+  if (!tripId) {
+    const back = lastTrip()
+    return <TripPicker onPick={choose} trips={tripIds} backTo={back && tripIds.includes(back) ? back : null} />
+  }
   return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
 }
 

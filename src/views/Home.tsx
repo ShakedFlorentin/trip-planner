@@ -37,6 +37,7 @@ import { readCache, cityLabel, couplesOf, currentDay, dayDate, dayParts, errorTe
 import { locale, t } from '../i18n'
 import { cityColor, cityPhoto } from '../cities'
 import { Icon, type LucideIcon } from '../icons'
+import { LoadNote } from '../ui'
 import type { MoreTab } from './More'
 import { useStays } from '../stays'
 import { dayEntries, fmtUntil, hotelFor, nightLines, stayInJapan, minutesOf, navUrl, nextStop, ymd, type Entry, type PlanItem } from './planUtils'
@@ -62,14 +63,25 @@ type Props = {
 }
 
 export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onOpenPlaces, onOpenBookings, onOpenSettings }: Props) {
-  const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
-  const { rows: items } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
-  const { rows: bookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+  const daysT = useTripTable<DayInfo>('day_info', trip.id, 'day')
+  const itemsT = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
+  const bookingsT = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+  const { rows: days } = daysT
+  const { rows: items } = itemsT
+  const { rows: bookings } = bookingsT
   const { stays, cities: stayCities } = useStays(trip.id)
-  const { rows: todos } = useTripTable<ChecklistItem>('checklist_items', trip.id)
+  const todosT = useTripTable<ChecklistItem>('checklist_items', trip.id)
+  const { rows: todos } = todosT
   const { rows: candidates } = useTripTable<Candidate>('candidates', trip.id)
   const { rows: swipes } = useTripTable<Swipe>('swipes', trip.id)
   const now = useNow()
+  // "no flight", "no place to stay" and "nothing planned" are only true once the lists have loaded: while one is still
+  // loading, or failed with nothing saved on the phone, say nothing about it
+  const unsure = (x: { loading: boolean; error: unknown; rows: unknown[] }) => x.loading || (!!x.error && x.rows.length === 0)
+  const planUnsure = unsure(itemsT) || unsure(bookingsT)
+  const gapsUnsure = unsure(bookingsT) || unsure(daysT) || unsure(todosT)
+  const loadFailed = [daysT, itemsT, bookingsT, todosT].some((x) => !!x.error && x.rows.length === 0)
+  const reloadAll = () => [daysT, itemsT, bookingsT, todosT].forEach((x) => x.reload())
 
   const today = currentDay(trip.start_date, trip.num_days)
   // count on Tokyo's calendar, not the phone's: abroad the local date can differ from Japan's
@@ -156,9 +168,11 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
 
       <ReviewCard tripId={trip.id} userId={userId} />
 
+      {loadFailed && <LoadNote onRetry={reloadAll} />}
+
       {today && (
         <>
-          <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />
+          {!planUnsure && <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />}
 
           {nowHM >= '18:00' && <EveningRate trip={trip} userId={userId} />}
 
@@ -198,7 +212,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
         </>
       )}
 
-      {!today && daysLeft !== null && daysLeft > 0 && (
+      {!today && daysLeft !== null && daysLeft > 0 && !gapsUnsure && (
         <BeforeTrip
           days={days}
           numDays={trip.num_days}

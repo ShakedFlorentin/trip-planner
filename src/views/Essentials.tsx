@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabase'
 import type { Booking, Essential, Member, Trip } from '../types'
 import { TOGETHER } from '../types'
@@ -113,7 +113,22 @@ export default function Essentials({ trip, members, userId }: Props) {
   const couples = couplesOf(members)
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
 
+  const [importing, setImporting] = useState(false)
+  const importLock = useRef(false)
   const importHotels = async () => {
+    if (importLock.current) return
+    // the rows it compares with are not here yet (or did not load): importing now would add every hotel again
+    if (loading || error) return setNote(t('הרשימה עוד לא נטענה. אפשר לנסות שוב בעוד רגע.'))
+    importLock.current = true
+    setImporting(true)
+    try {
+      await importHotelsNow()
+    } finally {
+      importLock.current = false
+      setImporting(false)
+    }
+  }
+  const importHotelsNow = async () => {
     setNote('')
     const { data, error } = await supabase.from('bookings').select('*').eq('trip_id', trip.id).eq('kind', 'hotel')
     if (error) return setNote(t('אי אפשר לקרוא את ההזמנות: {msg}', { msg: error.message }))
@@ -179,7 +194,7 @@ export default function Essentials({ trip, members, userId }: Props) {
           <button className="secondary" onClick={() => setEdit({ kind: 'hotel', who: myCouple })}>
             <Icon as={Plus} /> {t('פרט חדש')}
           </button>
-          <button className="secondary" onClick={importHotels}>
+          <button className="secondary" onClick={importHotels} disabled={importing || loading}>
             <Icon as={Hotel} /> {t('ייבוא מלונות')}
           </button>
         </div>

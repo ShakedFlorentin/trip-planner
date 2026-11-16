@@ -12,7 +12,8 @@ import { couplesOf, fmtDay, mutate, useTripTable } from '../lib'
 import { t } from '../i18n'
 import { ask } from '../toast'
 import { balances, convert, coupleTotals, fmtAmount, fmtMoney, parseAmount, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
-import { Empty, Field, LoadNote, Sheet, useRemembered } from '../ui'
+import { Empty, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
+import { canSayBalanced, findSettleTwin, newExpenseCurrency } from '../screenLogic'
 import { Icon, type LucideIcon } from '../icons'
 import { BedDouble, Check, ChevronDown, Handshake, Minus, Package, Pencil, Plane, Plus, Trash2, ShoppingBag, Ticket, TrainFront, Utensils } from 'lucide-react'
 import '../styles/expenses.css'
@@ -74,6 +75,7 @@ export default function Expenses({ trip, members, userId }: Props) {
   // the column defaults to 0.025; fall back to it for a trip row loaded before the column existed (e.g. a cached copy)
   const rate = savedRate ?? (Number(trip.ils_per_jpy) || 0.025)
   const show: Cur = cur === 'JPY' ? 'JPY' : 'ILS'
+  const unsure = (loading || !!error) && !rows.length
 
   // the currency toggle lives in the sheet's title row (the slot Sheet leaves at its end side); outside a sheet it
   // sits at the top of the list
@@ -158,68 +160,72 @@ export default function Expenses({ trip, members, userId }: Props) {
     <div className="exp" ref={root}>
       {slot ? createPortal(curToggle, slot) : <div className="exp-cur-row">{curToggle}</div>}
 
-      <div className="exp-card">
-        {pair ? (
-          <>
-            <div className="exp-pair">
-              {pair.map((c) => {
-                const net = totals[c]?.net ?? 0
-                return (
-                  <div key={c} className="exp-side">
-                    <span className="muted exp-fn">{c === myCouple ? t('{name} · אתם', { name: iso(t(c)) }) : t(c)}</span>
-                    <span className="exp-paid">{t('שילמו {amount}', { amount: `⁦${fmtMoney(paidOf(c), show)}⁩` })}</span>
-                    <b className={'exp-net' + (net > 0 ? ' plus' : net < 0 ? ' minus' : ' muted')}>
-                      <bdi dir="ltr">
-                        {net > 0 ? '+' : net < 0 ? '−' : ''}
-                        {fmtMoney(net, show)}
-                      </bdi>
-                    </b>
-                  </div>
-                )
-              })}
+      {/* zeros and "all settled" are only true once the expenses have really loaded */}
+      {!unsure && (
+        <div className="exp-card">
+          {pair ? (
+            <>
+              <div className="exp-pair">
+                {pair.map((c) => {
+                  const net = totals[c]?.net ?? 0
+                  return (
+                    <div key={c} className="exp-side">
+                      <span className="muted exp-fn">{c === myCouple ? t('{name} · אתם', { name: iso(t(c)) }) : t(c)}</span>
+                      <span className="exp-paid">{t('שילמו {amount}', { amount: `⁦${fmtMoney(paidOf(c), show)}⁩` })}</span>
+                      <b className={'exp-net' + (net > 0 ? ' plus' : net < 0 ? ' minus' : ' muted')}>
+                        <bdi dir="ltr">
+                          {net > 0 ? '+' : net < 0 ? '−' : ''}
+                          {fmtMoney(net, show)}
+                        </bdi>
+                      </b>
+                    </div>
+                  )
+                })}
+              </div>
+              <Meter className="exp-meter" value={share} aria-label={t('חלק {name} מהתשלומים', { name: iso(t(pair[0])) })}>
+                <MeterTrack>
+                  <MeterIndicator />
+                </MeterTrack>
+              </Meter>
+            </>
+          ) : (
+            <div className="exp-balances">
+              {byCouple
+                ? couples.map((c) => (
+                    <Balance key={c} name={t(c)} net={totals[c]?.net ?? 0} note={t('שילמו {amount}', { amount: `⁦${fmtMoney(totals[c]?.paid ?? 0, show)}⁩` })} cur={show} />
+                  ))
+                : members.map((m) => <Balance key={m.user_id} name={t(m.display_name)} net={bal[m.user_id] ?? 0} cur={show} />)}
             </div>
-            <Meter className="exp-meter" value={share} aria-label={t('חלק {name} מהתשלומים', { name: iso(t(pair[0])) })}>
-              <MeterTrack>
-                <MeterIndicator />
-              </MeterTrack>
-            </Meter>
-          </>
-        ) : (
-          <div className="exp-balances">
-            {byCouple
-              ? couples.map((c) => (
-                  <Balance key={c} name={t(c)} net={totals[c]?.net ?? 0} note={t('שילמו {amount}', { amount: `⁦${fmtMoney(totals[c]?.paid ?? 0, show)}⁩` })} cur={show} />
-                ))
-              : members.map((m) => <Balance key={m.user_id} name={t(m.display_name)} net={bal[m.user_id] ?? 0} cur={show} />)}
-          </div>
-        )}
-        {!toPay.length && !toGet.length && <div className="exp-owe even">{t('הכול מאוזן')}</div>}
-        {[...toPay, ...toGet].map((tr) => {
-          const paying = tr.from === mineKey
-          const other = iso(labelOf(paying ? tr.to : tr.from))
-          return (
-            <div key={tr.from + tr.to} className={'exp-owe ' + (paying ? 'minus' : 'plus')}>
-              <span className="exp-owe-text">
-                <span>
-                  {paying
-                    ? we
-                      ? t('אתם מחזירים ל{name}', { name: other })
-                      : t('עליך להחזיר ל{name}', { name: other })
-                    : we
-                      ? t('{name} מחזירים לכם', { name: other })
-                      : t('מגיע לך מ{name}', { name: other })}
+          )}
+          {!toPay.length && !toGet.length && canSayBalanced({ loading, error: !!error, rows: rows.length }) && <div className="exp-owe even">{t('הכול מאוזן')}</div>}
+          {[...toPay, ...toGet].map((tr) => {
+            const paying = tr.from === mineKey
+            const other = iso(labelOf(paying ? tr.to : tr.from))
+            return (
+              <div key={tr.from + tr.to} className={'exp-owe ' + (paying ? 'minus' : 'plus')}>
+                <span className="exp-owe-text">
+                  <span>
+                    {paying
+                      ? we
+                        ? t('אתם מחזירים ל{name}', { name: other })
+                        : t('עליך להחזיר ל{name}', { name: other })
+                      : we
+                        ? t('{name} מחזירים לכם', { name: other })
+                        : t('מגיע לך מ{name}', { name: other })}
+                  </span>
+                  <b className="exp-owe-amt">{money(tr.amount)}</b>
                 </span>
-                <b className="exp-owe-amt">{money(tr.amount)}</b>
-              </span>
-              <button className="exp-pill" onClick={() => setSettle({ t: asPeople(tr) })}>
-                <Icon as={Check} /> {paying ? (we ? t('החזרנו') : t('החזרתי')) : we ? t('קיבלנו') : t('קיבלתי')}
-              </button>
-            </div>
-          )
-        })}
-      </div>
+                <button className="exp-pill" onClick={() => setSettle({ t: asPeople(tr) })}>
+                  <Icon as={Check} /> {paying ? (we ? t('החזרנו') : t('החזרתי')) : we ? t('קיבלנו') : t('קיבלתי')}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {error && <LoadNote onRetry={reload} />}
+      {loading && !rows.length && <Skeleton rows={3} />}
       {!loading && !error && rows.length === 0 && (
         <Empty>{t('עוד אין הוצאות. מוסיפים הוצאה, בוחרים מי שילם ובין מי מחלקים, וכאן רואים מי חייב למי.')}</Empty>
       )}
@@ -337,13 +343,15 @@ export default function Expenses({ trip, members, userId }: Props) {
           <Icon as={Plus} /> {t('הוצאה חדשה')}
         </button>
       </div>
-      {edit && <ExpenseForm trip={trip} members={members} couples={couples} userId={userId} expense={edit} rate={rate} myCouple={myCouple} onClose={() => setEdit(null)} />}
+      {edit && <ExpenseForm trip={trip} members={members} couples={couples} userId={userId} expense={edit} rate={rate} myCouple={myCouple} shown={show} onClose={() => setEdit(null)} />}
       {settle && (
         <SettleSheet
           trip={trip}
           userId={userId}
           nameOf={whoOf}
           cur={settle.row?.currency ?? show}
+          rows={rows}
+          side={(id) => partyOf(id)?.key ?? id}
           {...settle}
           onClose={() => setSettle(null)}
         />
@@ -352,6 +360,7 @@ export default function Expenses({ trip, members, userId }: Props) {
         <RateSheet
           tripId={trip.id}
           rate={rate}
+          hasSettlements={rows.some((e) => e.kind === 'settlement')}
           onSaved={setSavedRate}
           onClose={() => setEditingRate(false)}
         />
@@ -386,12 +395,13 @@ function ExpenseForm(props: {
   expense: Partial<Expense>
   rate: number
   myCouple: string | undefined
+  shown: Cur
   onClose: () => void
 }) {
   const { expense: x, members, couples, userId, rate } = props
   // kept as typed text and read with parseAmount, exactly as before, so "12,5" and "1,200" mean what they always meant
   const [amount, setAmount] = useState(x.id ? String(x.amount) : '')
-  const [currency, setCurrency] = useState<Cur>(x.currency ?? 'JPY')
+  const [currency, setCurrency] = useState<Cur>(x.currency ?? newExpenseCurrency(props.shown))
   const [title, setTitle] = useState(x.title ?? '')
   // nothing picked in advance: the words pick it, a tap overrides them
   const [picked, setPicked] = useState<string | null>(x.category ?? null)
@@ -633,6 +643,8 @@ function SettleSheet(props: {
   t: Transfer
   row?: Expense
   cur: Cur
+  rows: Expense[]
+  side: (id: string) => string
   onClose: () => void
 }) {
   const { t: tr, row, cur } = props
@@ -645,6 +657,19 @@ function SettleSheet(props: {
     const n = roundFor(typed, cur)
     if (amount.trim() && Number.isNaN(typed)) return setErr(t('זה לא נראה כמו סכום'))
     if (!(n > 0)) return setErr(t('צריך סכום גדול מאפס'))
+    // the payer's "החזרתי" and the receiver's "קיבלתי" are two taps on one repayment: ask before the second is added
+    if (!row) {
+      const day = japanToday()
+      const twin = findSettleTwin(props.rows, { from: tr.from, to: tr.to, currency: cur, day, now: Date.now() }, props.side)
+      if (twin) {
+        const by = props.nameOf(twin.created_by ?? twin.paid_by)
+        const text = t('כבר נרשם היום החזר באותו כיוון, על ידי {by}, על {amount}. אם הכסף הועבר פעם אחת, אין צורך לרשום עוד פעם.', {
+          by: iso(by),
+          amount: `⁦${fmtAmount(Number(twin.amount), twin.currency)}⁩`,
+        })
+        if (!(await ask({ title: t('לרשום החזר נוסף?'), description: text, confirmLabel: t('לרשום שוב') }))) return
+      }
+    }
     setBusy(true)
     const fields = { amount: n }
     const ok = await mutate(
@@ -695,7 +720,7 @@ function SettleSheet(props: {
 }
 
 /** Edits the trip's shekel-per-yen rate; people think in shekels per ¥100. */
-function RateSheet(props: { tripId: string; rate: number; onSaved: (r: number) => void; onClose: () => void }) {
+function RateSheet(props: { tripId: string; rate: number; hasSettlements: boolean; onSaved: (r: number) => void; onClose: () => void }) {
   const [v, setV] = useState(String(Number((props.rate * 100).toFixed(3))))
   const [err, setErr] = useState('')
 
@@ -704,6 +729,8 @@ function RateSheet(props: { tripId: string; rate: number; onSaved: (r: number) =
     // 100 yen has been worth between one and five shekels for decades; anything far outside is a typo
     if (!(n >= 0.5 && n <= 20)) return setErr(t('השער לא נראה הגיוני. 100 ין זה בערך 2.5 שקלים'))
     const rate = Math.round((n / 100) * 1e6) / 1e6
+    // a new rate is applied to every past amount, repaid debts included: a changed rate must be a choice
+    if (props.hasSettlements && rate !== props.rate && !(await ask({ title: t('לשנות את השער?'), description: t('שינוי השער משנה גם חובות שכבר הוחזרו. היתרות בין כולם יחושבו מחדש לפי השער החדש.'), confirmLabel: t('לשנות את השער') }))) return
     if (await mutate(supabase.from('trips').update({ ils_per_jpy: rate }).eq('id', props.tripId))) {
       props.onSaved(rate)
       props.onClose()
@@ -713,6 +740,11 @@ function RateSheet(props: { tripId: string; rate: number; onSaved: (r: number) =
   return (
     <Sheet title={t('שער החליפין')} onClose={props.onClose}>
       <p className="muted small">{t('כמה שקלים שווים 100 ין. אותו שער לכולם, וכל ההמרות במסך לפיו.')}</p>
+      {props.hasSettlements && (
+        <p className="msg" role="note">
+          {t('שינוי השער משנה גם חובות שכבר הוחזרו. היתרות בין כולם יחושבו מחדש לפי השער החדש.')}
+        </p>
+      )}
       <Field label={t('שקלים ל־100 ין')}>
         <input inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} dir="ltr" />
       </Field>

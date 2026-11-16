@@ -81,7 +81,7 @@ export async function enablePush(from: string): Promise<PushState> {
   }
 }
 
-export async function disablePush(): Promise<PushState> {
+export async function disablePush(quiet = false): Promise<PushState> {
   try {
     const sub = await current()
     if (sub) {
@@ -91,18 +91,22 @@ export async function disablePush(): Promise<PushState> {
   } catch (e) {
     console.error('push unsubscribe failed', e)
   }
-  track('push_off')
+  if (!quiet) track('push_off')
   return 'off'
 }
 
 let synced = false
-/** Once per open: tells the server this phone's address again, under whoever is signed in now, in the app's language. */
+/** Whoever is signed in has changed (signed out or in): the next sync tells the server again, under the new account. */
+export function forgetPushSync() {
+  synced = false
+}
+/** Once per open and account: tells the server this phone's address again, under whoever is signed in now, in the app's language. Counted as done only once the server has it. */
 export async function syncPush() {
   if (synced || (await pushState()) !== 'on') return
-  synced = true
   const sub = await current()
-  if (sub && !sameKey(sub.options.applicationServerKey, unb64u(settings().push_public_key))) return void enablePush('key')
-  if (sub) await save(sub)
+  if (!sub) return
+  if (!sameKey(sub.options.applicationServerKey, unb64u(settings().push_public_key))) return void enablePush('key')
+  if (await save(sub)) synced = true
 }
 
 /** After this phone's swipe made a match: the others who liked it hear about it (the server checks it all again). */

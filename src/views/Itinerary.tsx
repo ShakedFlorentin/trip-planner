@@ -10,7 +10,7 @@ import { CATEGORIES, CITY_HE, TOGETHER, whoOptions, type Booking, type Candidate
 import { cityLabel, couplesOf, currentDay, errorText, useTokyoHM, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
 import { ask, say } from '../toast'
-import { Empty, Field, Sheet, useRemembered } from '../ui'
+import { Empty, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
 import { validWho, whoChoices, whoLabel } from '../who'
 import { RingsIcon } from '../rings'
 import { CARD_ICON, Icon } from '../icons'
@@ -37,15 +37,24 @@ import {
   type WhoMode,
 } from './planUtils'
 import '../styles/plan.css'
+import '../styles/fixc.css'
 import QuickFab from './QuickFab'
 import { arrivalLine, arrivalOf, type Arrival } from './arrivalLine'
 
 type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string }
 
 export default function Itinerary({ trip, day, setDay, members = [], userId }: Props) {
-  const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
-  const { rows: items, put: putItems } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
-  const { rows: bookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+  const { rows: days, error: daysError, reload: reloadDays } = useTripTable<DayInfo>('day_info', trip.id, 'day')
+  const { rows: items, put: putItems, loading: itemsLoading, error: itemsError, reload: reloadItems } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
+  const { rows: bookings, loading: bookingsLoading, error: bookingsError, reload: reloadBookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+  // "nothing planned" is only true once the plan has really loaded
+  const loading = itemsLoading || bookingsLoading
+  const loadFailed = !!(itemsError || bookingsError || daysError)
+  const reloadPlan = () => {
+    reloadItems()
+    reloadBookings()
+    reloadDays()
+  }
   const couples = couplesOf(members)
   const myCouple = members.find((m) => m.user_id === userId)?.couple ?? null
   // "שלנו" always includes the group's items, so nothing everyone does is ever hidden
@@ -88,7 +97,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   }
 
   useEffect(() => {
-    stripRef.current?.querySelector('.active')?.scrollIntoView({ inline: 'center', block: 'nearest' })
+    stripRef.current?.querySelector('[data-selected]')?.scrollIntoView({ inline: 'center', block: 'nearest' })
   }, [day])
 
   const info = days.find((d) => d.day === day)
@@ -216,12 +225,15 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
                 <span className="dtab-wd">{parts?.weekday ?? ''}</span>
                 <b className="dtab-n">{dayDate(trip.start_date, d)?.getDate() ?? d}</b>
                 {/* a day not everyone is together: the one-ring mark under the date */}
-                {apart ? (
-                  <span className="dtab-mark" role="img" aria-label={t('יום שלא כולם ביחד')}>
-                    <RingsIcon one />
+                {(apart || d === today) && (
+                  <span className="dtab-marks">
+                    {apart && (
+                      <span className="dtab-mark" role="img" aria-label={t('יום שלא כולם ביחד')}>
+                        <RingsIcon one />
+                      </span>
+                    )}
+                    {d === today && <span className="dtab-mark dtab-today">{t('היום')}</span>}
                   </span>
-                ) : (
-                  d === today && <span className="dtab-mark dtab-today">{t('היום')}</span>
                 )}
               </TabsTab>
             )
@@ -319,7 +331,9 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
         {info?.notes && <div className="notes day-notes" dir="auto">{keepRanges(info.notes)}</div>}
       </section>
 
-      {entries.length === 0 && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
+      {loadFailed && <LoadNote onRetry={reloadPlan} />}
+      {entries.length === 0 && loading && <Skeleton rows={3} />}
+      {entries.length === 0 && !loading && !loadFailed && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
       {sections.map((owner) => {
         const list = entries.filter((e) => owner === undefined || e.who === owner)
         // today: the thin "now" line sits before the first stop that has not started yet

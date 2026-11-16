@@ -1,0 +1,7 @@
+/* the ring mark and today's label can show together under a date */
+.dtab-marks { display: flex; align-items: center; justify-content: center; gap: 2px; }
+
+/* the match pop-up is a ui-sdk Dialog: it centres itself (the native dialog's own box is reset) over its own scrim */
+[data-slot='dialog-backdrop'].match-backdrop { position: fixed; inset: 0; z-index: 10; background: var(--scrim); }
+[data-slot='dialog-content'].match-pop { position: fixed; inset: 0; z-index: 11; margin: auto; height: fit-content; max-height: calc(100dvh - 48px); border: 0; color: var(--text); }
+[data-slot='dialog-content'].match-pop:is([data-starting-style], [data-ending-style]) { opacity: 0; }

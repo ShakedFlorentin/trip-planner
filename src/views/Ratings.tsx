@@ -1,4 +1,5 @@
 import { useEffect, useState, type KeyboardEvent } from 'react'
+import { ratingRow } from './ratingRow'
 import { Star } from 'lucide-react'
 import { supabase } from '../supabase'
 import type { PlaceRating } from '../types'
@@ -37,6 +38,8 @@ export function useRatings(ids: (string | null | undefined)[]) {
   // a stable key, so a new array with the same cards doesn't ask again
   const key = [...new Set(ids.filter((x): x is string => !!x))].sort().join(',')
   const [saved, setSaved] = useState<Saved>(() => readCache<Saved>(CACHE)?.data ?? { rows: {}, extra: {} })
+  // the cards whose rows were read from the server in this session (the phone's saved copy may be old)
+  const [fresh, setFresh] = useState<string[]>([])
 
   useEffect(() => {
     if (!key) return
@@ -57,6 +60,7 @@ export function useRatings(ids: (string | null | undefined)[]) {
       for (const r of sums.flatMap((x) => (x.data ?? []) as SummaryRow[]))
         extra[r.library_id] = { n: r.n, sum: r.stars_sum, notes: r.notes ?? [] }
       setSaved((old) => ({ rows: { ...old.rows, ...rows }, extra: { ...old.extra, ...extra } }))
+      setFresh((old) => [...new Set([...old, ...list])])
       const was = readCache<Saved>(CACHE)?.data
       writeCache(CACHE, { rows: { ...(was?.rows ?? {}), ...rows }, extra: { ...(was?.extra ?? {}), ...extra } })
     })
@@ -69,6 +73,8 @@ export function useRatings(ids: (string | null | undefined)[]) {
   return {
     /** the full rows you may read: yours and your trips' */
     of: rowsOf,
+    /** true once this card's rows came from the server; before that your own note is unknown */
+    loaded: (id: string) => fresh.includes(id),
     /** every star given to this card, yours and other travellers' (for averages and ranking) */
     stars: (id: string) => [...rowsOf(id).map((r) => r.stars), ...starsFrom(saved.extra[id]?.n ?? 0, saved.extra[id]?.sum ?? 0)],
     /** the same without one person's own rating, plus up to two notes (newest first, no names) */
@@ -104,18 +110,19 @@ export function RateBox(props: { libraryId: string; tripId: string; userId: stri
   const [draft, setDraft] = useState<string | null>(null)
   const stars = picked ?? mine?.stars ?? 0
 
-  const save = async (n: number, note: string | null) => {
+  const save = async (n: number, note: string | null, typed = false) => {
     setPicked(n)
-    const row = { library_id: libraryId, trip_id: tripId, stars: n, note }
+    // your own note is not known until the ratings are read: a star tap before that sends the stars only
+    const row = ratingRow({ library_id: libraryId, trip_id: tripId }, n, note, ratings.loaded(libraryId) || typed)
     const ok = await mutate(supabase.from('place_ratings').upsert(row, { onConflict: 'library_id,user_id' }))
-    if (ok) ratings.put({ ...row, user_id: userId, updated_at: new Date().toISOString() })
+    if (ok) ratings.put({ note: mine?.note ?? null, ...row, user_id: userId, updated_at: new Date().toISOString() })
     setPicked(null)
     return ok
   }
 
   const saveNote = async () => {
     const note = draft?.trim().slice(0, NOTE_MAX) || null
-    if (await save(stars, note)) setDraft(null)
+    if (await save(stars, note, true)) setDraft(null)
   }
 
   return (

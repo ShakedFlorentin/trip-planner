@@ -44,28 +44,40 @@ self.addEventListener('fetch', (e) => {
   else if (u.origin !== self.location.origin) return
   // the guide pages (japan/…, en/japan/…) and privacy/ (built by scripts/pages) are plain pages: the network serves them as is
   else if (req.mode === 'navigate' && /\/(en\/)?(japan|privacy)(\/|$)/.test(u.pathname)) return
-  else if (req.mode === 'navigate') e.respondWith(page(req))
+  else if (req.mode === 'navigate') e.respondWith(page(e, req))
   else e.respondWith(asset(e, req, u))
 })
 
 // Network first, so a deploy shows up on the next open; the cached page when the network is down or hangs
-// (an eSIM with a bar of signal but no data would otherwise leave a blank screen for a minute).
-async function page(req) {
+// (an eSIM with a bar of signal but no data would otherwise leave a blank screen for a minute). When the network is
+// only slow, the cached page is shown at once and the request is left to finish, so the next open has the new build.
+function page(e, req) {
+  const home = url('./')
+  const isHome = new URL(req.url).pathname === new URL(home).pathname
+  // past the HTTP cache: GitHub Pages lets it keep the page for 10 minutes, so a deploy could take that long
+  // to reach the phone. 'no-cache' revalidates, a tiny 304 when nothing changed. A navigation request can't
+  // take options, so fetch its URL
+  const net = fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
+  // only the app's own page is kept as the offline copy (a link to some other page must not replace it); the worker
+  // stays alive for this even after the answer went out
+  const saved = net.then((res) => (isHome ? keep(res.clone()) : undefined)).catch(() => {})
+  e.waitUntil(saved)
+  const slow = new Promise((_, no) => setTimeout(() => no(new Error('slow')), NAV_TIMEOUT))
+  return Promise.race([net, slow]).catch(async () => {
+    const cache = await caches.open(SHELL)
+    // nothing saved yet: keep waiting for the network, as before there was a copy to show
+    return (await cache.match(home)) || net.catch(() => Response.error())
+  })
+}
+
+// Saves a page as the offline copy only when it is our own shell: html that names this build's script. A login page
+// from a hotel or train Wi-Fi (a 200 html page in place of ours) must not replace it.
+async function keep(res) {
+  if (!res.ok || !(res.headers.get('content-type') || '').includes('text/html')) return
+  const text = await res.text()
+  if (!text.includes('assets/index-')) return
   const cache = await caches.open(SHELL)
-  try {
-    const res = await Promise.race([
-      // past the HTTP cache: GitHub Pages lets it keep the page for 10 minutes, so a deploy could take that long
-      // to reach the phone. 'no-cache' revalidates, a tiny 304 when nothing changed. A navigation request can't
-      // take options, so fetch its URL
-      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }),
-      new Promise((_, no) => setTimeout(() => no(new Error('slow')), NAV_TIMEOUT)),
-    ])
-    // only the app's own page is kept as the offline copy (a link to some other page must not replace it)
-    if (res.ok && new URL(req.url).pathname === new URL(url('./')).pathname) cache.put(url('./'), res.clone())
-    return res
-  } catch {
-    return (await cache.match(url('./'))) || Response.error()
-  }
+  await cache.put(url('./'), new Response(text, { status: 200, statusText: res.statusText, headers: res.headers }))
 }
 
 // Hashed build files never change, so the cache wins; media.json and the icons are served from the cache and

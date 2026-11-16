@@ -4,6 +4,8 @@ import { Field } from '../ui'
 import { t } from '../i18n'
 import { forgetInvite } from './Login'
 import { Loading } from '../rings'
+import { readCache } from '../lib'
+import type { Trip } from '../types'
 import SignOutSheet from './SignOutSheet'
 
 // accounts this phone already joined to their invite's trip: someone who later leaves that trip isn't pulled back in
@@ -33,7 +35,34 @@ function failure(message: string) {
   return t('לא הצלחנו. נסו שוב.')
 }
 
-export default function TripPicker({ onPick }: { onPick: (id: string) => void }) {
+/** Names of the trips this account is in: the saved copy at once, the server's answer when it comes. */
+function useTripNames(ids: string[]) {
+  const [names, setNames] = useState<Record<string, string>>(() =>
+    Object.fromEntries(ids.map((id) => [id, readCache<Trip>('trip:' + id)?.data?.name ?? '']).filter(([, n]) => n)),
+  )
+  const key = ids.join(',')
+  useEffect(() => {
+    if (!ids.length) return
+    let live = true
+    Promise.resolve(supabase.from('trips').select('id, name').in('id', ids))
+      .then(({ data }) => {
+        if (live && data) setNames((old) => ({ ...old, ...Object.fromEntries(data.map((r) => [r.id as string, r.name as string])) }))
+      })
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [key])
+  return names
+}
+
+/**
+ * Where a trip is chosen. For an account that is already in trips (it came here from "Switch trip") it lists them, with
+ * a way back to the trip that was open; below, join with a code or create one.
+ */
+export default function TripPicker({ onPick, trips = [], backTo = null }: { onPick: (id: string) => void; trips?: string[]; backTo?: string | null }) {
+  const names = useTripNames(trips)
+  const nameOf = (id: string) => names[id] || t('טיול')
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [tripName, setTripName] = useState(t('יפן'))
@@ -111,7 +140,24 @@ export default function TripPicker({ onPick }: { onPick: (id: string) => void })
 
   return (
     <div className="login">
-      <h1>{t('הצטרפות לטיול')}</h1>
+      <h1>{trips.length ? t('מעבר לטיול אחר') : t('הצטרפות לטיול')}</h1>
+      {trips.length > 0 && (
+        <div className="card trip-list">
+          {backTo && (
+            <button className="primary" onClick={() => onPick(backTo)}>
+              {t('חזרה אל {name}', { name: nameOf(backTo) })}
+            </button>
+          )}
+          {trips.filter((id) => id !== backTo).length > 0 && <h3>{t('הטיולים שלכם')}</h3>}
+          {trips
+            .filter((id) => id !== backTo)
+            .map((id) => (
+              <button key={id} className="secondary" dir="auto" onClick={() => onPick(id)}>
+                {nameOf(id)}
+              </button>
+            ))}
+        </div>
+      )}
       <div className="card">
         <Field label={t('איך קוראים לך?')}>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('השם שיוצג לשאר המשתתפים')} />

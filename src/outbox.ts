@@ -28,6 +28,9 @@ const WRITES = new Set(['POST', 'PATCH', 'DELETE'])
 // text columns there, so a row id made here would be refused
 const HAS_ID = new Set(['itinerary_items', 'places', 'expenses', 'checklist_items', 'bookings', 'essentials', 'candidates', 'trip_stays'])
 // the columns that make a row unique, for laying an upsert over the rows on screen
+// tables with a unique rule besides the row id (supabase/sql baseline): a booking with the same confirmation, a place or
+// a card with the same name in a trip
+const NATURAL_UNIQUE = new Set(['bookings', 'places', 'candidates'])
 const ROW_KEY: Record<string, string[]> = { swipes: ['trip_id', 'candidate_id', 'user_id'], day_info: ['trip_id', 'day'] }
 
 const listeners = new Set<() => void>()
@@ -41,10 +44,18 @@ function read(): Pending[] {
   }
 }
 function write(list: Pending[]) {
+  const text = JSON.stringify(list)
   try {
-    localStorage.setItem(KEY, JSON.stringify(list))
+    localStorage.setItem(KEY, text)
   } catch {
-    // storage full or blocked: the change stays in memory until the app closes
+    // storage full: the saved screen copies (cache:*) can be fetched again, a waiting change cannot, so they go first.
+    // The remembered account id stays: it is what lets the app open offline
+    try {
+      for (const k of Object.keys(localStorage)) if (k.startsWith('cache:') && k !== 'cache:userId') localStorage.removeItem(k)
+      localStorage.setItem(KEY, text)
+    } catch {
+      // still full or blocked: the change stays in memory until the app closes
+    }
   }
   memory = list
   changed()
@@ -126,6 +137,7 @@ function enqueue(url: URL, method: string, body: string | null, headers: Headers
     tried: tried || undefined,
   }
   write([...memory, item])
+  scheduleRetry()
   return madeUp(method, body, item.prefer, headers.get('Accept'))
 }
 
@@ -135,6 +147,9 @@ let base = ''
 let apiKey = ''
 let token: () => Promise<string | null> = async () => null
 let flushing: Promise<void> | null = null
+// when a send last failed for lack of network: a new change then goes straight to the queue instead of first waiting
+// out another timeout
+let lastBroke = 0
 
 /** The ids a change touches (row id in the query, or in the body of an insert), or its table when it has none. */
 function touches(p: Pending) {
@@ -151,8 +166,9 @@ function touches(p: Pending) {
 
 /**
  * Sends the waiting changes in order. A lost connection, 401, 408 or 429 stops and tries again later. A 5xx holds
- * back only later changes to the same row (an edit must not outrun its insert); others still go. A 409 on an insert
- * with our own row id means an earlier send arrived: done. A refusal (400, 403, 404) is kept, marked failed, for the
+ * back only later changes to the same row (an edit must not outrun its insert); others still go. A 409 "duplicate key"
+ * on the id of an insert we made means an earlier send arrived: done; any other 409 (a missing parent row, another
+ * unique column) is a refusal. A refusal (400, 403, 404) is kept, marked failed, for the
  * person to retry or discard. Only an unrelated later change goes on past a held-back one.
  */
 export function flush() {
@@ -161,7 +177,7 @@ export function flush() {
     let sent = 0
     const held = new Set<string>()
     for (const item of waiting()) {
-      const auth = await token()
+      const auth = await Promise.race([token().catch(() => null), pause(TOKEN_MS).then(() => null)])
       // only ever with the token of the account that made the change
       if (!auth || subOf(auth) !== item.uid) break
       if (!memory.some((p) => p.id === item.id && !p.failed)) continue
@@ -170,14 +186,18 @@ export function flush() {
       const headers: Record<string, string> = { apikey: apiKey, 'Content-Type': 'application/json' }
       if (auth) headers.Authorization = `Bearer ${auth}`
       let prefer = item.prefer ? item.prefer.replace('return=representation', 'return=minimal') : null
-      // a retry of an insert: if the first send did arrive, the server skips the copy instead of failing
-      if (item.tried && item.method === 'POST' && !prefer?.includes('resolution=')) prefer = (prefer ? prefer + ',' : '') + 'resolution=ignore-duplicates'
+      // a retry of an insert: if the first send did arrive, the server skips the copy instead of failing. Not for a row
+      // with our id in a table that has another unique rule (the same booking twice): skipping would hide that clash
+      // too, and the 409 on our id already says the first send arrived
+      const clashable = NATURAL_UNIQUE.has(item.table) && ownIds(item).length > 0
+      if (item.tried && item.method === 'POST' && !clashable && !prefer?.includes('resolution=')) prefer = (prefer ? prefer + ',' : '') + 'resolution=ignore-duplicates'
       if (prefer) headers.Prefer = prefer
       write(memory.map((p) => (p.id === item.id && !p.tried ? { ...p, tried: true } : p)))
       let res: Response
       try {
-        res = await realFetch(base + item.path, { method: item.method, headers, body: item.body ?? undefined })
+        res = await writeFetch(base + item.path, { method: item.method, headers, body: item.body ?? undefined })
       } catch {
+        lastBroke = Date.now()
         break
       }
       // signed out or the login lapsed: keep it for when the person is back
@@ -186,11 +206,12 @@ export function flush() {
         keys.forEach((k) => held.add(k))
         continue
       }
-      const ownId = item.method === 'POST' && item.body?.includes('"id"')
-      if (res.status === 409 && ownId) {
+      let text = ''
+      if (!res.ok) text = await Promise.race([res.text().catch(() => ''), pause(2000).then(() => '')])
+      if (res.status === 409 && arrivedBefore(item, text)) {
         // the first send got through
       } else if (!res.ok) {
-        console.warn('outbox: refused', item.table, item.method, res.status, await res.text().catch(() => ''))
+        console.warn('outbox: refused', item.table, item.method, res.status, text)
         write(memory.map((p) => (p.id === item.id ? { ...p, failed: res.status } : p)))
         keys.forEach((k) => held.add(k))
         continue
@@ -198,9 +219,14 @@ export function flush() {
       write(memory.filter((p) => p.id !== item.id))
       sent++
     }
-    if (sent) window.dispatchEvent(new Event('outbox-sent'))
+    if (sent) {
+      retryStep = 0
+      lastBroke = 0
+      window.dispatchEvent(new Event('outbox-sent'))
+    }
   })().finally(() => {
     flushing = null
+    scheduleRetry()
   })
   return flushing
 }
@@ -216,6 +242,70 @@ function subOf(jwt: string) {
 
 const realFetch: typeof fetch = (...args) => fetch(...args)
 
+// "online" with no data (a train, an eSIM with a bar and nothing behind it) never answers: a write that waits longer
+// than this is treated like no connection, kept in the queue and sent again later. Only table writes: an AI lookup
+// or an upload can take longer and is left alone
+const WRITE_MS = 8000
+const TOKEN_MS = 5000
+const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+const writeFetch: typeof fetch = (input, init = {}) => {
+  const ctl = new AbortController()
+  const timer = setTimeout(() => ctl.abort(), WRITE_MS)
+  const outer = init.signal
+  if (outer) {
+    if (outer.aborted) ctl.abort()
+    else outer.addEventListener('abort', () => ctl.abort(), { once: true })
+  }
+  return realFetch(input, { ...init, signal: ctl.signal }).finally(() => clearTimeout(timer))
+}
+
+// while changes wait and the app is open, try again after 15, 30, then every 60 seconds
+const RETRY_S = [15, 30, 60]
+let retryStep = 0
+let retryTimer: ReturnType<typeof setTimeout> | undefined
+function scheduleRetry() {
+  if (retryTimer !== undefined || !waiting().length) return
+  retryTimer = setTimeout(() => {
+    retryTimer = undefined
+    if (!waiting().length) return void (retryStep = 0)
+    if (navigator.onLine) void flush()
+    else scheduleRetry()
+  }, RETRY_S[Math.min(retryStep++, RETRY_S.length - 1)] * 1000)
+}
+
+/** The row ids an insert carries from us (every row has one), or an empty list. */
+function ownIds(p: Pending) {
+  if (p.method !== 'POST' || !p.body) return []
+  try {
+    const rows = [].concat(JSON.parse(p.body)) as { id?: unknown }[]
+    const ids = rows.map((r) => r?.id)
+    return ids.every((x) => typeof x === 'string') ? (ids as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * A 409 that only says an earlier send arrived: "duplicate key" (23505) on the primary key, with our own row id. When
+ * the answer names the key, it has to be our id. When it names nothing, it counts only in a table with no other unique
+ * rule, where it can't mean anything else.
+ */
+function arrivedBefore(p: Pending, text: string) {
+  const ids = ownIds(p)
+  if (!ids.length) return false
+  try {
+    const e = JSON.parse(text) as { code?: string; message?: string; details?: string }
+    if (e.code !== '23505') return false
+    if (e.details) {
+      const hit = /^Key \(id\)=\(([^)]+)\)/.exec(e.details)
+      return !!hit && ids.includes(hit[1])
+    }
+    return /_pkey"/.test(e.message ?? '') || !NATURAL_UNIQUE.has(p.table)
+  } catch {
+    return false
+  }
+}
+
 /** The Supabase client's fetch: table writes wait in the outbox when there is no network. */
 export const outboxFetch: typeof fetch = async (input, init = {}) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
@@ -223,11 +313,11 @@ export const outboxFetch: typeof fetch = async (input, init = {}) => {
   if (!WRITES.has(method) || !tableOf(url)) return realFetch(input, init)
   const headers = new Headers(init.headers)
   // a change made after others that are still waiting goes after them
-  if (waiting().length && navigator.onLine) await flush()
+  if (waiting().length && navigator.onLine && Date.now() - lastBroke > 15_000) await flush()
   const body = withIds(tableOf(url)!, method, typeof init.body === 'string' ? init.body : null)
   if (!navigator.onLine || waiting().length) return enqueue(url, method, body, headers, false)
   try {
-    return await realFetch(input, body === init.body ? init : { ...init, body })
+    return await writeFetch(input, body === init.body ? init : { ...init, body })
   } catch (e) {
     if (offline(e)) return enqueue(url, method, body, headers, true)
     throw e
@@ -239,7 +329,10 @@ export function startOutbox(url: string, key: string, getToken: () => Promise<st
   base = url.replace(/\/$/, '')
   apiKey = key
   token = getToken
-  const go = () => navigator.onLine && flush()
+  const go = () => {
+    retryStep = 0
+    return navigator.onLine && flush()
+  }
   window.addEventListener('online', go)
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && go())
   setTimeout(go, 1500)

@@ -4,6 +4,7 @@ import { Checkbox, CheckboxIndicator } from '@ui-sdk/react/checkbox'
 import { Toggle } from '@ui-sdk/react/toggle'
 import { supabase } from '../supabase'
 import { CARD_STYLE, CATEGORIES, CITY_HE, type Candidate, type DayInfo, type Place, type Trip } from '../types'
+import { buildSnapshot, type SharedSnapshot } from '../shareSnapshot'
 import { cityLabel, errorText, mutate } from '../lib'
 import { isEn, locale, t } from '../i18n'
 import { ask } from '../toast'
@@ -12,84 +13,9 @@ import { Sheet } from '../ui'
 import type { PlanItem } from './planUtils'
 import { appUrl } from '../native'
 
-// Opt-in public sharing of the itinerary. What gets published is a snapshot built here from the plan, and it holds
-// only the pieces below. Never put anything else in it: no bookings, files, confirmation numbers, hotels or
-// addresses, expenses, member names, whose plan an item is, or notes people typed. The sheet shows the snapshot
-// itself as the preview, so what is on screen is exactly what is published.
-
-export type SharedStop = { name: string; category: string; tip?: string; tip_en?: string; lat?: number; lng?: number }
-export type SharedDay = { day: number; city: string | null; stops: SharedStop[] }
-export type SharedSnapshot = { v: 1; name?: string; num_days: number; days: SharedDay[] }
-
-// kinds of place that are shared; a hotel or an errand saved as a place never is
-const SHARED_CATEGORIES = new Set(['sight', 'food', 'cafe', 'shopping', 'nightlife', 'experience'])
-const TIP_MAX = 240
-const NAME_MAX = 120
-
-const round = (n: number | null | undefined) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n * 1e5) / 1e5 : undefined)
-
-/** The snapshot of this plan: for each day its city and its places in order, from places that have a card or a name. */
-export function buildSnapshot(opts: {
-  trip: Trip
-  days: DayInfo[]
-  items: PlanItem[]
-  places: Place[]
-  cards: Candidate[]
-  withName: boolean
-  withTips: boolean
-  /** days the sender left out: they are not in the snapshot at all */
-  skipDays?: ReadonlySet<number>
-}): SharedSnapshot {
-  const { trip, days, items, places, cards } = opts
-  const out: SharedDay[] = []
-  for (let d = 1; d <= trip.num_days; d++) {
-    if (opts.skipDays?.has(d)) continue
-    const stops: SharedStop[] = []
-    const cityCounts = new Map<string, number>()
-    const todays = items
-      .filter((i) => i.day === d && i.place_id)
-      .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99') || a.sort - b.sort)
-    for (const i of todays) {
-      const p = places.find((x) => x.id === i.place_id)
-      if (!p) continue
-      const card = cards.find((c) => c.id === p.candidate_id)
-      const category = card?.category ?? p.category
-      if (!SHARED_CATEGORIES.has(category)) continue
-      // track the city of this stop in Hebrew (p.city is already Hebrew; card.city is a city ID)
-      // skip the day-trip pseudo-city so a day-trip stop does not influence the heading
-      const stopCity = p.city?.trim() || (card?.city ? (CITY_HE[card.city] ?? null) : null)
-      if (stopCity && stopCity !== CITY_HE['daytrip']) {
-        cityCounts.set(stopCity, (cityCounts.get(stopCity) ?? 0) + 1)
-      }
-      const stop: SharedStop = { name: p.name.trim().slice(0, NAME_MAX), category }
-      // the card's own tip (shared library text), never the notes someone typed on the place
-      const tip = card?.tip?.trim()
-      if (opts.withTips && tip) {
-        stop.tip = tip.slice(0, TIP_MAX)
-        const en = card?.en?.tip?.trim()
-        if (en) stop.tip_en = en.slice(0, TIP_MAX)
-      }
-      const lat = round(p.lat ?? card?.lat)
-      const lng = round(p.lng ?? card?.lng)
-      if (lat !== undefined && lng !== undefined) Object.assign(stop, { lat, lng })
-      if (stop.name) stops.push(stop)
-    }
-    // label the day with the city most of its shared stops are in; fall back to the sleep city on tie or no data
-    const dayCity = days.find((x) => x.day === d)?.city?.trim() || null
-    let city = dayCity
-    if (cityCounts.size > 0) {
-      const sorted = [...cityCounts.entries()].sort((a, b) => b[1] - a[1])
-      // unique winner only: if the top two are tied, keep the sleep city
-      if (sorted.length === 1 || sorted[0][1] > sorted[1][1]) {
-        city = sorted[0][0]  // already in Hebrew
-      }
-    }
-    if (stops.length) out.push({ day: d, city: city ? (CITY_HE[city] ?? city) : city, stops })
-  }
-  const snap: SharedSnapshot = { v: 1, num_days: trip.num_days, days: out }
-  if (opts.withName && trip.name.trim()) snap.name = trip.name.trim().slice(0, NAME_MAX)
-  return snap
-}
+// Opt-in public sharing of the itinerary. The snapshot is built in shareSnapshot.ts; the sheet shows it as the
+// preview, so what is on screen is exactly what is published.
+export { buildSnapshot, type SharedStop, type SharedDay, type SharedSnapshot } from '../shareSnapshot'
 
 /** Ten random characters from a 32-letter alphabet (no bias: 256 is a multiple of 32). */
 export function newSlug() {
@@ -165,6 +91,8 @@ export function ShareSheet(props: {
   const [withName, setWithName] = useState(false)
   const [withTips, setWithTips] = useState(true)
   const [active, setActive] = useState<Row | null | undefined>(undefined)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   // days unticked in the preview: they are left out of the published snapshot
@@ -174,6 +102,8 @@ export function ShareSheet(props: {
   // a link already published for this trip (members can read their own trip's rows)
   useEffect(() => {
     let live = true
+    setLoadFailed(false)
+    setActive(undefined)
     supabase
       .from('shared_plans')
       .select('slug, created_at')
@@ -183,13 +113,14 @@ export function ShareSheet(props: {
       .limit(1)
       .then(({ data, error }) => {
         if (!live) return
-        // no table yet or offline: offer to share anyway, the publish will say if it can't
-        setActive(error ? null : ((data?.[0] as Row | undefined) ?? null))
+        // on an error a link may still exist, so the form is not shown: offer a retry instead
+        if (error) return setLoadFailed(true)
+        setActive((data?.[0] as Row | undefined) ?? null)
       })
     return () => {
       live = false
     }
-  }, [trip.id])
+  }, [trip.id, attempt])
 
   // the preview shows every day, so a left-out day can be ticked back; what is published is the same snapshot with the unticked days dropped
   const preview = useMemo(() => buildSnapshot({ ...props, withName, withTips }), [props.days, props.items, props.places, props.cards, trip, withName, withTips])
@@ -220,7 +151,8 @@ export function ShareSheet(props: {
     if (!active) return
     if (!(await ask({ title: t('להפסיק את השיתוף?'), description: t('הקישור יפסיק לעבוד לכל מי שקיבל אותו.'), confirmLabel: t('הפסקת שיתוף'), danger: true }))) return
     if (!navigator.onLine) return setNote(t('אין אינטרנט. נסו שוב כשיש קליטה.'))
-    if (await mutate(supabase.from('shared_plans').update({ revoked_at: new Date().toISOString() }).eq('slug', active.slug))) setActive(null)
+    // every live link of this trip, not only the newest one
+    if (await mutate(supabase.from('shared_plans').update({ revoked_at: new Date().toISOString() }).eq('trip_id', trip.id).is('revoked_at', null))) setActive(null)
   }
 
   const send = async (url: string) => {
@@ -241,7 +173,12 @@ export function ShareSheet(props: {
   return (
     <Sheet title={t('שיתוף המסלול')} onClose={props.onClose}>
       <div className="stack">
-        {active === undefined ? (
+        {loadFailed ? (
+          <>
+            <p className="msg" role="alert">{t('לא הצלחנו לבדוק אם המסלול כבר משותף. בדקו את החיבור ונסו שוב.')}</p>
+            <button className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t('נסו שוב')}</button>
+          </>
+        ) : active === undefined ? (
           <p className="muted" role="status">{t('טוען…')}</p>
         ) : active ? (
           <>

@@ -64,16 +64,22 @@ function loadTurns(): Turn[] {
   }
 }
 
-/** Why a translation failed, in words a traveller can act on. */
-async function translateError(error: unknown) {
+/** Why a translation failed, in words a traveller can act on. Never the server's own (English) text. */
+export async function translateError(error: unknown) {
   const res = (error as { context?: Response } | null)?.context
-  const body = await res?.clone().json().catch(() => null)
-  if (res?.status === 429)
+  // offline, the error is a plain fetch TypeError with no response to read
+  const body = typeof res?.clone === 'function' ? await res.clone().json().catch(() => null) : null
+  const status = typeof res?.status === 'number' ? res.status : 0
+  if (status === 429)
     return /daily limit/.test(body?.error ?? '') ? t('הגעתם למגבלה היומית: 200 תרגומים ביום לכל אחד.') : t('השירות עמוס. נסו שוב בעוד דקה.')
-  if (!navigator.onLine) return t('אין חיבור לאינטרנט.')
-  const detail = res?.status ? ` (${res.status}${body?.error ? `: ${body.error}` : ''})` : ''
-  return t('התרגום נכשל{detail}.', { detail })
+  if (!navigator.onLine || !status) return t('אין חיבור לאינטרנט.')
+  if (status === 413) return t('המשפט ארוך מדי. אמרו אותו במשפטים קצרים יותר.')
+  if (status === 401 || status === 403) return t('אין הרשאה לתרגם בטיול הזה.')
+  if (status >= 500) return t('השירות לא זמין כרגע. נסו שוב בעוד רגע.')
+  return t('התרגום נכשל. נסו שוב.')
 }
+
+const TRANSLATE_TIMEOUT_MS = 20000
 
 export default function Translator({ tripId }: { tripId: string }) {
   const [lang, setLang] = useState<Lang>(HOME)
@@ -83,6 +89,8 @@ export default function Translator({ tripId }: { tripId: string }) {
   const [turns, setTurns] = useState<Turn[]>(loadTurns)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // the heard text of a translation that failed, kept so one tap tries it again
+  const [retry, setRetry] = useState<{ text: string; from: Lang } | null>(null)
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [log, setLog] = useState<string[]>([])
   const [spoke, setSpoke] = useState('')
@@ -142,29 +150,45 @@ export default function Translator({ tripId }: { tripId: string }) {
 
   const translate = async (text: string, from: Lang) => {
     setBusy(true)
+    setError('')
+    setRetry(null)
     note(t('שולח לתרגום'))
     const sent = performance.now()
-    const { data, error } = await supabase.functions.invoke('translate', { body: { text, from: from.slice(0, 2), lang: isEn ? 'en' : 'he', trip_id: tripId } })
-    setBusy(false)
-    const took = Math.round(performance.now() - sent)
-    if (error || !data?.translation) {
+    try {
+      const call = supabase.functions.invoke('translate', { body: { text, from: from.slice(0, 2), lang: isEn ? 'en' : 'he', trip_id: tripId } })
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('timeout')), TRANSLATE_TIMEOUT_MS)
+      })
+      const { data, error } = await Promise.race([call, timeout]).finally(() => clearTimeout(timer))
+      const took = Math.round(performance.now() - sent)
+      if (error || !data?.translation) {
+        note(t('התרגום נכשל'))
+        setError(await translateError(error))
+        setRetry({ text, from })
+        return
+      }
+      // where the wait went: the whole round trip, and inside the server its checks and the Claude call
+      note(
+        t('התקבל תרגום אחרי {took}ms (בדיקות {checks}ms, Claude {claude}ms, רשת והפעלה {net}ms)', {
+          took,
+          checks: data.ms?.checks ?? '?',
+          claude: data.ms?.claude ?? '?',
+          net: data.ms ? took - data.ms.checks - data.ms.claude : '?',
+        }),
+      )
+      const turn = { id: Date.now(), from, heard: text, text: data.translation, romaji: data.romaji ?? '', back: data.back ?? '' }
+      setTurns((t) => [turn, ...t].slice(0, MAX_TURNS))
+      setHeard('')
+      say(data.translation)
+    } catch (e) {
+      // a request that never answered, or a thrown fetch error: say so and keep the text for another try
       note(t('התרגום נכשל'))
-      setError(await translateError(error))
-      return
+      setError((e as Error)?.message === 'timeout' ? t('התרגום לוקח יותר מדי זמן. נסו שוב.') : t('אין חיבור לאינטרנט.'))
+      setRetry({ text, from })
+    } finally {
+      setBusy(false)
     }
-    // where the wait went: the whole round trip, and inside the server its checks and the Claude call
-    note(
-      t('התקבל תרגום אחרי {took}ms (בדיקות {checks}ms, Claude {claude}ms, רשת והפעלה {net}ms)', {
-        took,
-        checks: data.ms?.checks ?? '?',
-        claude: data.ms?.claude ?? '?',
-        net: data.ms ? took - data.ms.checks - data.ms.claude : '?',
-      }),
-    )
-    const turn = { id: Date.now(), from, heard: text, text: data.translation, romaji: data.romaji ?? '', back: data.back ?? '' }
-    setTurns((t) => [turn, ...t].slice(0, MAX_TURNS))
-    setHeard('')
-    say(data.translation)
   }
 
   // each language is its own button: a tap starts recording in it, a second tap on the same one stops
@@ -199,6 +223,7 @@ export default function Translator({ tripId }: { tripId: string }) {
     setHeard('')
     setInterim('')
     setError('')
+    setRetry(null)
     setLog([])
     clearTimeout(forceStop.current)
     stopping.current = false
@@ -237,8 +262,9 @@ export default function Translator({ tripId }: { tripId: string }) {
     // still pending at the stop count too, since Safari doesn't always finalise the last one
     r.onend = () => {
       note(t('נגמר'))
-      reset()
+      // a recognizer that was replaced must not stop the new recording
       if (rec.current !== r) return
+      reset()
       const said = (final + pending).trim()
       setHeard(said)
       if (said) translate(said, from)
@@ -323,6 +349,11 @@ export default function Translator({ tripId }: { tripId: string }) {
           <p className="msg" role="alert">
             {error}
           </p>
+        )}
+        {retry && !busy && !listening && (
+          <button className="secondary" onClick={() => translate(retry.text, retry.from)}>
+            {t('נסו שוב')}
+          </button>
         )}
         {turns.length > 0 ? (
           <div className="turns">

@@ -47,9 +47,13 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
   const inList = (id: string) => rows.filter((r) => r.list === id && (id !== 'packing' || !r.couple || r.couple === myCouple) && r.id !== gone?.id)
   const items = inList(list).sort((a, b) => Number(done(a)) - Number(done(b)))
 
+  // set before the insert starts: a double Enter or tap must not add the item twice
+  const adding = useRef(false)
   const add = async (e: FormEvent) => {
     e.preventDefault()
-    if (!text.trim()) return
+    if (!text.trim() || adding.current) return
+    adding.current = true
+    try {
     const ok = await mutate(
       supabase.from('checklist_items').insert({
         trip_id: tripId,
@@ -65,13 +69,24 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
       setEach(false)
       setAssignee('')
     }
+    } finally {
+      adding.current = false
+    }
   }
 
-  const toggle = (i: ChecklistItem) => {
+  const toggle = async (i: ChecklistItem) => {
     if (!i.each) return mutate(supabase.from('checklist_items').update({ done: !i.done }).eq('id', i.id))
     if (!myCouple) return
-    const was = i.done_couples ?? []
-    const next = was.includes(myCouple) ? was.filter((c) => c !== myCouple) : [...was, myCouple]
+    // what this couple wants, from what it saw on screen; the list it is applied to is read fresh at write time, so
+    // the other couple's tick is kept and only our own is added or removed.
+    // Residual race: the read and the write are two requests. A write from the other couple landing between them, or a
+    // write held while offline and sent later (it carries the list as it was read), can still drop their tick.
+    // Closing it needs an atomic array add/remove in the database (SQL); that waits until after the trip.
+    const want = !(i.done_couples ?? []).includes(myCouple)
+    const { data, error } = await supabase.from('checklist_items').select('done_couples').eq('id', i.id).maybeSingle()
+    if (error) return mutate(Promise.resolve({ error }))
+    const was: string[] = (data as { done_couples?: string[] | null } | null)?.done_couples ?? i.done_couples ?? []
+    const next = want ? (was.includes(myCouple) ? was : [...was, myCouple]) : was.filter((c) => c !== myCouple)
     return mutate(supabase.from('checklist_items').update({ done_couples: next }).eq('id', i.id))
   }
 

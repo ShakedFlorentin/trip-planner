@@ -5,6 +5,7 @@ import { BOOKING_TABS, CITY_HE, type Booking, type Candidate, type ChecklistItem
 import { cityLabel, dayDate, fmtDay, useTripTable } from '../lib'
 import { t } from '../i18n'
 import { Sheet } from '../ui'
+import { makeHas, norm } from '../searchMatch'
 
 /** Where a result leads: the screen that shows it. */
 export type SearchTarget =
@@ -15,13 +16,6 @@ export type SearchTarget =
   | { tab: 'lists' }
 
 type Hit = { key: string; title: string; sub: string; icon: LucideIcon; to: SearchTarget }
-
-// lower-case and drop Hebrew niqqud and geresh, so "ג׳" and "ג'" and "ג" find each other
-const norm = (s: string | null | undefined) =>
-  (s ?? '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[֑-ׇ'׳"״`]/g, '') // he-only
 
 /** Search across everything in the trip: places, the swipe deck, bookings, the day plan and the lists. */
 export default function Search({
@@ -39,12 +33,14 @@ export default function Search({
 }) {
   const [q, setQ] = useState('')
   const input = useRef<HTMLInputElement>(null)
-  const { rows: places } = useTripTable<Place>('places', tripId)
-  const { rows: cards } = useTripTable<Candidate>('candidates', tripId)
-  const { rows: swipes } = useTripTable<Swipe>('swipes', tripId)
-  const { rows: bookings } = useTripTable<Booking>('bookings', tripId, 'starts_at')
-  const { rows: items } = useTripTable<ItineraryItem>('itinerary_items', tripId, 'sort')
-  const { rows: todos } = useTripTable<ChecklistItem>('checklist_items', tripId)
+  const { rows: places, loading: l1, error: e1 } = useTripTable<Place>('places', tripId)
+  const { rows: cards, loading: l2, error: e2 } = useTripTable<Candidate>('candidates', tripId)
+  const { rows: swipes, loading: l3, error: e3 } = useTripTable<Swipe>('swipes', tripId)
+  const { rows: bookings, loading: l4, error: e4 } = useTripTable<Booking>('bookings', tripId, 'starts_at')
+  const { rows: items, loading: l5, error: e5 } = useTripTable<ItineraryItem>('itinerary_items', tripId, 'sort')
+  const { rows: todos, loading: l6, error: e6 } = useTripTable<ChecklistItem>('checklist_items', tripId)
+  const loading = l1 || l2 || l3 || l4 || l5 || l6
+  const failed = !!(e1 || e2 || e3 || e4 || e5 || e6)
   // the sheet takes focus when it opens; hand it to the field right after
   useEffect(() => {
     const t = setTimeout(() => input.current?.focus(), 60)
@@ -54,12 +50,7 @@ export default function Search({
   const groups = useMemo(() => {
     const term = norm(q.trim())
     if (term.length < 2) return []
-    // English matches at the start of a word ("one" shouldn't find Hakone or Sonezaki); Hebrew anywhere, since
-    // a word can carry a prefix letter (בטוקיו, הטיסה)
-    const latin = !/[֐-׿]/.test(term) // he-only
-    const wordStart = new RegExp('(^|[^\\p{L}\\p{N}])' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'u')
-    const has = (...fields: (string | null | undefined)[]) =>
-      fields.some((f) => (latin ? wordStart.test(norm(f)) : norm(f).includes(term)))
+    const has = makeHas(term)
     // a place and its plan items are found by their card's search words too (what it sells, synonyms)
     const tagsOf = new Map(cards.map((c) => [c.id, c.tags ?? []]))
     const placeTags = new Map(places.map((p) => [p.id, (p.candidate_id && tagsOf.get(p.candidate_id)) || []]))
@@ -145,7 +136,18 @@ export default function Search({
           onChange={(e) => setQ(e.target.value)}
         />
       </label>
-      {q.trim().length >= 2 && !groups.length && <p className="empty">{t('אין תוצאות ל"{q}"', { q: q.trim() })}</p>}
+      {q.trim().length >= 2 && !groups.length && (
+        <p className="empty" role="status">
+          {loading
+            ? t('טוען את הטיול…')
+            : failed
+              ? t('אין חיבור, אי אפשר לחפש עכשיו. נסו שוב כשיש קליטה.')
+              : t('אין תוצאות ל"{q}"', { q: q.trim() })}
+        </p>
+      )}
+      {q.trim().length >= 2 && groups.length > 0 && (loading || failed) && (
+        <p className="muted small" role="status">{loading ? t('עוד טוען, ייתכן שיתווספו תוצאות.') : t('אין חיבור, ייתכן שחסרות תוצאות.')}</p>
+      )}
       {groups.map((g) => (
         <section key={g.label} className="search-group">
           <h3>{g.label}</h3>

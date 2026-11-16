@@ -15,7 +15,9 @@ import { RateBox, StarsInput, useRatings, type Ratings } from './Ratings'
 import { SwipeRow } from '../swipe'
 import { RingsIcon } from '../rings'
 import { AREAS, areaOf } from '../areas'
-import { shows, validWho, type Who } from '../who'
+import { validWho, type Who } from '../who'
+import { placeWhoOk } from './placeWho'
+import { ratingRow } from './ratingRow'
 import UnderlineTabs from './UnderlineTabs'
 import WhoTextMenu from './WhoTextMenu'
 import { BeenThere, PlaceHero, PlaceMenu } from './PlaceCardParts'
@@ -71,7 +73,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   const [savedWho, setWhose] = useRemembered('placesWho', 'mine')
   const whose: Who = validWho(savedWho, couples, myCouple)
   // a place both couples liked is on each couple's list too ("שקד ומאור + אלמוג ושניר")
-  const whoOk = (p: Place) => !p.who || p.who.split(' + ').some((w) => shows(w, whose, myCouple)) || shows(null, whose, myCouple)
+  const whoOk = (p: Place) => placeWhoOk(p.who, whose, myCouple)
   const [edit, setEdit] = useState<Partial<Place> | null>(null)
   const [adding, setAdding] = useState(false)
   // the link shared into the app from another app's Share menu, filled in on the add-place sheet
@@ -520,29 +522,46 @@ function PlaceSheet(props: {
  */
 function RateSheet(props: { p: Place; libraryId: string; tripId: string; userId: string; ratings: Ratings; hasBaby: boolean; onClose: () => void }) {
   const mine = props.ratings.of(props.libraryId).find((r) => r.user_id === props.userId)
+  const loaded = props.ratings.loaded(props.libraryId)
   const [stars, setStars] = useState(mine?.stars ?? 0)
   const [note, setNote] = useState(mine?.note ?? '')
+  // what the person changed themselves; the saved rating, once it is read, only fills in what they have not touched
+  const touched = useRef({ stars: false, note: false })
+  useEffect(() => {
+    if (!mine) return
+    if (!touched.current.stars) setStars(mine.stars)
+    if (!touched.current.note) setNote(mine.note ?? '')
+  }, [mine?.stars, mine?.note])
+  const [saving, setSaving] = useState(false)
   const save = async () => {
-    if (!stars) return
-    const row = { library_id: props.libraryId, trip_id: props.tripId, stars, note: note.trim().slice(0, 500) || null }
+    if (!stars || saving) return
+    setSaving(true)
+    // before the saved rating is read, a note nobody typed is not sent, so it cannot wipe the one already saved
+    const row = ratingRow(
+      { library_id: props.libraryId, trip_id: props.tripId },
+      stars,
+      note.trim().slice(0, 500) || null,
+      loaded || touched.current.note,
+    )
     if (await mutate(supabase.from('place_ratings').upsert(row, { onConflict: 'library_id,user_id' }))) {
-      props.ratings.put({ ...row, user_id: props.userId, updated_at: new Date().toISOString() })
+      props.ratings.put({ note: mine?.note ?? null, ...row, user_id: props.userId, updated_at: new Date().toISOString() })
       props.onClose()
     }
+    setSaving(false)
   }
   return (
     <Sheet
       title={t('איך היה ב-{name}?', { name: '\u2068' + props.p.name + '\u2069' })}
       onClose={props.onClose}
       closeLabel={t('אחר כך')}
-      action={{ label: t('שמירה'), onClick: save, disabled: !stars }}
+      action={{ label: t('שמירה'), onClick: save, disabled: !stars || saving }}
     >
       <div className="rate-nudge">
-        <StarsInput value={stars} onChange={setStars} />
+        <StarsInput value={stars} onChange={(n) => { touched.current.stars = true; setStars(n) }} />
         <textarea
           className="grow"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(e) => { touched.current.note = true; setNote(e.target.value) }}
           maxLength={500}
           rows={3}
           dir="auto"
@@ -797,7 +816,13 @@ function AddToDay(props: { hasBaby: boolean; trip: Trip; place: Place; card?: Ca
   const [time, setTime] = useState('')
   const { rows: days } = useTripTable<DayInfo>('day_info', props.trip.id, 'day')
 
+  const [busy, setBusy] = useState(false)
+  const lock = useRef(false)
   const add = async () => {
+    if (lock.current) return
+    lock.current = true
+    setBusy(true)
+    try {
     const p = props.place
     // a place on one couple's list is theirs; otherwise a day only one couple is in Japan is theirs, else everyone's
     const who = p.who ?? days.find((d) => d.day === day)?.who ?? null
@@ -818,6 +843,10 @@ function AddToDay(props: { hasBaby: boolean; trip: Trip; place: Place; card?: Ca
       }),
     )
     if (ok) props.onClose()
+    } finally {
+      lock.current = false
+      setBusy(false)
+    }
   }
 
   return (
@@ -836,7 +865,7 @@ function AddToDay(props: { hasBaby: boolean; trip: Trip; place: Place; card?: Ca
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </Field>
       </div>
-      <button className="primary" onClick={add}>
+      <button className="primary" onClick={add} disabled={busy}>
         {t('הוספה')}
       </button>
     </Sheet>

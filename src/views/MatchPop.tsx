@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogTitle } from '@ui-sdk/react/dialog'
 import type { Candidate } from '../types'
 import { t } from '../i18n'
 import { safePhoto } from '../lib'
 import '../styles/match.css'
+import '../styles/fixc.css'
 
 export type Match = { c: Candidate; names: string[]; who: string | null }
 
@@ -27,15 +29,13 @@ function letters(names: string[]) {
 export default function MatchPop({ match, onClose }: { match: Match; onClose: () => void }) {
   const photo = match.c.photos?.map(safePhoto).find(Boolean)
   const [broken, setBroken] = useState(false)
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    addEventListener('keydown', key)
-    return () => removeEventListener('keydown', key)
-  }, [onClose])
 
+  // ui-sdk's Dialog moves focus into the pop-up, keeps Tab and Enter/Space inside it (the swipe card behind is inert),
+  // closes on Escape and an outside press, and returns focus to where it was
   return (
-    <div className="backdrop center-modal" onClick={onClose}>
-      <div className="match-pop" role="dialog" aria-modal="true" aria-labelledby="match-title" onClick={(e) => e.stopPropagation()}>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogBackdrop className="match-backdrop" />
+      <DialogContent className="match-pop" initialFocus="[data-match-continue]">
         {photo && !broken && <img className="match-photo" src={photo} alt="" onError={() => setBroken(true)} />}
         <div className="match-rings" aria-hidden="true">
           <svg className="burst" width="202" height="128" viewBox="0 0 202 128">
@@ -49,7 +49,7 @@ export default function MatchPop({ match, onClose }: { match: Match; onClose: ()
             <circle className="r2" cx="85.5" cy="27" r="22" />
           </svg>
         </div>
-        <h2 id="match-title">{t('מאצ׳!')}</h2>
+        <DialogTitle render={<h2 />}>{t('מאצ׳!')}</DialogTitle>
         <p className="match-line">
           <b dir="auto">{match.c.name}</b>{' '}
           {match.who ? t('נכנס לרשימה של {who}', { who: match.who.split(' + ').map((w) => t(w)).join(' + ') }) : t('נכנס לרשימה של כולם')}
@@ -67,10 +67,10 @@ export default function MatchPop({ match, onClose }: { match: Match; onClose: ()
           </div>
         )}
         <p className="muted small">{t('נכנס למסלול ביום פנוי בעיר שלו. טיול יום יחכה עד שתבחרו לו יום.')}</p>
-        <button className="primary" onClick={onClose}>
+        <DialogClose className="primary" data-match-continue>
           {t('המשך')}
-        </button>
-      </div>
-    </div>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   )
 }

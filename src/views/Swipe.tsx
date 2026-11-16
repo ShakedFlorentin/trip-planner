@@ -11,7 +11,8 @@ import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
 import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
-import { EmptyState, Sheet } from '../ui'
+import { EmptyState, LoadNote, Sheet } from '../ui'
+import { nextMatch, queueMatches } from '../screenLogic'
 import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
@@ -38,7 +39,7 @@ type Props = {
 }
 
 export default function SwipeGame({ trip, userId, members, showCard, onCardShown, onOpenPlaces }: Props) {
-  const { rows: rawCandidates, loading, reload: reloadCandidates } = useTripTable<Candidate>('candidates', trip.id)
+  const { rows: rawCandidates, loading, error: candidatesError, reload: reloadCandidates } = useTripTable<Candidate>('candidates', trip.id)
   const media = useMediaIndex()
   const candidates = useMemo(() => rawCandidates.map((c) => withMedia(c, media)), [rawCandidates, media])
   // this person's questionnaire: places that are no use to them stay out of everything here (deck, lists, counts),
@@ -65,15 +66,19 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const [sessionNotNow, setSessionNotNow] = useState<Set<string>>(() => new Set())
   const [city, setCity] = useState('')
   const [aud, setAud] = useState('')
-  const [match, setMatch] = useState<Match | null>(null)
+  // several matches at once wait their turn: one pop-up at a time
+  const [matchQueue, setMatchQueue] = useState<Match[]>([])
+  const match = matchQueue[0] ?? null
   // a match is a happy moment: once its pop-up is closed, the app may ask for a rating (src/rating.ts decides)
   const [pushAsk, setPushAsk] = useState<'likes' | 'match' | null>(null)
   const closeMatch = useCallback(() => {
-    setMatch(null)
+    setMatchQueue(nextMatch)
+    // the asks come after the last pop-up, not between two of them
+    if (matchQueue.length > 1) return
     askForRating()
     // the web's notifications offer (the rating prompt is only in the App Store app, so the two never meet)
     if (members.length > 1) void mayAskForPush().then((ok) => ok && setPushAsk('match'))
-  }, [members.length])
+  }, [members.length, matchQueue.length])
   // places this phone liked since it opened: a match one of them makes is this phone's to announce (notifyMatch)
   const likedHere = useRef(new Set<string>())
   const likesHere = useRef(0)
@@ -153,13 +158,15 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       return
     }
     // keyed with the owner too, so a couple's match turning into everyone's is celebrated again
+    const arrived: Match[] = []
     for (const [id, who] of matches) {
       if (knownMatches.current.has(id + who)) continue
       knownMatches.current.add(id + who)
       const c = candidates.find((x) => x.id === id)
-      if (c) setMatch({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
+      if (c) arrived.push({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
       if (likedHere.current.has(id)) notifyMatch(id)
     }
+    if (arrived.length) setMatchQueue((q) => queueMatches(q, arrived))
   }, [matches, loading, swipesLoading, candidates, likes, members])
 
   const mine = new Set(swipes.filter((s) => s.user_id === userId).map((s) => s.candidate_id))
@@ -405,7 +412,8 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       )}
 
       <div className="deck">
-        {!loading && !prefsLoading && deck.length === 0 && (
+        {candidatesError && deck.length === 0 && !candidates.length && <LoadNote onRetry={reloadCandidates} />}
+        {!loading && !prefsLoading && !(candidatesError && !candidates.length) && deck.length === 0 && (
           <div className="empty">
             {!candidates.length ? (
               <EmptyState icon={Flame} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
@@ -458,7 +466,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </div>
       )}
 
-      {match && <MatchPop match={match} onClose={closeMatch} />}
+      {match && <MatchPop key={match.c.id + (match.who ?? '')} match={match} onClose={closeMatch} />}
       {pushAsk && !match && <PushAsk from={pushAsk} onClose={() => setPushAsk(null)} />}
     </div>
   )

@@ -10,6 +10,7 @@ import { isEn, locale, t } from '../i18n'
 import { isNative, openExternal } from '../native'
 import { RingsIcon } from '../rings'
 import { shows, validWho, type Who } from '../who'
+import { dateDropped, readFlags, sameTime, type ImportFlag } from './importReview'
 import UnderlineTabs from './UnderlineTabs'
 import WhoTextMenu from './WhoTextMenu'
 import { takeBookingKind, useQuickAdd } from '../quickAdd'
@@ -525,11 +526,6 @@ function BookingForm(props: {
 
 type Extracted = Pick<Booking, 'kind' | 'title' | 'starts_at' | 'ends_at' | 'confirmation' | 'location' | 'url' | 'notes'>
 
-/** Same stored time, whatever the timestamp's formatting ("…T07:00:00Z" vs "…07:00:00+00:00"). */
-function sameTime(a: string | null, b: string | null) {
-  return a === b || (!!a && !!b && Date.parse(a) === Date.parse(b))
-}
-
 /** A local time from the reader as a stored timestamp; a bare date gets `time`. */
 function wallClock(v: string | null, time: string) {
   if (!v) return null
@@ -571,7 +567,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
   const [docLost, setDocLost] = useState(false)
   const [err, setErr] = useState('')
   // what the reader found, shown for a check before anything is saved; a confirmation can be a forged forward
-  const [review, setReview] = useState<{ b: ParsedBooking; ticked: boolean; outside: boolean }[] | null>(null)
+  const [review, setReview] = useState<{ b: ParsedBooking; ticked: boolean; outside: boolean; flags: ImportFlag[] }[] | null>(null)
 
   const run = async () => {
     if (!text.trim() && !file) return
@@ -592,13 +588,22 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       return
     }
     // times come back as local wall-clock "YYYY-MM-DDTHH:mm", sometimes as a bare date
-    // the reader also returns `flags` for review; only booking columns are kept, or the insert would be refused
-    const bookings = (data.bookings as (Extracted & { flags?: unknown })[]).map(({ flags: _flags, ...b }) => ({
-      ...b,
-      starts_at: wallClock(b.starts_at, b.kind === 'hotel' ? '15:00' : '00:00'),
-      ends_at: wallClock(b.ends_at, b.kind === 'hotel' ? '11:00' : '00:00'),
-      who: who || null,
-    }))
+    // the reader also returns `flags` for review (it has already emptied a date it refused); they are kept beside
+    // the booking for the check step and stripped before the insert, or the insert would be refused
+    const bookings = (data.bookings as (Extracted & { flags?: unknown })[]).map(({ flags: raw, ...b }) => {
+      const flags = readFlags(raw)
+      return {
+      b: {
+        ...b,
+        // the server's English fallback "Booking" is replaced by a placeholder in the app's language
+        title: flags.includes('no_title') ? t('הזמנה ללא שם') : b.title,
+        starts_at: wallClock(b.starts_at, b.kind === 'hotel' ? '15:00' : '00:00'),
+        ends_at: wallClock(b.ends_at, b.kind === 'hotel' ? '11:00' : '00:00'),
+        who: who || null,
+      },
+      flags,
+      }
+    })
     if (!bookings.length) {
       setErr(t('לא מצאנו הזמנה בטקסט הזה.'))
       setBusy(false)
@@ -615,8 +620,9 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       setBusy(false)
       return
     }
-    // another couple's booking with the same title and time is theirs, not a duplicate (unless it is the same code)
-    const isDup = (b: (typeof bookings)[number], list: { kind: string; title: string; starts_at: string | null; confirmation: string | null; who: string | null }[]) =>
+    // another couple's booking with the same title and time is theirs, not a duplicate (unless it is the same code);
+    // a booking with no time is never the same as another one with no time (a round trip with no dates keeps both legs)
+    const isDup = (b: ParsedBooking, list: { kind: string; title: string; starts_at: string | null; confirmation: string | null; who: string | null }[]) =>
       list.some(
         (h) =>
           h.kind === b.kind &&
@@ -626,7 +632,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       )
     // the parser can also repeat itself within one reply
     const fresh: typeof bookings = []
-    for (const b of bookings) if (!isDup(b, have ?? []) && !isDup(b, fresh)) fresh.push(b)
+    for (const x of bookings) if (!isDup(x.b, have ?? []) && !isDup(x.b, fresh.map((f) => f.b))) fresh.push(x)
     const skipped = bookings.length - fresh.length
     if (!fresh.length) {
       setErr(skipped > 1 ? t('כל ההזמנות באישור הזה כבר קיימות.') : t('ההזמנה הזו כבר קיימת.'))
@@ -635,9 +641,10 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
     }
 
     setSkipped(skipped)
-    setReview(fresh.map((b) => {
-      const outside = outsideTrip(trip, b)
-      return { b, ticked: !outside, outside }
+    // a row whose date the reader refused starts unticked, like one outside the trip
+    setReview(fresh.map(({ b, flags }) => {
+      const outside = outsideTrip(trip, b) || dateDropped(flags)
+      return { b, flags, ticked: !outside, outside }
     }))
     setBusy(false)
   }
@@ -722,9 +729,14 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
                       {t('קישור:')} <bdi dir="ltr">{host}</bdi>
                     </span>
                   )}
-                  {r.outside && (
+                  {r.outside && !dateDropped(r.flags) && (
                     <span className="imp-sub imp-warn">
                       <Icon as={AlertTriangle} /> {t('מחוץ לתאריכי הטיול')}
+                    </span>
+                  )}
+                  {dateDropped(r.flags) && (
+                    <span className="imp-sub imp-warn">
+                      <Icon as={AlertTriangle} /> {r.flags.some((f) => f === 'bad_start' || f === 'bad_end' || f === 'end_before_start') ? t('התאריך לא ברור, לא נשמר תאריך') : t('התאריך מחוץ לטיול, לא נשמר תאריך')}
                     </span>
                   )}
                 </span>

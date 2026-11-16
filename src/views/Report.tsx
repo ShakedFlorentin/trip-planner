@@ -4,6 +4,7 @@ import type { Report, Trip } from '../types'
 import { fmtDay, mutate, useTripTable } from '../lib'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
+import { reportKey, reportStatus } from '../screenLogic'
 import { t } from '../i18n'
 import { Check, Send } from 'lucide-react'
 import '../styles/info.css'
@@ -22,12 +23,12 @@ export default function ReportSheet(props: { trip: Trip; me: string; from: strin
   const { rows, reload } = useTripTable<Report>('reports', props.trip.id)
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [sent, setSent] = useState<false | 'sent' | 'queued'>(false)
   const [showDone, setShowDone] = useState(false)
   const sorted = [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at))
   // what's fixed (or won't be) is out of the way; its reply is still there behind one tap
-  const open = sorted.filter((r) => r.status === 'open')
-  const done = sorted.filter((r) => r.status !== 'open')
+  const open = sorted.filter((r) => reportStatus(r) === 'open')
+  const done = sorted.filter((r) => reportStatus(r) !== 'open')
 
   const send = async () => {
     const text = body.trim()
@@ -46,7 +47,8 @@ export default function ReportSheet(props: { trip: Trip; me: string; from: strin
     setBusy(false)
     if (ok) {
       setBody('')
-      setSent(true)
+      // offline the report waits in the phone's outbox: say so, not "sent"
+      setSent(navigator.onLine ? 'sent' : 'queued')
       // reports aren't broadcast live, so fetch the list again to show the one just sent
       reload()
     }
@@ -72,7 +74,8 @@ export default function ReportSheet(props: { trip: Trip; me: string; from: strin
       </p>
       {sent && (
         <p className="report-sent" role="status">
-          <Icon as={Check} /> {t('נשלח, תודה. כשזה יטופל, התשובה תופיע תחת "טופלו".')}
+          <Icon as={Check} />{' '}
+          {sent === 'queued' ? t('נשמר בטלפון, יישלח כשיש קליטה') : t('נשלח, תודה. כשזה יטופל, התשובה תופיע תחת "טופלו".')}
         </p>
       )}
       <button className="primary" onClick={send} disabled={busy || !body.trim()}>
@@ -98,14 +101,15 @@ export default function ReportSheet(props: { trip: Trip; me: string; from: strin
 }
 
 function card(r: Report) {
+  const st = STATUS[reportStatus(r)] ?? STATUS.open
   return (
-    <div key={r.id} className="card report">
+    <div key={reportKey(r)} className="card report">
       <div className="row spread nowrap">
         <span className="muted small">
           <bdi>{r.reporter ?? t('מישהו')}</bdi> · {fmtDay(new Date(r.created_at))}
           {r.screen && <> · <bdi>{r.screen}</bdi></>}
         </span>
-        <span className={'report-status ' + STATUS[r.status].cls}>{STATUS[r.status].label}</span>
+        <span className={'report-status ' + st.cls}>{st.label}</span>
       </div>
       <p className="report-body" dir="auto">{r.body}</p>
       {r.reply && (
