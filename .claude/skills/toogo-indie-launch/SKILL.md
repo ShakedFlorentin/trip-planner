@@ -30,3 +30,6 @@ Three doors on one Support screen: suggest (public ideas with votes), report a p
 - **Tell testers what happens next** (https://www.instagram.com/theglidestudio/reel/Dfxe6k1i2BG/): after a tester applies, send three lines: we read it, we reply, here is the first step. No silence after a form.
 - **Real, small capacity is fine; fake scarcity is not** (https://www.instagram.com/theglidestudio/reel/Dfz1-7dP0o8/ limits its free trial to four startups). A tester round capped for a true reason (e.g. only as many as the owner can answer) may say so once, plainly. No countdowns, no "last spots" (toogo-rules 7).
 - **Launch timing** (https://www.instagram.com/theglidestudio/reel/DfzQLl2o_6j/): December is crowded for everyone; Toogo's launch window is after the Japan trip anyway (toogo-rules 6). Plan the first video series ahead so it is ready, not rushed.
+
+## Added 2026-11-16 from @charles.unemployed (captions read)
+- **"Give this to your AI agent" rules block** (https://www.instagram.com/charles.unemployed/reel/DfxOhZmyLXz/): a short bullet list of concrete design rules the agent follows in every UI it builds works better than "make it nice". Keep one such list for Toogo (the CSS rules in toogo-premium-feel) and point the frontend agent at it for every screen.

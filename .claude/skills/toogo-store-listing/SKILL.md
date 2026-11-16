@@ -42,3 +42,7 @@ Deliverable format: a table per locale with each field, its character count, and
 ## Added 2026-11-16 from @theglidestudio (captions read)
 - **One line, who it is for and what it does** (https://www.instagram.com/theglidestudio/reel/Dfw1tros6ZG/, a homepage rule): a visitor gives one glance; if they cannot say what you do, they leave. Test the Toogo subtitle and the first screenshot caption: can a stranger say "a trip-planning app where you swipe on places with your travel partner" from that alone, in Hebrew and in English?
 - **Trust before words** (https://www.instagram.com/theglidestudio/reel/DfyFShTounu/): space, alignment and a calm rhythm read as "careful" before any text is read. Screenshot layouts: same margins, one idea per screenshot, no crowding.
+
+## Added 2026-11-16 from @charles.unemployed (captions read)
+- **One accent per screenshot** (https://www.instagram.com/charles.unemployed/reel/DfsTwyAxO_N/): the accent colour marks the one thing the screenshot is selling (the swipe card, the match). Same accent family as the app, in Hebrew and English sets.
+- **Fonts:** keep screenshot text in the app's system fonts; any display font used on screenshots must have Hebrew glyphs (https://www.instagram.com/charles.unemployed/reel/DfsT4vkRM9H/). No "AI-looking default" claims are tested for Toogo; judge by looking at the Hebrew set.
