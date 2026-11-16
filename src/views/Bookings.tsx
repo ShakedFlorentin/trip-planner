@@ -365,10 +365,10 @@ function BookingForm(props: {
       const res = await supabase.functions.invoke('parse-booking', {
         body: { text: '', file: { data: await toBase64(file), media_type: file.type }, trip_id: props.trip.id },
       })
-      if (res.error) setReadNote(await aiError(res.error, t('לא הצלחתי לקרוא את הקובץ. אפשר למלא ידנית.')))
+      if (res.error) setReadNote(await aiError(res.error, t('לא הצלחנו לקרוא את הקובץ. אפשר למלא ידנית.')))
       data = res.data
     } catch {
-      setReadNote(t('לא הצלחתי לקרוא את הקובץ. אפשר למלא ידנית.'))
+      setReadNote(t('לא הצלחנו לקרוא את הקובץ. אפשר למלא ידנית.'))
     }
     setReading(false)
     const found = data?.bookings ?? []
@@ -581,13 +581,13 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
     try {
       if (file) payload.file = { data: await toBase64(file), media_type: file.type }
     } catch {
-      setErr(t('לא הצלחתי לקרוא את הקובץ. אפשר לנסות קובץ אחר או להדביק את הטקסט.'))
+      setErr(t('לא הצלחנו לקרוא את הקובץ. אפשר לנסות קובץ אחר או להדביק את הטקסט.'))
       setBusy(false)
       return
     }
     const { data, error } = await supabase.functions.invoke('parse-booking', { body: payload })
     if (error || !data?.bookings) {
-      setErr(await aiError(error, t('לא הצלחתי לקרוא את האישור. אפשר לנסות שוב או להוסיף ידנית.')))
+      setErr(await aiError(error, t('לא הצלחנו לקרוא את האישור. אפשר לנסות שוב או להוסיף ידנית.')))
       setBusy(false)
       return
     }
@@ -600,7 +600,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       who: who || null,
     }))
     if (!bookings.length) {
-      setErr(t('לא מצאתי הזמנה בטקסט הזה.'))
+      setErr(t('לא מצאנו הזמנה בטקסט הזה.'))
       setBusy(false)
       return
     }
@@ -698,7 +698,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
         closeLabel={t('ביטול')}
         action={{ label: n === 1 ? t('שמירת הזמנה אחת') : t('שמירת {n} הזמנות', { n }), onClick: save, disabled: busy || n === 0 }}
       >
-        <p className="muted small">{t('מייל שהועבר אליכם יכול להיות מזויף. סמנו רק הזמנות שאתם מזהים, ובדקו לאיזה אתר הקישור מוביל.')}</p>
+        <p className="muted small">{t('מייל שהועבר יכול להיות מזויף. סמנו רק הזמנות שאתם מכירים, ובדקו לאן הקישור מוביל.')}</p>
         {err && <p className="msg">{err}</p>}
         <div className="group imp-list">
           {review.map((r, i) => {
@@ -739,7 +739,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
   return (
     <Sheet title={t('הוספה מאישור הזמנה')} onClose={onClose}>
       <p className="muted small">
-        {t('מדביקים את מייל האישור (Booking, Agoda, חברת תעופה…) או מצרפים PDF / צילום מסך, וההזמנה נוספת לבד.')}
+        {t('מדביקים את מייל האישור (Booking, Agoda, חברת תעופה…) או מצרפים PDF / צילום מסך, ואנחנו נראה לכם מה מצאנו לפני ששומרים.')}
       </p>
       {props.couples.length > 1 && <WhoField value={who} couples={props.couples} onChange={setWho} />}
       <Field label={t('טקסט האישור')}>
@@ -750,7 +750,7 @@ function ImportSheet(props: { trip: Trip; couples: string[]; myCouple: string | 
       </Field>
       {err && <p className="msg">{err}</p>}
       <button className="primary" onClick={run} disabled={busy || (!text.trim() && !file)}>
-        {busy ? t('קורא את האישור…') : t('קריאה ובדיקה')}
+        {busy ? t('קוראים את האישור…') : t('קריאה ובדיקה')}
       </button>
     </Sheet>
   )
