@@ -38,6 +38,10 @@ framework) — a `[modelled]` or `[estimate]` number may not be presented as an
 observation without a measured companion or the word "target". Don't
 re-derive or improvise this rule; defer the framework itself to tech.
 
+## Practices from @theglidestudio (2026-11-16, captions only)
+
+Before writing a spec for any entry screen (landing, store text, first run), write the one line a stranger should be able to say about Toogo after one glance, in Hebrew and in English, and test every screen against it. Pick the content format by the viewer's stage (curious, understanding, deciding) and give each stage its own deliverable. Details are in `toogo-store-listing`, `toogo-first-run` and `toogo-short-video`.
+
 ## Toogo
 
 Decide with evidence from `docs/nels-and-scouts-2026-11-14.md`, `docs/next-steps-2026-11-12.md` and `docs/ayoships-reels-2026-11-12.md`; say how strong each source is. Toogo has no analytics yet, so say what would have to be measured. Specs go in `docs/`.

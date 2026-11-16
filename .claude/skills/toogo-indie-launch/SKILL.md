@@ -25,3 +25,8 @@ Three doors on one Support screen: suggest (public ideas with votes), report a p
 ## Do not
 - Leave the "to be created" placeholders in reviewer notes on the day of submission.
 - Copy his Google Play steps, his subscription prices or any "comment X to get my guide" funnel.
+
+## Added 2026-11-16 from @theglidestudio (captions read)
+- **Tell testers what happens next** (https://www.instagram.com/theglidestudio/reel/Dfxe6k1i2BG/): after a tester applies, send three lines: we read it, we reply, here is the first step. No silence after a form.
+- **Real, small capacity is fine; fake scarcity is not** (https://www.instagram.com/theglidestudio/reel/Dfz1-7dP0o8/ limits its free trial to four startups). A tester round capped for a true reason (e.g. only as many as the owner can answer) may say so once, plainly. No countdowns, no "last spots" (toogo-rules 7).
+- **Launch timing** (https://www.instagram.com/theglidestudio/reel/DfzQLl2o_6j/): December is crowded for everyone; Toogo's launch window is after the Japan trip anyway (toogo-rules 6). Plan the first video series ahead so it is ready, not rushed.
