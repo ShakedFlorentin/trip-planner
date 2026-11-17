@@ -70,8 +70,10 @@ export async function translateError(error: unknown) {
   // offline, the error is a plain fetch TypeError with no response to read
   const body = typeof res?.clone === 'function' ? await res.clone().json().catch(() => null) : null
   const status = typeof res?.status === 'number' ? res.status : 0
-  if (status === 429)
-    return /daily limit/.test(body?.error ?? '') ? t('הגעתם למגבלה היומית: 200 תרגומים ביום לכל אחד.') : t('השירות עמוס. נסו שוב בעוד דקה.')
+  if (status === 429) {
+    if (!/daily limit/.test(body?.error ?? '')) return t('השירות עמוס. נסו שוב בעוד דקה.')
+    return body?.scope === 'all' ? t('השירות הגיע למכסה היומית שלו. נסו שוב מחר.') : t('הגעתם למגבלה היומית: 200 תרגומים ביום לכל אחד.')
+  }
   if (!navigator.onLine || !status) return t('אין חיבור לאינטרנט.')
   if (status === 413) return t('המשפט ארוך מדי. אמרו אותו במשפטים קצרים יותר.')
   if (status === 401 || status === 403) return t('אין הרשאה לתרגם בטיול הזה.')

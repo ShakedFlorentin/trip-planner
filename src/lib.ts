@@ -355,9 +355,9 @@ export async function aiError(error: unknown, fallback: string) {
   if (status === 429) {
     // the same status means either today's cap or Claude being busy for a minute
     const body = await res?.clone().json().catch(() => null)
-    return /daily limit/.test(body?.error ?? '')
-      ? t('נגמרו 30 הבדיקות להיום (לכל אחד). נסו שוב מחר.')
-      : t('השירות עמוס כרגע. נסו שוב בעוד דקה.')
+    if (!/daily limit/.test(body?.error ?? '')) return t('השירות עמוס כרגע. נסו שוב בעוד דקה.')
+    // 'all' is everyone's shared ceiling, not this person's own count
+    return body?.scope === 'all' ? t('השירות הגיע למכסה היומית שלו. נסו שוב מחר.') : t('נגמרו 30 הבדיקות להיום (לכל אחד). נסו שוב מחר.')
   }
   if (status === 413) return t('הטקסט או הקובץ ארוכים מדי.')
   if (!navigator.onLine) return t('אין חיבור לאינטרנט.')

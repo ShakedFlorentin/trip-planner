@@ -295,7 +295,8 @@ async function charge(admin: SupabaseClient, userId: string, fn: string, json: (
     per_user: await settingInt(admin, 'lookup_limit_person', DAILY_LIMIT),
     all_users: await settingInt(admin, 'lookup_limit_all', ALL_USERS_LIMIT),
   })
-  if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
+  // scope is whose cap it was, 'user' (this person's) or 'all' (everyone's shared ceiling), so the app can word it
+  if (took !== 'ok') return json({ error: 'daily limit reached', scope: took }, 429)
   return null
 }
 
