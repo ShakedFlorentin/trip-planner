@@ -36,12 +36,6 @@ type Props = {
 const CITY_ORDER = ['טוקיו', 'יוקוהמה', 'קיוטו', 'נארה', 'אוסקה', 'טיולי יום', 'טיול יום'] // he-only
 const rank = (c: string) => (CITY_ORDER.indexOf(c) + 1 || 99)
 
-/** Dark mode: the app's own choice, else the phone's. */
-function isDark() {
-  const forced = document.documentElement.dataset.theme
-  return forced ? forced === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
-}
-
 /**
  * The places on a map (49). It opens on the city of today (during the trip) or the first city, with a chip per city
  * and its count; nearby places merge into a circle with a number, and a tap on it zooms in. Pins take their category's
@@ -67,13 +61,12 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
   useEffect(() => {
     map.current = L.map(el.current!, { zoomControl: false, attributionControl: true }).setView([35.0, 136.5], 6)
     // no tile service has Hebrew names for Tokyo's streets and areas; Esri labels Japan in English, not Japanese.
-    // One colour street map in both modes (free, no key). Dark mode darkens it in CSS (.map.dark) and keeps the colours:
-    // Esri's own dark map is grey only, so water, parks and roads all looked the same
+    // One colour street map in both modes (free, no key). Dark mode darkens it in CSS and keeps the colours (Esri's own
+    // dark map is grey only); CSS, so it follows a theme change at once, while the map is open
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
       attribution: 'Tiles © Esri',
     }).addTo(map.current)
-    el.current!.classList.toggle('dark', isDark())
     guideLayer.current = L.layerGroup().addTo(map.current)
     layer.current = L.layerGroup().addTo(map.current)
     return () => {
