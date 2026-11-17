@@ -15,6 +15,7 @@ on:
           - card-photos
           - card-facts
           - parse-booking
+          - translate
 
 permissions:
   contents: read
@@ -41,7 +42,7 @@ jobs:
       #  - card-photos, card-facts: called by database triggers through pg_net with the planner token (x-plan-token) and no user
       #    JWT, and check that token themselves, so the gateway check is off.
       #  - parse-booking: the app calls it with the member's session JWT and the function runs getUser() on it, so the gateway
-      #    check stays ON (no flag). Before the first deploy of any of these, look at the function's live verify_jwt setting:
+      #    check stays ON (no flag). translate too (live verify_jwt is on). Before the first deploy of any of these, look at the function's live verify_jwt setting:
       #    this step sets it to what is written here.
       - name: Deploy
         env:
@@ -49,7 +50,7 @@ jobs:
         run: |
           case "$FUNCTION" in
             plan-trip|card-photos|card-facts) JWT_FLAG="--no-verify-jwt" ;;
-            parse-booking|suggest-place) JWT_FLAG="" ;;
+            parse-booking|suggest-place|translate) JWT_FLAG="" ;;
             *) echo "unknown function: $FUNCTION"; exit 1 ;;
           esac
           supabase functions deploy "$FUNCTION" --project-ref "$PROJECT_REF" $JWT_FLAG --use-api --yes
