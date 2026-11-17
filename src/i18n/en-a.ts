@@ -51,7 +51,7 @@ export const EN_A: Record<string, string> = {
   'אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.': 'No internet, not saved. Try again when you have signal.',
   'שגיאה: {message}': 'Error: {message}',
   'יום {day}': 'Day {day}',
-  'נגמרו 30 הבדיקות להיום (לכל אחד). נסו שוב מחר.': 'You\'ve used all 30 checks for today (each person). Try again tomorrow.',
+  'נגמרו הבדיקות שלך להיום. נסו שוב מחר.': 'You\'ve used all your checks for today. Try again tomorrow.',
   'השירות הגיע למכסה היומית שלו. נסו שוב מחר.': 'The service has reached its daily limit. Try again tomorrow.',
   'השירות עמוס כרגע. נסו שוב בעוד דקה.': 'The service is busy right now. Try again in a minute.',
   'הטקסט או הקובץ ארוכים מדי.': 'The text or file is too long.',
