@@ -45,7 +45,7 @@ function isDark() {
 /**
  * The places on a map (49). It opens on the city of today (during the trip) or the first city, with a chip per city
  * and its count; nearby places merge into a circle with a number, and a tap on it zooms in. Pins take their category's
- * colour (small legend). The same provider's dark grey map in dark mode. No +/− buttons: pinch to zoom.
+ * colour (small legend). In dark mode the same colour map, darkened. No +/− buttons: pinch to zoom.
  */
 export default function PlacesMap({ places, onPick, guide = [], onPickGuide, start, numDays, tripId }: Props) {
   const el = useRef<HTMLDivElement>(null)
@@ -67,14 +67,13 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
   useEffect(() => {
     map.current = L.map(el.current!, { zoomControl: false, attributionControl: true }).setView([35.0, 136.5], 6)
     // no tile service has Hebrew names for Tokyo's streets and areas; Esri labels Japan in English, not Japanese.
-    // Dark mode gets Esri's dark grey base with its labels on top (free, no key)
-    const base = 'https://server.arcgisonline.com/ArcGIS/rest/services/'
-    if (isDark()) {
-      L.tileLayer(base + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: 'Tiles © Esri' }).addTo(map.current)
-      L.tileLayer(base + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map.current)
-    } else {
-      L.tileLayer(base + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }).addTo(map.current)
-    }
+    // One colour street map in both modes (free, no key). Dark mode darkens it in CSS (.map.dark) and keeps the colours:
+    // Esri's own dark map is grey only, so water, parks and roads all looked the same
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri',
+    }).addTo(map.current)
+    el.current!.classList.toggle('dark', isDark())
     guideLayer.current = L.layerGroup().addTo(map.current)
     layer.current = L.layerGroup().addTo(map.current)
     return () => {

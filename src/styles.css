@@ -993,6 +993,9 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
 .view-toggle { position: fixed; z-index: 4; left: 50%; translate: -50% 0; bottom: calc(var(--tabbar-h) + 22px + env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 18px; border-radius: 999px; font-weight: 600; font-size: 0.9375rem; color: var(--text); }
 /* the map fills the screen under the filter row */
 .map-wrap { position: relative; margin: 0 -20px; }
+/* dark mode: flip the light colour map to dark, then turn the hues back so water stays blue and parks green. Tiles only, not the pins */
+.map.dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(1.3); }
+.map.dark { background: #1b1f24; }
 .places.map-mode .map-wrap .map { height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 64px); border-radius: 0; }
 .map-cities { position: absolute; z-index: 500; top: 10px; inset-inline: 0; padding: 0 12px; flex-wrap: nowrap; }
 .map-cities .chip { background: var(--bg); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); flex: none; }
