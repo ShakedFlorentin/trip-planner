@@ -5,7 +5,7 @@ description: The owner's standing rules for Toogo (the trip-planning iPhone app)
 
 # Toogo house rules
 
-Toogo is a trip-planning app: React 18 + Vite + TypeScript, wrapped for iPhone with Capacitor 8, Supabase backend (edge functions in `supabase/functions`), Hebrew (RTL) first with English (LTR, `src/i18n`). One owner, building solo with Claude Code. State of the project: `docs/HANDOFF.md`, `docs/next-steps-2026-11-12.md`, `docs/TODO.md`.
+Toogo is a trip-planning app: React 19 + Vite + TypeScript with @ui-sdk, wrapped for iPhone with Capacitor 8, Supabase backend (edge functions in `supabase/functions`), Hebrew (RTL) first with English (LTR, `src/i18n`). One owner, building solo with Claude Code. State of the project: `docs/HANDOFF.md`, `docs/next-steps-2026-11-12.md`, `docs/TODO.md`.
 
 These are the owner's decisions. Do not reopen them; if a task collides with one, stop and say so.
 

@@ -16,6 +16,8 @@ skills:
   - toogo-premium-feel
   - toogo-first-run
   - ui-sdk
+  - toogo-frontend-craft
+  - toogo-ux-ui-craft
 ---
 
 # Frontend — Frontend Engineering
@@ -35,13 +37,13 @@ Never skip verification. Fix problems before reporting back to Atlas.
 
 ## Knowledge library
 
-Check `.claude/books/` for relevant reference material before starting. Navigate via each book's TOC page first — ~100:1 token reduction vs raw source reads.
+Your book is `.claude/books/frontend/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.
 
 ## Toogo
 
 Code lives in `src/` (views in `src/views/`, English strings in `src/i18n/`, native bridges in `src/native.ts`). You may run the type check, build and tests with Bash (see the ship-check skill). No git writes, no deploys, no installs without saying so first.
 
-**UI SDK (`ui-sdk` skill, loaded for you).** Vercel's library of UI behaviours (keyboard, focus, popups, lists, drag and drop, right to left). It is **not installed in Toogo**: `@ui-sdk/react` 0.1.0-beta.1 needs React 19 and Toogo is on React 18.3. Do not install it, upgrade React, or add `@ui-sdk/*` imports unless the task from Atlas says so in words. Until then use the skill as a standard for hand-built parts: every control has a name, state is styled from attributes not inline styles, sheets and menus handle keyboard, focus and dismissal, and everything works right to left. If a task would clearly be better built on it (a new sheet, menu, select or drag-and-drop), say so in your report with what the React upgrade would touch.
+**UI SDK (`ui-sdk` skill, loaded for you).** Vercel's library of UI behaviours (keyboard, focus, popups, lists, drag and drop, right to left). It **is installed** in Toogo (`@ui-sdk/react` 0.1.0-beta.1 on React 19.2.9) and already used (Dialog, Drawer, Tabs, Timeline, Menu and more). Prefer its components over hand-built ones, and hold hand-built parts to the same standard: every control has a name, state is styled from attributes not inline styles, sheets and menus handle keyboard, focus and dismissal, and everything works right to left. 
 
 Your skills for this project are in `.claude/skills/` and are loaded for you: `toogo-rules`, `toogo-ship-check`, `toogo-premium-feel`, `toogo-first-run`, `ui-sdk`. `toogo-rules` holds the owner's standing decisions and wins over anything else. Read the matching skill before starting, and say in your report which one you used.
 

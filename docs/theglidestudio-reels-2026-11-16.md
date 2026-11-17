@@ -43,3 +43,13 @@
 
 ## Processed reels (do not redo)
 https://www.instagram.com/theglidestudio/reel/ plus: Dfz1-7dP0o8, Dfzkwu3hSj5, DfzQLl2o_6j, Dfy7ig_B-FL, DfyconoB6sG, DfyFShTounu, Dfx8cPehkfP, DfxznYFABmX, DfxpIbfP-SB, Dfxe6k1i2BG, Dfw1tros6ZG, and post p/DfxKTPhjkba.
+
+## Signed-in pass (2026-11-16)
+- Account now has 22 posts, all listed. 10 new, all **caption only** (frames not read: the agent cannot view screenshots). All 22 are now read by caption.
+- New: Df0N7B0jmVI (the logo's easing curve as the brand), Df0DpUNBt3h (icons that act out their job), DfwrVXTBD-G (a few seconds of motion beats a long launch post; sales-flavoured), DfwhC1riuuO (card becomes the page; back goes back; claimed 3.3K likes), Dfv1BkEO_YT (a screen recording is not a demo: keep what matters, big enough for a phone, a cursor leads), DfvsSxzMWIz (one shape carried across states), Dfvja0XCyIi (their rule: a press takes a blink, a reveal under a second), DfvanLxhZnb (their own free-trial pitch, skipped), DfvR2x7CLUH (software has no shape: draw what it does in three moves), Dfuw1KVjiJp (their brief: what do you make, who for, what should they feel; plus launch day and where it will be seen).
+- Lessons: (1) shared-element transitions: the tapped card becomes the detail page, and back reverses it (Discover card to place sheet; mirror in RTL). (2) Timing budget: press about a blink, reveal under 1 s (same direction as the 300 ms rule already in premium-feel). (3) Store/preview demo: crop the screen recording to the one flow, make it phone-big, let a cursor/finger lead; show swipe and match. (4) Draw what the app does in three moves. (5) Three-question brief for each Toogo video.
+- Skipped: DfvanLxhZnb and Dfuw1KVjiJp trial pitches (the brief is kept as a format), DfwrVXTBD-G (sales line).
+- Processed (added): Df0N7B0jmVI Df0DpUNBt3h DfwrVXTBD-G DfwhC1riuuO Dfv1BkEO_YT DfvsSxzMWIz Dfvja0XCyIi DfvanLxhZnb DfvR2x7CLUH Dfuw1KVjiJp
+
+## Frames pass (Step 2, 2026-11-16)
+Watched (frames, OCR): DfwhC1riuuO (carry, don't cut: card becomes the page, back goes back, menus start at their button), Dfv1BkEO_YT (screen recording edited: only what matters, big enough for a phone, a cursor that leads), Dfvja0XCyIi (press 0.16 s, reveal 0.7 s, scene 1.2 s: studio's own rule). Lessons went to toogo-ux-ui-craft and marketing.

@@ -46,3 +46,10 @@ Deliverable format: a table per locale with each field, its character count, and
 ## Added 2026-11-16 from @charles.unemployed (captions read)
 - **One accent per screenshot** (https://www.instagram.com/charles.unemployed/reel/DfsTwyAxO_N/): the accent colour marks the one thing the screenshot is selling (the swipe card, the match). Same accent family as the app, in Hebrew and English sets.
 - **Fonts:** keep screenshot text in the app's system fonts; any display font used on screenshots must have Hebrew glyphs (https://www.instagram.com/charles.unemployed/reel/DfsT4vkRM9H/). No "AI-looking default" claims are tested for Toogo; judge by looking at the Hebrew set.
+
+## Added 2026-11-16 from @luca_radez (captions read)
+- **A brand is the whole folder, not the logo** (https://www.instagram.com/luca_radez/reel/DfXubRAAIgw/): his concept brand keeps 46 files, one of which is the logo. For the store, list every touchpoint that must look like one product: icon, name and subtitle, screenshot set, preview video, share card, reviewer notes. Check them side by side in Hebrew and English before submitting.
+- **A name with a meaning** (https://www.instagram.com/luca_radez/p/DfSectlDDFi/): one sentence on why the name fits is what people retell. Write Toogo's one-sentence name story in both languages for the listing description; no invented claims.
+
+## Added 2026-11-16, signed-in pass (from @luca_radez, caption only)
+One idea can drive mark, palette, type and every touchpoint (https://www.instagram.com/reel/DfKL3ANARku/, Alba concept, his claim). Pick one idea for Toogo, use the accent only as light, and keep a display face plus a plain readable face that both carry Hebrew.

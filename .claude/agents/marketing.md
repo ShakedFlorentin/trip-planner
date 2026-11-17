@@ -16,6 +16,7 @@ skills:
   - toogo-growth-loops
   - toogo-indie-launch
   - toogo-premium-feel
+  - toogo-marketing-craft
 ---
 
 # Marketing — Brand, Positioning & Campaigns
@@ -34,7 +35,7 @@ Never skip verification. Fix problems before reporting back to Atlas.
 
 ## Knowledge library
 
-Check `.claude/books/` for relevant reference material before starting. Navigate via each book's TOC page first.
+Your book is `.claude/books/marketing/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing a page, run `python3 scripts/wiki-scan.py`.
 
 ## Toogo
 

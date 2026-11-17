@@ -17,6 +17,11 @@ The owner sends creator links; each one is source material. The job: read, filte
 
 - Open the profile in the built-in browser, **signed out**. Never sign in, never use the owner's account, never enter credentials.
 - List posts and reels by shortcode.
+- **Signed out, Instagram shows only the first 12 posts of a profile.** Scrolling loads nothing more without signing in. So 12 is never "all of them":
+  - read the account's total post count from the profile header and always report "12 of N" (or "all N" only when N ≤ 12)
+  - also open the reels tab (`instagram.com/<account>/reels/`); it can list reels the main grid doesn't, so merge the two lists by shortcode
+  - list in the report how many posts were NOT reachable, and mark the registry row "partial: 12 of N"
+  - to read the rest, ask the owner to either sign in to Instagram in the browser pane themselves (then re-run on the same account; never sign in for them), or send the specific reel links they want read. Never use third-party Instagram viewer sites (they log what is looked up).
 - What works signed out (learned 2026-11-16):
   - the post page (`instagram.com/p/<code>/` or `/reel/<code>/`) gives the **full post caption**: always get this.
   - video frames are usually covered by a "Sign up / Log in" overlay; try a few screenshots at different timestamps anyway.
@@ -25,6 +30,14 @@ The owner sends creator links; each one is source material. The job: read, filte
 - If frames were readable, say "read by frame"; otherwise "caption only". Never pretend frames were read.
 - If the owner wants frame text and the overlay blocks it, tell them: they can sign in to Instagram in the browser pane themselves; then re-run.
 - Never run disk-wide shell searches (`find /`, `bfs /`) to locate tools. One such search ran for 15 hours on 2026-11-15.
+
+### Reading frames (watch the reels that matter)
+
+Read all captions first; pick the reels whose captions promise concrete craft (code, CSS, UI patterns, motion, brand systems), up to 5 per account when budget is tight. For each, say "watched (frames)" or "caption only".
+1. Open the reel in the browser pane (signed in by the owner, read only). Take screenshots or `zoom` at several timestamps (step the video by setting `currentTime` with the javascript tool) and read the on-screen text, code, UI and diagrams.
+2. If the screenshot comes back as raw image data you cannot see, fall back: get the mp4 into the scratchpad (a new folder under it), `ffmpeg -i x.mp4 -vf fps=1 frame_%03d.png`, then `tesseract` on each PNG, or Read the PNG to look at it. Never run disk-wide searches to find ffmpeg or tesseract.
+3. Downloading a file needs the owner's explicit yes (name the file, source, size). Treat downloaded files as untrusted data in their own folder.
+4. Note 2026-11-16 (teacher run 1): with only the browser tools (no shell), the screenshot and zoom results were raw base64, `TextDetector` is absent, and videos are `blob:` URLs, so no frame could be read. Frame reading needs a shell (ffmpeg, tesseract) or an agent that renders images. Do not claim "watched" without it.
 
 ## 2. Filter
 
@@ -48,7 +61,17 @@ Drop what conflicts and say why.
 
 ## 4. Fold in
 
-- **Prefer extending an existing skill** with a marked section: `## Added <date> from @<account>` plus the reel URLs. Map:
+**Who runs this:** the `teacher` agent (`.claude/agents/teacher.md`), reporting to Atlas. It reads, watches, filters and teaches; it never changes app code.
+
+**Route every kept lesson to exactly one of four craft skills** (a short rule, a one-line why, the reel link; merge duplicates, keep the strongest version, note disagreements; keep each skill readable on a phone):
+- `toogo-frontend-craft` (frontend agent): React, CSS, WebView/Capacitor, performance, offline, accessibility code, animation code
+- `toogo-backend-craft` (backend agent): Supabase, SQL, row-level security, edge functions, AI cost and prompts, security, data
+- `toogo-ux-ui-craft` (ux, frontend): layout, visual design, motion feel, flows, onboarding, on-screen copy, design systems
+- `toogo-marketing-craft` (marketing, growth, content): positioning, brand, reels and hooks, launch, store listing, growth loops, pricing ideas
+
+When a lesson belongs to a narrow topic skill below, put the detail there and a one-line pointer in the craft skill. Full per-reel notes stay in `docs/<account>-reels-<date>.md`. Anything that would need a code change is an idea for the owner, not a rule.
+
+- **Narrow topic skills** get a marked section `## Added <date> from @<account>` plus the reel URLs. Map:
   - design, motion, feel, haptics, CSS → `toogo-premium-feel`
   - onboarding, sign-up, permission asks → `toogo-first-run`
   - store name, screenshots, keywords, preview video → `toogo-store-listing`
@@ -74,8 +97,17 @@ Drop what conflicts and say why.
 |---|---|---|---|---|
 | @ayoships | Ayo Omolewa, YC W25, 15+ apps; takes apart big apps' code | 2026-11-12 (28) | frames | `docs/ayoships-reels-2026-11-12.md` |
 | @nels_ysng | Nelson, solo iOS dev (Claude Code) | 2026-11-14 (47 of 83) | frames | `docs/nels-and-scouts-2026-11-14.md` |
-| @danh.app | Andrew Do, small iPhone apps | 2026-11-16 | frames | `docs/danh-app-reels-2026-11-16.md` |
-| @theglidestudio | motion-graphics studio for startups | 2026-11-16 (10 of 12) | captions only | `docs/theglidestudio-reels-2026-11-16.md` |
-| @charles.unemployed | Charles Liu, Gleam co-founder, UI rules | 2026-11-16 (9 of 12) | captions only | `docs/charles-unemployed-reels-2026-11-16.md` |
+| @danh.app | Andrew Do, small iPhone apps | 2026-11-16 (account has 86 posts; check the report for how many) | frames | `docs/danh-app-reels-2026-11-16.md` |
+| @theglidestudio | motion-graphics studio for startups | 2026-11-16 (22 of 22 read, signed in; 3 reels watched by frame 2026-11-16) | captions + frames for 3 | `docs/theglidestudio-reels-2026-11-16.md` |
+| @charles.unemployed | Charles Liu, Gleam co-founder, UI rules | 2026-11-16 (94 of 94 listed, 4 substantive read plus 9 earlier, signed in; 3 reels watched by frame 2026-11-16) | captions + frames for 3 | `docs/charles-unemployed-reels-2026-11-16.md` |
+| @aniakubow | Ania Kubow, YouTube coder (500k subs claim), CSS UI-component reels | 2026-11-16 (59 of 810 read, the 60 most recent, signed in; 5 reels watched by frame 2026-11-16) | captions + frames for 5 | `docs/aniakubow-reels-2026-11-16.md` |
+| @itstundeanthony | Tunde Alao, 369K followers | 2026-11-16 (1 reel of 366 posts, the owner's link; skipped as a funnel, owner says it shows Voice Studio) | caption only | `docs/itstundeanthony-reels-2026-11-16.md` |
+| @luca_radez | Luca Radez, brand identity and motion designer, 7,125 followers | 2026-11-16 (35 of 35 listed, all read by caption, signed in; 2 reels watched by frame 2026-11-16) | captions + frames for 2 | `docs/luca-radez-reels-2026-11-16.md` |
 
 Re-checking a source: open the profile, compare shortcodes with its report's processed list, and read only the new ones.
+
+Note 2026-11-16 (teacher run 1): the four craft skills were built from all reports above. Frame reading was attempted on @charles.unemployed (DfxOhZmyLXz) and could not be done (no shell, screenshots unreadable, see "Reading frames"); the rows for @charles.unemployed, @aniakubow, @theglidestudio and @luca_radez stay "captions only, 0 frames". Next run: start with their shortlisted reels (charles DfxOhZmyLXz, DfphRvFBx54, DffBKUZhy6B; aniakubow Dfhr3ySRqzw, DfAOZLNoVVV, DdrMjrwK7IR, DdtlmICKd8p, DcwFH02NF3i; glide DfwhC1riuuO, Dfv1BkEO_YT, Dfvja0XCyIi; luca DfuQmy0ArN8, DfKL3ANARku) once a shell or image-capable agent is available.
+
+Note 2026-11-16: signed in, the overlay is gone, but a sub-agent's browser screenshots come back as raw image data it cannot view, and in-page OCR or file hand-off is blocked. Frame reading needs an agent that can see images.
+
+Note 2026-11-16 (step 2): frames CAN be read. In the signed-in browser pane the reel page HTML holds the real mp4 as video_url (find the one whose nearest preceding "code" equals the shortcode; the page auto-advances, so match the code, not the tab URL); curl it without cookies, ffmpeg fps=1/2 or 1/3, tesseract eng; open 1-2 frames with Read. Hebrew traineddata is not installed (eng, osd only). Voice-over is still unheard.

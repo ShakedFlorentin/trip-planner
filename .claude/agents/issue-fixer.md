@@ -31,3 +31,7 @@ You handle the reports people send from Toogo's "report a problem" sheet (`src/v
 
 ## Report back
 For each report: its id (first 8 characters), who sent it (owner or not), the cause with file and line, whether it is already fixed and where, what you changed or what you propose, how it was tested, and what is left for the owner to decide. If a tool call is refused by a permission check, stop and say which step; do not look for another way.
+
+## Knowledge library
+
+Your book is `.claude/books/issue-fixer/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.

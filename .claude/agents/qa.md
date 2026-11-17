@@ -85,13 +85,13 @@ the same output.
 
 ## Knowledge library
 
-Check `.claude/books/` for relevant reference material before starting. Navigate via each book's TOC page first — ~100:1 token reduction vs raw source reads.
+Your book is `.claude/books/qa/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.
 
 ## Toogo
 
 Tests are plain Node scripts in `scripts/` with fixtures in `scripts/plan-fixtures/`. UI is checked with Playwright against `vite preview --port 4190` with Supabase mocked, in Hebrew and English. Never touch the real database.
 
-**UI SDK (`ui-sdk` skill, loaded for you).** Its `references/testing.md` is a checklist for testing keyboard, focus, ARIA, server rendering and right to left. Use it as a standard when you test Toogo's hand-built sheets, menus and lists. The `@ui-sdk/*` packages are not installed (they need React 19; Toogo is on 18.3): do not install them or write tests that import them.
+**UI SDK (`ui-sdk` skill, loaded for you).** Its `references/testing.md` is a checklist for testing keyboard, focus, ARIA, server rendering and right to left. Use it as a standard when you test Toogo's hand-built sheets, menus and lists. The `@ui-sdk/*` packages are installed (React 19.2.9) and used in the app; tests may import them.
 
 Your skills for this project are in `.claude/skills/` and are loaded for you: `toogo-rules`, `toogo-ship-check`, `toogo-app-review`, `ui-sdk`. `toogo-rules` holds the owner's standing decisions and wins over anything else. Read the matching skill before starting, and say in your report which one you used.
 

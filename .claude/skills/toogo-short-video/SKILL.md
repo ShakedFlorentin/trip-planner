@@ -51,3 +51,26 @@ A motion-graphics studio for startups, 2,244 followers; its posts are its own sa
 ## Added 2026-11-16 from @charles.unemployed (captions read; video text NOT read)
 - **Show the rule, give it in the caption** (https://www.instagram.com/charles.unemployed/reel/DfxOhZmyLXz/, https://www.instagram.com/charles.unemployed/reel/DfphRvFBx54/): his top posts are a visual demo plus a caption with the full list of rules; the caption is what gets saved. For Toogo: a short real-screen demo of one trip-planning rule with the full tip list in the caption; one ask per caption.
 - **Not adopted:** "comment a word and I will send the skill" (an engagement gate that asks for a comment to unlock value). Give the value in the caption or link it; no nagging (toogo-rules 7). His deals post with a date deadline is also not a pattern to copy (no fake urgency).
+
+## Added 2026-11-16 from @aniakubow (captions read; video NOT read)
+128K followers, 11 recent reels (29 Oct to 16 Nov 2026), all the same shape, so the format is the lesson (numbers are her public counts, not proof).
+- **One component, one line, one question.** Each reel shows a single UI element and a caption of one to two sentences, then three to five hashtags. Several end with a direct question ("What do you use for your thinking state?", "Is this a method you would use?", https://www.instagram.com/aniakubow/reel/DfUzxobxFfa/, https://www.instagram.com/aniakubow/reel/DfE208excKT/). For Toogo: one Toogo moment per reel (one swipe, one match, one day plan), a one-line caption, one question about trip planning ("Would you rather start with food or temples in Kyoto?"). This fits the one-ask-per-caption rule above.
+- **Reach on a big account is modest.** Her reels got 427 to 1,318 likes on 128K followers (under 1%), the best being the sliders reel (https://www.instagram.com/aniakubow/reel/Dfhr3ySRqzw/). Expect Toogo's early reels to be small; judge the format over several posts.
+- **Daily cadence, #100daysofcode series.** A named running series gives followers a reason to come back; Toogo's version could be a numbered "days to Japan" series with true dates only (toogo-rules 7, no countdown urgency).
+- **"Save it for your next app idea"** (https://www.instagram.com/aniakubow/reel/DfPGijtxPvs/): the save ask works for reference-style content; Toogo equivalent is "save this for your Japan trip".
+- Her bio sells her own course ("now $49"); not copied (a sales pitch for her own service).
+
+## Added 2026-11-16 from @luca_radez (captions read; video NOT read)
+Brand and motion designer, 7,125 followers. Of 12 grid items, 9 were usable. Like counts are the public numbers, not proof.
+- **Build it in front of them** (https://www.instagram.com/luca_radez/reel/Dfes-rkgUkD/, "the launch poster, built layer by layer"; https://www.instagram.com/luca_radez/reel/DfknZtRgk1p/, watch opens part by part): a reel that assembles one object step by step. Toogo version: one day plan built card by card, each card arriving by a real swipe and match, from a real fixture trip (toogo-rules 3, 11).
+- **Name the project honestly and put the story in the caption** (all Quartier, Meridio and Kage captions start "Concept project" and give the name's meaning, the colours, the fonts): Kage means shade and also light. A Toogo caption can give one true fact about the place and one about how the app works.
+- **A fact-led hook with sources** (https://www.instagram.com/luca_radez/reel/DfXubRAAIgw/): "A logo is one file. A brand identity is the whole folder." with named sources at the end. Any number in a Toogo caption must be true and sourced; his  and .7 billion figures are his claim from the sources he lists.
+- **End on one question** ("What's in your folder?"; same pattern as the @aniakubow note). Toogo: "What's in your Japan folder?" showing saved places.
+- **Not adopted:** "Comment MOTION and I'll send the video setup" and "send this to someone launching a brand" (https://www.instagram.com/luca_radez/reel/DfDSGbLgV4r/): a comment gate and a share ask inside a sales pitch (no nagging, toogo-rules 7). "Send this to a designer who..." closers: one share line at most.
+
+## Added 2026-11-16: free voice-over (from @itstundeanthony, owner's summary)
+For reel and store-video voice-overs, a free local text-to-speech studio (VoiceStudio / OmniVoice Studio, or Voicebox) can replace a paid service like ElevenLabs. Made once on the Mac, not in the app (rule 2: no per-user paid APIs; in-app voice stays the phone's own speech). Check the Hebrew voice before publishing, keep the AGPL code out of Toogo, and never clone a real person's voice without written consent. Details: `docs/itstundeanthony-reels-2026-11-16.md`.
+
+## Added 2026-11-16, signed-in pass (captions only)
+- **Demo, not screen recording** (https://www.instagram.com/reel/Dfv1BkEO_YT/): crop to the one flow, phone-big, a finger or cursor leads; show swipe and match. Draw what the app does in three moves (https://www.instagram.com/reel/DfvR2x7CLUH/).
+- **Three-question brief per video** (https://www.instagram.com/p/Dfuw1KVjiJp/): what is it, who for, what should they feel; plus launch day and where it is seen. One closing question per caption.

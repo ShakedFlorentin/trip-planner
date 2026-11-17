@@ -113,7 +113,12 @@ Routing notes:
 - A UI change is ux (what) then frontend (build) then qa (Hebrew and English screenshots). Never frontend alone for a design decision.
 - Anything about sign-in, payments, accounts, AI disclosure or permissions also goes to appstore, and to legal when money or data is involved.
 - A change that needs a deploy, live SQL or a git push ends with exact steps for the owner. No agent does those.
-- UI SDK is loaded for ux, frontend and qa but not installed (needs React 19; Toogo is on 18.3). Installing it or upgrading React is the owner's decision: route that question to the owner, not to an agent.
+- UI SDK is loaded for ux, frontend and qa and installed (`@ui-sdk/react` 0.1.0-beta.1 on React 19.2.9); prefer its components.
+- Reel or channel links from the owner go to the teacher agent (browser, toogo-learn-from-reels); it teaches the four craft skills: toogo-frontend-craft, toogo-backend-craft, toogo-ux-ui-craft, toogo-marketing-craft.
 - Suggested order of work is in `docs/nels-and-scouts-2026-11-14.md` section 4 (delete account first).
 
 Your skills for this project are in `.claude/skills/` and are loaded for you: `toogo-rules`. `toogo-rules` holds the owner's standing decisions and wins over anything else. Read the matching skill before starting, and say in your report which one you used.
+
+## Knowledge library
+
+Your book is `.claude/books/atlas/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.

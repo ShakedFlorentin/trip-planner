@@ -45,3 +45,12 @@
 
 ## Processed reels (do not redo)
 https://www.instagram.com/charles.unemployed/reel/ plus: DJrbdK7hugY, DIWt7j-O40r, DfxOhZmyLXz, DfxOT_IyBP7, DfuhpYpxM96, DfuhfgpRQxa, DfsT4vkRM9H, DfsTwyAxO_N, DfphRvFBx54, DfpgMtHhyNA, DfsUJ5Wx4TO, Dfm33XyhRN3.
+
+## Signed-in pass (2026-11-16)
+- 94 posts, all listed. 82 new posts checked by caption; **caption only, no frames read** (the agent cannot view screenshots). Four substantive: DffBKUZhy6B (list of design techniques), Dfh24cUh4KF (more terms), DfSbDWhR2bi (how to "unslop" designs), DfPruJSxggG (age-picker principles).
+- Skipped (most of the rest): vlogs, job/hiring posts (DX0auMNs2XM, DYNzOHbhqzA), startup-life and money posts, "comment X for the skill" funnels (Dfm3jaFBzej, Dfh2dXSBJII, DfcnAJFhAa1, Dfi94NwEQdL AI-influencer funnel), format credits and "what next" posts with no content.
+- Lessons (creator's claims): (1) Recognition over recall: give a few tappable prompts instead of an empty field (fits Add-a-place from a link and trip search). (2) Optimistic update: show the result at once, sync in the background (swipe/match, ticking an expense), with a clear failed state (matches the offline-queue work). (3) Human in the loop: anything that suggests changes asks before changing (planner suggestions must not touch bookings and expenses). (4) Layout stability, skeletons, origin-aware popups, ease-out for entering things, tabular figures, film grain on gradients to stop banding, tinted neutrals, empty states. (5) Unslop recipe: use a reference, then choose fonts and colours yourself to form a design system.
+- Processed (added): the 82 new shortcodes of the profile grid were listed and their captions read; substantive ones: DffBKUZhy6B Dfh24cUh4KF DfSbDWhR2bi DfPruJSxggG. Caption list not stored per code beyond those named here.
+
+## Frames pass (Step 2, 2026-11-16)
+Watched (frames, OCR plus 2 frames viewed): DfxOhZmyLXz (10 niche CSS hacks: concentric radius, alpha borders, OKLCH palettes and gradients, matched icon weight, masked edges, blurred icon swaps, dark-mode depth, dynamic viewport, multiply blending; code chips too brief to copy), DfphRvFBx54 (12 animation principles plus UX laws: Miller, Postel, Jakob, frequency of use), DffBKUZhy6B (AI chat without slop: visible steps with times, user's own data, confirm before adding to calendar). Lessons went to toogo-frontend-craft and toogo-ux-ui-craft.

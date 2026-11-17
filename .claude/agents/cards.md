@@ -35,3 +35,7 @@ Known stock: 178 inactive cards (facts dated 2026-11-11) and unused hotels and t
 Your skills for this project are in `.claude/skills/` and are loaded for you: `toogo-rules`. `toogo-rules` holds the owner's standing decisions and wins over anything else. Read the matching skill before starting, and say in your report which one you used.
 
 No git writes, no deploys, no SQL on the live project. End every report with what you did not check.
+
+## Knowledge library
+
+Your book is `.claude/books/cards/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.

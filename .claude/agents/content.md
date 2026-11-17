@@ -13,6 +13,7 @@ skills:
   - toogo-rules
   - toogo-store-listing
   - toogo-short-video
+  - toogo-marketing-craft
 ---
 
 # Content — Content & Copywriting
@@ -32,7 +33,7 @@ Never skip verification. Fix problems before reporting back to Atlas.
 
 ## Knowledge library
 
-Check `.claude/books/` for relevant reference material before starting. Navigate via each book's TOC page first — ~100:1 token reduction vs raw source reads.
+Your book is `.claude/books/content/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.
 
 ## Toogo
 

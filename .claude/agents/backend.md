@@ -14,6 +14,7 @@ skills:
   - toogo-rules
   - toogo-ship-check
   - toogo-supabase-prelaunch
+  - toogo-backend-craft
 ---
 
 # Backend — Backend Engineering
@@ -63,7 +64,7 @@ disclosure.
 
 ## Knowledge library
 
-Check `.claude/books/` for relevant reference material before starting. Navigate via each book's TOC page first — ~100:1 token reduction vs raw source reads.
+Your book is `.claude/books/backend/` (Toogo AI wiki, indexed by codegrapher). Open `00-toc.md` first, then only the pages you need; other agents' books are there too. To find code and the pages that explain it: `PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher query <term>`. After changing code or a page, run `python3 scripts/wiki-scan.py` and fix the page if it is now wrong.
 
 ## Toogo
 
