@@ -412,6 +412,8 @@ export default function AddPlace({ tripId, userId, me, initial = '', onClose }: 
         // the same card in English, for whoever uses the app in English
         ...(d.en ? { en: d.en } : {}),
         ...(d.tags?.length ? { tags: d.tags } : {}),
+        // the lookup's season notes (needs the candidates.seasonal column: supabase/sql/2026-11-18-seasonal-notes.sql)
+        ...(d.seasonal ? { seasonal: d.seasonal } : {}),
       })
       .select('id')
       .single()

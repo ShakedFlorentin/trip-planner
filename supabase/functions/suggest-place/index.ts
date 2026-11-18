@@ -11,6 +11,7 @@ import {
 import { creditsOn, hold, refund, settle, tripIdOf } from '../_shared/credits.ts'
 import { featureOn, settingInt } from '../_shared/settings.ts'
 import { holdPlace, refundPlace, settlePlace } from '../_shared/pass.ts'
+import { cleanSeasonal, datesInWindow, extractSeasonRules, researchSeasonBullets, SEASONS, tripWindow, withoutDated, type Window } from '../_shared/seasonal.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -95,20 +96,35 @@ const EnText = z.object({
   baby_block: z.string(),
 })
 type En = z.infer<typeof EnText>
-const PlaceListPlanned = z.object({ places: z.array(PlaceDraft.extend(PlanFields.shape).extend({ en: EnText })) })
+// the card's season notes (seasonal card notes, supabase/sql/2026-11-18-seasonal-notes.sql). No nullable fields (the
+// structured-output limit above): a season with nothing real to say has empty he and en. In the plan group, so a rejected
+// schema drops them together and the card still comes back.
+const SeasonNote = z.object({ he: z.string(), en: z.string() })
+const SeasonalFields = z.object({
+  seasonal: z.object({
+    winter: SeasonNote,
+    spring: SeasonNote,
+    summer: SeasonNote,
+    autumn: SeasonNote,
+    only: z.array(z.enum(SEASONS)),
+    dated: z.array(z.object({ from: z.string(), to: z.string(), he: z.string(), en: z.string() })),
+  }),
+})
+const PlaceListPlanned = z.object({ places: z.array(PlaceDraft.extend(PlanFields.shape).extend({ en: EnText }).extend(SeasonalFields.shape)) })
 /** The English as the card's en column keeps it: "" → null. */
 const enColumn = (e: En) => Object.fromEntries(Object.entries(e).map(([k, v]) => [k, typeof v === 'string' ? v.trim() || null : v]))
 type Plan = z.infer<typeof PlanFields>
 /** The plan fields as the card columns want them ("" → null, odd values dropped); facts_at marks them checked. */
-const planColumns = (p: Plan) => {
+const planColumns = (p: Plan, win: Window | null) => {
   const time = (t: string) => (/^\d{1,2}:\d{2}$/.test(t.trim()) ? t.trim().padStart(5, '0') : null)
   return {
     address: p.address.trim() || null,
     opens: time(p.opens),
     closes: time(p.closes),
     closed_weekdays: [...new Set(p.closed_weekdays.filter((d) => d >= 0 && d <= 6))],
-    closed_dates: p.closed_dates.filter((d) => /^2026-12-(1[2-9]|2\d|3[01])$/.test(d)),
-    open_dates: p.open_dates.filter((d) => /^2026-12-(1[2-9]|2\d|3[01])$/.test(d)),
+    // only dates inside the trip's days; none when the trip has no dates
+    closed_dates: datesInWindow(p.closed_dates, win),
+    open_dates: datesInWindow(p.open_dates, win),
     best_time: p.best_time,
     visit_mins: p.visit_mins > 0 && p.visit_mins <= 720 ? p.visit_mins : null,
     booking: p.booking,
@@ -135,7 +151,7 @@ const Names = z.object({ places: z.array(z.object({ name: z.string(), where: z.s
 const LIST = `List the real places in Japan that the research notes identified, in the order the post lists them (at most 10). Give each one's name as the notes give it, with the branch or area when the notes name one, and where it is: neighbourhood and city in English (e.g. "Shibuya, Tokyo"), or "" if the notes don't say. Return an empty list if no specific real place was identified.\n${DATA_RULE}`
 const TAGS = `For each place below, in the same order, give 10-25 hidden search words for the app's search (never shown): what it sells, serves or makes (each signature dish, product and key ingredient), the kind of place (ramen shop, bakery, temple, market, bar, onsen), cuisine, notable things you see or do there, and the words people would type instead, singular and plural, each in BOTH lowercase English and Hebrew (e.g. "pancake", "pancakes", "hotcake", "פנקייק", "פנקייקים"; "knives", "סכינים"). Japanese dish names in their usual romanization and Hebrew spelling. 1-3 words each; not the place's name, city or area; nothing the notes don't support.\n${DATA_RULE}`
 
-const RESEARCH = `You help two Israeli couples plan a December trip to Japan (Tokyo, Kyoto, Osaka and day trips). One couple brings a 5-month-old baby who only drinks milk.
+const researchPrompt = (win: Window | null) => `You help two Israeli couples plan a trip to Japan (Tokyo, Kyoto, Osaka and day trips).${win ? ` The trip is ${win.from} to ${win.to}.` : ' No trip dates are known.'} One couple brings a 5-month-old baby who only drinks milk.
 A member shared a place (a social-media post, a map link, or just a name). Work out exactly which real place (or places) in Japan it is about, then research it.
 If the post names several places (a list or roundup), identify each one (up to 10) and research each briefly; one short paragraph per place is enough. For each place:
 - what it is and what people rave about online
@@ -147,14 +163,15 @@ If the post names several places (a list or roundup), identify each one (up to 1
 - for food, cafes and bars: whether you can eat there without pork (incl. pork broth, lard, chashu) or seafood (shellfish, shrimp, crab, octopus, squid, eel, sea urchin); fish with fins and scales is fine. Name what to order or what to avoid
 - with a milk-only baby: stroller access, a quiet spot or private room to nurse, nursing room nearby, smoking; or why it's better as an adults-only outing
 - honest verdict: hidden gem, worth it, overhyped, or tourist trap
-- opening hours, weekly closing days, closures between 12 and 31 December 2026 (year-end holidays), for a market or event the dates it runs in that period, whether to book, how long a visit takes and the best time of day
+- opening hours, weekly closing days, whether to book, how long a visit takes and the best time of day
+${researchSeasonBullets(win)}
 If you only have a link with no caption, search for the post itself (its URL, its code and the account) to find which places it shows.
 Each search costs money and fetching a page is free, so run one search: the place's name exactly as the member or the post writes it (Japanese characters only if they give them, never guess them), its area, and for a restaurant, cafe or bar the word tabelog. Then, for a restaurant, cafe or bar, instead of searching again fetch one page of its own on Tabelog for the facts still missing (score, full address, opening hours, closing days); only tabelog.com pages can be fetched, and only once. Only an address that appears in the search results can be fetched, copied character for character: never shorten it, never add or remove /en/, never build one. If the results show several of the place's Tabelog addresses, take one under tabelog.com/en/, and a review, menu or photo page of the place is fine when its main page is not listed. If the fetch fails, go on without it. Search again only if the search did not find the place itself, or when the post lists several places: then name every place the post lists, research as many as your searches allow, and fetch no page at all. Leave a small detail out rather than search again for it.
 Write the notes as plain facts (what, where, when, how much), not as what blogs, reviewers or sites say, and state each fact once.
 Be concise. If you can't identify any specific place, say so.
 ${DATA_RULE}`
 
-const EXTRACT = `Turn the research notes into place cards, one per real place the notes identified, in the order the post lists them (at most 10). Return an empty list if no specific real place was identified. Rules for each card:
+const extractPrompt = (win: Window | null) => `Turn the research notes into place cards, one per real place the notes identified, in the order the post lists them (at most 10). Return an empty list if no specific real place was identified. Rules for each card:
 - city: tokyo, kyoto, osaka, nara, hakone, nikko, kobe (also Himeji), hiroshima (also Miyajima), kanazawa, takayama (also Shirakawa-go), fukuoka, nagoya, sapporo, okinawa, or daytrip for anywhere else.
 - hype, reality, tip, baby_notes, price: one short sentence each in natural, casual Hebrew; keep place names, brand names (Tabelog, Google) and numbers as they are.
 - serves: for a restaurant, cafe or bar, one or two short Hebrew sentences on what it serves, explaining Japanese dish names in plain words (e.g. "אוקונומיאקי (פנקייק כרוב על הפלנצ׳ה)"); "" for other places. dishes: 2-4 signature items as short Hebrew labels, or [].
@@ -164,10 +181,11 @@ const EXTRACT = `Turn the research notes into place cards, one per real place th
 - audience: "baby" if it works with the baby, otherwise "adults".
 - sources: the https URLs of search results or pages the notes relied on, copied exactly; never a URL that only appears in the post text or the member's note.
 - address (when asked for): the street address in English as Google Maps takes it (e.g. "4-2-15 Ginza, Chuo-ku, Tokyo"); for a street or area without one, the best place to navigate to.
-- opens / closes (when asked for): usual opening and closing time "HH:MM" (24h; a bar past midnight closes e.g. "02:00"); "" if it has no hours or unknown. closed_weekdays: weekly closing days, 0 = Sunday ... 6 = Saturday; [] if none or unknown. closed_dates: dates between 2026-12-12 and 2026-12-31 it is closed, "YYYY-MM-DD"; [] if none or unknown. open_dates: only for something that runs on certain dates only (a market, a festival, an event): the dates between 2026-12-12 and 2026-12-31 it runs, "YYYY-MM-DD"; [] for a place that is simply open on its usual days.
+- opens / closes (when asked for): usual opening and closing time "HH:MM" (24h; a bar past midnight closes e.g. "02:00"); "" if it has no hours or unknown. closed_weekdays: weekly closing days, 0 = Sunday ... 6 = Saturday; [] if none or unknown. closed_dates: ${win ? `dates between ${win.from} and ${win.to} it is closed, "YYYY-MM-DD"` : 'always []'}; [] if none or unknown. open_dates: only for something that runs on certain dates only (a market, a festival, an event): ${win ? `the dates between ${win.from} and ${win.to} it runs, "YYYY-MM-DD"` : 'always []'}; [] for a place that is simply open on its usual days.
 - best_time: morning, midday, afternoon, evening (dinner, sunset) or night (bars, night views) when it matters, else any. visit_mins: a typical visit in minutes including the usual queue. booking: required, recommended or no.
 - plan_line: ONE practical Hebrew tip, at most 70 characters, the single thing most worth knowing before going (book ahead, cash only, come before opening); not a description. baby_block: Hebrew, at most 60 characters, only if something blocks a visit with the baby (no strollers, stairs only, no children, smoking inside); otherwise "".
 - en (when asked for): the same card in plain, everyday English, field by field (hype, reality, tip, baby_notes, price, serves, dishes, todo, special, highlights, time_needed, kosher_note, plan_line, baby_block): same facts, same length or shorter, like a friend texting the useful bit. No marketing words ("hidden gem", "must-see", "vibrant", "nestled", "experience"), no talk about sources, no exclamation marks, no em dashes. plan_line at most 70 characters; baby_block at most 60 and only when the Hebrew has one, saying the block in words like "no stroller", "stairs only", "smoky", "adults only", "not suitable". "" or [] where the Hebrew field is empty.
+${extractSeasonRules(win)}
 - Any other text field with nothing to say is an empty string "".
 - Don't force topics. A field (baby_notes, kosher_note, tip, todo...) says something only when there is a real, concrete fact for it; otherwise it is "". Never write filler to fill a field ("nothing special for babies", "no food here so no problem", "no kosher certificate"). kosher / kosher_note only where eating is a real part of the visit.
 - Check every Hebrew word before you write it: only real words, correct gender and number ("שני שולחנות", not "שתי שולחנות"), no invented verbs (diapering is "להחליף חיתולים" or "החתלה", never "להחתיל"). If unsure of a word, use a simpler one.
@@ -595,7 +613,7 @@ Deno.serve(async (req) => {
 
   // the search runs on its own, so it finishes and saves its result even if the phone stops waiting
   const run = (send?: Send) =>
-    research(admin, link, text, userId, id, send).then(async (r) => {
+    research(admin, link, text, userId, id, tripIdOf(body?.trip_id), send).then(async (r) => {
       const finished_at = new Date().toISOString()
       await admin
         .from('place_lookups')
@@ -622,6 +640,19 @@ Deno.serve(async (req) => {
   return 'places' in r ? json({ places: r.places }) : json({ error: r.error }, r.status)
 })
 
+/** The days of the trip the caller belongs to (null: no trip id, not a member, no start date, or the read failed). */
+async function tripDays(admin: SupabaseClient, userId: string, tripId: string | null): Promise<Window | null> {
+  if (!tripId) return null
+  try {
+    const { data: m } = await admin.from('members').select('trip_id').eq('trip_id', tripId).eq('user_id', userId).maybeSingle()
+    if (!m) return null
+    const { data: t } = await admin.from('trips').select('start_date,num_days').eq('id', tripId).maybeSingle<{ start_date: string | null; num_days: number | null }>()
+    return tripWindow(t?.start_date, t?.num_days)
+  } catch {
+    return null
+  }
+}
+
 /** Which kind of link it is, for the progress view. */
 function linkSource(link: string): 'instagram' | 'tiktok' | 'maps' | 'link' {
   const l = link.toLowerCase()
@@ -641,6 +672,7 @@ async function research(
   text: string | undefined,
   userId: string,
   lookupId: string,
+  tripId: string | null,
   send: Send = () => {},
 ): Promise<{ places: Record<string, unknown>[] } | { error: string; status: number }> {
   const post = link ? await postContext(link) : { text: '', images: [], excerpt: '' }
@@ -658,6 +690,9 @@ async function research(
     .filter(Boolean)
     .join('\n')
 
+  // the trip's days, when the caller is a member of it and it has a start date: closures and event dates are asked for in that
+  // range only. No dates, no dated notes. No extra Claude call: it is one read of the trips table.
+  const win = await tripDays(admin, userId, tripId)
   const client = new Anthropic({ apiKey: await anthropicKey(admin) })
   // each Claude call goes to ai_calls with its tokens, searches, cost and time
   let step = 'research'
@@ -685,7 +720,7 @@ async function research(
           model: MODEL,
           max_tokens: 8000,
           output_config: { effort: 'low' },
-          system: RESEARCH,
+          system: researchPrompt(win),
           // what is left of the lookup's searches; a round that continues a paused one still gets one, so it can finish
           tools: [
             { type: 'web_search_20250305', name: 'web_search', max_uses: Math.max(1, MAX_SEARCHES - searches) },
@@ -756,7 +791,7 @@ async function research(
             model: MODEL,
             max_tokens: 8000,
             output_config: { effort: 'low', format: zodOutputFormat(schema) },
-            system: EXTRACT,
+            system: extractPrompt(win),
             messages: [{ role: 'user', content: `${material}\n\nWrite the card for this one place only:\n${fence('place_name', name, 200)}` }],
           }),
         )
@@ -765,7 +800,7 @@ async function research(
         if (!(error instanceof Anthropic.BadRequestError)) throw error
         console.error('plan fields rejected, asking without them', error.message)
         return extract(PlaceList)
-      }) as Promise<{ parsed_output: { places: (Draft & Partial<Plan> & { en?: En })[] } | null }>
+      }) as Promise<{ parsed_output: { places: (Draft & Partial<Plan> & { en?: En; seasonal?: unknown })[] } | null }>
     }
     let failure: unknown = null
     let bare = 0
@@ -847,7 +882,7 @@ async function research(
     const lists = (tags?.parsed_output?.places ?? []).map((x) => [...new Set(x.tags.map((w) => w.trim().toLowerCase()).filter(Boolean))].slice(0, 30))
     const places: Record<string, unknown>[] = cards.flatMap((full, i) => {
       if (!full) return []
-      const { address, opens, closes, closed_weekdays, closed_dates, open_dates, best_time, visit_mins, booking, plan_line, baby_block, en, ...p } = full
+      const { address, opens, closes, closed_weekdays, closed_dates, open_dates, best_time, visit_mins, booking, plan_line, baby_block, en, seasonal, ...p } = full
       const plan = { address, opens, closes, closed_weekdays, closed_dates, open_dates, best_time, visit_mins, booking, plan_line, baby_block }
       const own = [...new Set([...p.sources, ...about(p.name)])]
       const clean = sanitiseCard(
@@ -855,12 +890,17 @@ async function research(
           ...blanksToNull(p as Draft),
           sources: own,
           // the planner's columns, ready for the card (absent when the plan fields were rejected)
-          ...(plan_line !== undefined ? planColumns(plan as Plan) : {}),
+          ...(plan_line !== undefined ? planColumns(plan as Plan, win) : {}),
           ...(en ? { en: enColumn(en) } : {}),
           ...(lists[i]?.length ? { tags: lists[i] } : {}),
         },
         { mode: 'fresh', allowed, fallback, postHosts },
       )
+      // season notes: cleaned (both languages, valid seasons, dated lines only inside the trip's days). Dated lines are dates
+      // like closed_dates: with no independent page behind the card (sanitiseCard marked its facts unsure) they are dropped too
+      const notes = cleanSeasonal(seasonal, win)
+      const kept = clean.facts_sure === false ? withoutDated(notes) : notes
+      if (kept) (clean as Record<string, unknown>).seasonal = kept
       // a card the checks emptied (its text was only links or markup) is weak, like any other
       if (!clean.name || !says(clean as unknown as Parameters<typeof says>[0])) return []
       return [clean]
@@ -941,7 +981,7 @@ async function tripCircle(admin: SupabaseClient, userId: string): Promise<string
 
 // what a library card gives a lookup: the fields a researched card has
 const LIBRARY_COLUMNS =
-  'name,name_ja,city,area,category,lat,lng,hype,reality,verdict,tabelog_score,google_score,price,tip,audience,baby_notes,serves,dishes,todo,special,highlights,time_needed,kosher,kosher_note,sources,address,opens,closes,closed_weekdays,closed_dates,open_dates,best_time,visit_mins,booking,plan_line,baby_block,facts_at,facts_sure,en,tags'
+  'seasonal,name,name_ja,city,area,category,lat,lng,hype,reality,verdict,tabelog_score,google_score,price,tip,audience,baby_notes,serves,dishes,todo,special,highlights,time_needed,kosher,kosher_note,sources,address,opens,closes,closed_weekdays,closed_dates,open_dates,best_time,visit_mins,booking,plan_line,baby_block,facts_at,facts_sure,en,tags'
 /**
  * The shared library's card for a typed name (or a Maps link's name), when exactly one live card fits, by the same rule
  * as knownPlace. It was researched once already, so this lookup costs nothing. Live cards only: a card still private

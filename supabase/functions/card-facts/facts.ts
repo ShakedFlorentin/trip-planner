@@ -7,10 +7,21 @@ import { z } from 'npm:zod@4'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
 import { extractContent, lookUpKnown, recheckKnown, withRule } from './prompt.ts'
+import { cleanSeasonal, datesInWindow, extractSeasonRules, researchSeasonBullets, researchWho, SEASONS, type Seasonal, type Window } from '../_shared/seasonal.ts'
 
 const MODEL = 'claude-haiku-5-5'
 
-const FactsSchema = z.object({
+// the card's season notes (seasonal card notes, supabase/sql/2026-11-18-seasonal-notes.sql); a season with nothing real has empty he and en (structured output allows few nullable fields, so no nulls)
+const SeasonNote = z.object({ he: z.string(), en: z.string() })
+const SeasonalSchema = z.object({
+  winter: SeasonNote,
+  spring: SeasonNote,
+  summer: SeasonNote,
+  autumn: SeasonNote,
+  only: z.array(z.enum(SEASONS)),
+  dated: z.array(z.object({ from: z.string(), to: z.string(), he: z.string(), en: z.string() })),
+})
+const BaseFields = {
   address: z.string(),
   line: z.string(),
   baby: z.string(),
@@ -27,7 +38,10 @@ const FactsSchema = z.object({
   lat: z.number().nullable(),
   lng: z.number().nullable(),
   tags: z.array(z.string()),
-})
+}
+const FactsSchema = z.object(BaseFields)
+// kept apart: if the API ever rejects the bigger schema, the card still gets its facts (without seasonal notes)
+const FactsWithSeasons = z.object({ ...BaseFields, seasonal: SeasonalSchema })
 export type Facts = {
   key: string
   name: string
@@ -47,6 +61,8 @@ export type Facts = {
   lat: number | null
   lng: number | null
   tags: string[]
+  /** season notes in the column's shape; null when there is nothing real to say (or the schema was rejected) */
+  seasonal: Seasonal | null
 }
 
 export type PlaceInfo = {
@@ -60,16 +76,17 @@ export type PlaceInfo = {
   hype?: string | null
   reality?: string | null
   time_needed?: string | null
+  /** the trip's days, when it has dates: closures and event dates are asked for in that range only */
+  trip?: Window | null
 }
 
 /** The same place under small differences in spelling, case or punctuation gets one key. */
 export const factKey = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 
-const RESEARCH = `You check practical visiting facts for a place in Japan for travellers there between 12 and 31 December 2026.
-Each search costs money: one search is usually enough (use the Japanese name when you have it); search a second time only if the opening hours or the December closures are still missing. Report:
-- regular opening hours (as of late 2026) and weekly closing days
-- closures between 12 and 31 December 2026, especially the year-end holidays (usually from 28-31 December); say clearly when the place is open on those days if you find it
-- for a market, a festival or an event that runs on certain dates only: the dates it runs between 12 and 31 December 2026
+const researchPrompt = (win: Window | null) => `You check practical visiting facts for a place in Japan ${researchWho(win)}.
+Each search costs money: one search is usually enough (use the Japanese name when you have it); search a second time only if the opening hours${win ? ' or the closures in those dates' : ''} are still missing. Report:
+- regular opening hours and weekly closing days
+${researchSeasonBullets(win)}
 - whether you need to book ahead, and the usual queue
 - how long a typical visit takes
 - the best time of day to go, if there is one (sunset view, dinner, nightlife, morning before crowds)
@@ -77,7 +94,7 @@ Each search costs money: one search is usually enough (use the Japanese name whe
 - anything that makes it hard with a stroller and a milk-only 5-month-old baby (no strollers allowed, stairs only, no children, smoking inside, very cramped)
 Only report what you find or what is well known; say "unknown" otherwise. Plain facts, not who said them. Be brief.`
 
-const EXTRACT = `Turn the notes into the fields below.
+const extractPrompt = (win: Window | null) => `Turn the notes into the fields below.
 - address: the street address in English as Google Maps takes it (e.g. "4-2-15 Ginza, Chuo-ku, Tokyo"); for a street or area without one, the best place to navigate to (e.g. "Nishiki Market, Nakagyo-ku, Kyoto").
 - line: ONE short practical tip in natural Hebrew, at most 70 characters, the single thing most worth knowing before going (book ahead, cash only, come before opening, buy the sunset slot, closed on Mondays). Not a description of the place. Keep place and brand names as they are. No emoji, no exclamation marks.
 - baby: in Hebrew, at most 60 characters, ONLY if something there changes the plan with a milk-only baby (strollers not allowed, stairs only, no children, smoking inside). Otherwise "".
@@ -85,13 +102,14 @@ const EXTRACT = `Turn the notes into the fields below.
 - line_en / baby_en: the same two lines in plain, everyday English (same limits; baby_en "" when baby is ""). Short and practical ("Book ahead", "Cash only", "No room for a stroller"), no marketing words, no exclamation marks, no em dashes. baby_en must say the block in words like "no stroller", "stairs only", "smoky", "adults only", "not suitable".
 - opens / closes: typical opening and closing time as "HH:MM" (24h); "" if it has no hours (a street, an area) or unknown. A bar open past midnight closes at e.g. "02:00".
 - closed_weekdays: weekly closing days as numbers, 0 = Sunday ... 6 = Saturday; [] if none or unknown.
-- closed_dates: dates between 2026-12-12 and 2026-12-31 it is closed as "YYYY-MM-DD" (year-end holidays included); [] if none or unknown.
-- open_dates: ONLY for something that runs on certain dates only (a market, a festival, an event): the dates between 2026-12-12 and 2026-12-31 it runs, "YYYY-MM-DD"; [] for a place that is simply open on its usual days.
+- closed_dates: ${win ? `dates between ${win.from} and ${win.to} it is closed as "YYYY-MM-DD" (year-end holidays included)` : 'always []'}; [] if none or unknown.
+- open_dates: ONLY for something that runs on certain dates only (a market, a festival, an event): ${win ? `the dates between ${win.from} and ${win.to} it runs, "YYYY-MM-DD"` : 'always []'}; [] for a place that is simply open on its usual days.
 - best_time: when to go if it matters (morning before crowds, midday for lunch, afternoon, evening for dinner or sunset, night for bars and night views); "any" otherwise.
 - hours: typical visit length in hours including the usual queue (e.g. 1, 1.5, 3, 8 for a full day trip).
 - booking: "required", "recommended" or "no".
 - lat / lng: only if stated in the notes, else null.
-- tags: 10-25 hidden search words for the app's search (never shown): what it sells, serves or makes (each signature dish, product and key ingredient), the kind of place (ramen shop, bakery, temple, market, bar, onsen), cuisine, notable things you see or do there, and the words people would type instead, singular and plural, each in BOTH lowercase English and Hebrew (e.g. "pancake", "pancakes", "hotcake", "פנקייק", "פנקייקים"; "knives", "סכינים"). Japanese dish names in their usual romanization and Hebrew spelling. 1-3 words each; not the place's name, city or area; nothing the notes don't support.`
+- tags: 10-25 hidden search words for the app's search (never shown): what it sells, serves or makes (each signature dish, product and key ingredient), the kind of place (ramen shop, bakery, temple, market, bar, onsen), cuisine, notable things you see or do there, and the words people would type instead, singular and plural, each in BOTH lowercase English and Hebrew (e.g. "pancake", "pancakes", "hotcake", "פנקייק", "פנקייקים"; "knives", "סכינים"). Japanese dish names in their usual romanization and Hebrew spelling. 1-3 words each; not the place's name, city or area; nothing the notes don't support.
+${extractSeasonRules(win)}`
 
 /** Looks a place up; null when the lookup failed. */
 export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceInfo): Promise<Facts | null> {
@@ -111,7 +129,7 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
         // thinking counts toward this; at 3000 one lookup in 55 was cut off
         max_tokens: 6000,
         output_config: { effort: 'low' },
-        system: withRule(RESEARCH),
+        system: withRule(researchPrompt(p.trip ?? null)),
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
         messages,
       })
@@ -127,16 +145,24 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
 
     step = 'facts-extract'
     t = performance.now()
-    const r = await client.messages.parse({
-      model: MODEL,
-      // thinking counts toward this: cut off here, the paid search before it is thrown away
-      max_tokens: 4000,
-      output_config: { effort: 'low', format: zodOutputFormat(FactsSchema) },
-      system: withRule(EXTRACT),
-      messages: [{ role: 'user', content: extractContent(p, notes) }],
+    const win = p.trip ?? null
+    const ask = (schema: typeof FactsSchema | typeof FactsWithSeasons) =>
+      client.messages.parse({
+        model: MODEL,
+        // thinking counts toward this: cut off here, the paid search before it is thrown away
+        max_tokens: 4000,
+        output_config: { effort: 'low', format: zodOutputFormat(schema) },
+        system: withRule(extractPrompt(win)),
+        messages: [{ role: 'user', content: extractContent(p, notes) }],
+      })
+    // a rejected schema (answered before any work is done) must not cost the card: ask again without the season notes
+    const r = await ask(FactsWithSeasons).catch((error) => {
+      if (!(error instanceof Anthropic.BadRequestError)) throw error
+      console.error('seasonal schema rejected, asking without it', error.message)
+      return ask(FactsSchema)
     })
     log(r)
-    const f = r.parsed_output
+    const f = r.parsed_output as (z.infer<typeof FactsSchema> & { seasonal?: unknown }) | null
     if (!f) return null
     const time = (s: string) => (/^\d{1,2}:\d{2}$/.test(s.trim()) ? s.trim().padStart(5, '0') : null)
     const inJapan = f.lat != null && f.lng != null && f.lat > 24 && f.lat < 46 && f.lng > 122 && f.lng < 146
@@ -151,14 +177,15 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
       opens: time(f.opens),
       closes: time(f.closes),
       closed_weekdays: [...new Set(f.closed_weekdays.filter((d) => d >= 0 && d <= 6))],
-      closed_dates: f.closed_dates.filter((d) => /^2026-12-(1[2-9]|2\d|3[01])$/.test(d)),
-      open_dates: f.open_dates.filter((d) => /^2026-12-(1[2-9]|2\d|3[01])$/.test(d)),
+      closed_dates: datesInWindow(f.closed_dates, win),
+      open_dates: datesInWindow(f.open_dates, win),
       best_time: f.best_time,
       hours: f.hours > 0 && f.hours <= 12 ? f.hours : null,
       booking: f.booking,
       lat: inJapan ? f.lat : null,
       lng: inJapan ? f.lng : null,
       tags: [...new Set(f.tags.map((w) => w.trim().toLowerCase()).filter(Boolean))].slice(0, 30),
+      seasonal: cleanSeasonal(f.seasonal, win),
     }
   } catch (error) {
     console.error('facts lookup failed', p.name, error instanceof Error ? error.message : error)

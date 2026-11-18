@@ -7,6 +7,7 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.1.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { lookUp, recheck, type PlaceInfo } from './facts.ts'
+import { tripWindow } from '../_shared/seasonal.ts'
 
 type Card = PlaceInfo & {
   id: string
@@ -62,7 +63,9 @@ async function fill(admin: SupabaseClient, cid: string, token: string) {
     if (c.facts_at.slice(0, 10) > cutoff) return { skipped: 'has facts' }
     return refresh(admin, new Anthropic({ apiKey: key }), c, cutoff, token)
   }
-  const f = await lookUp(admin, new Anthropic({ apiKey: key }), c)
+  // the trip's days (null without a start date): closures and event dates are asked for in that range, season notes need no dates
+  const { data: trip } = await admin.from('trips').select('start_date,num_days').eq('id', c.trip_id).maybeSingle<{ start_date: string | null; num_days: number | null }>()
+  const f = await lookUp(admin, new Anthropic({ apiKey: key }), { ...c, trip: tripWindow(trip?.start_date, trip?.num_days) })
   if (!f) return { failed: true }
   const columns = {
     opens: f.opens,
@@ -86,6 +89,8 @@ async function fill(admin: SupabaseClient, cid: string, token: string) {
       ...columns,
       en: { ...(c.en ?? {}), ...english },
       ...(c.address == null && f.address ? { address: f.address } : {}),
+      // season notes (null when the research found nothing real to say: the card keeps what it has)
+      ...(f.seasonal ? { seasonal: f.seasonal } : {}),
       // search words for a card that came without them (e.g. from the Ptitim map)
       ...(!c.tags?.length && f.tags.length ? { tags: f.tags } : {}),
       // coordinates are kept in the backend only, for the planner's distances and the map pins
@@ -100,7 +105,7 @@ async function fill(admin: SupabaseClient, cid: string, token: string) {
     if (lib && lib.added_from_trip === c.trip_id) {
       await admin
         .from('place_library')
-        .update({ ...columns, address: f.address, en: { ...(lib.en ?? {}), ...english }, ...(f.tags.length ? { tags: f.tags } : {}) })
+        .update({ ...columns, address: f.address, en: { ...(lib.en ?? {}), ...english }, ...(f.tags.length ? { tags: f.tags } : {}), ...(f.seasonal ? { seasonal: f.seasonal } : {}) })
         .eq('id', c.library_id)
         .is('facts_at', null)
     }
