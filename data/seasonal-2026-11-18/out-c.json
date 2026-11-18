@@ -89,13 +89,21 @@
   },
   "seasonal": {
    "winter": {
-    "he": "מקורה ונעים ביום קר. בדצמבר פתוח 10:00-17:00, ובתקופת החגים השעות עלולות להשתנות.",
-    "en": "Indoors and good on a cold day. In December it is open 10:00-17:00, and holiday-period hours may change."
+    "he": "מקורה ונעים ביום קר.",
+    "en": "Indoors and good on a cold day."
    },
    "summer": {
     "he": "מקורה, מתאים ליום גשום או חם.",
     "en": "Indoors, suits a rainy or hot day."
-   }
+   },
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר פתוח 10:00-17:00, ובתקופת החגים השעות עלולות להשתנות.",
+     "en": "In December it is open 10:00-17:00, and holiday-period hours may change."
+    }
+   ]
   },
   "unsure": "Reality field ('great with a baby on a cold day') left as is: reads fine any month. Spring/autumn left out."
  },
@@ -114,14 +122,20 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר סוגרים ב-19:00. קר באאוטלט הפתוח, ופוג'י נראה בדרך כלל בבהירות.",
-    "en": "Closes at 19:00 in December. It is cold in the open-air outlet, and Fuji is usually clearly visible."
+    "he": "קר באאוטלט הפתוח, ופוג'י נראה בדרך כלל בבהירות.",
+    "en": "It is cold in the open-air outlet, and Fuji is usually clearly visible."
    },
    "summer": {
     "he": "חם ולח באאוטלט הפתוח, ופוג'י מוסתר לרוב בעננים.",
     "en": "Hot and humid in the open-air outlet, and Fuji is often hidden by cloud."
    },
    "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר סוגרים ב-19:00.",
+     "en": "Closes at 19:00 in December."
+    },
     {
      "from": "2026-12-01",
      "to": "2026-12-31",
@@ -143,8 +157,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "אמבט חם בחוץ נעים במיוחד בקור של דצמבר.",
-    "en": "A hot outdoor bath is especially nice in the cold of December."
+    "he": "אמבט חם בחוץ נעים במיוחד בקור של החורף.",
+    "en": "A hot outdoor bath is especially nice in the winter cold."
    }
   },
   "unsure": "Left out other seasons: no confident card-supported difference."
@@ -216,8 +230,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר השקיעה בנמל בסביבות 16:45, אז מתכננים את סוף היום בהתאם.",
-    "en": "In December sunset at the harbour is around 16:45, so plan the end of the day accordingly."
+    "he": "בחורף השקיעה בנמל בסביבות 16:45, אז מתכננים את סוף היום בהתאם.",
+    "en": "In winter sunset at the harbour is around 16:45, so plan the end of the day accordingly."
    },
    "summer": {
     "he": "הארקייד מקורה, נוח ליום גשום או חם.",
@@ -339,11 +353,13 @@
    "reality": "One of the most striking places around for art and architecture fans. Far, pricey and needs planning."
   },
   "seasonal": {
-   "winter": {
-    "he": "באמצע דצמבר מנהרת הפלדה מוארת בזריחה של היום הקצר, והיום הקצר מוסיף קסם.",
-    "en": "In mid-December the steel tunnel lights up at the shortest-day sunrise, and the short day adds to the atmosphere."
-   },
    "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "באמצע דצמבר מנהרת הפלדה מוארת בזריחה של היום הקצר, והיום הקצר מוסיף קסם.",
+     "en": "In mid-December the steel tunnel lights up at the shortest-day sunrise, and the short day adds to the atmosphere."
+    },
     {
      "from": "2026-12-29",
      "to": "2026-12-31",
@@ -364,10 +380,14 @@
    "plan_line": "Minutes from Hakone-machi pier"
   },
   "seasonal": {
-   "winter": {
-    "he": "בדצמבר נסגר ב-16:30.",
-    "en": "Closes at 16:30 in December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר נסגר ב-16:30.",
+     "en": "Closes at 16:30 in December."
+    }
+   ]
   },
   "unsure": "Left out other seasons."
  },
@@ -511,10 +531,14 @@
    "plan_line": "Near Iriuda station"
   },
   "seasonal": {
-   "winter": {
-    "he": "בדצמבר סגור בשני ושלישי.",
-    "en": "In December closed Monday and Tuesday."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר סגור בשני ושלישי.",
+     "en": "In December closed Monday and Tuesday."
+    }
+   ]
   },
   "unsure": "Card's closed days are stated for December only; other months' closing days unknown, so not stated."
  },
@@ -529,8 +553,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר קר מאוד למעלה.",
-    "en": "Very cold up top in December."
+    "he": "בחורף קר מאוד למעלה.",
+    "en": "Very cold up top in winter."
    },
    "summer": {
     "he": "בקיץ חם ולח, ופוג׳י מוסתר לרוב בעננים, בעיקר אחרי הצהריים.",
@@ -558,8 +582,8 @@
     "en": "In autumn the grass is silvery gold and gorgeous, worth a destination in itself."
    },
    "winter": {
-    "he": "בדצמבר העשב חום ונבול ושווה הרבה פחות, רק עצירה קצרה מהאוטובוס, ואם עוברים בדרך.",
-    "en": "In December the grass is brown and dying and worth much less, only a short bus stop if you are passing anyway."
+    "he": "בחורף העשב חום ונבול ושווה הרבה פחות, רק עצירה קצרה מהאוטובוס, ואם עוברים בדרך.",
+    "en": "In winter the grass is brown and dying and worth much less, only a short bus stop if you are passing anyway."
    },
    "only": [
     "autumn"
@@ -679,10 +703,14 @@
    "plan_line": "Closed 2nd Wed of the month"
   },
   "seasonal": {
-   "winter": {
-    "he": "בסוף השנה חדר התה בשירות מוגבל. בשנה שעברה הוא היה סגור ב-29-31 בדצמבר והחנות כולה ב-1-3 בינואר, ולכן בודקים באתר.",
-    "en": "The tea room has limited service at year-end. Last year it was closed 29-31 December and the whole shop 1-3 January, so check the website."
-   }
+   "dated": [
+    {
+     "from": "2026-12-29",
+     "to": "2027-01-03",
+     "he": "בסוף השנה חדר התה בשירות מוגבל. בשנה שעברה הוא היה סגור ב-29-31 בדצמבר והחנות כולה ב-1-3 בינואר, ולכן בודקים באתר.",
+     "en": "The tea room has limited service at year-end. Last year it was closed 29-31 December and the whole shop 1-3 January, so check the website."
+    }
+   ]
   },
   "unsure": "Last year's closures given without 2026 dates, worded as last year's pattern, so no dated entry. Left out other seasons."
  },
@@ -749,8 +777,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר חשוך מוקדם.",
-    "en": "In December it gets dark early."
+    "he": "בחורף חשוך מוקדם.",
+    "en": "In winter it gets dark early."
    },
    "spring": {
     "he": "בעונת הדובדבנים הפריחה מפורסמת, ובדרך כלל יש פתיחת ערב עם תאורה מיוחדת.",
@@ -900,8 +928,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר בדרך כלל דגי חורף ותבשילים חמים, והתפריט משתנה.",
-    "en": "In December usually winter fish and hot stews, and the menu changes."
+    "he": "בחורף בדרך כלל דגי חורף ותבשילים חמים, והתפריט משתנה.",
+    "en": "In winter usually winter fish and hot stews, and the menu changes."
    }
   },
   "unsure": "Edited English 'serves' only. Closed 29-31 Dec is in closed_dates but not in the card text, so no dated entry."
@@ -948,8 +976,8 @@
     "en": "In autumn it's packed to the brim, with crowds like a rush hour. Avoid weekends at peak leaf season."
    },
    "winter": {
-    "he": "בדצמבר רוב העלים כבר נפלו, אבל יש הרבה פחות קהל.",
-    "en": "In December most of the leaves have fallen, but there's far less of a crowd."
+    "he": "בחורף רוב העלים כבר נפלו, אבל יש הרבה פחות קהל.",
+    "en": "In winter most of the leaves have fallen, but there's far less of a crowd."
    }
   },
   "unsure": "Left out spring/summer. Kept hype ('famous for autumn colours') as it is a standing fact."
@@ -974,10 +1002,6 @@
    ]
   },
   "seasonal": {
-   "winter": {
-    "he": "שוק הפשפשים של סוף השנה, ה-Kobo-san האחרון של השנה, מתקיים בדרך כלל ב-21 בדצמבר.",
-    "en": "The year-end flea market, the last Kobo-san of the year, is usually held on 21 December."
-   },
    "only": [
     "winter"
    ],
@@ -1002,10 +1026,14 @@
    "plan_line": null
   },
   "seasonal": {
-   "winter": {
-    "he": "בסוף דצמבר ובראש השנה עמוס מאוד, עדיף לבוא לפני ה-28 בדצמבר.",
-    "en": "Very crowded in late December and around New Year; better to come before 28 December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בסוף דצמבר ובראש השנה עמוס מאוד, עדיף לבוא לפני ה-28 בדצמבר.",
+     "en": "Very crowded in late December and around New Year; better to come before 28 December."
+    }
+   ]
   },
   "unsure": "Left out other seasons."
  },
@@ -1019,10 +1047,14 @@
    "reality": "A good breather between shopping, not a destination on its own."
   },
   "seasonal": {
-   "winter": {
-    "he": "בדצמבר יש בו בדרך כלל תאורות חג.",
-    "en": "In December there are usually holiday lights."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר יש בו בדרך כלל תאורות חג.",
+     "en": "In December there are usually holiday lights."
+    }
+   ]
   },
   "unsure": "Left out other seasons."
  },
@@ -1049,10 +1081,16 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בחורף יש ימים סגורים, ובדצמבר מתקיים אירוע חג מולד.",
-    "en": "There are closed days in winter, and a Christmas event runs in December."
+    "he": "בחורף יש ימים סגורים.",
+    "en": "There are closed days in winter."
    },
    "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר מתקיים אירוע חג מולד.",
+     "en": "A Christmas event runs in December."
+    },
     {
      "from": "2026-12-18",
      "to": "2026-12-19",
@@ -1128,13 +1166,21 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בימי חול בחורף התורים קצרים מאוד. בערבי חורף יש תאורה צבעונית, ובדצמבר חלק מהמתקנים סגורים לתחזוקה.",
-    "en": "Winter weekdays have very short queues. There are colourful lights on winter evenings, and in December some rides close for maintenance."
+    "he": "בימי חול בחורף התורים קצרים מאוד. בערבי חורף יש תאורה צבעונית.",
+    "en": "Winter weekdays have very short queues. There are colourful lights on winter evenings."
    },
    "summer": {
     "he": "בקיץ פועלות גם בריכות הפארק, והמקום עמוס יותר.",
     "en": "In summer the park's pools open too, and it gets busier."
-   }
+   },
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בדצמבר חלק מהמתקנים סגורים לתחזוקה.",
+     "en": "In December some rides close for maintenance."
+    }
+   ]
   },
   "unsure": "Summer pools are general knowledge, not on the card. The weekday no-queue claim in reality was kept (unclear if it was winter-only)."
  },
@@ -1149,8 +1195,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר כדאי גרביים חמות.",
-    "en": "Warm socks help in December."
+    "he": "בחורף כדאי גרביים חמות.",
+    "en": "Warm socks help in winter."
    },
    "spring": {
     "he": "בעונת הדובדבנים הפריחה סביב הטירה מפורסמת.",
@@ -1191,8 +1237,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בחוץ קר ויש רוח בדצמבר.",
-    "en": "Cold and windy outside in December."
+    "he": "בחוץ קר ויש רוח בחורף.",
+    "en": "Cold and windy outside in winter."
    }
   },
   "unsure": "Left out other seasons."
@@ -1245,10 +1291,14 @@
    "plan_line": null
   },
   "seasonal": {
-   "winter": {
-    "he": "בדרך כלל סגור מסוף דצמבר ועד תחילת ינואר, כדאי לבדוק תאריכים באתר לפני.",
-    "en": "Usually closed from late December to early January; check the dates on the website first."
-   }
+   "dated": [
+    {
+     "from": "2026-12-20",
+     "to": "2027-01-10",
+     "he": "בדרך כלל סגור מסוף דצמבר ועד תחילת ינואר, כדאי לבדוק תאריכים באתר לפני.",
+     "en": "Usually closed from late December to early January; check the dates on the website first."
+    }
+   ]
   },
   "unsure": "No exact 2026 dates on the card, so wording 'usually' and no dated entry."
  },
@@ -1276,10 +1326,14 @@
     "he": "עלי הסתיו האדומים הם חלק מהיופי של הגן.",
     "en": "The red autumn leaves are part of the garden's charm."
    },
-   "winter": {
-    "he": "בתחילת דצמבר עוד נשארים עלי סתיו אדומים.",
-    "en": "Early December still has some red autumn leaves."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-10",
+     "he": "בתחילת דצמבר עוד נשארים עלי סתיו אדומים.",
+     "en": "Early December still has some red autumn leaves."
+    }
+   ]
   },
   "unsure": "Removed 'autumn leaves' from highlights since it is seasonal."
  },
@@ -1397,11 +1451,13 @@
    ]
   },
   "seasonal": {
-   "winter": {
-    "he": "בסוף השנה יפנים קונים כאן מאכלי חג, ובדצמבר צפוף מאוד, עם מבצעי סוף שנה גדולים. בימים האחרונים של השנה רוב הדוכנים סגורים. לפני ראש השנה צפוף במיוחד לעגלה.",
-    "en": "At year end locals buy holiday food here, and it is very crowded in December, with big year-end discounts. In the last days of the year most stalls are closed. Before New Year it is especially hard with a stroller."
-   },
    "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בסוף השנה יפנים קונים כאן מאכלי חג, ובדצמבר צפוף מאוד, עם מבצעי סוף שנה גדולים. בימים האחרונים של השנה רוב הדוכנים סגורים. לפני ראש השנה צפוף במיוחד לעגלה.",
+     "en": "At year end locals buy holiday food here, and it is very crowded in December, with big year-end discounts. In the last days of the year most stalls are closed. Before New Year it is especially hard with a stroller."
+    },
     {
      "from": "2026-12-30",
      "to": "2026-12-30",
@@ -1429,8 +1485,8 @@
     "en": "In late March and April the cherry blossom is at its best, very crowded by day and especially lovely at night."
    },
    "winter": {
-    "he": "בדצמבר אין פריחה ואין סירות, ואין סיבה להגיע במיוחד.",
-    "en": "In December there are no blossoms and no boats, so it is not a reason to come specially."
+    "he": "בחורף אין פריחה ואין סירות, ואין סיבה להגיע במיוחד.",
+    "en": "In winter there are no blossoms and no boats, so it is not a reason to come specially."
    },
    "only": [
     "spring"
@@ -1448,10 +1504,14 @@
    "tip": null
   },
   "seasonal": {
-   "winter": {
-    "he": "קרוב לסוף השנה יש סגירות, אז לא משאירים את זה ל-31 בדצמבר.",
-    "en": "Near the end of the year there are closures, so don't leave it for 31 December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "קרוב לסוף השנה יש סגירות, אז לא משאירים את זה ל-31 בדצמבר.",
+     "en": "Near the end of the year there are closures, so don't leave it for 31 December."
+    }
+   ]
   },
   "unsure": "Left out other seasons."
  },
@@ -1486,10 +1546,14 @@
    "plan_line": "Book ahead"
   },
   "seasonal": {
-   "winter": {
-    "he": "בסוף דצמבר עלול להיות סגור.",
-    "en": "May be closed in late December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בסוף דצמבר עלול להיות סגור.",
+     "en": "May be closed in late December."
+    }
+   ]
   },
   "unsure": "closed_dates has 30-31 Dec but the card only says 'may be closed', so I used a note, no dated entry."
  },
@@ -1518,10 +1582,16 @@
   },
   "seasonal": {
    "winter": {
-    "he": "כדאי להגיע לפני השקיעה, בערך 16:30, ואז לראות את התאורה ב-Marunouchi Nakadori. תאריכי התאורה ב-2026 לא ידועים. האווירה בדצמבר טובה.",
-    "en": "Come before sunset, around 16:30, and then see the lights on Marunouchi Nakadori. The 2026 light-up dates are unknown. The December mood is good."
+    "he": "כדאי להגיע לפני השקיעה, בערך 16:30, ואז לראות את התאורה ב-Marunouchi Nakadori. תאריכי התאורה ב-2026 לא ידועים.",
+    "en": "Come before sunset, around 16:30, and then see the lights on Marunouchi Nakadori. The 2026 light-up dates are unknown."
    },
    "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "האווירה בדצמבר טובה.",
+     "en": "The December mood is good."
+    },
     {
      "from": "2026-12-31",
      "to": "2026-12-31",
@@ -1542,10 +1612,14 @@
    "plan_line": "Tuesdays it closes at 17:00"
   },
   "seasonal": {
-   "winter": {
-    "he": "בסוף דצמבר כדאי לבדוק שעות פתיחה.",
-    "en": "Check opening hours in late December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בסוף דצמבר כדאי לבדוק שעות פתיחה.",
+     "en": "Check opening hours in late December."
+    }
+   ]
   },
   "unsure": "Left out other seasons."
  },
@@ -1568,8 +1642,8 @@
     "en": "In April there is an azalea festival."
    },
    "winter": {
-    "he": "בחורף נסגר ב-17:00. בדצמבר אין אזליאות, אבל שקט.",
-    "en": "Closes at 17:00 in winter. In December there are no azaleas, but it is quiet."
+    "he": "בחורף נסגר ב-17:00. בחורף אין אזליאות, אבל שקט.",
+    "en": "Closes at 17:00 in winter. In winter there are no azaleas, but it is quiet."
    }
   },
   "unsure": "EN special originally also said 'few tourists' in December; I folded it into 'quiet' to match the Hebrew."
@@ -1585,8 +1659,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "בדצמבר קר ברוח והשקיעה בערך ב-16:30.",
-    "en": "December is cold and windy and sunset is around 16:30."
+    "he": "בחורף קר ברוח והשקיעה בערך ב-16:30.",
+    "en": "Winter is cold and windy and sunset is around 16:30."
    },
    "summer": {
     "he": "בקיץ חם ולח על הגג הפתוח, ופוג'י נראה רק לעיתים רחוקות.",
@@ -1633,8 +1707,8 @@
   },
   "seasonal": {
    "winter": {
-    "he": "השוק בחוץ וקר בדצמבר.",
-    "en": "The market is outdoors and cold in December."
+    "he": "השוק בחוץ וקר בחורף.",
+    "en": "The market is outdoors and cold in winter."
    }
   },
   "unsure": "open_dates left untouched; no dated entry added. Left out other seasons."
@@ -1676,10 +1750,14 @@
   },
   "en_set": {},
   "seasonal": {
-   "winter": {
-    "he": "בסוף דצמבר צפוף במיוחד.",
-    "en": "Especially crowded in late December."
-   }
+   "dated": [
+    {
+     "from": "2026-12-01",
+     "to": "2026-12-31",
+     "he": "בסוף דצמבר צפוף במיוחד.",
+     "en": "Especially crowded in late December."
+    }
+   ]
   },
   "unsure": "closed_dates has 31 Dec but the card text does not say why, so no dated entry. Left out other seasons."
  }
