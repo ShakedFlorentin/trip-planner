@@ -6,7 +6,7 @@ import { TOGETHER, whoOptions, type Booking, type City, type StayAreaPick, type 
 import { mutate } from '../lib'
 import { isEn, t } from '../i18n'
 import { AREAS, type Area } from '../areas'
-import { hotelSearchUrl } from '../affiliate'
+import { AFFILIATE_ID, hotelSearchUrl } from '../affiliate'
 import { track } from '../track'
 import { openExternal } from '../native'
 import { Empty, Field, Sheet } from '../ui'
@@ -151,9 +151,19 @@ function whyText(p: StayAreaPick, basis: StayAreaRec['basis']) {
  * "Recommended: sleep in Shinjuku": the area for all the nights of a stretch with no hotel, why, the two others as
  * chips (a tap shows that one instead), and a hotel search there with the stretch's dates and the party's size.
  */
+/** Hotel buttons already counted as shown in this open, so a re-render or coming back to the screen counts once. */
+const hotelShown = new Set<string>()
+
 function StayRecCard({ rec, cities, people }: { rec: StayAreaRec; cities: City[]; people: { adults: number; rooms: number } }) {
   const [sel, setSel] = useState<string | null>(null)
   const best = areaOfRec(rec, rec.best.key)
+  // the hotel button was seen (with hotel_tap: how many who see it tap it). Area and nights only, nothing personal
+  const shownKey = best ? `${rec.city}|${rec.check_in}|${rec.party ?? ''}` : ''
+  useEffect(() => {
+    if (!shownKey || hotelShown.has(shownKey)) return
+    hotelShown.add(shownKey)
+    track('hotel_shown', { partner: 'booking', linked: !!AFFILIATE_ID, area: rec.best.key, nights: rec.nights ?? null })
+  }, [shownKey]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!best) return null
   const others = rec.alternatives.filter((a) => areaOfRec(rec, a.key))
   const pick = others.find((a) => a.key === sel) ?? rec.best
@@ -195,7 +205,7 @@ function StayRecCard({ rec, cities, people }: { rec: StayAreaRec; cities: City[]
       <button
         className="primary"
         onClick={() => {
-          track('hotel_tap', { area: area.key, nights: rec.nights ?? null })
+          track('hotel_tap', { partner: 'booking', linked: !!AFFILIATE_ID, area: area.key, nights: rec.nights ?? null })
           openExternal(hotelSearchUrl({ search: area.search, checkIn: rec.check_in, checkOut: rec.check_out, ...people }))
         }}
       >
