@@ -135,7 +135,10 @@ export function useTripTable<T>(table: string, tripId: string, order: string = '
  */
 export const keepRanges = (s: string) =>
   s
-    .replace(/[¥$€₪]?\d[\d.,:]*\s?[–—-]\s?[¥$€₪]?\d[\d.,:]*/g, (m) => '\u2066' + m + '\u2069')
+    // word joiners and no-break spaces keep the range on one line: the dash is otherwise a place to break the line
+    .replace(/[¥$€₪]?\d[\d.,:]*\s?[–—-]\s?[¥$€₪]?\d[\d.,:]*/g, (m) =>
+      '\u2066' + m.replace(/(\s?)([–—-])(\s?)/, (_, a, d, b) => (a ? '\u00A0' : '') + '\u2060' + d + '\u2060' + (b ? '\u00A0' : '')) + '\u2069',
+    )
     // a Hebrew prefix joined to a Latin word ("ו-teamLab"): a right-to-left mark after the hyphen keeps "ו-" with its
     // word, instead of the hyphen sticking to the English before it ("Shibuya Sky-ו teamLab") (78)
     .replace(/([\u05D0-\u05EA])-(?=[A-Za-z0-9])/g, '$1-\u200F')

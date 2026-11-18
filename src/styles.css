@@ -299,6 +299,10 @@ form.card, .login .card { display: flex; flex-direction: column; gap: var(--s-3)
   pointer-events: none;
 }
 .topbar.compact .topbar-title { opacity: 1; transform: none; }
+.shared-top { justify-content: flex-start; gap: 10px; height: auto; min-height: calc(var(--top-h) + env(safe-area-inset-top)); padding: calc(env(safe-area-inset-top) + 8px) 16px 8px; background: var(--bg); }
+.shared-logo { flex: none; width: 28px; height: 28px; border-radius: 7px; }
+.shared-title { margin: 0; min-width: 0; font-size: var(--fs-body); font-weight: 600; text-align: start; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+@media (prefers-color-scheme: dark) { .shared-logo { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.15); } }
 .large-title { font-size: var(--fs-large); font-weight: 700; letter-spacing: -0.022em; line-height: 1.2; margin: -6px 0 10px; }
 .menu-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--text); }
 .menu-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }

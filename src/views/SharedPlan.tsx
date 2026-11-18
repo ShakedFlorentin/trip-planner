@@ -97,8 +97,11 @@ export default function SharedPlan({ slug }: { slug: string }) {
   const snap = state.snap
   return (
     <div className="app shared-plan">
-      <header className="topbar">
-        <h1 dir="auto">{snap.name || t('מסלול משותף')}</h1>
+      <header className="topbar shared-top">
+        <img className="shared-logo" src={`${import.meta.env.BASE_URL}icon.svg`} alt="Toogo" width={28} height={28} />
+        <h1 className="shared-title">
+          <bdi dir="auto">{snap.name || t('מסלול משותף')}</bdi>
+        </h1>
       </header>
       <main>
         <div className="stack">
