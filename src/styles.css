@@ -721,9 +721,10 @@ html[dir='rtl'] .ja { text-align: right; }
 .fact .warn-line { margin-top: var(--s-1); }
 .season-line { display: flex; align-items: flex-start; gap: var(--s-2); color: var(--muted); font-size: var(--fs-footnote); line-height: 1.4; }
 .season-line > .ic { flex: none; margin-top: 0.1em; }
-/* the season note gets a 4th line on the card face (owner, 18 Nov): its useful end ("leave before 8:00") was cut at 3. Short screens keep 3 */
+/* the season note gets a 4th line on the card face (owner, 18 Nov): its useful end ("leave before 8:00") was cut at 3.
+   Short screens keep 2, like every other line on the card there (the card-info box is only 185px tall at 667) */
 .season-line .clamp { -webkit-line-clamp: 4; line-clamp: 4; }
-@media (max-height: 700px) { .season-line .clamp { -webkit-line-clamp: 3; line-clamp: 3; } }
+@media (max-height: 700px) { .season-line .clamp { -webkit-line-clamp: 2; line-clamp: 2; } }
 .more-btn { flex: none; align-self: flex-start; margin: 0 var(--s-4) var(--s-2); }
 .verdict { display: inline-flex; align-items: center; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill); font-weight: 700; font-size: var(--fs-footnote); }
 .tags { gap: var(--s-2); }
