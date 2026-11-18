@@ -280,9 +280,6 @@ const mins = (t: string | null | undefined) => {
 }
 const at = (ts: string | null) => (ts ? { date: ts.slice(0, 10), min: mins(ts.slice(11, 16))! } : null)
 const hebrew = (s: string | null | undefined) => !!s && /[\u0590-\u05FF]/.test(s)
-const JAPAN = /\b(HND|NRT|KIX|ITM|NGO|CTS|FUK|OKA|UKB)\b|Haneda|Narita|Kansai/i
-const ROUTE = /→|->|⟶|—|–|\s-\s/
-
 let mediaCache: Record<string, Media> | null = null
 async function media() {
   if (mediaCache) return mediaCache
@@ -361,7 +358,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     return data as T
   }
   const [trip, members, bookings, dayInfo, items, places, votes, mediaIdx, stayRows, cityRowsDb] = await Promise.all([
-    q<{ start_date: string; num_days: number }>(admin.from('trips').select('start_date,num_days').eq('id', tid).single()),
+    q<{ start_date: string | null; num_days: number }>(admin.from('trips').select('start_date,num_days').eq('id', tid).single()),
     q<{ couple: string | null; user_id: string }[]>(admin.from('members').select('couple,user_id').eq('trip_id', tid)),
     q<Booking[]>(admin.from('bookings').select('id,kind,title,starts_at,ends_at,who,location').eq('trip_id', tid)),
     q<{ day: number; city: string | null; who: string | null }[]>(admin.from('day_info').select('day,city,who').eq('trip_id', tid)),
@@ -404,6 +401,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const cap = pace ? PACE[pace] : undefined
     if (m.couple && cap) capOf.set(m.couple, Math.min(capOf.get(m.couple) ?? cap, cap))
   }
+  // a trip with no start date is not ready to be planned
+  if (!trip.start_date) return { stats: { placed: 0, insert: 0, update: 0, remove: 0, unplanned: 0 }, summary: { unplanned: [], warnings: [], issues: [], away: [], facts_pending: 0, days: [], stay_areas: [] } }
   const start = new Date(trip.start_date + 'T00:00:00Z')
   const dateOf = (day: number) => new Date(start.getTime() + (day - 1) * 86400000).toISOString().slice(0, 10)
 
@@ -723,11 +722,24 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     // per day: where each couple sleeps, and estimate:true when no hotel booking stands behind it (times are estimates)
     days: days
       .filter((d) => d.at.size)
-      .map((d) => ({
-        day: d.day,
-        ...([...d.at.values()].some((p) => (p as { estimate?: boolean }).estimate) ? { estimate: true } : {}),
-        hotels: Object.fromEntries([...d.at].map(([c, p]) => [c, (p as { label?: string }).label ?? null])),
-      })),
+      .map((d) => {
+        type PA = { estimate?: boolean; label?: string; arrival?: { airport: string; ride_min: number; landing_min: number } }
+        const arrivals = Object.fromEntries(
+          [...d.at]
+            .filter(([, p]) => (p as PA).arrival)
+            .map(([c, p]) => {
+              const a = (p as PA).arrival!
+              // ready: the moment the couple reaches the hotel door (landing + 60 min border/bags + ride)
+              return [c, { airport: a.airport, ride_min: a.ride_min, ready: hhmm(a.landing_min + 60 + a.ride_min) }]
+            }),
+        )
+        return {
+          day: d.day,
+          ...([...d.at.values()].some((p) => (p as PA).estimate) ? { estimate: true } : {}),
+          hotels: Object.fromEntries([...d.at].map(([c, p]) => [c, (p as PA).label ?? null])),
+          ...(Object.keys(arrivals).length ? { arrival: arrivals } : {}),
+        }
+      }),
     // where to sleep, for each stretch with no hotel: the recommended area and up to two others (stay.ts)
     stay_areas: stayRecs,
   }

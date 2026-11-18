@@ -125,8 +125,12 @@ export default function Guide({ onClose }: { onClose: () => void }) {
           markSeen()
           setEnded(true)
         }}
-        // no video (a missing file, no network on the web): straight to the way into the app
-        onError={() => setEnded(true)}
+        // no video (a missing file, no network on the web): straight into the app, never a blank screen. With no network
+        // the guide isn't marked as seen, so it plays the next time there is
+        onError={() => {
+          if (navigator.onLine) markSeen()
+          close.current()
+        }}
       />
       {!ended && (
         <button className="guide-skip" onClick={finish}>

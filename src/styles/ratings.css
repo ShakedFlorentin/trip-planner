@@ -8,7 +8,7 @@
 /* a visited row is muted and struck through; the rating is live, so it keeps the normal text colour */
 .rate-box {
   display: grid;
-  gap: 6px;
+  gap: var(--s-2);
   margin-top: 8px;
   padding-top: 6px;
   border-top: 0.5px solid var(--line);
@@ -18,8 +18,8 @@
 /* under the whole place row (check, picture and text), not squeezed into the text column */
 .place-row > .rate-box { flex: 1 0 100%; min-width: 0; }
 .item.done .rate-box { color: var(--text); text-decoration: none; }
-.rate-head { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; }
-.rate-ask { font-size: 0.9375rem; font-weight: 600; }
+.rate-head { display: flex; align-items: center; gap: var(--s-1) var(--s-2); flex-wrap: wrap; }
+.rate-ask { font-size: var(--fs-subhead); font-weight: 600; }
 
 .stars { display: inline-flex; }
 .stars button {
@@ -33,20 +33,20 @@
 .stars button.on { color: var(--star); }
 .stars button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .stars button:active .ic { transform: scale(0.85); }
-.stars .ic { transition: transform 0.12s; }
+.stars .ic { transition: transform var(--dur-1); }
 
 .rate-mine { display: grid; gap: 2px; justify-items: start; }
-.rate-write { display: grid; gap: 6px; }
+.rate-write { display: grid; gap: var(--s-2); }
 .rate-write textarea { width: 100%; }
 
-.rate-sum { display: grid; gap: 4px; font-size: 0.875rem; color: var(--muted); }
+.rate-sum { display: grid; gap: var(--s-1); font-size: var(--fs-footnote); color: var(--muted); }
 .rate-avg { font-variant-numeric: tabular-nums; }
 .rate-star { color: var(--star); margin-inline-end: 3px; }
 .rate-note {
   margin: 0;
-  padding-inline-start: 8px;
+  padding-inline-start: var(--s-2);
   border-inline-start: 3px solid var(--fill);
-  font-size: 0.875rem;
+  font-size: var(--fs-footnote);
   color: var(--text);
   white-space: pre-line;
 }
@@ -62,10 +62,10 @@
 }
 
 /* the day-after question on Home (views/Review.tsx) */
-.review-card { --star: #b07a00; display: grid; gap: 8px; }
+.review-card { --star: #b07a00; display: grid; gap: var(--s-2); }
 @media (prefers-color-scheme: dark) {
   .review-card { --star: #ffc933; }
 }
 .review-card h3 { margin: 0; }
 .review-x { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--muted); }
-.review-q { display: grid; gap: 4px; }
+.review-q { display: grid; gap: var(--s-1); }

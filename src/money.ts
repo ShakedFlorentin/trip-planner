@@ -36,6 +36,8 @@ export function splitEvenly(total: number, ids: string[]) {
 export function balances(expenses: Expense[], ids: string[], cur: Cur, rate: number) {
   const bal: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]))
   for (const e of expenses) {
+    // nobody to split among: counting only the payer's side would leave the balances not adding up to zero
+    if (!e.split_among?.length) continue
     const total = inCurrency(e, cur, rate)
     bal[e.paid_by] = (bal[e.paid_by] ?? 0) + total
     for (const [id, share] of splitEvenly(total, e.split_among)) bal[id] = (bal[id] ?? 0) - share
@@ -80,19 +82,38 @@ export function partiesOf(members: Member[], byCouple: boolean): Party[] {
   return out
 }
 
-// under a shekel (or 100 yen) isn't worth a transfer, and it is what rounding to whole shekels leaves behind
-const NOISE: Record<Cur, number> = { JPY: 100, ILS: 100 }
+/** A debt under one shekel isn't worth a transfer, in either view: in yen that is 1/rate yen, rounded up. */
+const noise = (cur: Cur, rate: number) => (cur === 'ILS' ? 100 : Math.ceil(1 / (rate > 0 ? rate : 0.025) - 1e-9))
 
 /**
  * The payments that settle the parties (from/to are party keys), in whole yen or shekels as people actually pay,
- * without leftovers too small to bother with.
+ * without leftovers under a shekel. `rate` is shekels per yen, so both views hide the same debts.
  */
-export function settleUp(bal: Record<string, number>, parties: Party[], cur: Cur): Transfer[] {
+export function settleUp(bal: Record<string, number>, parties: Party[], cur: Cur, rate: number): Transfer[] {
   const net = Object.fromEntries(parties.map((p) => [p.key, p.ids.reduce((s, id) => s + (bal[id] ?? 0), 0)]))
+  const min = noise(cur, rate)
   // drop the small ones before rounding: half a shekel left after paying a rounded amount must not come back as ₪1
   return simplify(net)
-    .filter((t) => t.amount >= NOISE[cur])
+    .filter((t) => t.amount >= min)
     .map((t) => ({ ...t, amount: cur === 'ILS' ? Math.round(t.amount / 100) * 100 : t.amount }))
+}
+
+/**
+ * What the person typed ("1,234.50", "12.5") as a number: above zero and at most 1e9 is valid. NaN for anything that
+ * is not plain digits ("1e3", "0x10", "¥500", "Infinity"); "1,200" is twelve hundred, "12,5" is twelve and a half.
+ */
+export function parseAmount(s: string): number {
+  const t = s.trim().replace(/\s/g, '')
+  const plain = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t) ? t.replace(/,/g, '') : /^\d+,\d{1,2}$/.test(t) ? t.replace(',', '.') : t
+  if (!/^\d+(\.\d+)?$/.test(plain)) return NaN
+  const n = Number(plain)
+  return Number.isFinite(n) && n <= 1e9 ? n : NaN
+}
+
+/** A row's amount as text: "₪12.50", "₪1,234.50", "¥1,200". */
+export function fmtAmount(amount: number, cur: Cur) {
+  const digits = cur === 'ILS' ? 2 : 0
+  return SYMBOL[cur] + Number(amount).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
 /** Per couple: net balance, and what they put in (settlements don't count as spending). */

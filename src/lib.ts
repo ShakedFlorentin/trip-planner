@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { supabase } from './supabase'
 import { onOutbox, withPending } from './outbox'
-import type { CardText, Member } from './types'
+import { CITY_HE, type CardText, type Member } from './types'
 import { isEn, locale, t } from './i18n'
 import { CACHE_PREFIX, readCache, writeCache } from './cache'
 import { dropTableStores, tableStore } from './tableStore'
+import { say } from './toast'
 
 export { readCache, writeCache }
 
@@ -139,16 +140,18 @@ export const keepRanges = (s: string) =>
     // word, instead of the hyphen sticking to the English before it ("Shibuya Sky-ו teamLab") (78)
     .replace(/([\u05D0-\u05EA])-(?=[A-Za-z0-9])/g, '$1-\u200F')
 
-/** A save failed: say so in plain Hebrew, and say it's the connection when there's no network. */
+/** A save failed: plain words in the app's language. Never the server's raw text (policies, SQL, codes). */
 export function errorText(message: string) {
-  return !navigator.onLine || /failed to fetch|network|load failed/i.test(message)
-    ? t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
-    : t('שגיאה: {message}', { message })
+  if (!navigator.onLine || /failed to fetch|network|load failed|timeout|timed out/i.test(message)) return t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
+  if (/row-level security|violates row|permission denied|not allowed|jwt|unauthori[sz]ed|forbidden/i.test(message)) return t('אין לכם הרשאה לשינוי הזה בטיול.')
+  if (/duplicate key|already exists|unique/i.test(message)) return t('זה כבר קיים.')
+  if (/violates (check|foreign key|not-null)|invalid input|null value/i.test(message)) return t('משהו בפרטים לא תקין, ולכן לא נשמר.')
+  return t('לא הצלחנו לשמור. נסו שוב בעוד רגע.')
 }
 
 export async function mutate(promise: PromiseLike<{ error: { message: string } | null }>) {
   const { error } = await promise
-  if (error) alert(errorText(error.message))
+  if (error) say(errorText(error.message), { error: true, duration: 6000 })
   return !error
 }
 
@@ -156,6 +159,30 @@ export async function mutate(promise: PromiseLike<{ error: { message: string } |
 export function safeUrl(u: string | null | undefined) {
   const v = u?.trim()
   return v && /^https?:\/\//i.test(v) ? v : undefined
+}
+
+// Photo hosts we render: our own Storage (cards, approved traveller photos) and Google's photo CDN, which the
+// shipped media.json uses for 245 place photos. Anything else could be a tracking pixel or an offensive image.
+const PHOTO_HOSTS = ['lh3.googleusercontent.com']
+const storageHost = (() => {
+  try {
+    return new URL(import.meta.env.VITE_SUPABASE_URL ?? '').hostname
+  } catch {
+    return ''
+  }
+})()
+
+/** A photo address we are willing to put in an <img>: https on our Storage or a known photo CDN, else undefined (the card keeps its icon tile). */
+export function safePhoto(u: string | null | undefined) {
+  const v = u?.trim()
+  if (!v) return undefined
+  try {
+    const x = new URL(v)
+    if (x.protocol !== 'https:' || x.username || x.password) return undefined
+    return x.hostname === storageHost || PHOTO_HOSTS.includes(x.hostname) ? v : undefined
+  } catch {
+    return undefined
+  }
 }
 
 export function mapsUrl(query: string) {
@@ -193,6 +220,17 @@ export function dayParts(d: Date | null) {
 }
 
 /** Today's trip day (1-based) by the date in Japan, or null when not currently on the trip. */
+/** Tokyo's clock as "HH:MM", refreshed every 30 seconds. */
+export function useTokyoHM() {
+  const hm = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  const [v, setV] = useState(hm)
+  useEffect(() => {
+    const id = setInterval(() => setV(hm()), 30000)
+    return () => clearInterval(id)
+  }, [])
+  return v
+}
+
 export function currentDay(start: string | null, numDays: number): number | null {
   if (!start) return null
   // the trip runs on Japan's calendar, whatever timezone the phone is still set to
@@ -296,7 +334,13 @@ export function localizeCard<T extends object>(row: T): T {
 
 /** A city as the app shows it: the Hebrew names the database keeps ("טוקיו / קיוטו"), in the app's language. */
 export function cityLabel(city: string | null | undefined) {
-  return city ? city.split(' / ').map((c) => t(c.trim())).join(' / ') : ''
+  return city ? city.split(' / ').map((c) => t(cityHe(c))).join(' / ') : ''
+}
+
+/** A stored city as its Hebrew name: some rows keep the English slug ("yokohama"), which has to read "Yokohama" in English. */
+export function cityHe(city: string | null | undefined) {
+  const c = (city ?? '').trim()
+  return CITY_HE[c.toLowerCase()] ?? c
 }
 
 /** The couples in the trip, in a stable order. */
@@ -311,9 +355,9 @@ export async function aiError(error: unknown, fallback: string) {
   if (status === 429) {
     // the same status means either today's cap or Claude being busy for a minute
     const body = await res?.clone().json().catch(() => null)
-    return /daily limit/.test(body?.error ?? '')
-      ? t('נגמרו 30 הבדיקות להיום (לכל אחד). נסו שוב מחר.')
-      : t('השירות עמוס כרגע. נסו שוב בעוד דקה.')
+    if (!/daily limit/.test(body?.error ?? '')) return t('השירות עמוס כרגע. נסו שוב בעוד דקה.')
+    // 'all' is everyone's shared ceiling, not this person's own count
+    return body?.scope === 'all' ? t('השירות הגיע למכסה היומית שלו. נסו שוב מחר.') : t('נגמרו הבדיקות שלך להיום. נסו שוב מחר.')
   }
   if (status === 413) return t('הטקסט או הקובץ ארוכים מדי.')
   if (!navigator.onLine) return t('אין חיבור לאינטרנט.')

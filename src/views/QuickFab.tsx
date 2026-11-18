@@ -19,6 +19,9 @@ const DRAG_PX = 8
 const HOLD_MS = 220
 /** Closer than this to where the finger went down, nothing is chosen (letting go there closes the wheel). */
 const DEAD_PX = 16
+/** The + slides away after this much downward scroll, and comes back on any upward scroll, at the top, or this long after scrolling stops. */
+const AWAY_PX = 10
+const BACK_MS = 700
 
 // quarter k's centre in degrees (maths angle, y up); English mirrors the wheel so "place" stays on the reading side
 const centre = (k: number) => (isEn ? 180 - (45 + 90 * k) : 45 + 90 * k)
@@ -113,6 +116,51 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
     )
   }
   useEffect(() => () => clearTimeout(timer.current), [])
+  // slide away while the list scrolls down (it would cover a row), back on scroll up / at the top / when scrolling stops.
+  // Scroll does not bubble, so one capture listener on the document hears the page and any sheet's own scroller.
+  // Class toggled on the button directly: no re-render per scroll event.
+  useEffect(() => {
+    const b = btn.current
+    if (!b) return
+    const last = new WeakMap<object, number>()
+    let el: Element | null = null
+    let down = 0
+    let raf = 0
+    let settle = 0
+    const back = () => {
+      down = 0
+      b.classList.remove('fab-away')
+    }
+    const read = () => {
+      raf = 0
+      if (!el) return
+      const top = el.scrollTop
+      const max = el.scrollHeight - el.clientHeight
+      if (top < 0 || top > max) return // iOS rubber band
+      const delta = top - (last.get(el) ?? top)
+      last.set(el, top)
+      if (delta === 0) return
+      if (delta < 0 || top <= 0) return back()
+      down += delta
+      if (down > AWAY_PX && !b.classList.contains('open') && !b.matches(':focus-visible')) b.classList.add('fab-away')
+    }
+    const onScroll = (e: Event) => {
+      const tg = e.target
+      el = tg instanceof Element ? tg : document.scrollingElement
+      if (!raf) raf = requestAnimationFrame(read)
+      clearTimeout(settle)
+      settle = window.setTimeout(back, BACK_MS)
+    }
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    return () => {
+      document.removeEventListener('scroll', onScroll, { capture: true })
+      cancelAnimationFrame(raf)
+      clearTimeout(settle)
+    }
+  }, [])
+  useEffect(() => {
+    if (open) btn.current?.classList.remove('fab-away')
+  }, [open])
   // with the keyboard, the needle points at the chosen quarter
   useEffect(() => {
     if (open && byKey.current && sel >= 0) {
@@ -184,6 +232,7 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
         onPointerCancel={up(true)}
         onClick={click}
         onKeyDown={key}
+        onFocus={(e) => e.currentTarget.matches(':focus-visible') && e.currentTarget.classList.remove('fab-away')}
         onContextMenu={(e) => e.preventDefault()}
       >
         {children ?? <Plus size={28} strokeWidth={2} aria-hidden="true" />}

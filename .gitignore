@@ -4,3 +4,6 @@ dist
 *.tsbuildinfo
 # Supabase CLI cache (written by functions deploy/download)
 supabase/.temp
+
+# code graph (rebuilt locally: PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher scan .)
+codegrapher_out/

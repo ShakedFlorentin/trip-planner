@@ -28,7 +28,7 @@ export function whoLabel(mode: Who) {
   if (mode === 'group')
     return (
       <>
-        <RingsIcon /> {t('ביחד')}
+        <RingsIcon /> {t('רק משותף')}
       </>
     )
   return t(mode)

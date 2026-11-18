@@ -1,0 +1,52 @@
+project_name: Toogo
+human:
+  name: founder
+  role: owner
+interface: cli
+timezone: Asia/Jerusalem
+work_week:
+- 0
+- 1
+- 2
+- 3
+- 4
+agents:
+  chief_of_staff: Atlas
+  governance: Marcus
+  tech_architecture: Alex
+  product: Sofia
+  backend: Sam
+  frontend: Jordan
+  qa: Jamie
+  devops: Chris
+  build: Lee
+  ux: Taylor
+  content: Maya
+  growth: Omar
+  security: Nina
+  legal: Mike
+  reflection: Ada
+  reliability: Robin
+  appstore: Dana
+  cards: Noa
+agents_model:
+  security: claude-opus-4-8
+  legal: claude-opus-4-8
+  reflection: claude-opus-4-8
+budget:
+  daily_limit_usd: null
+codegrapher:
+  enabled: true
+  enforce_query_first: true
+  source_dir: src
+schedule:
+  summarize: 02:00
+  reflection: 03:00
+  reliability: 04:00
+  morning_prepare: 05:00
+  pod_daily: 05:30
+  weekly_sprint: 06:00
+  monthly_milestone: 07:00
+books: {}
+memory:
+  semantic: false

@@ -1,18 +1,23 @@
-import { useEffect, useRef } from 'react'
-import { ArrowLeftRight, BookOpen, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck } from 'lucide-react'
+import { useRef, useState, type ReactNode } from 'react'
+import { DrawerClose } from '@ui-sdk/react/drawer'
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@ui-sdk/react/collapsible'
+import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronDown, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { Icon, type LucideIcon } from '../icons'
-import { t } from '../i18n'
-import { supabase } from '../supabase'
+import { t, locale } from '../i18n'
+import { Sheet } from '../ui'
+import { Avatar } from '../avatar'
+import { dayDate } from '../lib'
+import type { Trip } from '../types'
 import { MORE_TABS, type MoreTab } from './More'
 import { PhotoReviewRow } from './PlacePhotos'
 import { GUIDE_READY, openGuide } from './Guide'
 import { openExternal, privacyUrl } from '../native'
-
-// the tools' tile colours, like iOS Settings: one colour per tool, white glyph
-const TOOL_COLOR: Record<MoreTab, string> = { money: '#34a853', lists: '#f0a020', info: '#e5484d', say: '#3b82f6', baby: '#a259d9' }
+import SignOutSheet from './SignOutSheet'
+import '../styles/menu.css'
 
 type Props = {
   me: string
+  trip: Trip | null
   hasBaby: boolean
   onClose: () => void
   onTool: (sub: MoreTab) => void
@@ -22,84 +27,91 @@ type Props = {
   onReport: () => void
 }
 
+/** "12–31 December" / "12–31 בדצמבר": the trip's first and last day, or nothing for a trip with no start date. */
+function tripDates(trip: Trip | null) {
+  const a = dayDate(trip?.start_date ?? null, 1)
+  const b = dayDate(trip?.start_date ?? null, Math.max(1, trip?.num_days ?? 1))
+  if (!a || !b) return ''
+  const fmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }) as Intl.DateTimeFormat & { formatRange(a: Date, b: Date): string }
+  return fmt.formatRange(a, b)
+}
+
 /**
- * The ☰ menu (4, 52, 63): the person on top with their preferences, the tools that left the tab bar, then settings,
- * another trip, the guide and a problem report; signing out alone at the bottom, the only red row. It slides in from the side
- * the ☰ button is on (left in Hebrew, right in English).
+ * The account sheet, opened from the initial in the top bar: who you are and your preferences, the tools that left the
+ * tab bar, then settings, another trip and a "More" disclosure for the rarely used rows; signing out alone at the bottom.
+ * It is the shared Sheet (ui-sdk Drawer), so the slide, the drag from the handle or header, Escape and the backdrop tap
+ * come with it.
  */
 export default function Menu(props: Props) {
-  const panel = useRef<HTMLDivElement>(null)
-  const close = useRef(props.onClose)
-  close.current = props.onClose
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
-    window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    panel.current?.focus({ preventScroll: true })
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [])
-  // every row closes the menu first, so the screen it opens sits over the page, not over the menu
+  const [signingOut, setSigningOut] = useState(false)
+  // a row closes the sheet first, so the screen it opens sits over the page, not over the sheet; it runs once the sheet
+  // has slid out
+  const after = useRef<(() => void) | null>(null)
   const go = (f: () => void) => () => {
-    props.onClose()
-    f()
+    after.current = f
   }
   const tools = MORE_TABS.filter((x) => x.id !== 'baby' || props.hasBaby)
-  const initial = props.me.trim()[0] ?? ''
+  const sub = [props.trip?.name, tripDates(props.trip)].filter(Boolean).join(' · ')
   return (
-    <div className="menu-backdrop" onClick={props.onClose}>
-      <div ref={panel} className="menu-panel" role="dialog" aria-modal="true" aria-label={t('תפריט')} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
-        <div className="menu-me">
-          <span className="avatar" aria-hidden="true">
-            {initial}
-          </span>
-          <span className="menu-me-text">
-            <b dir="auto">{props.me}</b>
-            <button className="link" onClick={go(props.onPrefs)}>
-              {t('ההעדפות שלי')} <Icon as={ChevronLeft} className="flip-ltr" />
-            </button>
-          </span>
+    <Sheet
+      title={t('חשבון')}
+      closeLabel={t('סיום')}
+      onClose={() => {
+        props.onClose()
+        const f = after.current
+        after.current = null
+        f?.()
+      }}
+    >
+      <div className="acct">
+        <div className="group acct-group">
+          <div className="acct-id">
+            <Avatar name={props.me} size="l" look="accent" decorative />
+            <span className="acct-id-text">
+              <b dir="auto">{props.me}</b>
+              {sub && <small dir="auto">{sub}</small>}
+            </span>
+          </div>
+          <Row icon={SlidersHorizontal} label={t('ההעדפות שלי')} onPress={go(props.onPrefs)} />
         </div>
-        <div className="group">
+        <div className="group acct-group">
           {tools.map((x) => (
-            <MenuRow key={x.id} icon={x.icon} color={TOOL_COLOR[x.id]} label={x.label} onClick={go(() => props.onTool(x.id))} />
+            <Row key={x.id} icon={x.icon} label={x.label} onPress={go(() => props.onTool(x.id))} />
           ))}
         </div>
-        <div className="group">
-          <MenuRow icon={SettingsIcon} color="#8e8e93" label={t('הגדרות')} chevron onClick={go(props.onSettings)} />
-          <MenuRow icon={ArrowLeftRight} color="#8e8e93" label={t('מעבר לטיול אחר')} onClick={go(props.onLeave)} />
-          {GUIDE_READY && <MenuRow icon={BookOpen} color="#8e8e93" label={t('מדריך')} onClick={go(openGuide)} />}
-          <MenuRow icon={MessageSquareWarning} color="#8e8e93" label={t('דיווח על בעיה')} onClick={go(props.onReport)} />
-          <MenuRow icon={ShieldCheck} color="#8e8e93" label={t('פרטיות ותנאי שימוש')} onClick={go(() => openExternal(privacyUrl()))} />
+        <div className="group acct-group">
+          <Row icon={SettingsIcon} label={t('הגדרות')} onPress={go(props.onSettings)} />
+          <Row icon={ArrowLeftRight} label={t('מעבר לטיול אחר')} onPress={go(props.onLeave)} />
           <PhotoReviewRow />
+          <Collapsible className="acct-more">
+            <CollapsibleTrigger className="group-row acct-more-trigger">
+              <span className="k">{t('עוד')}</span>
+              <Icon as={ChevronDown} className="chev acct-more-chev" />
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              {GUIDE_READY && <Row icon={BookOpen} label={t('מדריך')} onPress={go(openGuide)} />}
+              <Row icon={MessageSquareWarning} label={t('דיווח על בעיה')} onPress={go(props.onReport)} />
+              <Row icon={ShieldCheck} label={t('פרטיות ותנאי שימוש')} external onPress={go(() => openExternal(privacyUrl()))} />
+            </CollapsiblePanel>
+          </Collapsible>
         </div>
-        <div className="group">
-          <button
-            className="group-row danger"
-            onClick={() => {
-              // this phone only: the others' devices, and this person's other devices, stay logged in
-              if (confirm(t('להתנתק מהטלפון הזה? כדי לחזור צריך שם וסיסמה.'))) supabase.auth.signOut({ scope: 'local' })
-            }}
-          >
+        <div className="group acct-group">
+          <button className="group-row danger" onClick={() => setSigningOut(true)}>
             {t('התנתקות')}
           </button>
         </div>
       </div>
-    </div>
+      {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
+    </Sheet>
   )
 }
 
-function MenuRow(props: { icon: LucideIcon; color: string; label: string; chevron?: boolean; onClick: () => void }) {
+function Row(props: { icon: LucideIcon; label: ReactNode; external?: boolean; onPress: () => void }) {
   return (
-    <button className="group-row" onClick={props.onClick}>
-      <span className="menu-tile" style={{ background: props.color }}>
-        <Icon as={props.icon} />
-      </span>
+    <DrawerClose className="group-row" onClick={props.onPress}>
+      <Icon as={props.icon} className="lead" />
       <span className="k">{props.label}</span>
-      {props.chevron && <Icon as={ChevronLeft} className="chev flip-ltr" />}
-    </button>
+      <Icon as={props.external ? ArrowUpRight : ChevronLeft} className={props.external ? 'chev' : 'chev flip-ltr'} />
+    </DrawerClose>
   )
 }

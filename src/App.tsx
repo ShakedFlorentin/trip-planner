@@ -9,28 +9,34 @@ import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl } from './views/Login'
 import TripPicker from './views/TripPicker'
+import ResetPassword from './views/ResetPassword'
 import Home from './views/Home'
 import Itinerary from './views/Itinerary'
 import Bookings from './views/Bookings'
 import Places from './views/Places'
 import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
 import Menu from './views/Menu'
+import { Avatar } from './avatar'
 import Settings from './views/Settings'
+import { ReplanSheet } from './views/Replan'
 import ReportSheet from './views/Report'
 import SwipeGame from './views/Swipe'
 import Onboarding, { useProfile } from './views/Onboarding'
 import Search, { type SearchTarget } from './views/Search'
 import SharedPlan, { ImportShared, forgetPendingShare, pendingShare, slugInUrl } from './views/SharedPlan'
 import { Loading } from './rings'
-import { useQuickAddRoute } from './quickAdd'
+import { useGoRoute, useQuickAddRoute } from './quickAdd'
+import { widgetsOn } from './widgetData'
+import WidgetSync from './views/WidgetSync'
 import { useSettings, useSettingsKnown } from './settings'
 import { isNative } from './native'
 import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
-import { askForRating } from './rating'
-import { syncPush } from './push'
+import { OverlayLayer, say } from './toast'
+import { toast } from '@ui-sdk/react/toast'
+import { forgetPushSync, syncPush } from './push'
 import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
@@ -47,6 +53,7 @@ type Tab = (typeof TABS)[number]['id']
 
 // who was signed in, so the app still opens when an expired login can't be refreshed without a network
 const UID_KEY = 'userId'
+const SESSION_WAIT_MS = 3000
 
 // a shared plan's link (?share=…) opens the read-only page for anyone, before the login gate.
 // The guide video plays over everything the first time the app opens on this device (after the opening rings, before
@@ -69,9 +76,13 @@ function AppMain() {
   const [invited, setInvited] = useState(false)
   // came in through Google with no invite (open sign-up): asked the same questions first, but joins no one's trip
   const [fresh, setFresh] = useState(false)
+  // the reset email's link signed the person in (PASSWORD_RECOVERY): choose the new password before the app
+  const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data, error }) => {
+    let settled = false
+    const apply = ({ data, error }: Awaited<ReturnType<typeof supabase.auth.getSession>>) => {
+      settled = true
       const id = data.session?.user.id ?? null
       if (id) writeCache(UID_KEY, id)
       // a refresh that failed for lack of network is not a sign-out: carry on as the same user
@@ -80,17 +91,34 @@ function AppMain() {
       setFresh(isNewOAuth(data.session?.user))
       setOutboxUser(id ?? offlineId ?? null)
       setUserId(id ?? offlineId ?? null)
-    })
+    }
+    // a token refresh with no data can take a minute before it gives up: after a few seconds open as the same user
+    // as last time (what the offline case above does); the real answer still lands when it comes
+    const slow = setTimeout(() => {
+      const cached = readCache<string>(UID_KEY)?.data
+      if (settled || !cached) return
+      setOutboxUser(cached)
+      setUserId(cached)
+    }, SESSION_WAIT_MS)
+    supabase.auth.getSession().then(apply).finally(() => clearTimeout(slow))
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
       // the first event repeats getSession above, which also knows about the offline case
       if (e === 'INITIAL_SESSION') return
+      settled = true
+      if (e === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (e === 'SIGNED_OUT' || e === 'SIGNED_IN') forgetPushSync()
       if (e === 'SIGNED_OUT') {
+        setRecovering(false)
         clearCache()
-        window.caches?.delete('docs').catch(() => {})
-        // nothing of this account is left for whoever signs in next on this device
+        // saved booking documents, map tiles and place photos: the next person on this phone starts clean
+        for (const c of ['docs', 'tiles', 'photos']) window.caches?.delete(c).catch(() => {})
+        // nothing of this account is left for whoever signs in next on this device (theme and language stay;
+        // changes not sent yet stay too, kept for their own account by the outbox)
         forgetPendingShare()
         try {
-          for (const k of ['tripId', 'invite', 'translator-turns', 'guest']) localStorage.removeItem(k)
+          for (const k of ['tripId', 'lastTrip', 'invite', 'translator-turns', 'guest', 'reviewDismissed'])
+            localStorage.removeItem(k)
+          for (const k of Object.keys(localStorage)) if (/^(notnow|splitStartLater|replanned):/.test(k)) localStorage.removeItem(k)
         } catch {
           // nothing remembered to forget
         }
@@ -102,11 +130,22 @@ function AppMain() {
       setOutboxUser(s?.user.id ?? null)
       setUserId(s?.user.id ?? null)
     })
-    return () => data.subscription.unsubscribe()
+    return () => {
+      clearTimeout(slow)
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   if (userId === undefined) return <Loading />
   if (!userId) return <SignedOut />
+  if (recovering)
+    return (
+      <ResetPassword
+        onDone={() => {
+          setRecovering(false)
+        }}
+      />
+    )
   return invited || fresh ? <ProfileGate key={userId} userId={userId} invited={invited} /> : <TripGate userId={userId} />
 }
 
@@ -165,11 +204,21 @@ function savedTrip() {
   }
 }
 
+function lastTrip() {
+  try {
+    return localStorage.getItem('lastTrip')
+  } catch {
+    return null
+  }
+}
+
 function TripGate({ userId, invited = false }: { userId: string; invited?: boolean }) {
   // open on the last trip at once (no waiting for a network that may not be there); the check below corrects it
   const [tripId, setTripId] = useState<string | null | undefined>(() => savedTrip() ?? undefined)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  // the trips this account is in, for the list in the picker (the last answer is kept, so it also shows with no network)
+  const [tripIds, setTripIds] = useState<string[]>(() => readCache<string[]>('memberTrips:' + userId)?.data ?? [])
   // a shared plan the person asked to copy before signing in: offered once they are in
   const [offer, setOffer] = useState(pendingShare)
   // what a visitor answered and liked before making the account: carried into it once the trip is known. Someone who
@@ -183,6 +232,8 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
     try {
       // '' remembers that the trip was left on purpose, so the next launch opens the trip list instead of it
       localStorage.setItem('tripId', id ?? '')
+      // the trip to go back to from the picker, and to open when the list can't be loaded
+      if (id) localStorage.setItem('lastTrip', id)
     } catch {
       // the choice just won't be remembered
     }
@@ -197,14 +248,19 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
       .eq('user_id', userId)
       .then(({ data, error }) => {
         const saved = savedTrip()
-        if (saved === '') return setTripId(null)
         // offline or a server hiccup is not "you have no trip": keep the last trip, or offer a retry
         if (error) {
+          // left on purpose and nothing to list (no saved answer): the picker would be a dead end, so open the last trip
+          if (saved === '') return setTripId(tripIds.length ? null : lastTrip() || null)
           if (saved) setTripId(saved)
           else setFailed(true)
           return
         }
         const ids = (data ?? []).map((m) => m.trip_id as string)
+        setTripIds(ids)
+        writeCache('memberTrips:' + userId, ids)
+        // '' means the trip was left on purpose: the picker, with the list of trips to go to
+        if (saved === '') return setTripId(null)
         choose(saved && ids.includes(saved) ? saved : (ids[0] ?? null))
       })
   }, [userId, attempt])
@@ -238,7 +294,10 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
         }}
       />
     )
-  if (!tripId) return <TripPicker onPick={choose} />
+  if (!tripId) {
+    const back = lastTrip()
+    return <TripPicker onPick={choose} trips={tripIds} backTo={back && tripIds.includes(back) ? back : null} />
+  }
   return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
 }
 
@@ -260,21 +319,23 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [settings, setSettings] = useState(false)
   const [prefs, setPrefs] = useState(false)
   const [reporting, setReporting] = useState(false)
-  // a short message at the bottom ("מעדכנים את המסלול…")
-  const [toast, setToast] = useState('')
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>()
   useEffect(
     () => () => {
       wandRun.current?.stop()
-      clearTimeout(toastTimer.current)
     },
     [tripId],
   )
+  // the wand always asks first (a stray tap must not re-plan the days ahead). The planner keeps every earlier day,
+  // today, ticked stops and anything added or edited by hand (plan-trip/index.ts: fixedItems), and never touches bookings
+  const [replanning, setReplanning] = useState(false)
+  const askThenWand = () => {
+    if (wandRun.current) return
+    setReplanning(true)
+  }
   const wand = () => {
     if (wandRun.current) return
-    clearTimeout(toastTimer.current)
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | undefined
     const run = {
@@ -285,12 +346,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       },
     }
     wandRun.current = run
-    const finish = (msg: string) => {
+    const progress = say(t('מעדכנים את המסלול, כמה שניות…'), { duration: 30_000 })
+    const finish = (msg: string, error = false) => {
       run.stop()
-      setToast(msg)
-      toastTimer.current = setTimeout(() => setToast(''), 2000)
+      toast.dismiss(progress)
+      say(msg, { error, duration: 2500 })
     }
-    setToast(t('מעדכנים את המסלול, כמה שניות…'))
     const read = async () => {
       try {
         const { data } = await supabase.from('plan_state').select('ran_at, dirty, error').eq('trip_id', tripId).maybeSingle()
@@ -309,13 +370,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
-          finish(t('המסלול עודכן'))
-          // a finished plan is a good moment: after the message, the app may ask for a rating (src/rating.ts)
-          return askForRating(2400)
+          // no rating prompt here: a re-plan is not a moment of delight
+          return finish(t('המסלול עודכן'))
         }
-        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'))
+        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
         timer = setTimeout(poll, 1000)
       }
       timer = setTimeout(poll, 1000)
@@ -337,6 +397,16 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     setTool(null)
     setTab(kind === 'place' ? 'places' : 'bookings')
   })
+  // a home-screen quick action, a widget or Siri (src/native.ts): Plan at today, or the Translate tool
+  useGoRoute((target) => {
+    setMenu(false)
+    setSearching(false)
+    if (target === 'translate') return setTool('say')
+    setTool(null)
+    const today = trip ? currentDay(trip.start_date, trip.num_days) : null
+    if (today) setDay(today)
+    setTab('plan')
+  })
   useEffect(() => {
     const onScroll = () => setCompact(window.scrollY > 34)
     onScroll()
@@ -350,14 +420,17 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)
-  const [stale, setStale] = useState(!!tripCache)
+  const [stale, setStale] = useState(false)
 
   useEffect(() => {
+    // a saved copy is shown at once; the banner waits for a failed load or a slow first answer (6 s), not for the first round trip
+    const slow = setTimeout(() => setStale(true), 6000)
     const load = async () => {
       const [t, m] = await Promise.all([
         supabase.from('trips').select('*').eq('id', tripId).single(),
         supabase.from('members').select('*').eq('trip_id', tripId).order('joined_at'),
       ])
+      clearTimeout(slow)
       if (t.data) {
         setTrip(t.data as Trip)
         writeCache('trip:' + tripId, t.data)
@@ -390,6 +463,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       stop = () => void supabase.removeChannel(channel)
     }
     return () => {
+      clearTimeout(slow)
       stop()
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('online', refresh)
@@ -450,6 +524,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
 
   return (
     <div className="app">
+      {widgetsOn && <WidgetSync trip={trip} members={members} userId={props.userId} />}
       <header className={'topbar' + (compact ? ' compact' : '')}>
         <span className="topbar-title" aria-hidden={!compact}>
           {TABS.find((t) => t.id === tab)?.label}
@@ -465,15 +540,13 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
-            onClick={wand}
+            onClick={askThenWand}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
           </button>
         )}
-        <button className="menu-btn" aria-label={t('תפריט')} onClick={() => setMenu(true)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+        <button className="menu-btn" aria-label={me ? t('חשבון') + ', ' + me : t('חשבון')} aria-haspopup="dialog" aria-expanded={menu} onClick={() => setMenu(true)}>
+          <Avatar name={me} size="m" look="accent" decorative />
         </button>
       </header>
       <OfflineBanner since={stale ? syncedAt : null} />
@@ -488,6 +561,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
             onOpenDay={openDay}
             onOpenMore={openMore}
             onOpenPlaces={() => setTab('places')}
+            onOpenBookings={() => setTab('bookings')}
             onOpenSettings={() => setSettings(true)}
           />
         )}
@@ -507,14 +581,11 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           </button>
         ))}
       </nav>
-      {toast && (
-        <div className="toast" role="status">
-          {toast}
-        </div>
-      )}
+      <OverlayLayer />
       {menu && (
         <Menu
           me={me}
+          trip={trip}
           hasBaby={hasBaby}
           onClose={() => setMenu(false)}
           onTool={setTool}
@@ -526,6 +597,15 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       )}
       {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
       {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}
+      {replanning && trip && (
+        <ReplanSheet
+          trip={trip}
+          onClose={(go) => {
+            setReplanning(false)
+            if (go) wand()
+          }}
+        />
+      )}
       {prefs && <PrefsSheet userId={props.userId} onClose={() => setPrefs(false)} />}
       {reporting && (
         <ReportSheet trip={trip} me={me} from={(tool && MORE_LABEL[tool]) || TABS.find((x) => x.id === tab)?.label || tab} onClose={() => setReporting(false)} />
@@ -535,7 +615,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   )
 }
 
-const MORE_LABEL: Record<MoreTab, string> = { money: t('כסף'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
+const MORE_LABEL: Record<MoreTab, string> = { money: t('הוצאות'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
 
 
 function LoadError({ onRetry }: { onRetry: () => void }) {

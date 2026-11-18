@@ -1,61 +1,103 @@
-/* Shared expenses */
-.exp-hero { display: flex; flex-direction: column; gap: 6px; }
-.exp-big { font-size: 1.875rem; font-weight: 800; line-height: 1.2; }
-.exp-big.plus, .exp-num.plus { color: var(--ok); }
-.exp-big.minus, .exp-num.minus { color: var(--nope); }
-.exp-cur { flex: none; width: 96px; }
-.exp-cur button { min-height: 44px; }
-.exp-link { min-height: 44px; padding: 4px 8px; }
-.exp-h { font-size: 1rem; margin: 0 0 4px; }
+/* Expenses and the new-expense form: two couples side by side, the list by day, people as avatars. Tokens only. */
+.exp { display: flex; flex-direction: column; gap: var(--s-2); padding-bottom: var(--s-2); }
+.exp-fn { font-size: var(--fs-footnote); }
+.exp-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.exp-num.plus, .exp-net.plus { color: var(--ok); }
+.exp-num.minus, .exp-net.minus { color: var(--nope); }
+.exp-link { min-height: 44px; padding: var(--s-1) var(--s-2); }
+.exp-label { margin: var(--s-4) var(--s-4) 0; font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); }
 
-.exp-transfer, .exp-bal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 0;
-  border-top: 1px solid var(--line);
-}
-.exp-transfer:first-of-type, .exp-bal:first-of-type { border-top: 0; }
-.exp-transfer-who { display: flex; flex-direction: column; min-width: 0; font-size: 0.9375rem; }
-.exp-num { font-weight: 700; font-variant-numeric: tabular-nums; }
-.exp-transfer .pill { flex: none; min-height: 44px; }
+/* the ¥ / ₪ switch: same look as the List / Map switch on Places */
+.exp-cur-row { display: flex; justify-content: flex-end; }
+.exp-seg { position: relative; display: inline-flex; isolation: isolate; padding: 2px; gap: 0; background: var(--fill); border-radius: var(--r-pill); flex: none; }
+.exp-seg-item { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; min-width: 44px; padding: 0 var(--s-3); border-radius: var(--r-pill); font-size: var(--fs-subhead); font-weight: 500; color: var(--muted); position: relative; }
+.exp-seg-item::after { content: ''; position: absolute; inset: -4px 0; }
+.exp-seg-item[data-checked] { color: var(--text); font-weight: 600; }
+.exp-seg-ind { position: absolute; z-index: -1; top: var(--segmented-control-indicator-top); left: var(--segmented-control-indicator-left); width: var(--segmented-control-indicator-width); height: var(--segmented-control-indicator-height); background: var(--card); border-radius: var(--r-pill); box-shadow: var(--elev-1); transition: left var(--dur-2) var(--ease), width var(--dur-2) var(--ease); }
+.sheet-end { display: flex; justify-content: flex-end; grid-column: 3; grid-row: 1; padding-inline-end: var(--s-2); }
 
-.exp-day { gap: 8px; }
-.exp-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 14px;
-  text-align: start;
-  color: inherit;
-}
-.exp-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--fill); color: var(--muted); }
-.exp-bal b.exp-num { white-space: nowrap; }
-.chips .chip .ic { margin-inline-end: 2px; }
-.exp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.exp-main > b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.exp-amt { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+/* the pair card */
+.exp-card { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); background: var(--card); border-radius: var(--r-md); }
+.exp-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+.exp-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.exp-paid { font-size: var(--fs-subhead); font-variant-numeric: tabular-nums; }
+.exp-net { font-size: var(--fs-title); font-weight: 600; font-variant-numeric: tabular-nums; }
+.exp-meter { display: block; }
+.exp-meter [data-slot='meter-track'], .exp-meter > div { display: block; height: 4px; border-radius: var(--r-pill); background: var(--fill); overflow: hidden; }
+.exp-meter [data-slot='meter-indicator'] { display: block; height: 100%; border-radius: var(--r-pill); background: var(--accent); }
+.exp-balances { display: flex; flex-direction: column; }
 
-/* amount field next to its currency toggle in the form */
-.exp-amount { display: flex; gap: 10px; align-items: flex-end; }
-.exp-amount .field { flex: 1; }
-.exp-amount .exp-cur { margin-bottom: 1px; }
-.exp-amount .exp-cur button { min-height: 44px; }
+/* "X owe you ₪…" with its Paid back button: a tinted row inside the card */
+.exp-owe { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-3); border-radius: var(--r-sm); font-size: var(--fs-subhead); }
+.exp-owe.plus { background: color-mix(in srgb, var(--ok) 14%, var(--card)); }
+.exp-owe.minus { background: color-mix(in srgb, var(--warn) 16%, var(--card)); }
+.exp-owe.even { justify-content: center; background: var(--fill); color: var(--muted); }
+.exp-owe-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.exp-owe-amt { font-weight: 600; font-variant-numeric: tabular-nums; }
+.exp-owe.plus .exp-owe-amt { color: var(--ok); }
+.exp-owe.minus .exp-owe-amt { color: var(--warn); }
+.exp-pill { flex: none; display: inline-flex; align-items: center; gap: var(--s-1); min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); background: var(--bg); color: var(--text); font-size: var(--fs-subhead); font-weight: 600; }
+.exp-pill:active { transform: scale(0.97); opacity: 0.85; }
 
-.exp-rate { margin-top: 2px; }
+/* people who owe each other besides me, and a single-couple trip's balances */
+.exp-transfer, .exp-bal { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); min-height: 52px; padding: 0 var(--s-4); font-size: var(--fs-subhead); }
+.exp-transfer + .exp-transfer, .exp-bal + .exp-bal { border-top: 0.5px solid var(--line); }
+.exp-transfer-who { display: flex; flex-direction: column; min-width: 0; }
 .exp-transfer .link { flex: none; }
-/* everyone's balance, folded away: what to pay is already in the card above */
-.exp-details .exp-details-body { padding: 0 16px 6px; }
-.exp-settle-who { margin: 0; font-size: 1.125rem; }
-/* the balance (53): a sentence, one big amount, a plain full-width button; orange when you owe, green when owed */
-.exp-owe { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 4px; }
-.exp-owe + .exp-owe { border-top: 1px solid var(--line); padding-top: 12px; }
-.exp-owe-line { font-size: 1rem; font-weight: 600; }
-.exp-owe .exp-big { font-size: 2rem; }
-.exp-owe.minus .exp-big { color: #e07800; }
-.exp-owe.plus .exp-big { color: var(--ok); }
-.exp-owe .secondary { margin-top: 6px; width: 100%; }
-@media (prefers-color-scheme: dark) { .exp-owe.minus .exp-big { color: #ff9f0a; } }
-.exp-guess { margin: -4px 4px 0; }
+.exp-card .exp-bal { padding: 0; }
+
+/* the list: a filter line, then one group per day */
+.exp-listhead { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-top: var(--s-2); padding-inline: var(--s-1); }
+.exp-filter { display: inline-flex; align-items: center; gap: var(--s-1); min-height: 44px; padding: 0 var(--s-2); color: var(--accent); font-size: var(--fs-subhead); font-weight: 500; }
+.exp-day { display: flex; flex-direction: column; gap: var(--s-1); }
+.exp-dayhead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); margin-inline: var(--s-4); font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); }
+.exp-dayhead .exp-num { font-weight: 500; }
+.exp-group { background: var(--card); border-radius: var(--r-md); overflow: hidden; }
+.exp-group .swipe-card { background: var(--card); }
+.exp-row { position: relative; display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: var(--row-h); padding: var(--s-2) var(--s-4); text-align: start; color: inherit; background: none; }
+.exp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.exp-title { font-size: var(--fs-body); font-weight: 500; overflow-wrap: anywhere; }
+.exp-amt { flex: none; display: flex; flex-direction: column; align-items: flex-end; font-size: var(--fs-body); font-variant-numeric: tabular-nums; }
+.exp-rate { margin-top: var(--s-2); text-align: center; }
+
+/* the docked button: sticky at the bottom of the sheet, like the summary bar on the Calendar */
+.exp-dock { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); z-index: 2; display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom)); margin: var(--s-2) -16px calc(-24px - env(safe-area-inset-bottom)); background: var(--bg); border-top: 0.5px solid var(--line); }
+.exp-dock .primary { width: 100%; }
+.exp-dock .msg { margin: 0; }
+
+/* the form */
+.expf { display: flex; flex-direction: column; gap: var(--s-3); }
+.expf-title { min-height: 52px; padding: 0 var(--s-4); border: 0; border-radius: var(--r-md); background: var(--card); font-size: var(--fs-body); }
+.expf-cats { display: flex; justify-content: space-between; gap: var(--s-1); }
+.expf-cat { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--card); color: var(--muted); }
+.expf-cat[data-pressed] { background: var(--accent-fill); color: var(--on-accent); }
+.expf-catname { margin: calc(var(--s-1) * -1) 0 0; text-align: center; }
+.expf-amount { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) var(--s-4); border-radius: var(--r-md); background: var(--card); }
+.expf-num { flex: 1; min-width: 0; min-height: 44px; padding: 0; border: 0; background: none; font-size: var(--fs-title); font-weight: 600; font-variant-numeric: tabular-nums; }
+.expf-approx { margin: calc(var(--s-1) * -1) var(--s-4) 0; }
+.expf-cards { display: flex; flex-direction: column; gap: var(--s-2); }
+.expf-card { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--card); }
+.expf-checks { display: flex; flex-direction: column; gap: var(--s-2); }
+.expf-people { display: flex; flex-wrap: wrap; gap: var(--s-4); }
+.expf-person { display: flex; flex-direction: column; align-items: center; gap: var(--s-1); min-width: 64px; min-height: 44px; color: var(--text); background: none; cursor: pointer; }
+.expf-ava { position: relative; display: inline-grid; }
+.expf-name { font-size: var(--fs-footnote); text-align: center; max-width: 96px; overflow-wrap: anywhere; }
+.expf-couple { display: flex; align-items: center; gap: var(--s-2); }
+.expf-parent { min-height: 44px; cursor: pointer; }
+/* the paid-by pick: a check badge on the chosen avatar */
+.expf-person[data-checked] .ava, .expf-person[aria-checked='true'] .ava { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.expf-badge { position: absolute; inset-block-end: -2px; inset-inline-end: -2px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-fill); color: var(--on-accent); }
+.expf-badge .ic { width: 12px; height: 12px; }
+/* the split: a round check on each avatar; unchecked people fade */
+.expf-check { position: relative; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 1.5px solid var(--line); background: var(--bg); color: transparent; }
+.expf-ava .expf-check { position: absolute; inset-block-end: -2px; inset-inline-end: -2px; }
+.expf-check[data-checked], .expf-check[data-indeterminate] { background: var(--accent-fill); border-color: transparent; color: var(--on-accent); }
+.expf-check .ic { width: 14px; height: 14px; }
+.expf-check::after { content: ''; position: absolute; inset: -11px; }
+.expf-person:not([data-on]) .ava { opacity: 0.4; }
+.expf-splithead { display: flex; align-items: center; justify-content: space-between; margin-inline-end: var(--s-2); }
+.expf-quick { display: inline-flex; gap: var(--s-1); margin-top: var(--s-4); }
+.expf-quick [aria-pressed='true'] { font-weight: 600; }
+.expf-date { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); min-height: 52px; padding: 0 var(--s-4); border-radius: var(--r-md); background: var(--card); font-size: var(--fs-body); }
+.expf-date input { min-height: 44px; border: 0; background: none; text-align: end; }
+.exp-settle-who { margin: 0; font-size: var(--fs-body); }

@@ -1,0 +1,120 @@
+/* UX fixes: messages (ui-sdk Toast), yes/no questions (ui-sdk Alert Dialog), the connection bar, plan marks */
+
+/* ---- Toast: a small dark pill above the + button; Undo is a text button inside it ---- */
+[data-slot='toast-region'] {
+  position: fixed;
+  inset-inline: 16px;
+  bottom: calc(var(--tabbar-h) + 16px + 52px + 12px + env(safe-area-inset-bottom));
+  top: auto;
+  margin: 0 auto;
+  max-width: 420px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+[data-slot='toast'] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  min-height: 48px;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--text) 90%, transparent);
+  color: var(--bg);
+  font-size: var(--fs-subhead);
+  line-height: 1.35;
+  box-shadow: var(--elev-2);
+}
+[data-slot='toast'][data-type='error'] { background: var(--accent-fill); color: var(--on-accent); }
+[data-slot='toast'] [data-slot='toast-action'] {
+  flex: none;
+  min-height: 44px;
+  min-width: 44px;
+  margin-block: -8px;
+  padding: 0 var(--s-1);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- Alert Dialog: iOS style card, one-line title, one line of explanation, stacked buttons ---- */
+[data-slot='alert-dialog-backdrop'] { position: fixed; inset: 0; background: var(--scrim); }
+[data-slot='alert-dialog-content'] {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(320px, calc(100vw - 48px));
+  height: fit-content;
+  padding: var(--s-5) var(--s-4) var(--s-4);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--elev-3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  transition: opacity 0.18s, scale 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-color-scheme: dark) {
+  [data-slot='alert-dialog-content'] { background: var(--card); }
+}
+[data-slot='alert-dialog-content']:is([data-starting-style], [data-ending-style]) { opacity: 0; scale: 0.96; }
+[data-slot='alert-dialog-content'] [data-slot='stack'] { display: flex; flex-direction: column; gap: var(--s-2); }
+[data-slot='alert-dialog-title'] { margin: 0; font-size: var(--fs-body); font-weight: 600; line-height: 1.3; text-wrap: balance; }
+[data-slot='alert-dialog-description'] { margin: 0; font-size: var(--fs-footnote); line-height: 1.4; color: var(--muted); text-wrap: balance; }
+[data-slot='alert-dialog-content'] [data-slot='actions'] { display: flex; flex-direction: column-reverse; gap: var(--s-1); }
+[data-slot='alert-dialog-close'] {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+[data-slot='alert-dialog-close'][data-variant='solid'] { background: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
+[data-slot='alert-dialog-close']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Connection bar: sticky under the top bar, grey for waiting, red only when a change was refused ---- */
+.net-bar {
+  position: sticky;
+  top: calc(var(--top-h) + env(safe-area-inset-top));
+  z-index: 5;
+  padding: var(--s-2) var(--s-4);
+  text-align: center;
+  background: var(--fill);
+  color: var(--text);
+  backdrop-filter: blur(12px);
+}
+.net-bar[data-state='failed'] { background: var(--accent-fill); color: var(--on-accent); }
+.net-bar .link { color: inherit; text-decoration: underline; min-height: 32px; }
+.net-bar[data-state='waiting'] { background: var(--card); color: var(--text); box-shadow: 0 0.5px 0 var(--line); }
+.net-bar > .ic { width: var(--icon-s); height: var(--icon-s); color: var(--muted); }
+.net-bar[data-state='failed'] > .ic { color: inherit; }
+
+/* ---- Plan marks ---- */
+
+.net-bar { min-height: 36px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: var(--s-2); box-sizing: border-box; }
+body:has(.net-bar) .day-strip { top: calc(var(--top-h) + env(safe-area-inset-top) + 36px); }
+.row-chev { flex: none; margin-inline-start: auto; color: var(--muted); }
+
+/* ---- Home "Before the trip": a calm iOS list (rows 15px / 600, sub-lines 13px muted, small icons at the start) ---- */
+.before-trip > h3, .card-h3 { font-size: var(--fs-subhead); font-weight: 600; margin: 0 0 var(--s-1); }
+.before-trip .todo-row { align-items: center; gap: var(--s-3); min-height: 52px; padding: var(--s-3) 0; }
+.before-trip .todo-row:last-child { padding-bottom: var(--s-1); }
+.before-trip .todo-row > .tile { margin-top: 0; }
+.before-trip .todo-row b { font-size: var(--fs-subhead); font-weight: 600; line-height: 1.3; }
+.before-trip .todo-row .small, .before-trip .todo-row .muted { display: block; font-size: var(--fs-footnote); line-height: 1.35; font-weight: 400; color: var(--muted); }
+.before-trip .tile { width: 28px; height: 28px; border-radius: var(--r-xs); }
+.before-trip .tile .ic { width: 16px; height: 16px; }
+.before-trip .bar.thin { height: 6px; margin-top: 6px; }
+.before-trip .row-chev { width: 16px; height: 16px; }

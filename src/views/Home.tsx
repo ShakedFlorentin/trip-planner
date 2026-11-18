@@ -10,6 +10,7 @@ import {
   Layers,
   ListChecks,
   Navigation,
+  Plane,
   Share2,
   ShieldAlert,
   Ticket,
@@ -18,10 +19,8 @@ import {
 } from 'lucide-react'
 import { supabase } from '../supabase'
 import QuickFab from './QuickFab'
-import { requestAdd } from '../quickAdd'
+import { requestAdd, requestAddBooking } from '../quickAdd'
 import {
-  BOOKING_KINDS,
-  BOOKING_TABS,
   itemDone,
   CITY_HE,
   TOGETHER,
@@ -34,13 +33,14 @@ import {
   type Swipe,
   type Trip,
 } from '../types'
-import { cityLabel, couplesOf, currentDay, dayDate, dayParts, errorText, fmtDay, fmtDayLong, mutate, useTripTable } from '../lib'
+import { readCache, cityLabel, couplesOf, currentDay, dayDate, dayParts, errorText, fmtDay, fmtDayLong, mutate, useTripTable } from '../lib'
 import { locale, t } from '../i18n'
 import { cityColor, cityPhoto } from '../cities'
-import { BOOKING_ICON, Icon } from '../icons'
+import { Icon, type LucideIcon } from '../icons'
+import { LoadNote } from '../ui'
 import type { MoreTab } from './More'
 import { useStays } from '../stays'
-import { dayEntries, fmtUntil, hotelFor, nightLines, stayInJapan, minutesOf, navUrl, ymd, type Entry, type PlanItem } from './planUtils'
+import { dayEntries, fmtUntil, hotelFor, nightLines, stayInJapan, minutesOf, navUrl, nextStop, ymd, type Entry, type PlanItem } from './planUtils'
 import ReviewCard from './Review'
 import { EveningRate } from './Places'
 import { appUrl } from '../native'
@@ -56,19 +56,32 @@ type Props = {
   /** open one of the menu's screens (money, lists, emergency, translate) over Home */
   onOpenMore: (sub: MoreTab) => void
   onOpenPlaces: () => void
+  /** the Bookings tab */
+  onOpenBookings: () => void
   /** the trip has no dates yet: open settings, where they are picked */
   onOpenSettings: () => void
 }
 
-export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onOpenPlaces, onOpenSettings }: Props) {
-  const { rows: days } = useTripTable<DayInfo>('day_info', trip.id, 'day')
-  const { rows: items } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
-  const { rows: bookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onOpenPlaces, onOpenBookings, onOpenSettings }: Props) {
+  const daysT = useTripTable<DayInfo>('day_info', trip.id, 'day')
+  const itemsT = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
+  const bookingsT = useTripTable<Booking>('bookings', trip.id, 'starts_at')
+  const { rows: days } = daysT
+  const { rows: items } = itemsT
+  const { rows: bookings } = bookingsT
   const { stays, cities: stayCities } = useStays(trip.id)
-  const { rows: todos } = useTripTable<ChecklistItem>('checklist_items', trip.id)
+  const todosT = useTripTable<ChecklistItem>('checklist_items', trip.id)
+  const { rows: todos } = todosT
   const { rows: candidates } = useTripTable<Candidate>('candidates', trip.id)
   const { rows: swipes } = useTripTable<Swipe>('swipes', trip.id)
   const now = useNow()
+  // "no flight", "no place to stay" and "nothing planned" are only true once the lists have loaded: while one is still
+  // loading, or failed with nothing saved on the phone, say nothing about it
+  const unsure = (x: { loading: boolean; error: unknown; rows: unknown[] }) => x.loading || (!!x.error && x.rows.length === 0)
+  const planUnsure = unsure(itemsT) || unsure(bookingsT)
+  const gapsUnsure = unsure(bookingsT) || unsure(daysT) || unsure(todosT)
+  const loadFailed = [daysT, itemsT, bookingsT, todosT].some((x) => !!x.error && x.rows.length === 0)
+  const reloadAll = () => [daysT, itemsT, bookingsT, todosT].forEach((x) => x.reload())
 
   const today = currentDay(trip.start_date, trip.num_days)
   // count on Tokyo's calendar, not the phone's: abroad the local date can differ from Japan's
@@ -81,12 +94,17 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
   const entries = today ? dayEntries(items, bookings, today, ymd(dayDate(trip.start_date, today)!), 'mine', myCouple) : []
   const nowHM = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   // the next thing still ahead today; untimed items wait their turn after the timed ones
-  const next = entries.find((e) => !e.done && e.time && e.time >= nowHM) ?? entries.find((e) => !e.done && !e.time)
+  const next = nextStop(entries, nowHM)
   const rest = entries.filter((e) => e !== next && e.item && !e.done)
   const todayBookings = entries.filter((e) => e.booking)
   const tonight = today
     ? hotelFor(nightLines(todayInfo?.hotel ?? null, bookings, ymd(dayDate(trip.start_date, today)!), couples, stays, stayCities), myCouple)
     : []
+  // the same number Discover shows as "N left": the cards still to vote on. Discover saves its own count (it knows this
+  // person's questionnaire and which places are for their couple); until it has, count the cards not voted on yet
+  const swipesLeft =
+    readCache<number>('left:' + trip.id + ':' + userId)?.data ??
+    candidates.filter((c) => !swipes.some((s) => !s.skipped && s.user_id === userId && s.candidate_id === c.id)).length
   const cities = runs(days, 'city')
   const destinations = Object.entries(
     candidates.reduce<Record<string, number>>((acc, c) => ((acc[c.city] = (acc[c.city] ?? 0) + 1), acc), {}),
@@ -150,9 +168,11 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
 
       <ReviewCard tripId={trip.id} userId={userId} />
 
+      {loadFailed && <LoadNote onRetry={reloadAll} />}
+
       {today && (
         <>
-          <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />
+          {!planUnsure && <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />}
 
           {nowHM >= '18:00' && <EveningRate trip={trip} userId={userId} />}
 
@@ -162,7 +182,9 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
                 <Icon as={BedDouble} /> {t('הלילה במלון')}
               </h3>
               {tonight.map((t) => (
-                <div key={t}>{t}</div>
+                <bdi key={t} className="tonight-hotel">
+                  {t}
+                </bdi>
               ))}
             </section>
           )}
@@ -190,7 +212,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
         </>
       )}
 
-      {!today && daysLeft !== null && daysLeft > 0 && (
+      {!today && daysLeft !== null && daysLeft > 0 && !gapsUnsure && (
         <BeforeTrip
           days={days}
           numDays={trip.num_days}
@@ -200,7 +222,8 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
           bookings={bookings}
           todos={todos}
           open={() => onOpenMore('lists')}
-          swipesLeft={candidates.filter((c) => !swipes.some((s) => s.user_id === userId && s.candidate_id === c.id)).length}
+          openBookings={onOpenBookings}
+          swipesLeft={swipesLeft}
         />
       )}
 
@@ -279,7 +302,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
       )}
 
       <section className="card">
-        <h3>{t('משתתפים')}</h3>
+        <h3 className="card-h3">{t('משתתפים')}</h3>
         <div className="chips">
           {members.map((m) => (
             <span key={m.user_id} className="chip">
@@ -457,15 +480,13 @@ function BeforeTrip(props: {
   myCouple: string | null
   bookings: Booking[]
   todos: ChecklistItem[]
+  openBookings: () => void
   swipesLeft: number
   open: () => void
 }) {
   const { bookings, couples, days } = props
   const todo = props.todos.filter((t) => t.list === 'todo')
   const left = todo.filter((t) => !itemDone(t, props.myCouple)).length
-  const counts = ['flight', 'hotel', 'restaurant', 'activity'].map((k) => ({ k, n: bookings.filter((b) => b.kind === k).length }))
-  // only the kinds that have bookings: "0 מסעדות" says nothing
-  const shown = counts.filter((c) => c.n > 0)
   const mine = props.myCouple
 
   // each couple needs a roof for its own nights in Japan: from landing to the night before its flight out. Without
@@ -480,18 +501,33 @@ function BeforeTrip(props: {
       const uncovered = nights.filter(
         ({ date, info }) => !hotelFor(nightLines(info?.hotel ?? null, bookings, date, couples), c).length,
       )
-      return { c, n: uncovered.length, of: nights.length }
+      const dates = uncovered.map((u) => u.date).filter(Boolean).sort()
+      return { c, n: uncovered.length, of: nights.length, range: dates.length ? nightRange(dates[0], dates[dates.length - 1]) : '' }
     })
     .filter((m) => m.n > 0)
-  const noFlight = couples.filter((c) => !bookings.some((b) => b.kind === 'flight' && (!b.who || b.who === c)))
-  const gaps = [
-    ...noFlight.map((c) => t('אין טיסה ל{who}', { who: t(c) })),
-    ...(missing.length ? [t('חסרה לינה: {list}', { list: missing.map((m) => t('{who} {n} מתוך {of} לילות', { who: t(m.c), n: m.n, of: m.of })).join(' · ') })] : []),
+  // only what is still to do: no booking is counted here (they are all in Bookings)
+  const flightsOf = (c: string) => bookings.filter((x) => x.kind === 'flight' && (!x.who || x.who === c))
+  const noFlight = couples.filter((c) => !flightsOf(c).length)
+  // flights that exist, but none lands in or none leaves Japan (a missing return or connection)
+  const halfFlight = couples.filter((c) => flightsOf(c).length > 0 && !stayInJapan(bookings, c))
+  const noCode = bookings.filter((x) => x.kind === 'flight' && !x.confirmation?.trim()).length
+  type Gap = { key: string; icon: LucideIcon; title: string; sub?: string; go: () => void }
+  const gaps: Gap[] = [
+    ...noFlight.map((c): Gap => ({ key: 'nf' + c, icon: Plane, title: t('אין טיסה ל{who}', { who: t(c) }), go: () => requestAddBooking('flight') })),
+    ...halfFlight.map((c): Gap => ({ key: 'hf' + c, icon: Plane, title: t('חסרה טיסה ליפן או ממנה: {who}', { who: t(c) }), go: () => requestAddBooking('flight') })),
+    ...missing.map((m): Gap => ({
+      key: 'bed' + m.c,
+      icon: BedDouble,
+      title: t('חסרה לינה: {who}', { who: t(m.c) }),
+      sub: t('{n} מתוך {of} לילות{range}', { n: m.n, of: m.of, range: m.range ? ' · \u2066' + m.range + '\u2069' : '' }),
+      go: () => requestAddBooking('hotel'),
+    })),
+    ...(noCode ? [{ key: 'code', icon: Ticket, title: noCode === 1 ? t('לטיסה אחת אין קוד אישור') : t('ל-{n} טיסות אין קוד אישור', { n: noCode }), go: props.openBookings } as Gap] : []),
   ]
 
-  if (!todo.length && !bookings.length && !gaps.length && !props.swipesLeft) return null
+  if (!todo.length && !gaps.length && !props.swipesLeft) return null
   return (
-    <section className="card">
+    <section className="card before-trip">
       <h3>{t('לפני הטיול')}</h3>
       {todo.length > 0 && (
         <button className="todo-row" onClick={props.open}>
@@ -510,25 +546,19 @@ function BeforeTrip(props: {
               </span>
             )}
           </span>
+          <Icon as={ChevronLeft} className="flip-ltr row-chev" />
         </button>
       )}
-      <div className="todo-row">
-        <span className="tile neutral"><Icon as={Ticket} /></span>
-        <span>
-          {shown.length ? (
-            <b className="count-chips">
-              {shown.map(({ k, n }) => (
-                <span key={k} className="count-chip">
-                  <Icon as={BOOKING_ICON[k]} /> {n} {n === 1 ? (k === 'activity' ? t('אטרקציה') : BOOKING_KINDS[k]) : BOOKING_TABS[k]}
-                </span>
-              ))}
-            </b>
-          ) : (
-            <b>{t('עוד אין הזמנות')}</b>
-          )}
-          <span className="muted small">{gaps.length ? gaps.join(' · ') : shown.length ? t('טיסות ולינה סגורות') : t('אפשר להוסיף מאישור הזמנה, בלשונית הזמנות.')}</span>
-        </span>
-      </div>
+      {gaps.map((g) => (
+        <button key={g.key} className="todo-row" onClick={g.go}>
+          <span className="tile neutral"><Icon as={g.icon} /></span>
+          <span>
+            <b>{g.title}</b>
+            {g.sub && <span className="muted small">{g.sub}</span>}
+          </span>
+          <Icon as={ChevronLeft} className="flip-ltr row-chev" />
+        </button>
+      ))}
       {props.swipesLeft > 0 && (
         <div className="todo-row">
           <span className="tile neutral"><Icon as={Layers} /></span>
@@ -542,6 +572,12 @@ function BeforeTrip(props: {
   )
 }
 
+
+/** "14–17.12": the first and last night without a roof, as dates ("2026-12-14" in, "14.12" out). */
+function nightRange(a: string, b: string) {
+  const f = (d: string) => d.slice(8, 10) + '.' + d.slice(5, 7)
+  return a === b ? f(a) : a.slice(5, 7) === b.slice(5, 7) ? a.slice(8, 10) + '–' + f(b) : f(a) + '–' + f(b)
+}
 
 /** "יום אחד" / "יומיים" / "5 ימים" */
 function daysLabel(n: number) {

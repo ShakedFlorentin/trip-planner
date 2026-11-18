@@ -9,6 +9,7 @@ import { PhraseList } from './Essentials'
 import { Icon, type LucideIcon } from '../icons'
 import { Baby as BabyIcon, Check, Droplets, Luggage, Milk, ShoppingCart, Plus, Sparkles, Stethoscope, Train, Trash2, Languages, Plane } from 'lucide-react'
 import '../styles/info.css'
+import { askDelete } from '../toast'
 
 type Props = { trip: Trip; members: Member[]; userId: string }
 
@@ -92,7 +93,7 @@ export default function Baby({ trip }: Props) {
             <button
               className="icon faint"
               aria-label={t('מחיקה')}
-              onClick={() => confirm(t('למחוק את "{title}"?', { title: i.text })) && mutate(supabase.from('checklist_items').delete().eq('id', i.id))}
+              onClick={async () => (await askDelete(t('למחוק את "{title}"?', { title: i.text }))) && mutate(supabase.from('checklist_items').delete().eq('id', i.id))}
             >
               <Icon as={Trash2} size="1.25em" />
             </button>

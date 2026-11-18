@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, Moon, Sun, SunMoon } from 'lucide-react'
+import { Switch, SwitchThumb } from '@ui-sdk/react/switch'
+import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectTrigger, SelectValue } from '@ui-sdk/react/select'
+import { Check, ChevronLeft, ChevronsUpDown } from 'lucide-react'
 import { supabase } from '../supabase'
 import type { Trip } from '../types'
 import { dayDate, fmtDay, mutate } from '../lib'
@@ -7,16 +9,20 @@ import { ymd } from './planUtils'
 import { isEn, lang, locale, setLang, t } from '../i18n'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
+import { Avatar } from '../avatar'
+import '../styles/settings.css'
 import { countingOn, setCounting } from '../track'
 import { usePassStatus } from '../pass'
 import PassSheet from './Pass'
 import { openExternal, privacyUrl } from '../native'
 import { disablePush, enablePush, pushState, type PushState } from '../push'
+import SignOutSheet from './SignOutSheet'
 
 /**
- * Settings (62, 63): only what is saved, as iOS grouped rows. "הטיול" (its name and dates, seen by everyone in the
- * trip) and "אני" (my name, language, theme), and the credits wallet while credits are on. No save button: a name
- * saves when its field loses focus or the sheet closes, the dates when the calendar says "סיום".
+ * Settings (62, 63), as the iPhone Settings app: my profile on top (avatar, my name), then "the trip, seen by
+ * everyone", "on this phone" (language, appearance, notifications), credits and trip pass while they are on,
+ * privacy, and sign out. No save button: a name saves when its field loses focus or the sheet closes, the dates
+ * when the calendar says "סיום".
  */
 export default function Settings(props: { trip: Trip; me: string; userId: string; onClose: () => void }) {
   const { trip } = props
@@ -25,6 +31,7 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
   const [saved, setSaved] = useState<'' | 'trip' | 'me' | 'dates'>('')
   const [dates, setDates] = useState(false)
   const [wallet, setWallet] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const flash = (k: 'trip' | 'me' | 'dates') => {
     setSaved(k)
     setTimeout(() => setSaved((s) => (s === k ? '' : s)), 1600)
@@ -51,51 +58,55 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
 
   return (
     <Sheet title={t('הגדרות')} onClose={close}>
-      <div className="group-label">{t('הטיול')}</div>
-      <div className="group">
-        <label className="group-row">
-          <span className="k">{t('שם הטיול')}</span>
-          {saved === 'trip' && <span className="saved">✓ {t('נשמר')}</span>}
-          <input value={name} onChange={(e) => setName(e.target.value)} onBlur={saveName} onKeyDown={done} enterKeyHint="done" dir="auto" />
-        </label>
-        <button className="group-row" onClick={() => setDates(true)}>
-          <span className="k">{t('תאריכים')}</span>
-          {saved === 'dates' && <span className="saved">✓ {t('נשמר')}</span>}
-          <span className="v">
-            {trip.start_date ? rangeLabel(trip.start_date, trip.num_days) : t('לבחירה')}
-            {trip.start_date && <small>{daysCount(trip.num_days)}</small>}
-          </span>
-          <Icon as={ChevronLeft} className="chev flip-ltr" />
-        </button>
+      <div className="set">
+        <div className="group set-profile">
+          <label className="group-row">
+            <Avatar name={myName || props.me} size="l" look="accent" decorative />
+            <span className="set-profile-text">
+              <input aria-label={t('השם שלי')} value={myName} onChange={(e) => setMyName(e.target.value)} onBlur={saveMyName} onKeyDown={done} enterKeyHint="done" dir="auto" />
+              <span className="set-foot-in">{saved === 'me' ? '✓ ' + t('נשמר') : t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</span>
+            </span>
+          </label>
+        </div>
+
+        <div className="group-label">{t('הטיול · נראה לכל מי שבטיול')}</div>
+        <div className="group">
+          <label className="group-row">
+            <span className="k">{t('שם הטיול')}</span>
+            {saved === 'trip' && <span className="saved">✓ {t('נשמר')}</span>}
+            <input value={name} onChange={(e) => setName(e.target.value)} onBlur={saveName} onKeyDown={done} enterKeyHint="done" dir="auto" />
+          </label>
+          <button className="group-row" onClick={() => setDates(true)}>
+            <span className="k">{t('תאריכים')}</span>
+            {saved === 'dates' && <span className="saved">✓ {t('נשמר')}</span>}
+            <span className="v">
+              {trip.start_date ? rangeLabel(trip.start_date, trip.num_days) : t('לבחירה')}
+              {trip.start_date && <small>{daysCount(trip.num_days)}</small>}
+            </span>
+            <Icon as={ChevronLeft} className="chev flip-ltr" />
+          </button>
+        </div>
+
+        <PhoneGroup />
+
+        <TripAccess tripId={trip.id} onWallet={() => setWallet(true)} />
+
+        <div className="group">
+          <CountingRow />
+          <button className="group-row" onClick={() => openExternal(privacyUrl())}>
+            <span className="k">{t('פרטיות ותנאי שימוש')}</span>
+            <Icon as={ChevronLeft} className="chev flip-ltr" />
+          </button>
+        </div>
+        <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. לא אוספים שמות, מיילים או מה שאתם כותבים. דוחות שגיאה נחתכים קצר, ולעיתים נדירות עשויים לכלול קצת טקסט מהמסך. בלי כלים חיצוניים. אפשר לכבות את זה למעלה.')}</p>
+
+        <div className="group">
+          <button className="group-row danger" onClick={() => setSigningOut(true)}>
+            {t('התנתקות')}
+          </button>
+        </div>
       </div>
-      <p className="group-foot">{t('השינוי כאן נראה אצל כל מי שבטיול.')}</p>
-
-      <div className="group-label">{t('אני')}</div>
-      <div className="group">
-        <label className="group-row">
-          <span className="k">{t('השם שלי')}</span>
-          {saved === 'me' && <span className="saved">✓ {t('נשמר')}</span>}
-          <input value={myName} onChange={(e) => setMyName(e.target.value)} onBlur={saveMyName} onKeyDown={done} enterKeyHint="done" dir="auto" />
-        </label>
-        <LangPicker />
-        <ThemePicker />
-      </div>
-      <p className="group-foot">{t('זה השם שהאחרים רואים. ההתחברות נשארת עם השם המקורי.')}</p>
-
-      <PushGroup />
-
-      <div className="group-label">{t('פרטיות')}</div>
-      <div className="group">
-        <CountingRow />
-        <button className="group-row" onClick={() => openExternal(privacyUrl())}>
-          <span className="k">{t('פרטיות ותנאי שימוש')}</span>
-          <Icon as={ChevronLeft} className="chev flip-ltr" />
-        </button>
-      </div>
-      <p className="group-foot">{t('אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. בלי מה שאתם כותבים, ובלי כלים חיצוניים.')}</p>
-
-      <PassRow tripId={trip.id} />
-      <WalletRow tripId={trip.id} onOpen={() => setWallet(true)} />
+      {signingOut && <SignOutSheet onClose={() => setSigningOut(false)} />}
 
       {dates && (
         <DateRangeSheet
@@ -118,15 +129,14 @@ export default function Settings(props: { trip: Trip; me: string; userId: string
   )
 }
 
-/** "Help improve Toogo": usage counting on this device (src/track.ts), on unless turned off. */
-/** Notifications on this phone (src/push.ts): a switch, or why there can't be one here. Hidden where there is no way. */
-function PushGroup() {
+/** "On this phone": language, appearance, and notifications (src/push.ts: a switch, or why there can't be one here). */
+function PhoneGroup() {
   const [state, setState] = useState<PushState | null>(null)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     void pushState().then(setState)
   }, [])
-  if (!state || state === 'unsupported') return null
+  const showPush = !!state && state !== 'unsupported'
   const on = state === 'on'
   const stuck = state === 'home-screen' || state === 'blocked'
   const toggle = async () => {
@@ -137,39 +147,49 @@ function PushGroup() {
   }
   return (
     <>
-      <div className="group-label">{t('התראות')}</div>
+      <div className="group-label">{t('בטלפון הזה')}</div>
       <div className="group">
-        <button className="group-row" role="switch" aria-checked={on} aria-disabled={stuck || busy} onClick={toggle}>
-          <span className="k">{t('מאצ׳ים בטיול')}</span>
-          <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
-        </button>
+        <LangRow />
+        <ThemeRow />
+        {showPush && (
+          <label className="group-row">
+            <span className="k">{t('מאצ׳ים בטיול')}</span>
+            <Switch className="switch" checked={on} readOnly={stuck || busy} onCheckedChange={toggle}>
+              <SwitchThumb className="switch-thumb" />
+            </Switch>
+          </label>
+        )}
       </div>
-      <p className="group-foot">
-        {state === 'home-screen'
-          ? t('באייפון, התראות עובדות רק כשפותחים את Toogo מהמסך הראשי: בספארי, שיתוף ואז "הוספה למסך הבית".')
-          : state === 'blocked'
-            ? t('ההתראות חסומות בהגדרות הטלפון. אפשר לפתוח אותן שם, תחת Toogo.')
-            : t('התראה כשמישהו מהטיול אוהב מקום שגם אתם אהבתם. רק בטלפון הזה.')}
-      </p>
+      {showPush && (
+        <p className="group-foot">
+          {state === 'home-screen'
+            ? t('באייפון, התראות עובדות רק כשפותחים את Toogo מהמסך הראשי: בספארי, שיתוף ואז "הוספה למסך הבית".')
+            : state === 'blocked'
+              ? t('ההתראות חסומות בהגדרות הטלפון. אפשר לפתוח אותן שם, תחת Toogo.')
+              : t('התראה כשמישהו מהטיול אוהב מקום שגם אתם אהבתם. רק בטלפון הזה.')}
+        </p>
+      )}
     </>
   )
 }
 
+/** "Help improve Toogo": usage counting on this device (src/track.ts), on unless turned off. */
 function CountingRow() {
   const [on, setOn] = useState(countingOn)
   return (
-    <button
-      className="group-row"
-      role="switch"
-      aria-checked={on}
-      onClick={() => {
-        setCounting(!on)
-        setOn(!on)
-      }}
-    >
+    <label className="group-row">
       <span className="k">{t('עזרה בשיפור Toogo')}</span>
-      <span className={'switch' + (on ? ' on' : '')} aria-hidden="true" />
-    </button>
+      <Switch
+        className="switch"
+        checked={on}
+        onCheckedChange={(next) => {
+          setCounting(next)
+          setOn(next)
+        }}
+      >
+        <SwitchThumb className="switch-thumb" />
+      </Switch>
+    </label>
   )
 }
 
@@ -186,27 +206,13 @@ function daysCount(n: number) {
   return n === 1 ? t('יום אחד') : t('{n} ימים', { n })
 }
 
-/** The trip pass row (src/pass.ts): shown only while the trip pass is on; opens the offer, or says the pass is on. */
-function PassRow({ tripId }: { tripId: string }) {
+/**
+ * Credits and the trip pass, as one group. Each row is there only while its feature is on: the trip pass row while
+ * src/pass.ts has a status, the credits row while my_credits says enabled. Nothing shows when both are off.
+ */
+function TripAccess({ tripId, onWallet }: { tripId: string; onWallet: () => void }) {
   const status = usePassStatus(tripId)
   const [open, setOpen] = useState(false)
-  if (!status) return null
-  return (
-    <>
-      <div className="group">
-        <button className="group-row" onClick={() => setOpen(true)}>
-          <span className="k">{t('כרטיס לטיול')}</span>
-          <span className="v">{status.pass ? t('פעיל') : status.left > 0 ? t('{left} מתוך {n} מקומות חדשים בחינם', { left: status.left, n: status.free }) : t('נוצלו {n} המקומות בחינם', { n: status.free })}</span>
-          <Icon as={ChevronLeft} className="chev flip-ltr" />
-        </button>
-      </div>
-      {open && <PassSheet tripId={tripId} status={status} onClose={() => setOpen(false)} />}
-    </>
-  )
-}
-
-/** The credits row: shown only while credits are on (my_credits says enabled); opens the wallet on its own page. */
-function WalletRow({ tripId, onOpen }: { tripId: string; onOpen: () => void }) {
   const [balance, setBalance] = useState<number | null>(null)
   const [unlimited, setUnlimited] = useState(false)
   useEffect(() => {
@@ -217,15 +223,27 @@ function WalletRow({ tripId, onOpen }: { tripId: string; onOpen: () => void }) {
       setBalance(d.balance ?? 0)
     })
   }, [tripId])
-  if (balance === null) return null
+  if (!status && balance === null) return null
   return (
-    <div className="group">
-      <button className="group-row" onClick={onOpen}>
-        <span className="k">{t('ארנק קרדיטים')}</span>
-        <span className="v">{unlimited ? t('ללא הגבלה') : balance}</span>
-        <Icon as={ChevronLeft} className="chev flip-ltr" />
-      </button>
-    </div>
+    <>
+      <div className="group">
+        {balance !== null && (
+          <button className="group-row" onClick={onWallet}>
+            <span className="k">{t('ארנק קרדיטים')}</span>
+            <span className="v">{unlimited ? t('ללא הגבלה') : balance}</span>
+            <Icon as={ChevronLeft} className="chev flip-ltr" />
+          </button>
+        )}
+        {status && (
+          <button className="group-row" onClick={() => setOpen(true)}>
+            <span className="k">{t('כרטיס לטיול')}</span>
+            <span className="v">{status.pass ? t('פעיל') : status.left > 0 ? t('{left} מתוך {n} מקומות חדשים בחינם', { left: status.left, n: status.free }) : t('נוצלו {n} המקומות בחינם', { n: status.free })}</span>
+            <Icon as={ChevronLeft} className="chev flip-ltr" />
+          </button>
+        )}
+      </div>
+      {open && status && <PassSheet tripId={tripId} status={status} onClose={() => setOpen(false)} />}
+    </>
   )
 }
 
@@ -392,16 +410,41 @@ export function CreditWallet({ tripId }: { tripId: string }) {
 }
 
 const THEMES = [
-  { id: 'auto', label: t('כמו בטלפון'), icon: SunMoon },
-  { id: 'light', label: t('בהיר'), icon: Sun },
-  { id: 'dark', label: t('כהה'), icon: Moon },
-] as const
+  { value: 'auto', label: isEn ? t('מערכת') : t('כמו בטלפון') },
+  { value: 'light', label: t('בהיר') },
+  { value: 'dark', label: t('כהה') },
+]
+
+/** A settings row that is a Select: the label at the start, the chosen value and the up-down mark at the end. */
+function SelectRow(props: { label: string; value: string; items: { value: string; label: string; lang?: string }[]; onPick: (v: string) => void }) {
+  return (
+    <Select value={props.value} items={props.items} onValueChange={(v) => typeof v === 'string' && v !== props.value && props.onPick(v)}>
+      <SelectTrigger className="group-row set-select">
+        <span className="k">{props.label}</span>
+        <span className="v">
+          <SelectValue />
+        </span>
+        <Icon as={ChevronsUpDown} className="chev" />
+      </SelectTrigger>
+      <SelectContent className="set-select-list">
+        {props.items.map((i) => (
+          <SelectItem key={i.value} value={i.value} lang={i.lang}>
+            <span>{i.label}</span>
+            <SelectItemIndicator>
+              <Icon as={Check} />
+            </SelectItemIndicator>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
 
 /**
  * Light, dark, or following the phone. Kept on this phone only and applied at once: html[data-theme] switches the
  * dark styles (see themeOverride in vite.config.ts), and index.html applies it again before the next load paints.
  */
-export function ThemePicker() {
+export function ThemeRow() {
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('theme') ?? 'auto'
@@ -420,37 +463,14 @@ export function ThemePicker() {
       // private browsing: the choice holds until the app closes
     }
   }
-  return (
-    <div className="group-block">
-      <span id="theme-label">{t('מראה')}</span>
-      <div className="segmented theme-picker" role="radiogroup" aria-labelledby="theme-label">
-        {THEMES.map((t) => (
-          <button key={t.id} role="radio" aria-checked={theme === t.id} className={theme === t.id ? 'on' : ''} onClick={() => pick(t.id)}>
-            <Icon as={t.icon} /> {t.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
+  return <SelectRow label={t('מראה')} value={theme} items={THEMES} onPick={pick} />
 }
 
 /** Hebrew or English for the whole app, on this phone. Each option is written in its own language. */
-export function LangPicker() {
-  return (
-    <div className="group-block">
-      <span id="lang-label">שפה · Language</span> {/* he-only: each language names itself */}
-      <div className="segmented" role="radiogroup" aria-labelledby="lang-label">
-        {LANGS.map((l) => (
-          <button key={l.id} role="radio" lang={l.id} aria-checked={lang === l.id} className={lang === l.id ? 'on' : ''} onClick={() => l.id !== lang && setLang(l.id)}>
-            {l.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
+export function LangRow() {
+  return <SelectRow label={t('שפה')} value={lang} items={[...LANGS]} onPick={(v) => v !== lang && setLang(v as typeof lang)} />
 }
 const LANGS = [
-  { id: 'he', label: 'עברית' }, // he-only
-  { id: 'en', label: 'English' },
+  { value: 'he', label: 'עברית', lang: 'he' }, // he-only
+  { value: 'en', label: 'English', lang: 'en' },
 ] as const
-

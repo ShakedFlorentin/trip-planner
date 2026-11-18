@@ -6,6 +6,7 @@ import { zodOutputFormat } from 'npm:@anthropic-ai/sdk@1.1.0/helpers/zod'
 import { z } from 'npm:zod@4'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
+import { extractContent, lookUpKnown, recheckKnown, withRule } from './prompt.ts'
 
 const MODEL = 'claude-haiku-5-5'
 
@@ -94,18 +95,8 @@ const EXTRACT = `Turn the notes into the fields below.
 
 /** Looks a place up; null when the lookup failed. */
 export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceInfo): Promise<Facts | null> {
-  const known = [
-    `Place: ${p.name}${p.name_ja ? ` (${p.name_ja})` : ''}`,
-    p.area || p.city ? `Where: ${[p.area, p.city].filter(Boolean).join(', ')}` : '',
-    p.category ? `Kind: ${p.category}` : '',
-    [p.hype, p.reality, p.tip, p.baby_notes, p.time_needed].filter(Boolean).length
-      ? `What the trip's card already says: ${[p.hype, p.reality, p.tip, p.baby_notes, p.time_needed && `time needed: ${p.time_needed}`]
-          .filter(Boolean)
-          .join(' / ')}`
-      : '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  // the card's words are member text: fenced (prompt.ts)
+  const known = lookUpKnown(p)
   let step = 'facts-research'
   let t = performance.now()
   const log = (r: Anthropic.Message) =>
@@ -120,7 +111,7 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
         // thinking counts toward this; at 3000 one lookup in 55 was cut off
         max_tokens: 6000,
         output_config: { effort: 'low' },
-        system: RESEARCH,
+        system: withRule(RESEARCH),
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
         messages,
       })
@@ -141,8 +132,8 @@ export async function lookUp(admin: SupabaseClient, client: Anthropic, p: PlaceI
       // thinking counts toward this: cut off here, the paid search before it is thrown away
       max_tokens: 4000,
       output_config: { effort: 'low', format: zodOutputFormat(FactsSchema) },
-      system: EXTRACT,
-      messages: [{ role: 'user', content: `${known}\n\nNotes:\n${notes}` }],
+      system: withRule(EXTRACT),
+      messages: [{ role: 'user', content: extractContent(p, notes) }],
     })
     log(r)
     const f = r.parsed_output
@@ -275,17 +266,7 @@ export function readRecheck(text: string): Omit<Recheck, 'searches'> | null {
 /** Re-checks a place's hours; null when the call failed or was refused (nothing is changed then). An answer that could not be read is "unknown" with nothing found: the check ran and was paid for. */
 export async function recheck(admin: SupabaseClient, client: Anthropic, p: RecheckInfo): Promise<Recheck | null> {
   const page = tabelogPage(p.sources)
-  const known = [
-    `Place: ${p.name}${p.name_ja ? ` (${p.name_ja})` : ''}`,
-    p.area || p.city ? `Where: ${[p.area, p.city].filter(Boolean).join(', ')}` : '',
-    p.address ? `Address on the card: ${p.address}` : '',
-    p.category ? `Kind: ${p.category}` : '',
-    `The card's hours now: ${p.opens && p.closes ? `${p.opens}-${p.closes}` : 'none on the card'}`,
-    `The card's weekly closing days now: ${p.closed_weekdays?.length ? p.closed_weekdays.join(', ') : 'none'}`,
-    page ? `Its Tabelog page: ${page}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const known = recheckKnown(p, page)
   const step = page ? 'recheck-page' : 'recheck-search'
   let t = performance.now()
   try {
@@ -300,7 +281,7 @@ export async function recheck(admin: SupabaseClient, client: Anthropic, p: Reche
         // thinking counts toward this
         max_tokens: 2000,
         output_config: { effort: 'low' },
-        system: page ? RECHECK_PAGE : RECHECK_SEARCH,
+        system: withRule(page ? RECHECK_PAGE : RECHECK_SEARCH),
         tools: [
           // declared in every round, as the rounds that continue a paused one still hold its search results; one
           // search is allowed in each, and the prompt says to search once

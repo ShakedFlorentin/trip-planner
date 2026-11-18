@@ -21,6 +21,18 @@
 		B07E580B9DAB71EECDD92EFB /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B715C98BB3211218EBC34A /* ShareViewController.swift */; };
 		BEA8064B5C1ECF47CB958529 /* ShareInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93D3CDA1955D902E852A674 /* ShareInbox.swift */; };
 		C9FF4FB61645E70ACFBBAC5E /* ToogoShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0F82A901BB1D873E98CF6221 /* ToogoShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8FBA3CE2D93EC653221229A7 /* WidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3815D740038059D0ED587411 /* WidgetData.swift */; };
+		6CFFCAAFB52271543EFFF843 /* QuickAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8084DDB2C1A43A7BBBEE6D14 /* QuickAction.swift */; };
+		6A4D8595824BAFB936A8F048 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 41917F738C03ADCBE016B5C5 /* InfoPlist.strings */; };
+		C093E97335FC37051D95AF9B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 70DE39F92F77CF339267B06C /* Localizable.strings */; };
+		AACE51F5059FDCD4962CF90B /* AppShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = 46F9CA73CC70ADFF14AB8B5E /* AppShortcuts.strings */; };
+		9AA2D3F0B37B1409F7896D1D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A6DF3D8334DD24C61F625AE8 /* Localizable.strings */; };
+		9848C7DD57F79F4B4BCF131C /* ToogoWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F1492B8366E25C8DA2BD761E /* ToogoWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		87213E923FB65BE54C431EE2 /* ToogoWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 420D97F56A7B8905BB9DDF54 /* ToogoWidgetBundle.swift */; };
+		764C23F83481F43D24AEBB8D /* WidgetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23305F9A12E2E8E584B76B01 /* WidgetModel.swift */; };
+		DEF967A41166CB2DC63D1958 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F3728B5835B9F5AA98A6F7 /* WidgetViews.swift */; };
+		8E2F3488849A6D3929B30418 /* TodayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB40D490FDC01634C07804F5 /* TodayWidget.swift */; };
+		84C131F132B8770756F6D082 /* TranslateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328B2ECDBD49B930F6F7795 /* TranslateWidget.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +42,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 7F8DE59DE7E993F0ED2EB95A;
 			remoteInfo = ToogoShare;
+		};
+		AB6400F1076EAAD897C814BE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C2A03E2E43B92D3A1058154E;
+			remoteInfo = ToogoWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -41,6 +60,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				C9FF4FB61645E70ACFBBAC5E /* ToogoShare.appex in Embed Foundation Extensions */,
+				9848C7DD57F79F4B4BCF131C /* ToogoWidget.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -67,6 +87,24 @@
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A93D3CDA1955D902E852A674 /* ShareInbox.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareInbox.swift; sourceTree = "<group>"; };
+		3815D740038059D0ED587411 /* WidgetData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetData.swift; sourceTree = "<group>"; };
+		8084DDB2C1A43A7BBBEE6D14 /* QuickAction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickAction.swift; sourceTree = "<group>"; };
+		F1492B8366E25C8DA2BD761E /* ToogoWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ToogoWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8ECE20F2FE53FFDB280ADB9A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2EAEFFCF829B42133F47141F /* ToogoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToogoWidget.entitlements; sourceTree = "<group>"; };
+		420D97F56A7B8905BB9DDF54 /* ToogoWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToogoWidgetBundle.swift; sourceTree = "<group>"; };
+		23305F9A12E2E8E584B76B01 /* WidgetModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetModel.swift; sourceTree = "<group>"; };
+		84F3728B5835B9F5AA98A6F7 /* WidgetViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
+		BB40D490FDC01634C07804F5 /* TodayWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TodayWidget.swift; sourceTree = "<group>"; };
+		4328B2ECDBD49B930F6F7795 /* TranslateWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TranslateWidget.swift; sourceTree = "<group>"; };
+		603E295D5C55D85D2E5A468F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D94927B874180A199A513601 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9567F81E25A2EA8EBF1F3AB5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1E06D647A6331DEC6A982216 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		BBADBEACC0024A0DDEA81A2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AppShortcuts.strings; sourceTree = "<group>"; };
+		7584DCCB86815AD9FDE52D7C /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/AppShortcuts.strings; sourceTree = "<group>"; };
+		B80DB631A2456AD43AAD7C28 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		BB11B21E0F6AA30B9ACF36DD /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +121,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		093C1692616C9BA21D497AB0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +153,7 @@
 				504EC3051FED79650016851F /* Products */,
 				954A16F8E841F2B26B0D0C79 /* Frameworks */,
 				38BBA2962784516386577120 /* ToogoShare */,
+				E949E7DE89CFBBAF65225098 /* ToogoWidget */,
 			);
 			sourceTree = "<group>";
 		};
@@ -116,6 +162,7 @@
 			children = (
 				504EC3041FED79650016851F /* App.app */,
 				0F82A901BB1D873E98CF6221 /* ToogoShare.appex */,
+				F1492B8366E25C8DA2BD761E /* ToogoWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -135,6 +182,11 @@
 				A93D3CDA1955D902E852A674 /* ShareInbox.swift */,
 				5EA38415B2940470D0CA0C76 /* App.entitlements */,
 				3A51F38CD11C72FCDC1ED74B /* AppReview.swift */,
+				3815D740038059D0ED587411 /* WidgetData.swift */,
+				8084DDB2C1A43A7BBBEE6D14 /* QuickAction.swift */,
+				41917F738C03ADCBE016B5C5 /* InfoPlist.strings */,
+				70DE39F92F77CF339267B06C /* Localizable.strings */,
+				46F9CA73CC70ADFF14AB8B5E /* AppShortcuts.strings */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -155,6 +207,21 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		E949E7DE89CFBBAF65225098 /* ToogoWidget */ = {
+			isa = PBXGroup;
+			children = (
+				420D97F56A7B8905BB9DDF54 /* ToogoWidgetBundle.swift */,
+				23305F9A12E2E8E584B76B01 /* WidgetModel.swift */,
+				84F3728B5835B9F5AA98A6F7 /* WidgetViews.swift */,
+				BB40D490FDC01634C07804F5 /* TodayWidget.swift */,
+				4328B2ECDBD49B930F6F7795 /* TranslateWidget.swift */,
+				A6DF3D8334DD24C61F625AE8 /* Localizable.strings */,
+				8ECE20F2FE53FFDB280ADB9A /* Info.plist */,
+				2EAEFFCF829B42133F47141F /* ToogoWidget.entitlements */,
+			);
+			path = ToogoWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -171,6 +238,7 @@
 			);
 			dependencies = (
 				D21F0241536DE1FDB202A551 /* PBXTargetDependency */,
+				E5E5693377C02361F8FE95A4 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -197,6 +265,23 @@
 			productReference = 0F82A901BB1D873E98CF6221 /* ToogoShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		C2A03E2E43B92D3A1058154E /* ToogoWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 70C3E234E4DA15874F1A2765 /* Build configuration list for PBXNativeTarget "ToogoWidget" */;
+			buildPhases = (
+				B9C099EC394BD80B26F02FE8 /* Sources */,
+				093C1692616C9BA21D497AB0 /* Frameworks */,
+				0D0A29D8E911E591D76B77D4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ToogoWidget;
+			productName = ToogoWidget;
+			productReference = F1492B8366E25C8DA2BD761E /* ToogoWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -220,6 +305,7 @@
 			knownRegions = (
 				en,
 				Base,
+				he,
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
@@ -231,6 +317,7 @@
 			targets = (
 				504EC3031FED79650016851F /* App */,
 				7F8DE59DE7E993F0ED2EB95A /* ToogoShare */,
+				C2A03E2E43B92D3A1058154E /* ToogoWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -246,6 +333,9 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				6A4D8595824BAFB936A8F048 /* InfoPlist.strings in Resources */,
+				C093E97335FC37051D95AF9B /* Localizable.strings in Resources */,
+				AACE51F5059FDCD4962CF90B /* AppShortcuts.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +343,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D0A29D8E911E591D76B77D4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AA2D3F0B37B1409F7896D1D /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,6 +365,8 @@
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 				BEA8064B5C1ECF47CB958529 /* ShareInbox.swift in Sources */,
 				99577811830F82C895FC0B60 /* AppReview.swift in Sources */,
+				8FBA3CE2D93EC653221229A7 /* WidgetData.swift in Sources */,
+				6CFFCAAFB52271543EFFF843 /* QuickAction.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,6 +378,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B9C099EC394BD80B26F02FE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87213E923FB65BE54C431EE2 /* ToogoWidgetBundle.swift in Sources */,
+				764C23F83481F43D24AEBB8D /* WidgetModel.swift in Sources */,
+				DEF967A41166CB2DC63D1958 /* WidgetViews.swift in Sources */,
+				8E2F3488849A6D3929B30418 /* TodayWidget.swift in Sources */,
+				84C131F132B8770756F6D082 /* TranslateWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -286,6 +398,12 @@
 			name = ToogoShare;
 			target = 7F8DE59DE7E993F0ED2EB95A /* ToogoShare */;
 			targetProxy = ED12DE64AA66809EDA3D3BEF /* PBXContainerItemProxy */;
+		};
+		E5E5693377C02361F8FE95A4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ToogoWidget;
+			target = C2A03E2E43B92D3A1058154E /* ToogoWidget */;
+			targetProxy = AB6400F1076EAAD897C814BE /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -304,6 +422,42 @@
 				504EC3111FED79650016851F /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		41917F738C03ADCBE016B5C5 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				603E295D5C55D85D2E5A468F /* en */,
+				D94927B874180A199A513601 /* he */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		70DE39F92F77CF339267B06C /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9567F81E25A2EA8EBF1F3AB5 /* en */,
+				1E06D647A6331DEC6A982216 /* he */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		46F9CA73CC70ADFF14AB8B5E /* AppShortcuts.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BBADBEACC0024A0DDEA81A2E /* en */,
+				7584DCCB86815AD9FDE52D7C /* he */,
+			);
+			name = AppShortcuts.strings;
+			sourceTree = "<group>";
+		};
+		A6DF3D8334DD24C61F625AE8 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B80DB631A2456AD43AAD7C28 /* en */,
+				BB11B21E0F6AA30B9ACF36DD /* he */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -515,6 +669,55 @@
 			};
 			name = Release;
 		};
+		59E62C41C723D72DAD175B2E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ToogoWidget/ToogoWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = ToogoWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shakedflorentin.tripplanner.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		30853B9B6FBA0ED3BCEECCD4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ToogoWidget/ToogoWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = ToogoWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shakedflorentin.tripplanner.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -541,6 +744,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		70C3E234E4DA15874F1A2765 /* Build configuration list for PBXNativeTarget "ToogoWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30853B9B6FBA0ED3BCEECCD4 /* Release */,
+				59E62C41C723D72DAD175B2E /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

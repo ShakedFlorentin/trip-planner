@@ -1,22 +1,22 @@
 /* Essentials and baby corner */
-.info-sec { display: flex; flex-direction: column; gap: 10px; }
-.info-h { font-size: 1.125rem; font-weight: 700; margin: 6px 0 0; }
+.info-sec { display: flex; flex-direction: column; gap: var(--s-3); }
+.info-h { font-size: var(--fs-body); font-weight: 700; margin: var(--s-2) 0 0; }
 .info-note { margin: 0; }
-.info-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.info-card { display: flex; flex-direction: column; gap: var(--s-2); cursor: pointer; }
 .info-title { font-weight: 600; }
-.info-value { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.9375rem; }
+.info-value { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-subhead); }
 .pill.soft { background: var(--fill); color: var(--text); }
 button.pill, .info-card .pill { min-height: 44px; }
-.info-h { display: flex; align-items: center; gap: 8px; }
-.info-card .pill, .info-sec .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.info-h { display: flex; align-items: center; gap: var(--s-2); }
+.info-card .pill, .info-sec .secondary { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
 .area-title .ic { margin-inline-end: 2px; }
 
 /* sub-tabs of the "more" screen and the list switcher: icon beside text, 44px targets */
-.list-tabs button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
-.list-tabs button { padding-inline: 6px; }
+.list-tabs button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-1); white-space: nowrap; }
+.list-tabs button { padding-inline: var(--s-2); }
 
 /* tap-to-call emergency numbers: big enough to hit in a panic */
-.sos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sos-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
 .sos {
   display: flex;
   flex-direction: column;
@@ -24,36 +24,36 @@ button.pill, .info-card .pill { min-height: 44px; }
   justify-content: center;
   gap: 2px;
   min-height: 92px;
-  border-radius: 18px;
+  border-radius: var(--r-lg);
   color: #fff;
   text-decoration: none;
   box-shadow: var(--shadow);
 }
-.sos b { font-size: 2.25rem; line-height: 1; font-weight: 800; }
-.sos span { font-size: 0.9375rem; font-weight: 600; }
+.sos b { font-size: 2.25rem; line-height: 1; font-weight: 700; }
+.sos span { font-size: var(--fs-subhead); font-weight: 600; }
 .sos.police { background: #1f4e9c; }
 .sos.ambulance { background: #c4162f; }
 .sos:active { transform: scale(0.97); opacity: 0.9; }
 
 /* phrase cards */
-.phrase { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: start; padding: 14px 16px; }
-.phrase-he { font-size: 0.9375rem; font-weight: 600; }
-.phrase-ja { text-align: left; font-size: 1.375rem; font-weight: 700; line-height: 1.35; display: flex; flex-direction: column; overflow-wrap: anywhere; }
-.phrase-ro { color: var(--muted); font-size: 0.8125rem; font-style: italic; text-align: left; }
-.phrase-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
-.phrase-acts .secondary { min-height: 40px; font-size: 0.875rem; gap: 6px; }
+.phrase { display: flex; flex-direction: column; gap: var(--s-1); width: 100%; text-align: start; padding: var(--s-4) var(--s-4); }
+.phrase-he { font-size: var(--fs-subhead); font-weight: 600; }
+.phrase-ja { text-align: left; font-size: var(--fs-title); font-weight: 700; line-height: 1.35; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.phrase-ro { color: var(--muted); font-size: var(--fs-footnote); font-style: italic; text-align: left; }
+.phrase-acts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin-top: 6px; }
+.phrase-acts .secondary { min-height: 40px; font-size: var(--fs-footnote); gap: var(--s-2); }
 
 
 /* collapsible tips */
 .card.tip { padding: 0; }
-.tip summary { list-style: none; cursor: pointer; padding: 14px 16px; min-height: 52px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tip summary { list-style: none; cursor: pointer; padding: var(--s-4) var(--s-4); min-height: 52px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 .tip summary::-webkit-details-marker { display: none; }
-.tip summary::after { content: ''; flex: none; width: 7px; height: 7px; border-inline-end: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-block-end: 3px; transition: transform 0.15s; }
+.tip summary::after { content: ''; flex: none; width: 7px; height: 7px; border-inline-end: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-block-end: 3px; transition: transform var(--dur-1); }
 /* closed: points forward (left in RTL); open: points down */
 .tip[open] summary::after { transform: rotate(-45deg); margin-block-end: 3px; }
-.tip summary > span { display: inline-flex; align-items: center; gap: 8px; }
-.tip .row { padding: 0 16px 14px; }
-.tip ul { margin: 0; padding: 0 34px 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 0.9375rem; line-height: 1.5; }
+.tip summary > span { display: inline-flex; align-items: center; gap: var(--s-2); }
+.tip .row { padding: 0 var(--s-4) var(--s-4); }
+.tip ul { margin: 0; padding: 0 34px var(--s-4) var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); font-size: var(--fs-subhead); line-height: 1.5; }
 
 /* full-screen card to hold up to someone; always light with dark text so it reads in sunlight */
 .show-full {
@@ -66,88 +66,88 @@ button.pill, .info-card .pill { min-height: 44px; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: var(--s-5);
   padding: 64px 20px calc(32px + env(safe-area-inset-bottom));
   text-align: center;
   animation: fade 0.15s;
   cursor: pointer;
 }
-.show-close { display: grid; place-items: center; position: absolute; top: calc(10px + env(safe-area-inset-top)); inset-inline-start: 10px; width: 48px; height: 48px; font-size: 1.5rem; color: #555; }
-.show-big { text-wrap: balance;font-size: clamp(2rem, 11vw, 3.5rem); font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-wrap; display: flex; flex-direction: column; }
+.show-close { display: grid; place-items: center; position: absolute; top: calc(10px + env(safe-area-inset-top)); inset-inline-start: 10px; width: 48px; height: 48px; font-size: var(--fs-large); color: #555; }
+.show-big { text-wrap: balance;font-size: clamp(2rem, 11vw, 3.5rem); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-wrap; display: flex; flex-direction: column; }
 .show-big.s { font-size: clamp(1.5rem, 8vw, 2.5rem); }
 .show-big.xs { font-size: clamp(1.125rem, 5.5vw, 1.75rem); }
-.show-sub { font-size: 1rem; color: #555; font-style: italic; overflow-wrap: anywhere; }
-.show-small { font-size: 1rem; color: #777; margin-top: 12px; }
+.show-sub { font-size: var(--fs-subhead); color: #555; font-style: italic; overflow-wrap: anywhere; }
+.show-small { font-size: var(--fs-subhead); color: #6e6e6e; margin-top: 12px; }
 
-.couple-mark { display: inline-flex; align-items: center; gap: 3px; margin-inline-end: 12px; }
-.check-line { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.couple-mark { display: inline-flex; align-items: center; gap: 3px; margin-inline-end: var(--s-3); }
+.check-line { display: flex; align-items: center; gap: var(--s-2); cursor: pointer; }
 .check-line input { width: 18px; height: 18px; min-height: 0; flex: none; margin: 0; accent-color: var(--accent); }
 /* voice-translation trial: tap to record, tap again to stop */
-.voice-test { display: flex; flex-direction: column; gap: 12px; }
+.voice-test { display: flex; flex-direction: column; gap: var(--s-3); }
 .rec-btn {
   align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--s-1);
   width: 112px;
   height: 112px;
   border-radius: 50%;
   background: var(--accent-fill);
   color: var(--on-accent);
-  font-size: 0.875rem;
+  font-size: var(--fs-footnote);
   font-weight: 600;
-  transition: transform 100ms ease-out;
+  transition: transform var(--dur-1) var(--ease);
 }
 .rec-btn:active { transform: scale(0.95); }
 .rec-btn.on { animation: rec-pulse 1.4s ease-in-out infinite; }
 @keyframes rec-pulse { 50% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent-fill) 22%, transparent); } }
-.voice-out { min-height: 72px; padding: 12px 14px; border-radius: 14px; background: var(--bg); font-size: 1.25rem; line-height: 1.4; }
-.voice-report { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--fill); font: 0.75rem/1.5 ui-monospace, 'SF Mono', monospace; white-space: pre-wrap; direction: rtl; text-align: right; }
+.voice-out { min-height: 72px; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--bg); font-size: var(--fs-title); line-height: 1.4; }
+.voice-report { margin: 0; padding: var(--s-3) var(--s-3); border-radius: var(--r-sm); background: var(--fill); font: 0.75rem/1.5 ui-monospace, 'SF Mono', monospace; white-space: pre-wrap; direction: rtl; text-align: right; }
 .rec-row { display: flex; justify-content: center; gap: 28px; }
 .rec-btn:disabled { opacity: 0.35; }
-.voice-out { display: flex; flex-direction: column; gap: 6px; }
+.voice-out { display: flex; flex-direction: column; gap: var(--s-2); }
 .voice-out p { margin: 0; }
-.voice-heard { font-size: 0.9375rem; }
-.voice-translation { font-size: 1.5rem; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
-.voice-romaji { font-size: 0.9375rem; font-style: italic; text-align: start; }
-.voice-details summary { cursor: pointer; min-height: 32px; color: var(--muted); font-size: 0.875rem; }
-.voice-details[open] { display: flex; flex-direction: column; gap: 8px; }
-.voice-back { font-size: 0.875rem; }
+.voice-heard { font-size: var(--fs-subhead); }
+.voice-translation { font-size: var(--fs-large); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+.voice-romaji { font-size: var(--fs-subhead); font-style: italic; text-align: start; }
+.voice-details summary { cursor: pointer; min-height: 32px; color: var(--muted); font-size: var(--fs-footnote); }
+.voice-details[open] { display: flex; flex-direction: column; gap: var(--s-2); }
+.voice-back { font-size: var(--fs-footnote); }
 /* the conversation: each exchange a bubble, Hebrew speaker on the right (start), Japanese on the left */
-.turns { display: flex; flex-direction: column; gap: 10px; }
+.turns { display: flex; flex-direction: column; gap: var(--s-3); }
 .turn {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--s-1);
   max-width: 88%;
-  padding: 12px 14px;
+  padding: var(--s-3) var(--s-4);
   padding-inline-end: 40px;
-  border-radius: 20px;
+  border-radius: var(--r-lg);
   background: var(--bg);
   text-align: start;
-  transition: transform 100ms ease-out;
+  transition: transform var(--dur-1) var(--ease);
 }
 .turn:active { transform: scale(0.98); }
 .turn.he { align-self: flex-start; border-start-start-radius: 6px; }
 .turn.ja { align-self: flex-end; border-start-end-radius: 6px; background: var(--fill); }
-.turn.pending { align-self: stretch; max-width: none; padding-inline-end: 14px; }
-.turn-heard { font-size: 0.875rem; }
-.turn-text { font-size: 1.375rem; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
-.turn-romaji { font-size: 0.875rem; font-style: italic; }
-.turn-back { font-size: 0.8125rem; }
+.turn.pending { align-self: stretch; max-width: none; padding-inline-end: var(--s-4); }
+.turn-heard { font-size: var(--fs-footnote); }
+.turn-text { font-size: var(--fs-title); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+.turn-romaji { font-size: var(--fs-footnote); font-style: italic; }
+.turn-back { font-size: var(--fs-footnote); }
 .turn-play { position: absolute; inset-inline-end: 14px; bottom: 12px; color: var(--accent); }
 .turns > .link { align-self: center; }
 /* problem reports */
-.report-sent { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--ok); font-weight: 600; }
+.report-sent { display: flex; align-items: center; gap: var(--s-2); margin: 0; color: var(--ok); font-weight: 600; }
 .report-list { margin-top: 12px; }
 .report-list h3 { margin: 0; }
-.report { display: flex; flex-direction: column; gap: 6px; }
+.report { display: flex; flex-direction: column; gap: var(--s-2); }
 .report-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.report-reply { margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--fill); font-size: 0.9375rem; }
-.report-status { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; background: var(--fill); color: var(--muted); }
+.report-reply { margin: 0; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--fill); font-size: var(--fs-subhead); }
+.report-status { flex: none; padding: 2px var(--s-3); border-radius: var(--r-pill); font-size: var(--fs-footnote); font-weight: 600; background: var(--fill); color: var(--muted); }
 .report-status.fixed { background: color-mix(in srgb, var(--ok) 16%, var(--card)); color: var(--ok); }
 
 /* a Japanese word stays whole: lines break between words (58); a word longer than the line still wraps */

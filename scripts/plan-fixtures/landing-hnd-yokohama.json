@@ -1,0 +1,93 @@
+{
+ "name": "landing-hnd-yokohama",
+ "description": "Couple lands at HND 09:15 on day 1 (2026-12-12), sleeps Yokohama Bashamichi days 1-2. Two Tokyo-based units (sg=Shinagawa, od=Odaiba). Both are >40 min from the Yokohama hotel, so they are excluded from the landing day. Day 2 (Yokohama, non-landing, normal start): cap=min(510,810)=510 — 2×(240+20)=520 ≤ 525, so both fit. Within day 2, arrangeOrder picks [sg,od]: hotel→sg≈50 min + sg→od≈23 min = 73 min < hotel→od≈52 min + od→sg≈23 min = 75 min, so sg starts before od. A Tokyo move-day was deliberately NOT added: presence.ts forces start=840 on a hotel-change day, leaving cap=min(510,450)=450 — only 1 unit fits (520>465), so a 3-day version with 4 units would yield placedMin=3, not 4.",
+ "presence": {
+  "startDate": "2026-12-12",
+  "numDays": 2,
+  "couples": [
+   "A",
+   "B"
+  ],
+  "dayWho": {},
+  "flights": [
+   {
+    "who": null,
+    "title": "TLV → HND",
+    "starts_at": "2026-12-11T23:00:00",
+    "ends_at": "2026-12-12T09:15:00"
+   }
+  ],
+  "capOf": {},
+  "sleeps": [
+   {
+    "party": null,
+    "checkIn": "2026-12-12",
+    "checkOut": "2026-12-14",
+    "city": "yokohama",
+    "point": {"lat": 35.4437, "lng": 139.638},
+    "label": "Richmond Hotel Yokohama-Bashamichi",
+    "key": "Richmond Yokohama|",
+    "confirmed": true,
+    "booked": true
+   }
+  ]
+ },
+ "units": [
+  {
+   "id": "sg",
+   "couples": ["A", "B"],
+   "base": "tokyo",
+   "far": false,
+   "point": {"lat": 35.6285, "lng": 139.7387},
+   "mins": 240,
+   "category": "sight",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 3,
+   "current": null
+  },
+  {
+   "id": "od",
+   "couples": ["A", "B"],
+   "base": "tokyo",
+   "far": false,
+   "point": {"lat": 35.6267, "lng": 139.7757},
+   "mins": 240,
+   "category": "sight",
+   "best": "any",
+   "opens": null,
+   "closes": null,
+   "closedWeekdays": [],
+   "closedDates": [],
+   "openDates": [],
+   "priority": 3,
+   "current": null
+  }
+ ],
+ "fixed": [],
+ "expect": {
+  "placedMin": 2,
+  "emptyDays": [1],
+  "presence": {
+   "1": {
+    "A": {"base": "yokohama", "start": 681},
+    "B": {"base": "yokohama", "start": 681}
+   },
+   "2": {
+    "A": {"base": "yokohama"},
+    "B": {"base": "yokohama"}
+   }
+  },
+  "arrival": {
+   "1": {
+    "A": {"airport": "HND", "ride_min": 46},
+    "B": {"airport": "HND", "ride_min": 46}
+   }
+  },
+  "startsBefore": [["sg", "od"]]
+ }
+}

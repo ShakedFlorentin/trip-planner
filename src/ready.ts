@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { currentDay, dayDate, mediaIndex, readCache, writeCache } from './lib'
+import { currentDay, dayDate, mediaIndex, readCache, safePhoto, writeCache } from './lib'
 import { saveDoc, savedDoc } from './docs'
 import { track } from './track'
 import type { Booking, Candidate, ItineraryItem, Place } from './types'
@@ -101,7 +101,7 @@ async function run(trip: { id: string; start_date: string | null }, days: number
     const card = p.candidate_id ? cards.get(p.candidate_id) : undefined
     const m = media[p.name]
     const list = p.photos?.length ? p.photos : card?.photos?.length ? card.photos : (m?.photos ?? [])
-    photos.push(...list.slice(0, PHOTOS_PER_PLACE))
+    photos.push(...list.filter((u) => safePhoto(u)).slice(0, PHOTOS_PER_PLACE))
     const lat = p.lat ?? card?.lat ?? m?.lat ?? null
     const lng = p.lng ?? card?.lng ?? m?.lng ?? null
     if (lat != null && lng != null) byDay.set(it.day, [...(byDay.get(it.day) ?? []), { lat, lng }])

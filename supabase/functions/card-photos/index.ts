@@ -10,6 +10,8 @@ import { zodOutputFormat } from 'npm:@anthropic-ai/sdk@1.1.0/helpers/zod'
 import { z } from 'npm:zod@4'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { logCall } from './ai-log.ts'
+import { MAX_HTML, MAX_IMAGE, fetchLimited, isHtmlType, isImageType, publicHttpsAllowed, slideImages } from '../_shared/guard.ts'
+import { fromLabel, pickIntro, pickSystem } from './prompt.ts'
 
 const MODEL = 'claude-haiku-5-5'
 const BUCKET = 'card-photos'
@@ -102,17 +104,61 @@ async function fill(admin: SupabaseClient, cid: string, dry: boolean) {
     urls.push(admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
   }
   if (!urls.length) return { ...report, stored: 0 }
+  // this trip's own card and place always get them
   await admin.from('candidates').update({ photos: urls }).eq('id', c.id)
-  // a library card's photos are copied to every trip on sync, which would wipe the trip's copy: the library keeps them
-  if (c.library_id) await admin.from('place_library').update({ photos: urls }).eq('id', c.library_id)
   await admin.from('places').update({ photos: urls }).eq('candidate_id', c.id)
-  return { ...report, stored: urls.length }
+  // The shared library card is written only by the candidate that created it (that card is not shown to other trips
+  // until an admin approves it). For a library card another trip made or an admin curated, the photos come from pages
+  // a member named, so they wait in the photo_submissions queue for an admin instead.
+  let queued = 0
+  if (c.library_id) {
+    const { data: lib } = await admin.from('place_library').select('id,added_from_trip').eq('id', c.library_id).maybeSingle<{ id: string; added_from_trip: string | null }>()
+    if (lib && lib.added_from_trip === c.trip_id) await admin.from('place_library').update({ photos: urls }).eq('id', lib.id)
+    else if (lib) queued = await queueForReview(admin, c, lib.id, chosen)
+  }
+  return { ...report, stored: urls.length, queued }
+}
+
+const SUBMISSIONS = 'photo-submissions'
+/** At most this many server-found photos wait for one library card. */
+const MAX_WAITING = 6
+
+/**
+ * Puts photos found for a card into the admin review queue (photo_submissions, source 'server') instead of the shared
+ * library card. The private bucket takes JPEG only, so other formats are not queued. Returns how many were queued.
+ */
+async function queueForReview(admin: SupabaseClient, c: Card, libraryId: string, chosen: Image[]) {
+  const { data: trip } = await admin.from('trips').select('created_by').eq('id', c.trip_id).maybeSingle<{ created_by: string | null }>()
+  if (!trip?.created_by) return 0
+  const { count } = await admin.from('photo_submissions').select('id', { count: 'exact', head: true }).eq('library_id', libraryId).eq('status', 'pending').eq('source', 'server')
+  let room = MAX_WAITING - (count ?? 0)
+  let queued = 0
+  for (const im of chosen) {
+    if (room <= 0) break
+    if (im.type !== 'image/jpeg') continue
+    const path = `${c.trip_id}/${trip.created_by}/${crypto.randomUUID()}.jpg`
+    const up = await admin.storage.from(SUBMISSIONS).upload(path, im.bytes, { contentType: 'image/jpeg' })
+    if (up.error) {
+      console.error('queue upload failed', c.name, up.error.message)
+      continue
+    }
+    // rights_confirmed is the table's required flag: for source 'server' it only means "an admin checks the licence when reviewing"
+    const ins = await admin.from('photo_submissions').insert({ library_id: libraryId, trip_id: c.trip_id, user_id: trip.created_by, path, rights_confirmed: true, source: 'server' })
+    if (ins.error) {
+      console.error('queue insert failed', c.name, ins.error.message)
+      await admin.storage.from(SUBMISSIONS).remove([path])
+      continue
+    }
+    room--
+    queued++
+  }
+  return queued
 }
 
 /** Every image the place's own pages offer, best guesses first. */
 async function candidates(admin: SupabaseClient, c: Card): Promise<Found[]> {
   const out: Found[] = []
-  const sources = (c.sources ?? []).filter((s) => /^https:\/\//i.test(s))
+  const sources = (c.sources ?? []).filter(publicHttps)
   const social = [c.instagram_url, c.tiktok_url, ...sources].filter((s): s is string => !!s && /instagram\.com|tiktok\.com/i.test(s))
   // a roundup post ("5 cafes in Kyoto") is the source of several cards: its cover shows only one of them
   const { data: trip } = await admin.from('candidates').select('id,sources,instagram_url,tiktok_url').eq('trip_id', c.trip_id)
@@ -129,8 +175,9 @@ async function candidates(admin: SupabaseClient, c: Card): Promise<Found[]> {
     if (cover) out.push({ url: cover, from: 'post' })
   }
   const eats = ['food', 'cafe', 'nightlife'].includes(c.category ?? '')
+  // the website is member-written: https, a public host name, no IP literal (fetchText checks every redirect again)
   const pages = [c.website_url, ...sources.filter((s) => !/instagram\.com|tiktok\.com|tabelog\.com/i.test(s))]
-  const list = [...new Set(pages.filter((p): p is string => !!p))].slice(0, 5)
+  const list = [...new Set(pages.filter((p): p is string => !!p && publicHttps(p)))].slice(0, 5)
   const [tabelog, own, wiki] = await Promise.all([
     eats ? tabelogPhotos(c, sources) : [],
     Promise.all(list.map(async (p) => (await pageImages(p, c)).map((url) => ({ url, from: p === c.website_url ? 'website' : new URL(p).hostname })))),
@@ -141,11 +188,25 @@ async function candidates(admin: SupabaseClient, c: Card): Promise<Found[]> {
   return out.filter((f) => !seen.has(f.url) && seen.add(f.url))
 }
 
+/** A URL string that passes the public https check (SSRF): https, no credentials, default port, a public host name. */
+const publicHttps = (s: string) => {
+  try {
+    return publicHttpsAllowed(new URL(s))
+  } catch {
+    return false
+  }
+}
+
+// every hop is checked (redirects are followed by hand), HTML is read up to MAX_HTML bytes, and only an HTML answer is kept
 const fetchText = async (url: string, ms = 8000) => {
   try {
-    const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'en,ja;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(ms) })
-    if (!r.ok || !(r.headers.get('content-type') ?? '').includes('html')) return null
-    return { html: (await r.text()).slice(0, 400_000), url: r.url }
+    const got = await fetchLimited(fetch, url, {
+      max: MAX_HTML,
+      typeOk: isHtmlType,
+      init: { headers: { 'User-Agent': UA, 'Accept-Language': 'en,ja;q=0.8' }, signal: AbortSignal.timeout(ms) },
+    })
+    if (!got) return null
+    return { html: new TextDecoder().decode(got.bytes).slice(0, 400_000), url: got.url.href }
   } catch {
     return null
   }
@@ -210,8 +271,7 @@ async function instagramCover(code: string) {
 /** The slides of an Instagram carousel, from the data in its public embed page. */
 async function instagramSlides(code: string) {
   const got = await fetchText(`https://www.instagram.com/p/${code}/embed/captioned/`)
-  const urls = [...(got?.html.matchAll(/display_url\\*"\s*:\s*\\*"(https:[^"]+?)\\*"/g) ?? [])].map((m) => m[1].replace(/\\+\//g, '/').replace(/\\+u0026/g, '&'))
-  return [...new Set(urls)].slice(0, MAX_CHECKED)
+  return slideImages(got?.html ?? '').slice(0, MAX_CHECKED)
 }
 
 /** A restaurant's photos on Tabelog, from its page among the card's sources (Tabelog's own search can't be read). */
@@ -312,10 +372,14 @@ async function download(found: Found[]): Promise<Image[]> {
   const got = await Promise.all(
     found.slice(0, 14).map(async (f) => {
       try {
-        const r = await fetch(f.url, { headers: /wikimedia\.org/.test(f.url) ? WIKI_UA : { 'User-Agent': UA }, signal: AbortSignal.timeout(10000) })
-        const type = (r.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
-        if (!r.ok || !['image/jpeg', 'image/png', 'image/webp'].includes(type)) return null
-        const bytes = new Uint8Array(await r.arrayBuffer())
+        // the address came from a page: https, a public host at every redirect, an image type, at most MAX_IMAGE bytes
+        const got = await fetchLimited(fetch, f.url, {
+          max: MAX_IMAGE,
+          typeOk: isImageType,
+          init: { headers: /wikimedia\.org/.test(f.url) ? WIKI_UA : { 'User-Agent': UA }, signal: AbortSignal.timeout(10000) },
+        })
+        if (!got) return null
+        const { bytes, type } = got
         if (bytes.length < MIN_BYTES || bytes.length > 4_500_000) return null
         const size = dimensions(bytes)
         if (!size || Math.min(size.w, size.h) < MIN_SIDE * 0.75 || Math.max(size.w, size.h) < MIN_SIDE) return null
@@ -370,11 +434,11 @@ async function pick(admin: SupabaseClient, c: Card, images: Image[]): Promise<nu
   const key = Deno.env.get('ANTHROPIC_API_KEY') || ((await admin.rpc('get_anthropic_key')).data as string | null) || undefined
   const t = performance.now()
   try {
-    const about = [c.category, c.area, c.city, c.serves ?? c.todo ?? c.hype].filter(Boolean).join(' · ')
     const content: Anthropic.ContentBlockParam[] = [
-      { type: 'text', text: `Place: ${c.name}${c.name_ja ? ` (${c.name_ja})` : ''}\nAbout: ${about}\nImages, numbered from 0:` },
+      // the name and the card's words are member text: fenced (prompt.ts)
+      { type: 'text', text: pickIntro(c) },
       ...images.flatMap((im, i): Anthropic.ContentBlockParam[] => [
-        { type: 'text', text: `Image ${i} (from ${im.from}):` },
+        { type: 'text', text: `Image ${i} (from ${fromLabel(im.from)}):` },
         { type: 'image', source: { type: 'base64', media_type: im.type as 'image/jpeg', data: base64(im.bytes) } },
       ]),
     ]
@@ -383,12 +447,7 @@ async function pick(admin: SupabaseClient, c: Card, images: Image[]): Promise<nu
       // the model's thinking counts toward this too: at 200, one call in ten was cut off before it answered
       max_tokens: 2000,
       output_config: { effort: 'low', format: zodOutputFormat(Pick) },
-      system:
-        `These images were found for a place card in a trip app. Return the numbers of up to ${KEEP} images that are real photos of this place: its food or drinks, the interior, the building or street, or the view, ` +
-        'best first. Leave out logos, text banners, maps, menus as plain text, screenshots, collages of many places, stock photos of something else, and images that clearly show a different place. ' +
-        'When an image has a place name written on it, keep it only if the name is this place. ' +
-        'Images "from post slide" come from one post about several places: keep such a slide only when this place\'s name (in any language or script) is written on it, never for its food or look alone. ' +
-        'An empty list is fine.',
+      system: pickSystem(KEEP),
       messages: [{ role: 'user', content }],
     })
     logCall(admin, { fn: 'card-photos', step: 'pick', userId: null, model: MODEL, usage: r.usage, ms: performance.now() - t, stopReason: r.stop_reason })

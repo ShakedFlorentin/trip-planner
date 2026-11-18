@@ -86,7 +86,8 @@ async function admit(req: Request, fn: string, json: (body: unknown, status?: nu
     per_user: await settingInt(admin, 'translate_limit_person', DAILY_LIMIT),
     all_users: await settingInt(admin, 'translate_limit_all', ALL_USERS_LIMIT),
   })
-  if (took !== 'ok') return json({ error: 'daily limit reached' }, 429)
+  // scope is whose cap it was, 'user' (this person's) or 'all' (everyone's shared ceiling), so the app can word it
+  if (took !== 'ok') return json({ error: 'daily limit reached', scope: took }, 429)
   // credits (behind CREDITS_ON): hold the price first; the caller settles or refunds it
   let creditOp: string | null = null
   if (credits && await creditsOn(admin)) {

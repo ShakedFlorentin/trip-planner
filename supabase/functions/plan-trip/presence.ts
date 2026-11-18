@@ -1,6 +1,7 @@
 // Where each couple is on each day and the hours they have: built from where they sleep (a Sleep is one stay of one
 // party in one city). Pure code, so it can be tested outside the edge runtime (scripts/plan-test.mjs, presence fixtures).
-import type { Day, Point, Presence } from './plan.ts'
+import { ride, type Day, type Point, type Presence } from './plan.ts'
+import { JAPAN, ROUTE, AIRPORT_PT, japanAirportCode, flightDest } from './airports.ts'
 
 /** One stay: a party (null = everyone) sleeps in a city from check-in until the morning of check-out. */
 export type Sleep = {
@@ -18,10 +19,13 @@ export type Sleep = {
 export type FlightLite = { who: string | null; title: string; starts_at: string | null; ends_at: string | null }
 
 /** A presence that also says which hotel it is and whether its times are an estimate (no booking yet). */
-export type PresenceInfo = Presence & { label?: string; estimate?: boolean }
+export type PresenceInfo = Presence & {
+  label?: string
+  estimate?: boolean
+  /** set on the day a couple arrives in Japan: the airport they land at, the ride to the hotel, and the landing time */
+  arrival?: { airport: string; ride_min: number; landing_min: number }
+}
 
-const JAPAN = /\b(HND|NRT|KIX|ITM|NGO|CTS|FUK|OKA|UKB)\b|Haneda|Narita|Kansai/i
-const ROUTE = /→|->|⟶|—|–|\s-\s/
 const mins = (t: string) => {
   const m = t.match(/^(\d{1,2}):(\d{2})/)
   return m ? Number(m[1]) * 60 + Number(m[2]) : null
@@ -56,8 +60,9 @@ export function buildDays(inp: PresenceInput): Day[] {
   const flightOf = (c: string, date: string, way: 'in' | 'out') =>
     inp.flights.find((f) => {
       if (f.who && f.who !== c) return false
-      const [from, ...to] = f.title.split(ROUTE)
-      if (way === 'in') return JAPAN.test(to.join(' ')) && f.ends_at?.slice(0, 10) === date
+      const [from] = f.title.split(ROUTE)
+      // flightDest returns the destination half, or the full title when there is no route separator (e.g. "TLV-NRT", "טוקיו")
+      if (way === 'in') return JAPAN.test(flightDest(f.title)) && f.ends_at?.slice(0, 10) === date
       return JAPAN.test(from) && f.starts_at?.slice(0, 10) === date
     })
 
@@ -71,9 +76,22 @@ export function buildDays(inp: PresenceInput): Day[] {
       if (!tonight && !last) continue
       let s = 9 * 60 + 30
       let e = 21 * 60 + 30
+      let arrivalInfo: { airport: string; ride_min: number; landing_min: number } | undefined
       if (tonight && !last) {
         const f = flightOf(c, date, 'in')
-        s = Math.max(s, f ? at(f.ends_at)!.min + 180 : 15 * 60)
+        if (f) {
+          // day start = landing + 60 (border control and bags) + ride to hotel + 20 (drop bags),
+          // but never earlier than landing + 120
+          const dest = flightDest(f.title)
+          const code = japanAirportCode(dest)
+          const airportPt = code ? AIRPORT_PT[code] : null
+          const rideMin = ride(airportPt ?? null, tonight.point)
+          const landMin = at(f.ends_at)!.min
+          s = Math.max(s, landMin + Math.max(80 + rideMin, 120))
+          arrivalInfo = { airport: code ?? 'JPN', ride_min: rideMin, landing_min: landMin }
+        } else {
+          s = Math.max(s, 15 * 60)
+        }
       }
       if (!tonight && last) {
         const f = flightOf(c, date, 'out')
@@ -86,6 +104,7 @@ export function buildDays(inp: PresenceInput): Day[] {
       if (!h.city) continue
       const p: PresenceInfo = { base: h.city, hotel: h.point, start: s, end: Math.max(s, e), cap: capOf.get(c), label: h.label }
       if (!h.booked) p.estimate = true
+      if (arrivalInfo) { p.landing = true; p.arrival = arrivalInfo }
       atMap.set(c, p)
     }
     days.push({ day: d, date, weekday: new Date(date + 'T12:00:00Z').getUTCDay(), at: atMap })

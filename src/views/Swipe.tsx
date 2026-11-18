@@ -2,7 +2,7 @@ import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
-import { cityLabel, couplesOf, keepRanges, mutate, readCache, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
+import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
 import { askForRating } from '../rating'
@@ -11,34 +11,21 @@ import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
 import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
-import { EmptyState, Sheet } from '../ui'
+import { EmptyState, LoadNote, Sheet } from '../ui'
+import { nextMatch, queueMatches } from '../screenLogic'
 import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
-import { Camera, CircleCheck, Compass, SlidersHorizontal, SearchX, SkipForward, ChevronLeft, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby } from 'lucide-react'
+import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
-import QuickFab from './QuickFab'
+import AreaMap from './AreaMap'
 
 type CardInterest = { base: InterestBase; cards: Record<string, Interest> }
-
-const LEVELS = [
-  { xp: 0, name: t('גאיג׳ין') },
-  { xp: 200, name: t('תייר') },
-  { xp: 500, name: t('נוסע') },
-  { xp: 1000, name: t('מקומי') },
-  { xp: 2000, name: t('שוגון') },
-  // past the shogun: by then every card is voted on, so these come with new places and their matches
-  { xp: 3000, name: t('קיסר') },
-  { xp: 4000, name: t('דרקון') },
-  { xp: 5000, name: t('קאמי') },
-  { xp: 6500, name: t('אמאטרסו') },
-  { xp: 8000, name: t('גודזילה') },
-]
 
 type Props = {
   trip: Trip
@@ -52,7 +39,7 @@ type Props = {
 }
 
 export default function SwipeGame({ trip, userId, members, showCard, onCardShown, onOpenPlaces }: Props) {
-  const { rows: rawCandidates, loading, reload: reloadCandidates } = useTripTable<Candidate>('candidates', trip.id)
+  const { rows: rawCandidates, loading, error: candidatesError, reload: reloadCandidates } = useTripTable<Candidate>('candidates', trip.id)
   const media = useMediaIndex()
   const candidates = useMemo(() => rawCandidates.map((c) => withMedia(c, media)), [rawCandidates, media])
   // this person's questionnaire: places that are no use to them stay out of everything here (deck, lists, counts),
@@ -79,15 +66,19 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const [sessionNotNow, setSessionNotNow] = useState<Set<string>>(() => new Set())
   const [city, setCity] = useState('')
   const [aud, setAud] = useState('')
-  const [match, setMatch] = useState<Match | null>(null)
+  // several matches at once wait their turn: one pop-up at a time
+  const [matchQueue, setMatchQueue] = useState<Match[]>([])
+  const match = matchQueue[0] ?? null
   // a match is a happy moment: once its pop-up is closed, the app may ask for a rating (src/rating.ts decides)
   const [pushAsk, setPushAsk] = useState<'likes' | 'match' | null>(null)
   const closeMatch = useCallback(() => {
-    setMatch(null)
+    setMatchQueue(nextMatch)
+    // the asks come after the last pop-up, not between two of them
+    if (matchQueue.length > 1) return
     askForRating()
     // the web's notifications offer (the rating prompt is only in the App Store app, so the two never meet)
     if (members.length > 1) void mayAskForPush().then((ok) => ok && setPushAsk('match'))
-  }, [members.length])
+  }, [members.length, matchQueue.length])
   // places this phone liked since it opened: a match one of them makes is this phone's to announce (notifyMatch)
   const likedHere = useRef(new Set<string>())
   const likesHere = useRef(0)
@@ -157,7 +148,6 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     }
     return m
   }, [forWhom, likes, members, trip.match_threshold])
-  const matchedIds = useMemo(() => new Set(matches.keys()), [matches])
 
   // announce every new match, whoever made it
   useEffect(() => {
@@ -168,13 +158,15 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       return
     }
     // keyed with the owner too, so a couple's match turning into everyone's is celebrated again
+    const arrived: Match[] = []
     for (const [id, who] of matches) {
       if (knownMatches.current.has(id + who)) continue
       knownMatches.current.add(id + who)
       const c = candidates.find((x) => x.id === id)
-      if (c) setMatch({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
+      if (c) arrived.push({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
       if (likedHere.current.has(id)) notifyMatch(id)
     }
+    if (arrived.length) setMatchQueue((q) => queueMatches(q, arrived))
   }, [matches, loading, swipesLoading, candidates, likes, members])
 
   const mine = new Set(swipes.filter((s) => s.user_id === userId).map((s) => s.candidate_id))
@@ -200,6 +192,10 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   )
   // what is left to vote on before any filter: a filter is offered only when it would pick something out of it
   const open = visible.filter((c) => !mine.has(c.id) && forMe(c) && !sessionNotNow.has(c.id))
+  // Home shows this same number ("more places in Discover"); it is kept for Home to read before this screen has been opened
+  useEffect(() => {
+    if (!loading && !swipesLoading && !prefsLoading && forWhom) writeCache('left:' + trip.id + ':' + userId, open.length)
+  }, [loading, swipesLoading, prefsLoading, forWhom, open.length, trip.id, userId])
   const filterCities = cities.filter((c) => city === c || open.some((x) => x.city === c))
   const showFilters = open.length > 0 || !!city || !!aud
   // cards in one batch: app_settings swipe_batch_size (20 by default), changeable with no new version
@@ -281,22 +277,6 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     else reloadSwipes()
   }
 
-  const board = members
-    .map((m) => {
-      const own = swipes.filter((s) => s.user_id === m.user_id)
-      const xp = own.length * 10 + [...matchedIds].filter((id) => likes.get(id)?.includes(m.user_id)).length * 50
-      // my own progress is through the places I'm shown; everyone else's through them all
-      const pool = m.user_id === userId ? visible : candidates
-      const ids = new Set(pool.map((c) => c.id))
-      const done = own.filter((s) => ids.has(s.candidate_id)).length
-      return { m, done, total: pool.length, xp, level: [...LEVELS].reverse().find((l) => xp >= l.xp)!, twin: agreement(swipes, userId, m.user_id) }
-    })
-    .sort((a, b) => b.xp - a.xp)
-
-  const meRow = board.find((b) => b.m.user_id === userId)
-  const nextLevel = meRow ? LEVELS.find((l) => l.xp > meRow.xp) : undefined
-  const levelPct = meRow ? (nextLevel ? ((meRow.xp - meRow.level.xp) / (nextLevel.xp - meRow.level.xp)) * 100 : 100) : 0
-  const [boardOpen, setBoardOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   // places someone said no to: a split vote keeps a place off that couple's list, so it is worth finding again
   const [vetoOpen, setVetoOpen] = useState(false)
@@ -327,31 +307,6 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
 
   return (
     <div className="swipe-screen">
-      <button className="hud" onClick={() => setBoardOpen(true)} aria-label={t('פתיחת הדירוג')}>
-        <span className="hud-level">
-          <b>{meRow?.level.name ?? ''}</b>
-          <span className="bar">
-            <span style={{ width: `${levelPct}%` }} />
-          </span>
-          <span className="hud-next">{nextLevel && meRow ? xpToNext(nextLevel.xp - meRow.xp, nextLevel.name) : t('הדרגה הכי גבוהה')}</span>
-        </span>
-        <span className="hud-stat">
-          <b>
-            <bdi>{fmtNum(meRow?.xp ?? 0)}</bdi>
-          </b>
-          <small>XP</small>
-        </span>
-        <span className="hud-stat">
-          <b>{matchedIds.size}</b>
-          <small>
-            {t('מאצ׳ים')} <Icon as={Heart} />
-          </small>
-        </span>
-        <span className="hud-chevron" aria-hidden="true">
-          <Icon as={ChevronLeft} size="1.3em" className="flip-ltr" />
-        </span>
-      </button>
-
       {(showFilters || vetoed.length > 0) && (
         <div className="chips scroll filters" role="group" aria-label={t('סינון')}>
           {showFilters && (
@@ -361,7 +316,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
           )}
           {vetoed.length > 0 && (
             <button className="chip" onClick={() => setVetoOpen(true)}>
-              <Icon as={Ban} /> {t('נפסלו')} <bdi className="muted">{vetoed.length}</bdi>
+              <Icon as={Ban} /> {t('לא בשבילנו')} <bdi className="muted">{vetoed.length}</bdi>
             </button>
           )}
           {showFilters &&
@@ -383,8 +338,6 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </div>
       )}
 
-      <QuickFab label={t('הצעת מקום')} onTap={() => setAdding(true)} />
-
       {prefsOpen && (
         <Onboarding
           userId={userId}
@@ -396,10 +349,10 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
           onClose={() => setPrefsOpen(false)}
         />
       )}
-      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} defaultTo="deck" onClose={() => setAdding(false)} />}
+      {adding && <AddPlace tripId={trip.id} userId={userId} me={me} onClose={() => setAdding(false)} />}
 
       {vetoOpen && (
-        <Sheet title={t('נפסלו')} onClose={() => setVetoOpen(false)}>
+        <Sheet title={t('לא בשבילנו')} onClose={() => setVetoOpen(false)}>
           <p className="small muted">{t('מקומות שמישהו אמר עליהם לא. אצל זוג שאחד אהב והשני לא, המקום לא נכנס למסלול שלהם עד שמישהו משנה את דעתו.')}</p>
           {!vetoed.length && <p className="empty">{t('אף אחד לא פסל מקום')}</p>}
           <div className="card list-card">
@@ -458,55 +411,12 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </Sheet>
       )}
 
-      {boardOpen && (
-        <Sheet title={t('דירוג')} onClose={() => setBoardOpen(false)}>
-          <div className="board">
-            {board.map((b, i) => (
-              <div key={b.m.user_id} className="player">
-                <span className="rank">{i + 1}</span>
-                <div className="player-body">
-                  <div className="row spread nowrap">
-                    <b>
-                      {b.m.display_name}
-                      {b.m.user_id === userId && ` ${t('(אני)')}`}
-                    </b>
-                    <span className="small muted">
-                      {b.level.name} · <bdi dir="ltr">{fmtNum(b.xp)} XP</bdi>
-                    </span>
-                  </div>
-                  <div className="votes-bar">
-                    <span className="bar">
-                      <span style={{ width: `${b.total ? (b.done / b.total) * 100 : 0}%` }} />
-                    </span>
-                    <span className="small muted">{t('הצבעות: {done} מתוך {total}', { done: b.done, total: b.total })}</span>
-                  </div>
-                  {b.m.user_id === userId && (
-                    <div className="small muted">{nextLevel ? xpToNext(nextLevel.xp - b.xp, nextLevel.name) : t('הדרגה הכי גבוהה')}</div>
-                  )}
-                  {b.m.user_id !== userId && b.twin !== null && (
-                    <div className="small muted">{t('טעם משותף איתך: {pct}%', { pct: b.twin })}</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <h3 className="how-title">{t('איך עובד מאצ׳')}</h3>
-          <ol className="how card">
-            <li>{t('כל זוג מצביע ביחד: מספיק שאחד אהב, אם השני לא דילג.')}</li>
-            <li>{t('על מקום שואלים רק את הזוגות שישנים בעיר שלו.')}</li>
-            <li>{t('כשכל הזוגות האלה אהבו, המקום נכנס למסלול ביום שכולם בעיר.')}</li>
-          </ol>
-          <p className="small muted">
-            {t('לייק או דילוג:')} <bdi dir="ltr">10 XP</bdi> · {t('מאצ׳:')} <bdi dir="ltr">50 XP</bdi>
-          </p>
-        </Sheet>
-      )}
-
       <div className="deck">
-        {!loading && !prefsLoading && deck.length === 0 && (
+        {candidatesError && deck.length === 0 && !candidates.length && <LoadNote onRetry={reloadCandidates} />}
+        {!loading && !prefsLoading && !(candidatesError && !candidates.length) && deck.length === 0 && (
           <div className="empty">
             {!candidates.length ? (
-              <EmptyState icon={Compass} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
+              <EmptyState icon={Flame} title={t('עוד אין מקומות לגלות')} line={t('מקום שתציעו יופיע כאן לכולם להצביע עליו.')} action={{ label: t('הצעת מקום'), onClick: () => setAdding(true) }} />
             ) : !visible.length ? (
               <EmptyState icon={SlidersHorizontal} title={t('אף מקום לא מתאים להעדפות')} line={t('ההעדפות שלך מסתירות את כל המקומות.')} action={{ label: t('שינוי ההעדפות'), onClick: () => setPrefsOpen(true) }} />
             ) : visible.some((c) => !mine.has(c.id) && forMe(c)) ? (
@@ -552,11 +462,11 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
           <button className="round small-round" onClick={() => deck[0] && notNow(deck[0])} disabled={!deck.length || batchOver} aria-label={t('לא עכשיו')}>
             <Icon as={SkipForward} />
           </button>
-          {deck.length > 0 && !batchOver && <span className="left-count" aria-live="polite">{Math.min(deck.length, batchLeft) === 1 ? t('נשאר אחד') : t('נשארו {n}', { n: Math.min(deck.length, batchLeft) })}</span>}
+          {deck.length > 0 && !batchOver && <span className="left-count" aria-live="polite">{open.length === 1 ? t('נשאר אחד') : t('נשארו {n}', { n: open.length })}</span>}
         </div>
       )}
 
-      {match && <MatchPop match={match} onClose={closeMatch} />}
+      {match && <MatchPop key={match.c.id + (match.who ?? '')} match={match} onClose={closeMatch} />}
       {pushAsk && !match && <PushAsk from={pushAsk} onClose={() => setPushAsk(null)} />}
     </div>
   )
@@ -579,7 +489,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   const moved = useRef(false)
   const onInfo = useRef(false)
   const style = CARD_STYLE[c.category] ?? CARD_STYLE.sight
-  const photos = (c.photos ?? []).filter((u) => !broken.has(u))
+  const photos = (c.photos ?? []).filter((u) => safePhoto(u) && !broken.has(u))
   const cur = photos[Math.min(photo, photos.length - 1)]
   useEffect(() => () => stop.current?.(), [])
   // how long the top card is looked at, and whether its photos and details are opened (src/look.ts, step 11)
@@ -733,7 +643,8 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
       onPointerUp={top ? up : undefined}
       onPointerCancel={top ? cancel : undefined}
     >
-      <div className="card-hero" style={{ background: style.bg }}>
+      {/* a photo card keeps its category colour behind the photo; no photo means a calm flat header, not a fake picture */}
+      <div className={'card-hero' + (cur ? '' : ' no-photo')} style={cur ? { background: style.bg } : undefined}>
         {cur ? (
           <img
             key={cur}
@@ -746,7 +657,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
             onError={() => setBroken((b) => new Set(b).add(cur))}
           />
         ) : (
-          <Icon as={CARD_ICON[c.category] ?? CARD_ICON.sight} className="card-emoji" size={92} />
+          <Icon as={CARD_ICON[c.category] ?? CARD_ICON.sight} className="card-emoji" size={64} />
         )}
         {top && photos.length > 1 && (
           <>
@@ -838,6 +749,8 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
       {more &&
         createPortal(
           <Sheet title={c.name} onClose={() => setMore(false)}>
+            {/* no photo: the place's spot on a map, here only (never on the swipe card) */}
+            {!cur && <AreaMap name={c.name_ja || c.name} lat={c.lat} lng={c.lng} area={c.area} />}
             <div className="card-full">
               <CardFull c={c} prior={prior} />
             </div>
@@ -863,9 +776,18 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
   const hasBaby = useTripHasBaby(c.trip_id)
   const avoidsPork = useTripAvoidsPorkSeafood(c.trip_id)
   const [addPhoto, setAddPhoto] = useState(false)
+  // the planner's two facts: the card's own language, else the English kept in `en` (a row may carry only that)
+  const planLine = ((isEn ? c.en?.plan_line : null) ?? c.plan_line)?.trim()
+  const babyBlock = hasBaby ? ((isEn ? c.en?.baby_block : null) ?? c.baby_block)?.trim() : null
   return (
     <>
       <Tags c={c} />
+      {planLine && (
+        <p className="warn-line" dir="auto">
+          <Icon as={Info} />
+          <span>{keepRanges(planLine)}</span>
+        </p>
+      )}
       {c.serves && (
         <div className="fact">
           <Label icon={Utensils}>{t('מה מגישים')}</Label>
@@ -921,10 +843,16 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
           <p dir="auto">{keepRanges(c.kosher_note)}</p>
         </div>
       )}
-      {hasBaby && c.baby_notes && (
+      {hasBaby && (c.baby_notes || babyBlock) && (
         <div className="fact">
           {c.audience === 'adults' ? <Label icon={Wine}>{t('למה בלי התינוק')}</Label> : <Label icon={Baby}>{t('עם תינוק')}</Label>}
-          <p dir="auto">{keepRanges(c.baby_notes)}</p>
+          {c.baby_notes && <p dir="auto">{keepRanges(c.baby_notes)}</p>}
+          {babyBlock && (
+            <p className="warn-line" dir="auto">
+              <Icon as={Info} />
+              <span>{keepRanges(babyBlock)}</span>
+            </p>
+          )}
         </div>
       )}
       {c.tip && (
@@ -1035,14 +963,6 @@ function nameOf(members: Member[], id: string) {
   return t(members.find((m) => m.user_id === id)?.display_name ?? '?')
 }
 
-/** % of shared swipes where two members made the same call; null when there's nothing to compare. */
-function agreement(swipes: Swipe[], a: string, b: string) {
-  const mine = new Map(swipes.filter((s) => s.user_id === a).map((s) => [s.candidate_id, s.liked]))
-  const both = swipes.filter((s) => s.user_id === b && mine.has(s.candidate_id))
-  if (both.length < 3) return null
-  return Math.round((both.filter((s) => mine.get(s.candidate_id) === s.liked).length / both.length) * 100)
-}
-
 function hash(s: string) {
   let h = 0
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0
@@ -1088,23 +1008,4 @@ function writeNotNow(tripId: string, userId: string, ids: Set<string>) {
   } catch {
     /* private mode or full: the card just isn't remembered */
   }
-}
-
-/** A number with thousands commas in every language (4,860), so XP reads the same in Hebrew and English. */
-function fmtNum(n: number) {
-  return n.toLocaleString('en-US')
-}
-
-/** "עוד 140 XP לקאמי", with the number and XP kept together and in order inside the Hebrew. */
-function xpToNext(xp: number, level: string) {
-  const n = <bdi dir="ltr">{fmtNum(xp)} XP</bdi>
-  return isEn ? (
-    <>
-      {n} to {level}
-    </>
-  ) : (
-    <>
-      עוד {n} ל{level} {/* he-only */}
-    </>
-  )
 }

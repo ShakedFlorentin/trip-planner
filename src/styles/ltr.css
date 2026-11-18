@@ -6,8 +6,6 @@ html[dir='ltr'] .flip-ltr { transform: scaleX(-1); }
 
 /* English tab labels are 10px like the Hebrew ones; the icon nudge mirrors */
 html[dir='ltr'] .tab-icon { translate: calc(var(--nudge, 0) * 1px); }
-/* the add button sits on the right */
-html[dir='ltr'] .fab { left: auto; right: max(16px, calc(50% - 304px)); }
 
 /* swipe card photos: tap the left side for the previous one */
 html[dir='ltr'] .photo-tap.prev { right: auto; left: 0; }
@@ -16,8 +14,9 @@ html[dir='ltr'] .left-count { direction: ltr; }
 
 /* a name in another script lines up with the text around it: on the left */
 html[dir='ltr'] :is(h2, h3, p, div, b, span)[dir="auto"]:not(.show-sub, .show-small, .turn-heard, .turn-text, .turn-back) { text-align: left; }
+html[dir='ltr'] :is(div, p).notes[dir="auto"] { text-align: start; } /* a Hebrew note on the English screen sits on the right, English on the left */
 html[dir='ltr'] .phrase-ja, html[dir='ltr'] .phrase-ro { text-align: left; }
 html[dir='ltr'] .voice-report { direction: ltr; text-align: left; }
 
 /* a time before the title: the gap goes after it (the Hebrew layout puts it before, see plan.css) */
-html[dir='ltr'] :is(.item-title, .next-label) .time { margin-inline-start: 0; margin-inline-end: 8px; }
+html[dir='ltr'] :is(.item-title, .next-label) .time { margin-inline-start: 0; margin-inline-end: var(--s-2); }

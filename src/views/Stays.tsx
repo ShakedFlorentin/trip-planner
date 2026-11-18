@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { DrawerClose } from '@ui-sdk/react/drawer'
 import { BedDouble, Bus, CalendarRange, ChevronLeft, Lock, MapPin, Minus, Plus, Search, Ticket, TrainFront, Wand2 } from 'lucide-react'
 import { supabase } from '../supabase'
 import { askSplit, suggestSplits, type NightCount, type SplitAlt } from '../stays'
@@ -9,9 +10,10 @@ import { AREAS, type Area } from '../areas'
 import { AFFILIATE_ID, hotelSearchUrl } from '../affiliate'
 import { track } from '../track'
 import { openExternal } from '../native'
-import { Empty, Field, Sheet } from '../ui'
+import { Empty, EmptyState, Field, Sheet } from '../ui'
 import { Icon, type LucideIcon } from '../icons'
 import { cityName, stayLabel } from './planUtils'
+import { askDelete, say } from '../toast'
 
 const dayMs = 86400000
 const nightsBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / dayMs)
@@ -52,7 +54,7 @@ export default function StaysSheet({ tripId, date, couples, stays, cities, booki
             <StayRecCard key={`${r.party ?? ''}|${r.city}|${r.check_in}`} rec={r} cities={cities} people={people(r.party)} />
           ))}
         {!available && <Empty>{t('הלינה לפי עיר תהיה זמינה אחרי עדכון השרת. עד אז התוכנית קוראת את הזמנות המלון.')}</Empty>}
-        {available && stays.length === 0 && <Empty>{t('עוד לא הוזנה לינה. הוסיפו עיר ולילות, והתוכנית תסתדר גם לפני שמזמינים מלון.')}</Empty>}
+        {available && stays.length === 0 && <EmptyState icon={BedDouble} title={t('עוד לא הוזנה לינה')} line={t('הוסיפו עיר ולילות, והתוכנית תסתדר גם לפני שמזמינים מלון.')} />}
         {available &&
           parties.map((party) => {
             const mine = stays.filter((s) => (s.party ?? null) === party).sort((a, b) => a.check_in.localeCompare(b.check_in))
@@ -256,33 +258,47 @@ export function SplitStart({ open, onBooked, onNights, onSuggest, onLater }: { o
     { icon: CalendarRange, title: t('יודעים כמה לילות בכל עיר'), line: t('בוחרים ערים ולילות, ואנחנו מסדרים לפי הטיסות'), go: onNights },
     { icon: Wand2, title: t('רק טיסות, תציעו לנו'), line: t('חלוקה לפי הטיסות ומה שמקובל בכל עיר'), go: onSuggest },
   ]
+  // one quiet row keeps the day below it in view; the three ways open in a sheet, and the chosen one runs once the sheet has slid out
+  const [asking, setAsking] = useState(false)
+  const pending = useRef<(() => void) | null>(null)
   return (
-    <section className="card split-start" aria-labelledby="split-start-title">
-      <div className="stay-rec-head">
-        <span className="stay-rec-mark">
+    <>
+      <div className="group split-start">
+        <button className="group-row split-row" onClick={() => setAsking(true)}>
           <Icon as={BedDouble} />
-        </span>
-        <div className="stay-rec-text">
-          <b id="split-start-title">{t('איך מחלקים את הטיול בין ערים?')}</b>
-          <span className="small muted">{open === 1 ? t('ללילה אחד עוד אין עיר') : t('ל-{n} לילות עוד אין עיר', { n: open })}</span>
-        </div>
+          <span className="k">{open === 1 ? t('ללילה אחד עוד אין עיר') : t('ל-{n} לילות עוד אין עיר', { n: open })}</span>
+          <Icon as={ChevronLeft} className="chev flip-ltr" />
+        </button>
       </div>
-      <div className="split-ways">
-        {ways.map((w) => (
-          <button key={w.title} className="split-way" onClick={w.go}>
-            <Icon as={w.icon} />
-            <span>
-              <b>{w.title}</b>
-              <span className="small muted">{w.line}</span>
-            </span>
-            <Icon as={ChevronLeft} className="chev flip-ltr" />
-          </button>
-        ))}
-      </div>
-      <button className="link split-later" onClick={onLater}>
-        {t('אחר כך')}
-      </button>
-    </section>
+      {asking && (
+        <Sheet
+          title={t('איך מחלקים את הטיול בין ערים?')}
+          closeLabel={t('ביטול')}
+          onClose={() => {
+            setAsking(false)
+            const go = pending.current
+            pending.current = null
+            go?.()
+          }}
+        >
+          <div className="split-ways">
+            {ways.map((w) => (
+              <DrawerClose key={w.title} className="split-way" onClick={() => (pending.current = w.go)}>
+                <Icon as={w.icon} />
+                <span>
+                  <b>{w.title}</b>
+                  <span className="small muted">{w.line}</span>
+                </span>
+                <Icon as={ChevronLeft} className="chev flip-ltr" />
+              </DrawerClose>
+            ))}
+          </div>
+          <DrawerClose className="link split-later" onClick={() => (pending.current = onLater)}>
+            {t('אחר כך')}
+          </DrawerClose>
+        </Sheet>
+      )}
+    </>
   )
 }
 
@@ -425,7 +441,7 @@ export function NightsSheet({ tripId, stays, cities, onClose }: { tripId: string
     <Sheet title={t('כמה לילות בכל עיר')} onClose={onClose}>
       {open === null && <Empty>{t('בודקים כמה לילות פנויים…')}</Empty>}
       {open === 'error' && <Empty>{t('לא הצלחנו לבדוק כרגע. נסו שוב עוד רגע.')}</Empty>}
-      {open === 0 && <Empty>{t('כל הלילות כבר סגורים. אין מה לחלק.')}</Empty>}
+      {open === 0 && <EmptyState icon={BedDouble} title={t('כל הלילות כבר סגורים. אין מה לחלק.')} />}
       {free > 0 && (
         <>
           <p className="small muted">{t('מסמנים כמה לילות בכל עיר. את הסדר והתאריכים נסדר לפי הטיסות והמסלול.')}</p>
@@ -502,7 +518,7 @@ function StayForm(props: { tripId: string; couples: string[]; cities: City[]; bo
 
   const save = async () => {
     if (!f.city || !f.check_in || !f.check_out) return
-    if (f.check_out <= f.check_in) return alert(t('הצ׳ק-אאוט חייב להיות אחרי הצ׳ק-אין.'))
+    if (f.check_out <= f.check_in) return void say(t('הצ׳ק-אאוט חייב להיות אחרי הצ׳ק-אין.'), { error: true })
     const row = {
       party: f.party || null,
       city: f.city,
@@ -519,7 +535,7 @@ function StayForm(props: { tripId: string; couples: string[]; cities: City[]; bo
     if (ok) props.onClose()
   }
   const remove = async () => {
-    if (f.id && confirm(t('למחוק?')) && (await mutate(supabase.from('trip_stays').delete().eq('id', f.id)))) props.onClose()
+    if (f.id && (await askDelete(t('למחוק את הלינה?'))) && (await mutate(supabase.from('trip_stays').delete().eq('id', f.id)))) props.onClose()
   }
 
   return (

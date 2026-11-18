@@ -8,7 +8,7 @@ export type BestTime = 'morning' | 'midday' | 'afternoon' | 'evening' | 'night' 
  * Where one couple is on one day and the hours they have for plans (minutes after midnight); cap: how much of a day
  * they want filled, from the pace they chose (DAY_CAP when nobody said)
  */
-export type Presence = { base: string; hotel: Point; start: number; end: number; cap?: number }
+export type Presence = { base: string; hotel: Point; start: number; end: number; cap?: number; landing?: true }
 
 export type Day = {
   day: number
@@ -219,7 +219,9 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
         if (!p) return false
         // a day trip needs a day that starts in the morning, with time for the ride there and back
         if (u.far) return !!u.point && km(p.hotel, u.point) <= 150 && p.start <= TRIP_START && p.end - p.start >= 2 * ride(p.hotel, u.point) + u.mins
-        return p.base === u.base || (!!u.point && km(p.hotel, u.point) <= NEAR_KM)
+        // on the landing day: places more than 40 min from the hotel are saved for a later day
+        const eligible = p.base === u.base || (!!u.point && km(p.hotel, u.point) <= NEAR_KM)
+        return eligible && !(p.landing && u.point && ride(p.hotel, u.point) > 40)
       })
       if (!there) return false
       anyDay = true
@@ -301,7 +303,11 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if (day == null) return u.priority * 14 * (0.5 + u.mins / 120)
     let cost = 0
     const d = byDay.get(day)!
-    if (isAway(d, u)) cost += AWAY_COST
+    if (isAway(d, u)) {
+      // the away penalty grows with the ride, so nearer parts of the next city come before far ones
+      const awayPres = u.couples.map((c) => d.at.get(c)).find((p) => p && p.base !== u.base)
+      cost += AWAY_COST + (awayPres && u.point ? ride(awayPres.hotel, u.point) / 60 : 0)
+    }
     // a couple's own place fits best on a day the other couple is elsewhere
     if (u.couples.length < together(d, u.couples[0]).length) cost += 2
     if (u.current != null && u.current !== day) cost += 1.5

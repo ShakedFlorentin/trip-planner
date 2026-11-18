@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
-import { Empty, Sheet } from '../ui'
+import { EmptyState, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
+import { safePhoto } from '../lib'
 import { Camera } from 'lucide-react'
 
 const MAX_SIDE = 1600
@@ -137,10 +138,10 @@ export function PhotoReviewRow() {
       {open && (
         <Sheet title={t('תמונות לאישור')} onClose={() => setOpen(false)}>
           {err && <p className="msg" role="alert">{err}</p>}
-          {!rows.length && <Empty>{t('אין תמונות שממתינות לאישור')}</Empty>}
+          {!rows.length && <EmptyState icon={Camera} title={t('אין תמונות שממתינות לאישור')} />}
           {rows.map((r) => (
             <div key={r.id} className="photo-review">
-              {r.url && <img className="photo-preview" src={r.url} alt="" />}
+              {safePhoto(r.url) && <img className="photo-preview" src={safePhoto(r.url)} alt="" />}
               <b dir="auto">{r.place_library?.name}</b>
               <div className="row">
                 <button className="primary" onClick={() => review(r.id, true)}>{t('אישור')}</button>

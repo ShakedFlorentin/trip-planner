@@ -51,7 +51,8 @@ export const EN_A: Record<string, string> = {
   'אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.': 'No internet, not saved. Try again when you have signal.',
   'שגיאה: {message}': 'Error: {message}',
   'יום {day}': 'Day {day}',
-  'נגמרו 30 הבדיקות להיום (לכל אחד). נסו שוב מחר.': 'You\'ve used all 30 checks for today (each person). Try again tomorrow.',
+  'נגמרו הבדיקות שלך להיום. נסו שוב מחר.': 'You\'ve used all your checks for today. Try again tomorrow.',
+  'השירות הגיע למכסה היומית שלו. נסו שוב מחר.': 'The service has reached its daily limit. Try again tomorrow.',
   'השירות עמוס כרגע. נסו שוב בעוד דקה.': 'The service is busy right now. Try again in a minute.',
   'הטקסט או הקובץ ארוכים מדי.': 'The text or file is too long.',
   'אין חיבור לאינטרנט.': 'No internet connection.',
@@ -178,7 +179,6 @@ export const EN_A: Record<string, string> = {
   'מראה': 'Appearance',
 
   // More
-  'כסף': 'Money',
   'רשימות': 'Lists',
   'תינוק': 'Baby',
 
@@ -435,7 +435,7 @@ export const EN_A: Record<string, string> = {
   'כרטיס לטיול ב-{price}': 'Get the trip pass for {price}',
   'התשלום ייפתח בקרוב. בינתיים אפשר להוסיף מקומות שכבר יש ב-Toogo, בחיפוש לפי שם.': 'Payment opens soon. Meanwhile you can add places already in Toogo by searching their name.',
   'לטיול הזה יש כרטיס: מקומות חדשים בלי הגבלה, לכל מי שבטיול.': 'This trip has a pass: unlimited new places for everyone on it.',
-  'אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. בלי מה שאתם כותבים, ובלי כלים חיצוניים.': "We count which screens are opened, where people get stuck and how long each card is looked at, to improve the app and the order of the cards. Never what you type, and no outside tools.",
+  'אנחנו סופרים אילו מסכים נפתחים, איפה נתקעים וכמה זמן מסתכלים על כל כרטיס, כדי לשפר את האפליקציה ואת סדר הכרטיסים. לא אוספים שמות, מיילים או מה שאתם כותבים. דוחות שגיאה נחתכים קצר, ולעיתים נדירות עשויים לכלול קצת טקסט מהמסך. בלי כלים חיצוניים. אפשר לכבות את זה למעלה.': "We count which screens are opened, where people get stuck and how long each card is looked at, to improve the app and the order of the cards. We don't collect names, emails or what you type. Error reports are cut short and may rarely include a bit of screen text. No outside tools. You can switch this off above.",
   "ההתראות חסומות בהגדרות הטלפון. אפשר לפתוח אותן שם, תחת Toogo.": "Notifications are blocked in the phone's settings. You can allow them there, under Toogo.",
   "לא הצלחתי להפעיל התראות. אפשר לנסות שוב מההגדרות.": "I couldn't turn notifications on. You can try again from Settings.",
   "התראות על מאצ׳ים": "Match notifications",
@@ -448,4 +448,15 @@ export const EN_A: Record<string, string> = {
   "מאצ׳ים בטיול": "Matches on the trip",
   "באייפון, התראות עובדות רק כשפותחים את Toogo מהמסך הראשי: בספארי, שיתוף ואז \"הוספה למסך הבית\".": "On an iPhone, notifications work only when Toogo is opened from the Home Screen: in Safari, tap Share, then \"Add to Home Screen\".",
   "התראה כשמישהו מהטיול אוהב מקום שגם אתם אהבתם. רק בטלפון הזה.": "A notification when someone on the trip likes a place you liked too. On this phone only.",
+  'קוד אישור': 'Confirmation code',
+  'עוד לא הוזנה לינה': 'No stays added yet',
+  'הוסיפו עיר ולילות, והתוכנית תסתדר גם לפני שמזמינים מלון.': 'Add a city and nights, and the plan works out even before you book a hotel.',
+  'עוד אין פרטים שמורים': 'Nothing saved yet',
+  'אי אפשר לבטל את המחיקה.': "This can't be undone.",
+  'למחוק את הלינה?': 'Delete this stay?',
+  'קוד': 'Code',
+  'מערכת': 'System',
+  'עוד אין מקומות': 'No places yet',
+  'מקום שקיבל מאצ׳ בגילוי יופיע כאן': 'A place that gets a match in Discover shows up here',
+  'הוספת קוד אישור להזמנה: {name}': 'Add a confirmation code to the booking: {name}',
 }

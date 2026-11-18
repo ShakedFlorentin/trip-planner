@@ -1,0 +1,30 @@
+/* Bookings: every booking under its day, in its own --card (the .pt-* rows of plan.css: node, time over title). No rail:
+   a rail would join two bookings of one day into one trip. The node's ring is filled with --card; the code takes a third column. */
+.bk-screen { gap: var(--s-4); }
+.tl-day-block { display: flex; flex-direction: column; gap: var(--s-2); }
+.tl-card { display: flex; flex-direction: column; align-items: stretch; gap: var(--s-1); padding: var(--s-3) var(--s-3) var(--s-1); background: var(--card); border-radius: var(--r-md); overflow: hidden; }
+.tl-card > .tl-who { align-self: flex-start; margin: 0 0 var(--s-1); padding-block: 2px; }
+.tl-card:not(:has(> .tl-who)) { padding-top: var(--s-2); }
+.tl-day { margin: var(--s-2) 0 0; font-variant-numeric: tabular-nums; }
+.tl { padding: 0; }
+
+.tl .pt-item { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.tl .pt-node { background: var(--card); }
+.tl .pt-line { display: none; }
+.tl .pt-content > .tl-end { grid-column: 3; align-self: center; display: inline-flex; align-items: center; }
+.tl-main { display: flex; width: 100%; min-height: 44px; text-align: start; color: var(--text); }
+.tl-sub { display: block; white-space: pre-line; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; cursor: inherit; }
+.tl-code { display: inline-flex; align-items: center; }
+.tl-code .bk-code { padding: 0; background: none; border-radius: 0; font-family: inherit; font-size: var(--fs-footnote); font-weight: 600; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.tl-add { font-size: var(--fs-footnote); white-space: nowrap; }
+.pt-item[data-done] .pt-title { font-weight: 400; }
+.tl-import .k { font-size: var(--fs-subhead); font-weight: 600; }
+.tl-import .ic:first-child { color: var(--muted); }
+
+/* import review (ImportSheet): one ticked row per booking found, on the shared grouped list */
+.imp-row { align-items: flex-start; padding-block: var(--s-3); cursor: pointer; }
+.imp-row input[type=checkbox] { flex: none; width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0; border: none; accent-color: var(--accent); }
+.imp-row .k { display: flex; flex-direction: column; gap: var(--s-1); }
+.imp-title { font-size: var(--fs-subhead); font-weight: 600; overflow-wrap: anywhere; }
+.imp-sub { font-size: var(--fs-footnote); color: var(--muted); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.imp-warn { display: flex; align-items: center; gap: var(--s-1); color: var(--warn); font-weight: 600; }
