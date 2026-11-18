@@ -37,7 +37,7 @@ const INVITE_KEY = 'invite'
 
 export const inviteInUrl = () => new URLSearchParams(location.search).get('invite')?.trim() || null
 
-function savedInvite() {
+export function savedInvite() {
   try {
     return localStorage.getItem(INVITE_KEY)
   } catch {

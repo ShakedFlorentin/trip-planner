@@ -7,7 +7,7 @@ import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
 import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
-import Login, { inviteInUrl } from './views/Login'
+import Login, { inviteInUrl, savedInvite } from './views/Login'
 import TripPicker from './views/TripPicker'
 import ResetPassword from './views/ResetPassword'
 import Home from './views/Home'
@@ -186,7 +186,8 @@ function isNewOAuth(u: { app_metadata?: { provider?: string }; user_metadata?: {
 function SignedOut() {
   const { features } = useSettings()
   const known = useSettingsKnown()
-  const [login, setLogin] = useState(() => !!inviteInUrl())
+  // an invite link goes straight to sign-up, also when the person comes back to the app later without the link
+  const [login, setLogin] = useState(() => !!(inviteInUrl() || savedInvite()))
   const shows = !known ? null : features.guest_mode && !login ? 'guest' : 'login'
   useEffect(() => {
     if (shows) track('signed_out_view', { shows, invite: !!inviteInUrl() })
@@ -417,12 +418,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   useEffect(() => {
     pageScroller().scrollTo(0, 0)
   }, [tab])
-  const [failed, setFailed] = useState(false)
   useEffect(() => {
     if (!isNative) return
     document.documentElement.classList.add('inner-scroll')
     return () => document.documentElement.classList.remove('inner-scroll')
   }, [])
+  const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)
