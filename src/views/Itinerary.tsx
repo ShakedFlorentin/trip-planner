@@ -36,6 +36,7 @@ import {
   type PlanItem,
   type WhoMode,
 } from './planUtils'
+import { trackOnce } from '../track'
 import '../styles/plan.css'
 import '../styles/fixc.css'
 import QuickFab from './QuickFab'
@@ -49,6 +50,10 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
   const { rows: bookings, loading: bookingsLoading, error: bookingsError, reload: reloadBookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
   // "nothing planned" is only true once the plan has really loaded
   const loading = itemsLoading || bookingsLoading
+  // the first time this person sees days the planner made
+  useEffect(() => {
+    if (!loading && items.some((i) => i.auto)) trackOnce('first_plan', userId, { items: items.length, days: new Set(items.map((i) => i.day)).size })
+  }, [loading, items, userId])
   const loadFailed = !!(itemsError || bookingsError || daysError)
   const reloadPlan = () => {
     reloadItems()

@@ -1,6 +1,7 @@
 import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
+import { trackOnce } from '../track'
 import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
 import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
@@ -159,6 +160,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     }
     // keyed with the owner too, so a couple's match turning into everyone's is celebrated again
     const arrived: Match[] = []
+    const hadNone = knownMatches.current.size === 0
     for (const [id, who] of matches) {
       if (knownMatches.current.has(id + who)) continue
       knownMatches.current.add(id + who)
@@ -166,7 +168,10 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
       if (c) arrived.push({ c, who, names: (likes.get(id) ?? []).map((u) => nameOf(members, u)) })
       if (likedHere.current.has(id)) notifyMatch(id)
     }
-    if (arrived.length) setMatchQueue((q) => queueMatches(q, arrived))
+    if (arrived.length) {
+      if (hadNone) trackOnce('first_match', userId, { members: members.length })
+      setMatchQueue((q) => queueMatches(q, arrived))
+    }
   }, [matches, loading, swipesLoading, candidates, likes, members])
 
   const mine = new Set(swipes.filter((s) => s.user_id === userId).map((s) => s.candidate_id))
@@ -233,6 +238,8 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
     const ok = await mutate(Promise.resolve(res))
     if (!ok) lookStart(c.id, !!c.photos?.length)
     if (ok) {
+      // the first vote this person ever made (a "not now" is not a vote)
+      if (!swipesLoading && !swipes.some((s) => s.user_id === userId)) trackOnce('first_swipe', userId, { liked })
       if (liked) markLiked(c.id)
       setHistory((h) => (h[h.length - 1] === c.id ? h : [...h, c.id]))
       // learn from it (and from how long it was looked at) for the next cards, and move on in the batch

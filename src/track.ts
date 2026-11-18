@@ -76,6 +76,27 @@ export function track(name: string, props: Props = {}) {
   later(4000)
 }
 
+/**
+ * Counts an event only the first time it happens for this account on this device (first_swipe, first_match,
+ * first_plan: how far new people get). Remembered on the phone by account, so it is one flag and nothing else. While
+ * counting is off (the person's switch, the server's, a developer's machine) nothing is sent and nothing is
+ * remembered, so turning it back on later still counts the first time.
+ */
+export function trackOnce(name: string, userId: string | undefined, props: Props = {}) {
+  if (!userId || off()) return
+  const key = `first:${name}:${userId}`
+  try {
+    if (localStorage.getItem(key)) return
+    localStorage.setItem(key, '1')
+  } catch {
+    // no storage: fall back to once per open
+    if (firedHere.has(key)) return
+    firedHere.add(key)
+  }
+  track(name, props)
+}
+const firedHere = new Set<string>()
+
 function later(ms: number) {
   if (!timer) timer = setTimeout(flush, ms)
 }
