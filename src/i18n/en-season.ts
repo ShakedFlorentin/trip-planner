@@ -4,5 +4,5 @@ export const EN_SEASON: Record<string, string> = {
   'באביב': 'spring',
   'בקיץ': 'summer',
   'בסתיו': 'autumn',
-  'בעיקר {list}': 'Mostly a {list} place',
+  'בעיקר {list}': 'Best in {list}',
 }

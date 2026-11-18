@@ -56,9 +56,19 @@ export function datedNotes(seasonal: Seasonal | null | undefined, start: string 
   return out
 }
 
-/** "Mostly a winter place" when the card is for other seasons than this trip's; null for a year-round card or no dates. */
+// the order seasons follow each other in, for a list that runs across new year ("autumn and winter", not "winter and autumn")
+const CYCLE: Season[] = ['spring', 'summer', 'autumn', 'winter']
+/** The seasons as they come in the year: from the first one whose season before it isn't in the list. */
+function inOrder(list: Season[]): Season[] {
+  const has = new Set(list)
+  const start = CYCLE.findIndex((s, i) => has.has(s) && !has.has(CYCLE[(i + 3) % 4]))
+  const from = start < 0 ? 0 : start
+  return [...CYCLE.slice(from), ...CYCLE.slice(0, from)].filter((s) => has.has(s))
+}
+
+/** "Best in winter" when the card is for other seasons than this trip's; null for a year-round card or no dates. */
 export function onlyLine(seasonal: Seasonal | null | undefined, season: Season | null): string | null {
-  const only = SEASONS.filter((s) => seasonal?.only?.includes(s))
+  const only = inOrder(SEASONS.filter((s) => seasonal?.only?.includes(s)))
   if (!season || !only.length || only.includes(season)) return null
   const name = (s: Season) => (s === 'winter' ? t('בחורף') : s === 'spring' ? t('באביב') : s === 'summer' ? t('בקיץ') : t('בסתיו'))
   const names = only.map(name)

@@ -59,10 +59,13 @@ eq('en missing -> he', datedNotes({ dated: [{ from: '2026-12-28', to: '2026-12-2
 
 // the "only" line
 eq('winter place on a summer trip (he)', onlyLine({ only: ['winter'] }, 'summer'), 'בעיקר בחורף')
-eq('winter place on a summer trip (en)', en.onlyLine({ only: ['winter'] }, 'summer'), 'Mostly a winter place')
+eq('winter place on a summer trip (en)', en.onlyLine({ only: ['winter'] }, 'summer'), 'Best in winter')
 eq('two seasons (he)', onlyLine({ only: ['autumn', 'spring'] }, 'summer'), 'בעיקר באביב ובסתיו')
-eq('two seasons (en)', en.onlyLine({ only: ['autumn', 'spring'] }, 'summer'), 'Mostly a spring and autumn place')
-eq('three seasons (en)', en.onlyLine({ only: ['winter', 'spring', 'autumn'] }, 'summer'), 'Mostly a winter, spring and autumn place')
+eq('two seasons (en)', en.onlyLine({ only: ['autumn', 'spring'] }, 'summer'), 'Best in spring and autumn')
+eq('three seasons (en)', en.onlyLine({ only: ['winter', 'spring', 'autumn'] }, 'summer'), 'Best in autumn, winter and spring')
+eq('autumn place (en), no a/an', en.onlyLine({ only: ['autumn'] }, 'spring'), 'Best in autumn')
+eq('across new year (en)', en.onlyLine({ only: ['winter', 'autumn'] }, 'summer'), 'Best in autumn and winter')
+eq('across new year (he)', onlyLine({ only: ['winter', 'autumn'] }, 'summer'), 'בעיקר בסתיו ובחורף')
 eq('summer place (he)', onlyLine({ only: ['summer'] }, 'winter'), 'בעיקר בקיץ')
 eq('spring place (he)', onlyLine({ only: ['spring'] }, 'autumn'), 'בעיקר באביב')
 eq('autumn place (he)', onlyLine({ only: ['autumn'] }, 'spring'), 'בעיקר בסתיו')
