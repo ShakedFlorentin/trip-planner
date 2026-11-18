@@ -7,6 +7,20 @@ letter is 2 bytes, so the Hebrew list is half as long), promotional text 170 cha
 Not checked from here: whether the name is free. App Store Connect says so when you create the app. If "Toogo" is
 taken, keep the rest and try "Toogo Japan: Trip Planner".
 
+## Change log
+- **2026-11-18 (t09): where-to-stay taken out until after the owner's Japan trip (after 31 Dec 2026).** Apple 2.3: the
+  listing may not show a feature the app doesn't have. Booking import (reads existing hotel bookings) stays. When the
+  feature goes live, restore these lines:
+  - English keywords: `onsen` back to `hotel` (same length, 100 bytes). Hebrew keywords: `אונסן` back to `מלון` (and the count is then 89 bytes).
+  - English description: after the "NIGHTS PER CITY" bullet, rename the heading to `NIGHTS PER CITY, AND WHERE TO SLEEP` and add
+    `• For each city, the best areas to stay near the places you liked, with a hotel search for your dates.`
+  - Hebrew description: heading back to `כמה לילות בכל עיר, ואיפה לישון`, plus
+    `• בכל עיר, האזורים הכי טובים ללינה ליד המקומות שאהבתם, עם חיפוש מלונות לתאריכים שלכם.`
+  - Screenshot 5 back to: Where to stay | The best area to stay in each city | האזור הכי טוב ללינה בכל עיר
+    (move the shared-plan shot to 8 or drop it).
+  - App Privacy line: `Nothing is shared with data brokers or used for ads. The hotel links name Toogo, not the person.`
+  - Promotional text, subtitle and name never mentioned it; nothing to restore there.
+
 ## Rules followed
 - The name, subtitle and keywords are all searched, so no word appears twice across them; each slot adds new words.
 - Hebrew search matches whole words, so a word with a prefix (ליפן, לטוקיו) does not match a search for יפן or טוקיו.
@@ -22,7 +36,7 @@ taken, keep the rest and try "Toogo Japan: Trip Planner".
 |---|---|---|
 | Name | Toogo: Japan Trip Planner | 25 |
 | Subtitle | Plan Tokyo, Kyoto and Osaka | 27 |
-| Keywords | itinerary,travel,guide,vacation,holiday,family,baby,hotel,nara,hakone,fuji,hiroshima,ramen,sushi,map | 100 bytes |
+| Keywords | itinerary,travel,guide,vacation,holiday,family,baby,onsen,nara,hakone,fuji,hiroshima,ramen,sushi,map | 100 bytes |
 | Promotional text | Swipe through hand-picked places in Japan with the people you travel with. Toogo turns what you all liked into a day-by-day plan, with nights per city. | 152 |
 
 **Description**
@@ -40,9 +54,8 @@ FITS HOW YOU TRAVEL
 • A food filter for people who don't eat pork or seafood, with a note on what each place serves.
 • Travelling with a baby: what to pack, where to buy diapers and formula, and phrases for asking for help.
 
-NIGHTS PER CITY, AND WHERE TO SLEEP
+NIGHTS PER CITY
 • Booked flights but don't know where to start? Toogo suggests how many nights each city deserves, in an order that makes sense, adjusted for a first visit and for the season.
-• For each city, the best areas to stay near the places you liked, with a hotel search for your dates.
 
 THE WHOLE TRIP IN ONE PLACE
 • Bookings: paste or upload a confirmation (email, PDF or screenshot) and Toogo fills in the dates and details.
@@ -62,7 +75,7 @@ Opening hours and menus change, so check before you go. "No pork or seafood" is 
 |---|---|---|
 | Name | Toogo: תכנון טיול ליפן | 22 |
 | Subtitle | מסלול יומי: טוקיו קיוטו אוסקה | 29 |
-| Keywords | יפן,מדריך,כשר,תינוק,משפחה,מלון,נארה,חופשה,רמן,סושי | 91 bytes |
+| Keywords | יפן,מדריך,כשר,תינוק,משפחה,אונסן,נארה,חופשה,רמן,סושי | 91 bytes |
 | Promotional text | מחליקים יחד על מקומות שנבחרו ביד ביפן, ו-Toogo הופכת את מה שכולכם אהבתם לתוכנית יום אחרי יום, כולל כמה לילות בכל עיר. | 117 |
 
 **Description**
@@ -80,9 +93,8 @@ Toogo מתכננת את הטיול ליפן יחד עם מי שנוסע איתכ
 • סינון אוכל למי שלא אוכל חזיר ופירות ים, עם הסבר על מה שכל מקום מגיש.
 • טיול עם תינוק: מה לארוז, איפה קונים חיתולים ותמ"ל, ומשפטים לבקשת עזרה.
 
-כמה לילות בכל עיר, ואיפה לישון
+כמה לילות בכל עיר
 • הזמנתם טיסות ולא יודעים מאיפה להתחיל? Toogo מציעה כמה לילות מגיעים לכל עיר, בסדר הגיוני, לפי ביקור ראשון ולפי עונה.
-• בכל עיר, האזורים הכי טובים ללינה ליד המקומות שאהבתם, עם חיפוש מלונות לתאריכים שלכם.
 
 כל הטיול במקום אחד
 • הזמנות: מדביקים או מעלים אישור (מייל, PDF או צילום מסך), ו-Toogo ממלאת את התאריכים והפרטים.
@@ -114,7 +126,7 @@ Toogo מתכננת את הטיול ליפן יחד עם מי שנוסע איתכ
 
 ## App Privacy (the "nutrition label")
 
-Tracking: **No**. Nothing is shared with data brokers or used for ads. The hotel links name Toogo, not the person.
+Tracking: **No**. Nothing is shared with data brokers or used for ads.
 
 | Apple's data type | Collected | Linked to the person | Purposes |
 |---|---|---|---|
@@ -144,7 +156,7 @@ convincing outward:
 | 2 | A match | See what you both love | רואים מה שניכם אוהבים |
 | 3 | Plan, one day | A day-by-day Japan itinerary | מסלול יומי ליפן, מוכן בשבילכם |
 | 4 | Nights per city | How many nights in Tokyo, Kyoto, Osaka | כמה לילות בטוקיו, קיוטו ואוסקה |
-| 5 | Where to stay | The best area to stay in each city | האזור הכי טוב ללינה בכל עיר |
+| 5 | Shared plan (read-only link, opened on another phone) | Share the whole plan with one link | משתפים את כל התוכנית בקישור אחד |
 | 6 | Bookings | Flights and hotels, read from your email | טיסות ומלונות, ישר מהמייל |
 | 7 | Food filter or baby screen | No pork or seafood? Travelling with a baby? | בלי חזיר ופירות ים? עם תינוק? |
 
