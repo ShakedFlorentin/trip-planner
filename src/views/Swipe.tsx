@@ -1,8 +1,8 @@
 import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabase'
-import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Swipe, type Trip } from '../types'
-import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
+import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type Member, type Season, type Swipe, type Trip } from '../types'
+import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripSeasonNotes, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
 import { askForRating } from '../rating'
@@ -19,7 +19,7 @@ import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
-import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info } from 'lucide-react'
+import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info, Snowflake, Flower2, Sun, Leaf } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
@@ -473,6 +473,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
 }
 
 export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: boolean; likedBy: string[]; prior?: number; onSwipe: (liked: boolean) => Promise<boolean> }) {
+  const season = useTripSeasonNotes(c)
   const [dx, setDx] = useState(0)
   const [more, setMore] = useState(false)
   const [photo, setPhoto] = useState(0)
@@ -710,6 +711,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
       {/* a short preview; tapping it opens the whole card in a full-height sheet */}
       <div className="card-info">
         <Tags c={c} />
+        {season.note && <SeasonLine season={season.season} text={season.note} clamp />}
         {c.serves && (
           <div className="fact">
             <Label icon={Utensils}>{t('מה מגישים')}</Label>
@@ -779,6 +781,7 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
   // the planner's two facts: the card's own language, else the English kept in `en` (a row may carry only that)
   const planLine = ((isEn ? c.en?.plan_line : null) ?? c.plan_line)?.trim()
   const babyBlock = hasBaby ? ((isEn ? c.en?.baby_block : null) ?? c.baby_block)?.trim() : null
+  const season = useTripSeasonNotes(c)
   return (
     <>
       <Tags c={c} />
@@ -788,6 +791,14 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
           <span>{keepRanges(planLine)}</span>
         </p>
       )}
+      {season.note && <SeasonLine season={season.season} text={season.note} />}
+      {season.dated.map((d) => (
+        <p key={d} className="warn-line" dir="auto">
+          <Icon as={Info} />
+          <span>{keepRanges(d)}</span>
+        </p>
+      ))}
+      {season.only && <SeasonLine season={c.seasonal?.only?.[0] ?? null} text={season.only} />}
       {c.serves && (
         <div className="fact">
           <Label icon={Utensils}>{t('מה מגישים')}</Label>
@@ -881,6 +892,18 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
         </div>
       )}
     </>
+  )
+}
+
+const SEASON_ICON = { winter: Snowflake, spring: Flower2, summer: Sun, autumn: Leaf }
+
+/** One season line: the season's icon and a sentence, in the muted footnote style. */
+function SeasonLine({ season, text, clamp }: { season: Season | null; text: string; clamp?: boolean }) {
+  return (
+    <p className="season-line" dir="auto">
+      <Icon as={SEASON_ICON[season ?? 'winter']} />
+      <span className={clamp ? 'clamp' : undefined}>{keepRanges(text)}</span>
+    </p>
   )
 }
 

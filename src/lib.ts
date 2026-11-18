@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { supabase } from './supabase'
 import { onOutbox, withPending } from './outbox'
-import { CITY_HE, type CardText, type Member } from './types'
+import { CITY_HE, type CardText, type Member, type Seasonal } from './types'
+import { datedNotes, onlyLine, seasonNote, tripSeason } from './season'
 import { isEn, locale, t } from './i18n'
 import { CACHE_PREFIX, readCache, writeCache } from './cache'
 import { dropTableStores, tableStore } from './tableStore'
@@ -91,6 +92,15 @@ export function useTripAvoidsPorkSeafood(tripId: string): boolean {
     }
   }, [tripId, key])
   return avoids
+}
+
+/** The open trip's dates, for cards that note what the season changes. Null outside a trip (a visitor's card): no seasonal notes. */
+export const TripDatesContext = createContext<{ start: string | null; numDays: number } | null>(null)
+export function useTripSeasonNotes(c: { seasonal?: Seasonal | null }) {
+  const d = useContext(TripDatesContext)
+  const season = d ? tripSeason(d.start, d.numDays) : null
+  if (!d || !season || !c.seasonal) return { season: null, note: null, dated: [] as string[], only: null }
+  return { season, note: seasonNote(c.seasonal, season, isEn), dated: datedNotes(c.seasonal, d.start, d.numDays, isEn), only: onlyLine(c.seasonal, season) }
 }
 
 /** Forget every saved copy (on sign-out, so the next person on this phone doesn't see the old data). */

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { supabase } from './supabase'
 import { setOutboxUser } from './outbox'
 import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
-import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
+import { clearCache, currentDay, readCache, replan, TripDatesContext, useTripHasBaby, writeCache } from './lib'
 import { Wand2 } from 'lucide-react'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl } from './views/Login'
@@ -507,6 +507,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (trip) setDay(pointedDay.current ?? currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
+  const tripDates = useMemo(() => (trip ? { start: trip.start_date, numDays: trip.num_days } : null), [trip?.start_date, trip?.num_days]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <Loading />
   const me = members.find((m) => m.user_id === props.userId)?.display_name ?? ''
   const openDay = (d: number) => {
@@ -523,6 +524,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   }
 
   return (
+    <TripDatesContext.Provider value={tripDates}>
     <div className="app">
       {widgetsOn && <WidgetSync trip={trip} members={members} userId={props.userId} />}
       <header className={'topbar' + (compact ? ' compact' : '')}>
@@ -612,6 +614,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       )}
       {searching && <Search tripId={trip.id} start={trip.start_date} members={members} onClose={() => setSearching(false)} onPick={openResult} />}
     </div>
+    </TripDatesContext.Provider>
   )
 }
 

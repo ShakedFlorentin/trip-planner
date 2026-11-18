@@ -282,7 +282,17 @@ export type Candidate = {
   en?: CardText | null
   /** the shared card (place_library) this trip's copy came from; ratings hang on it. null for a card only this trip has */
   library_id?: string | null
+  /** season-specific advice, so the general fields can read true in any month; null = nothing seasonal */
+  seasonal?: Seasonal | null
 } & PlanFacts
+
+export type Season = 'winter' | 'spring' | 'summer' | 'autumn'
+type SeasonText = { he?: string | null; en?: string | null }
+/** Notes by season, the seasons the place is worth it in, and facts tied to dates (ISO, inclusive). Every key is optional. */
+export type Seasonal = Partial<Record<Season, SeasonText>> & {
+  only?: Season[]
+  dated?: ({ from: string; to: string } & SeasonText)[]
+}
 
 /** The card text fields, as kept in English in `en` (same keys as the Hebrew columns). */
 export type CardText = Partial<{
