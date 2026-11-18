@@ -29,7 +29,7 @@ import { useGoRoute, useQuickAddRoute } from './quickAdd'
 import { widgetsOn } from './widgetData'
 import WidgetSync from './views/WidgetSync'
 import { useSettings, useSettingsKnown } from './settings'
-import { isNative } from './native'
+import { isNative, pageScroller } from './native'
 import Guest from './views/Guest'
 import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
@@ -408,15 +408,21 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     setTab('plan')
   })
   useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 34)
+    // the iOS app scrolls <main> (the page itself is locked, see html.inner-scroll); the web scrolls the page
+    const onScroll = () => setCompact(pageScroller().scrollTop > 34)
     onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    return () => document.removeEventListener('scroll', onScroll, { capture: true })
   }, [])
   useEffect(() => {
-    window.scrollTo(0, 0)
+    pageScroller().scrollTo(0, 0)
   }, [tab])
   const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    if (!isNative) return
+    document.documentElement.classList.add('inner-scroll')
+    return () => document.documentElement.classList.remove('inner-scroll')
+  }, [])
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)

@@ -1123,3 +1123,26 @@ main { animation: view-in var(--dur-2) var(--ease); }
 .skeleton-row:nth-child(2) { animation-delay: 0.15s; }
 .skeleton-row:nth-child(3) { animation-delay: 0.3s; }
 @media (prefers-reduced-motion: reduce) { .skeleton-row { animation: none; } }
+
+/* iOS app only (html.inner-scroll, set by App while the signed-in screens show): the page never scrolls or bounces.
+   <main> is the one scroller, full screen, so the sticky bars and the glass top bar keep working; the top bar, tab bar
+   and banner sit outside it, so a tap lands at once even in the middle of a scroll. The web keeps the page scroll. */
+html.inner-scroll, html.inner-scroll body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+html.inner-scroll #root, html.inner-scroll .app { height: 100%; min-height: 0; }
+html.inner-scroll .app { position: relative; }
+html.inner-scroll main {
+  position: absolute;
+  inset: 0;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* no top padding: sticky bars measure from the padding edge, so the title carries the room under the top bar */
+  padding-top: 0;
+  scroll-padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom));
+}
+html.inner-scroll main > .large-title:first-child { margin-top: calc(14px + var(--top-h) + env(safe-area-inset-top)); }
+html.inner-scroll .topbar { position: absolute; inset-inline: 0; top: 0; }
+html.inner-scroll .net-bar { position: absolute; inset-inline: 0; top: calc(var(--top-h) + env(safe-area-inset-top)); }
+/* no scroll indicator anywhere in the iOS app (html.native-app, set in native.ts): iOS draws it at the left edge in Hebrew, which read as a stray line */
+html.native-app ::-webkit-scrollbar { display: none; }

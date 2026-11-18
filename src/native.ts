@@ -11,6 +11,11 @@ import { track } from './track'
 
 /** Running inside the iOS app (Capacitor), not in a browser. */
 export const isNative = Capacitor.isNativePlatform()
+if (isNative) document.documentElement.classList.add('native-app')
+
+/** What scrolls the signed-in screens: <main> in the iOS app (the page is locked there), the page itself on the web. */
+export const pageScroller = (): Element =>
+  (isNative && document.querySelector('main')) || document.scrollingElement || document.documentElement
 
 // links sent to other people must point at the website: inside the app the page lives at capacitor://localhost
 const SITE = 'https://shakedflorentin.github.io/trip-planner/'
