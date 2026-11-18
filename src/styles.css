@@ -572,6 +572,12 @@ button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; 
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   outline: none;
 }
+/* iOS dark mode: a sheet is the elevated surface (#1c1c1e) over the black page, and what it holds steps up one level
+   (rows #2c2c2e). The tokens are redefined for the sheet's subtree, so everything inside follows; light is untouched */
+@media (prefers-color-scheme: dark) {
+  .sheet { --bg: #1c1c1e; --card: #2c2c2e; }
+  .sheet :is(input, select, textarea) { background: var(--card); }
+}
 /* covers the gap a drag past the bottom edge would open */
 .sheet::after { content: ''; position: absolute; inset-inline: 0; top: 100%; height: 6rem; background: var(--bg); }
 .sheet-head {
@@ -983,7 +989,16 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
   .map.leaflet-container { background: #1b1f24; }
 }
 .places.map-mode .map-wrap .map { height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 64px); border-radius: 0; }
+/* Esri's credit has to stay readable. The map runs under the tab bar, so Leaflet's bottom-right corner is off screen:
+   pin it to the screen just above the tab bar. The legend (inline-start), the guide button and the picked card all sit
+   74px or more above the bar, so this strip is free in both directions. z 4: under the tab bar (5), sheets and toasts */
+.places.map-mode .map .leaflet-bottom { position: fixed; z-index: 4; right: var(--s-2); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
+.places.map-mode .map .leaflet-control-attribution { margin: 0; padding: 1px var(--s-2); border-radius: var(--r-xs); background: color-mix(in srgb, var(--bg) 82%, transparent); color: var(--muted); font-size: var(--fs-micro); }
+.places.map-mode .map .leaflet-control-attribution a { color: inherit; }
 .map-cities { position: absolute; z-index: 500; top: 10px; inset-inline: 0; padding: 0 var(--s-3); flex-wrap: nowrap; }
+/* .chips.scroll (above) pulls its box 20px past the edges and pads it back 20px, which put the first chip at the screen
+   edge here: this row sits on the full-width map, so it gets its own 12px at both ends of the scroll */
+.map-cities.chips.scroll { margin: -2px 0; padding: var(--s-1) var(--s-3); scroll-padding-inline: var(--s-3); }
 .map-cities .chip { background: var(--bg); box-shadow: var(--elev-1); flex: none; }
 .map-cities .chip.on { background: var(--accent-fill); }
 .map-legend { position: absolute; z-index: 500; inset-inline-start: 10px; bottom: calc(var(--tabbar-h) + 80px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: var(--s-1); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: color-mix(in srgb, var(--bg) 88%, transparent); font-size: var(--fs-caption); box-shadow: var(--elev-1); }
