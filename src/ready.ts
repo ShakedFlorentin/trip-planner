@@ -172,14 +172,10 @@ async function keep(name: string, urls: string[], missed: (n: number) => void): 
   return have
 }
 
-// the same map the app shows (PlacesMap.tsx): Esri's street map, or its dark grey base and labels in dark mode
+// the same map the app shows (PlacesMap.tsx): Esri's colour street map in both modes; dark mode darkens it in CSS
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/'
 function layers() {
-  const forced = document.documentElement.dataset.theme
-  const dark = forced ? forced === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
-  return dark
-    ? [ESRI + 'Canvas/World_Dark_Gray_Base/MapServer/tile/', ESRI + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/']
-    : [ESRI + 'World_Street_Map/MapServer/tile/']
+  return [ESRI + 'World_Street_Map/MapServer/tile/']
 }
 
 const tileX = (lng: number, z: number) => Math.floor(((lng + 180) / 360) * 2 ** z)
