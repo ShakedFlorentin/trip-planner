@@ -992,9 +992,10 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
 }
 .places.map-mode .map-wrap .map { height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 64px); border-radius: 0; }
 /* Esri's credit has to stay readable. The map runs under the tab bar, so Leaflet's bottom-right corner is off screen:
-   pin it to the screen just above the tab bar. The legend (inline-start), the guide button and the picked card all sit
-   74px or more above the bar, so this strip is free in both directions. z 4: under the tab bar (5), sheets and toasts */
-.places.map-mode .map .leaflet-bottom { position: fixed; z-index: 4; right: var(--s-2); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
+   pin it to the screen just above the tab bar, at inline-end: the legend sits at inline-start and reaches down to this
+   strip, so the credit takes the other corner in each language. z 1000 inside the map's own stacking context, above
+   Leaflet's tile and marker panes (400-700); the map as a whole stays under the tab bar, sheets and toasts */
+.places.map-mode .map .leaflet-bottom.leaflet-right { position: fixed; z-index: 1000; left: auto; right: auto; inset-inline-end: var(--s-2); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
 .places.map-mode .map .leaflet-control-attribution { margin: 0; padding: 1px var(--s-2); border-radius: var(--r-xs); background: color-mix(in srgb, var(--bg) 82%, transparent); color: var(--muted); font-size: var(--fs-micro); }
 .places.map-mode .map .leaflet-control-attribution a { color: inherit; }
 .map-cities { position: absolute; z-index: 500; top: 10px; inset-inline: 0; padding: 0 var(--s-3); flex-wrap: nowrap; }
