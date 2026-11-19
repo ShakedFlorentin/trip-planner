@@ -2,17 +2,11 @@ import { ExternalLink, MapPin } from 'lucide-react'
 import { Icon } from '../icons'
 import { t } from '../i18n'
 import { mapsUrl } from '../lib'
+import { grayUrls, useDark } from '../mapTiles'
 import '../styles/places.css'
-
-/** Dark mode: the app's own choice, else the phone's (the same rule as the Places map). */
-function isDark() {
-  const forced = document.documentElement.dataset.theme
-  return forced ? forced === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
-}
 
 const Z = 15
 const TILE = 256
-const BASE = 'https://server.arcgisonline.com/ArcGIS/rest/services/'
 
 /** Web-Mercator tile coordinates (fractional) of a point at zoom Z. */
 function tileXY(lat: number, lng: number) {
@@ -25,10 +19,13 @@ function tileXY(lat: number, lng: number) {
 
 /**
  * The card's spot on a map: a still tile grid around the pin, from the same free Esri tiles the Places map uses (no
- * key, no per-view cost, "Tiles © Esri"). It is not interactive; one tap opens the place in Google Maps. It is shown
- * only in "More details", never on the swipe card. A card without coordinates gets the area line and a link instead.
+ * key, no per-view cost, "Tiles © Esri"). Esri Gray Canvas, light or dark tile set with its label overlay,
+ * swapped when the theme changes. It is not interactive; one tap opens the place in Google
+ * Maps. It is shown only in "More details", never on the swipe card. A card without coordinates gets the area line
+ * and a link instead.
  */
 export default function AreaMap(props: { name: string; lat: number | null | undefined; lng: number | null | undefined; area?: string | null }) {
+  const dark = useDark()
   const { lat, lng } = props
   const href = mapsUrl(lat != null && lng != null ? `${lat},${lng}` : props.name)
   if (lat == null || lng == null)
@@ -40,8 +37,9 @@ export default function AreaMap(props: { name: string; lat: number | null | unde
       </a>
     )
   const { x, y } = tileXY(lat, lng)
-  const dark = isDark()
-  const tiles: { key: string; srcs: string[]; dx: number; dy: number }[] = []
+  const u = grayUrls(dark)
+  const fill = (tpl: string, tx: number, ty: number) => tpl.replace('{z}', String(Z)).replace('{y}', String(ty)).replace('{x}', String(tx))
+  const tiles: { key: string; src: string; labels: string; dx: number; dy: number }[] = []
   for (let dy = -1; dy <= 1; dy++)
     for (let dx = -2; dx <= 2; dx++) {
       const tx = Math.floor(x) + dx
@@ -50,17 +48,16 @@ export default function AreaMap(props: { name: string; lat: number | null | unde
         key: tx + '/' + ty,
         dx: (tx - x) * TILE,
         dy: (ty - y) * TILE,
-        srcs: dark
-          ? [`${BASE}Canvas/World_Dark_Gray_Base/MapServer/tile/${Z}/${ty}/${tx}`, `${BASE}Canvas/World_Dark_Gray_Reference/MapServer/tile/${Z}/${ty}/${tx}`]
-          : [`${BASE}World_Street_Map/MapServer/tile/${Z}/${ty}/${tx}`],
+        src: fill(u.base, tx, ty),
+        labels: fill(u.labels, tx, ty),
       })
     }
   return (
     <a className="am" href={href} target="_blank" rel="noreferrer" aria-label={t('פתיחה במפה: {name}', { name: props.name })}>
       <span className="am-tiles" aria-hidden="true">
-        {tiles.map((tl) =>
-          tl.srcs.map((src) => (
-            <img key={tl.key + src} src={src} alt="" width={TILE} height={TILE} loading="lazy" referrerPolicy="no-referrer" style={{ transform: `translate(${tl.dx}px, ${tl.dy}px)` }} />
+        {tiles.flatMap((tl) =>
+          [tl.src, tl.labels].map((src, i) => (
+            <img key={tl.key + (i ? 'l' : '')} src={src} alt="" width={TILE} height={TILE} loading="lazy" referrerPolicy="no-referrer" style={{ transform: `translate(${tl.dx}px, ${tl.dy}px)` }} />
           )),
         )}
       </span>

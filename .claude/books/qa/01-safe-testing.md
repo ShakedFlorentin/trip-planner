@@ -15,7 +15,12 @@ Stop, touch nothing, report it. No real trip data in screenshots or scratch file
 
 ## Mocked browser run
 1. Build to a temp dir, `vite preview --port 4190` (see `.claude/skills/toogo-ship-check/SKILL.md`).
-2. In Playwright, answer every Supabase call with `page.route('**/*supabase.co/**', ...)`: REST tables, auth, storage, functions and the realtime websocket. Anything not answered must fail loudly, not pass through.
+2. In Playwright, answer every Supabase HTTP call with `page.route('**/*supabase.co/**', ...)`: REST tables, auth, storage, functions. `page.route` does not catch websockets: the realtime socket (`wss://<project>.supabase.co/realtime/v1/websocket`) went to the real host on 18 Nov. Catch it with `routeWebSocket`, on the context or page, before `goto`:
+   ```js
+   await context.routeWebSocket(/supabase\.co/, ws => ws.close()); // or answer with a fake socket
+   await page.goto('http://localhost:4190');
+   ```
+   Anything not answered must fail loudly, not pass through. Block or log every other non-localhost host too, and fail the run if any is hit.
 3. Seed a made-up user and trip in local storage so the gate chain (see frontend `01-app-shell.md`) opens `TripApp`.
 4. Drive the screen at 390x844, in Hebrew and English.
 

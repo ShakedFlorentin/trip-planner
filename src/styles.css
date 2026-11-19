@@ -576,6 +576,12 @@ button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; 
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   outline: none;
 }
+/* iOS dark mode: a sheet is the elevated surface (#1c1c1e) over the black page, and what it holds steps up one level
+   (rows #2c2c2e). The tokens are redefined for the sheet's subtree, so everything inside follows; light is untouched */
+@media (prefers-color-scheme: dark) {
+  .sheet { --bg: #1c1c1e; --card: #2c2c2e; }
+  .sheet :is(input, select, textarea) { background: var(--card); }
+}
 /* covers the gap a drag past the bottom edge would open */
 .sheet::after { content: ''; position: absolute; inset-inline: 0; top: 100%; height: 6rem; background: var(--bg); }
 .sheet-head {
@@ -758,7 +764,6 @@ html[dir='rtl'] .ja { text-align: right; }
 .map { height: 58dvh; border-radius: var(--r-md); z-index: 0; }
 .pin { width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--elev-1); }
 .pin.visited { opacity: 0.45; }
-.pin.guide { width: 14px; height: 14px; border-width: 2px; background: #6b7c93; }
 .place-row { align-items: flex-start; flex-wrap: wrap; }
 .thumb { flex: none; width: 56px; height: 56px; border-radius: var(--r-xs); overflow: hidden; background: var(--fill); display: grid; place-items: center; font-size: var(--fs-large); }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -980,15 +985,28 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
 
 /* the map fills the screen under the filter row */
 .map-wrap { position: relative; margin: 0 -20px; }
+/* dark mode switches Esri's tile set in PlacesMap.tsx; only the empty-tile background is set here */
+@media (prefers-color-scheme: dark) {
+  .map.leaflet-container { background: #1b1f24; }
+}
 .places.map-mode .map-wrap .map { height: calc(100dvh - var(--top-h) - var(--title-h) - env(safe-area-inset-top) - 64px); border-radius: 0; }
+/* Esri's credit has to stay readable. The map runs under the tab bar, so Leaflet's bottom-right corner is off screen:
+   pin it to the screen just above the tab bar, at inline-end: the legend sits at inline-start and reaches down to this
+   strip, so the credit takes the other corner in each language. z 1000 inside the map's own stacking context, above
+   Leaflet's tile and marker panes (400-700); the map as a whole stays under the tab bar, sheets and toasts */
+.places.map-mode .map .leaflet-bottom.leaflet-right { position: fixed; z-index: 1000; left: auto; right: auto; inset-inline-end: var(--s-2); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
+.places.map-mode .map .leaflet-control-attribution { margin: 0; padding: 1px var(--s-2); border-radius: var(--r-xs); background: color-mix(in srgb, var(--bg) 82%, transparent); color: var(--muted); font-size: var(--fs-micro); }
+.places.map-mode .map .leaflet-control-attribution a { color: inherit; }
 .map-cities { position: absolute; z-index: 500; top: 10px; inset-inline: 0; padding: 0 var(--s-3); flex-wrap: nowrap; }
+/* .chips.scroll (above) pulls its box 20px past the edges and pads it back 20px, which put the first chip at the screen
+   edge here: this row sits on the full-width map, so it gets its own 12px at both ends of the scroll */
+.map-cities.chips.scroll { margin: -2px 0; padding: var(--s-1) var(--s-3); scroll-padding-inline: var(--s-3); }
 .map-cities .chip { background: var(--bg); box-shadow: var(--elev-1); flex: none; }
 .map-cities .chip.on { background: var(--accent-fill); }
 .map-legend { position: absolute; z-index: 500; inset-inline-start: 10px; bottom: calc(var(--tabbar-h) + 80px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: var(--s-1); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: color-mix(in srgb, var(--bg) 88%, transparent); font-size: var(--fs-caption); box-shadow: var(--elev-1); }
 .map-legend span { display: flex; align-items: center; gap: var(--s-2); }
 .map-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .pin-cluster { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-fill); color: #fff; font-weight: 700; font-size: var(--fs-footnote); border: 2.5px solid #fff; box-shadow: var(--elev-1); }
-.map-guide { position: fixed; z-index: 5; inset-inline-end: 16px; bottom: calc(var(--tabbar-h) + 80px + env(safe-area-inset-bottom)); background: var(--bg); box-shadow: var(--elev-1); }
 .map-picked { position: fixed; z-index: 6; inset-inline: 12px; bottom: calc(var(--tabbar-h) + 74px + env(safe-area-inset-bottom)); max-width: 616px; margin: 0 auto; }
 .map-picked :is(.item, .place-row) { box-shadow: var(--elev-2); background: var(--bg); }
 .places.map-mode ~ .fab, .places.map-mode .fab { display: none; }

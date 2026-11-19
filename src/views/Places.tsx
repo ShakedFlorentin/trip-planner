@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
 import { supabase } from '../supabase'
-import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type GuidePlace, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
-import { cityHe, cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, safeUrl, normName, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
+import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
+import { cityHe, cityLabel, couplesOf, dayDate, localizeCard, dayOption, errorText, fmtDay, keepRanges, mapsUrl, mutate, safeUrl, useMediaIndex, useTripHasBaby, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
-import { Baby as BabyIcon, Star, BookOpen, CalendarCheck, Check, ChevronLeft, Clock, Globe, Heart, Lightbulb, List, Map as MapIcon, MapPin, Navigation, Pencil, Play, Plus, Trash2, Undo2 } from 'lucide-react'
+import { Baby as BabyIcon, Star, CalendarCheck, Check, ChevronLeft, Clock, Globe, Heart, Lightbulb, List, Map as MapIcon, MapPin, Navigation, Pencil, Play, Plus, Trash2, Undo2 } from 'lucide-react'
 import { EmptyState, Field, Skeleton, LoadNote, Sheet, useRemembered } from '../ui'
 import { CATEGORY_ICON, Icon } from '../icons'
 import '../styles/game.css'
@@ -36,13 +36,6 @@ const PLACE_TABS: Record<string, string> = {
   transport: t('תחבורה'),
   other: t('אחר'),
 }
-
-// the Ptitim map's folders, filed under the Places tabs
-const GUIDE_TAB: Record<string, string> = { 'חנויות': 'shopping', 'איזורים ואתרים': 'sight' } // he-only
-const guideTab = (g: GuidePlace) => GUIDE_TAB[g.folder] ?? 'food'
-const guideCategory = (g: GuidePlace) =>
-  g.folder === 'חנויות' ? 'shopping' : g.folder === 'איזורים ואתרים' ? 'sight' : g.folder.startsWith('קפה') ? 'cafe' : 'food' // he-only
-const PTITIM_URL = 'https://www.ptitim.com/tokyoguide'
 
 const CITY_ORDER = ['טוקיו', 'יוקוהמה', 'קיוטו', 'נארה', 'אוסקה', 'טיולי יום', 'טיול יום'] // he-only
 
@@ -89,23 +82,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   const [pickedId, setPickedId] = useState<string | null>(null)
   const onPick = useCallback((p: Place) => {
     setPickedId(p.id)
-    setGuidePick(null)
   }, [])
-  // the Ptitim blog's Tokyo map as an optional layer, loaded the first time it's turned on
-  const [showGuide, setShowGuide] = useRemembered('guideLayer', '')
-  const [guide, setGuide] = useState<GuidePlace[]>([])
-  const [guidePick, setGuidePick] = useState<GuidePlace | null>(null)
-  const onPickGuide = useCallback((g: GuidePlace) => {
-    setPickedId(null)
-    setGuidePick(g)
-  }, [])
-  useEffect(() => {
-    if (!showGuide || guide.length) return
-    supabase
-      .from('guide_places')
-      .select('id, source, folder, name, note, lat, lng')
-      .then(({ data }) => setGuide((data as GuidePlace[]) ?? []))
-  }, [showGuide, guide.length])
 
   const filtered = rows.filter(whoOk)
   // one tab per kind of place; the rarer kinds only once something is filed under them
@@ -119,11 +96,6 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
   for (const i of items) if (i.place_id && !plannedDay.has(i.place_id)) plannedDay.set(i.place_id, i.day)
   const read = readId ? rows.find((p) => p.id === readId) : undefined
   const rating = rateId ? rows.find((p) => p.id === rateId) : undefined
-  const guideShown = useMemo(() => {
-    if (!showGuide) return []
-    const mine = new Set(rows.map((p) => p.name.toLowerCase()))
-    return guide.filter((g) => (!current || guideTab(g) === current) && !mine.has(g.name.toLowerCase()))
-  }, [showGuide, guide, rows, current])
 
   // city → places. One flat list per city (the neighbourhood is on each row's quiet line); the places already
   // been to fold away under "Been there" at the bottom. The city is the Hebrew name whichever way the row stores it.
@@ -200,11 +172,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
 
       {view === 'map' ? (
         <>
-          <PlacesMap places={shown} onPick={onPick} guide={guideShown} onPickGuide={onPickGuide} start={trip.start_date} numDays={trip.num_days} tripId={trip.id} />
-          <button className={'chip map-guide' + (showGuide ? ' on' : '')} aria-pressed={!!showGuide} onClick={() => setShowGuide(showGuide ? '' : '1')}>
-            <Icon as={BookOpen} /> {t('המפה של פתיתים')} {showGuide && guideShown.length ? `(${guideShown.length})` : ''}
-          </button>
-          {guidePick && !picked && <GuideCard g={guidePick} tripId={trip.id} userId={userId} me={me} onClose={() => setGuidePick(null)} />}
+          <PlacesMap places={shown} onPick={onPick} start={trip.start_date} numDays={trip.num_days} tripId={trip.id} />
           {picked && <div className="map-picked">{row(picked, false, true)}</div>}
         </>
       ) : (
@@ -869,78 +837,6 @@ function AddToDay(props: { hasBaby: boolean; trip: Trip; place: Place; card?: Ca
         {t('הוספה')}
       </button>
     </Sheet>
-  )
-}
-
-/** A place from the Ptitim map: Gal's note, a link, and a way to put it in the game. */
-function GuideCard({ g, tripId, userId, me, onClose }: { g: GuidePlace; tripId: string; userId: string; me: string; onClose: () => void }) {
-  const [state, setState] = useState<'' | 'busy' | 'added' | 'there'>('')
-  useEffect(() => setState(''), [g.id])
-  const suggest = async () => {
-    setState('busy')
-    const { data, error } = await supabase
-      .from('candidates')
-      .insert({
-        trip_id: tripId,
-        name: g.name,
-        city: 'tokyo',
-        category: guideCategory(g),
-        lat: g.lat,
-        lng: g.lng,
-        hype: g.note ? 'גל מפתיתים: ' + g.note.replace(/\s*\n\s*/g, ' ') : null, // he-only
-        sources: [PTITIM_URL],
-        added_by: me,
-      })
-      .select('id')
-      .single()
-    // 23505: it's already in the game under the same name
-    let id: string | undefined = data?.id
-    if (error) {
-      if (error.code !== '23505') {
-        setState('')
-        say(errorText(error.message), { error: true })
-        return
-      }
-      // already in the game: find that card and like it, same as AddPlace's "same place"
-      const { data: same } = await supabase.from('candidates').select('id, name').eq('trip_id', tripId).ilike('name', g.name.replace(/[%_\\]/g, '\\$&'))
-      id = (same ?? []).find((c) => normName(c.name) === normName(g.name))?.id ?? same?.[0]?.id
-      if (!id) {
-        setState('there')
-        return
-      }
-    }
-    const { error: likeErr } = await supabase.from('swipes').upsert({ trip_id: tripId, candidate_id: id, user_id: userId, liked: true })
-    if (likeErr) {
-      setState('')
-      say(errorText(likeErr.message), { error: true })
-      return
-    }
-    setState(error ? 'there' : 'added')
-  }
-  return (
-    <div className="card place-row stack">
-      <div className="row">
-        <b dir="auto">{g.name}</b>
-        <span className="muted small">{t(g.folder)}</span>
-      </div>
-      {g.note && <p dir="auto" className="small" style={{ whiteSpace: 'pre-line' }}>{g.note}</p>}
-      <div className="row">
-        <a className="chip" href={mapsUrl(g.name + ' Tokyo')} target="_blank" rel="noreferrer">
-          <Icon as={MapPin} /> {t('גוגל מפות')}
-        </a>
-        {state === 'added' ? (
-          <span className="small">{t('נוסף לגילוי עם הלייק שלך')}</span>
-        ) : state === 'there' ? (
-          <span className="small">{t('כבר בגילוי, עם הלייק שלך')}</span>
-        ) : (
-          <button className="chip" disabled={state === 'busy'} onClick={suggest}>
-            <Icon as={Heart} /> {t('הוספה לגילוי')}
-          </button>
-        )}
-        <button className="link small" onClick={onClose}>{t('סגירה')}</button>
-      </div>
-      <a className="small muted" href={PTITIM_URL} target="_blank" rel="noreferrer">{t('מתוך המדריך של פתיתים')}</a>
-    </div>
   )
 }
 

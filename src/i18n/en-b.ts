@@ -132,7 +132,6 @@ export const EN_B: Record<string, string> = {
   'רשימה': 'List',
   'מפה': 'Map',
   'כל הזוגות': 'All couples',
-  'המפה של פתיתים': "Ptitim's map",
   'מקום אחד בלי מיקום לא מופיע במפה': '1 place without a location is not on the map',
   '{n} מקומות בלי מיקום לא מופיעים במפה': '{n} places without a location are not on the map',
   'המיקומים משוערים, כדאי לבדוק בגוגל מפות': 'Locations are approximate, check in Google Maps',
@@ -153,14 +152,8 @@ export const EN_B: Record<string, string> = {
   'הוספת "{name}" למסלול': 'Add "{name}" to the plan',
   'שעה (לא חובה)': 'Time (optional)',
   'הוספה': 'Add',
-  'חנויות': 'Shops',
-  'איזורים ואתרים': 'Areas and sights',
   'גוגל מפות': 'Google Maps',
-  'נוסף לגילוי עם הלייק שלך': 'Added to Discover with your like',
-  'כבר בגילוי, עם הלייק שלך': 'Already in Discover, with your like',
-  'הוספה לגילוי': 'Add to Discover',
   'סגירה': 'Close',
-  'מתוך המדריך של פתיתים': "From Ptitim's guide",
 
   // Add place
   'לא מצאנו. נסו את השם כמו שהוא מופיע במפות, עם העיר או השכונה.': 'Not found. Try the name as it appears on maps, with the city or area.',

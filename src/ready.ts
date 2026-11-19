@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import { currentDay, dayDate, mediaIndex, readCache, safePhoto, writeCache } from './lib'
 import { saveDoc, savedDoc } from './docs'
 import { track } from './track'
+import { grayUrls, isDark } from './mapTiles'
 import type { Booking, Candidate, ItineraryItem, Place } from './types'
 import { ymd } from './views/planUtils'
 
@@ -172,14 +173,11 @@ async function keep(name: string, urls: string[], missed: (n: number) => void): 
   return have
 }
 
-// the same map the app shows (PlacesMap.tsx): Esri's street map, or its dark grey base and labels in dark mode
-const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/'
+// the same map the app shows (PlacesMap.tsx): Esri Gray Canvas, base and labels, for the theme in use now. The other
+// theme's set is not saved (it would double the download); switching theme while offline leaves the map without tiles
 function layers() {
-  const forced = document.documentElement.dataset.theme
-  const dark = forced ? forced === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
-  return dark
-    ? [ESRI + 'Canvas/World_Dark_Gray_Base/MapServer/tile/', ESRI + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/']
-    : [ESRI + 'World_Street_Map/MapServer/tile/']
+  const u = grayUrls(isDark())
+  return [u.base, u.labels].map((x) => x.replace('{z}/{y}/{x}', ''))
 }
 
 const tileX = (lng: number, z: number) => Math.floor(((lng + 180) / 360) * 2 ** z)

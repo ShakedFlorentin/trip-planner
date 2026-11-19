@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { DayInfo, GuidePlace, Place } from '../types'
+import type { DayInfo, Place } from '../types'
 import { cityHe, cityLabel, currentDay, useTripTable } from '../lib'
 import { t } from '../i18n'
+import { TILE_NATIVE_ZOOM, grayUrls, isDark, watchTheme } from '../mapTiles'
 
 export const PIN_COLORS: Record<string, string> = {
   food: '#d7263d',
@@ -25,9 +26,6 @@ const LEGEND: [string, string][] = [
 type Props = {
   places: Place[]
   onPick: (p: Place) => void
-  /** a guide's places, drawn as small dots under the trip's own pins */
-  guide?: GuidePlace[]
-  onPickGuide?: (g: GuidePlace) => void
   start: string | null
   numDays: number
   tripId: string
@@ -36,22 +34,24 @@ type Props = {
 const CITY_ORDER = ['טוקיו', 'יוקוהמה', 'קיוטו', 'נארה', 'אוסקה', 'טיולי יום', 'טיול יום'] // he-only
 const rank = (c: string) => (CITY_ORDER.indexOf(c) + 1 || 99)
 
-/** Dark mode: the app's own choice, else the phone's. */
-function isDark() {
-  const forced = document.documentElement.dataset.theme
-  return forced ? forced === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
-}
-
 /**
  * The places on a map (49). It opens on the city of today (during the trip) or the first city, with a chip per city
  * and its count; nearby places merge into a circle with a number, and a tap on it zooms in. Pins take their category's
- * colour (small legend). The same provider's dark grey map in dark mode. No +/− buttons: pinch to zoom.
+ * colour (small legend). Esri Gray Canvas, light or dark tile set. No +/− buttons: pinch to zoom.
  */
-export default function PlacesMap({ places, onPick, guide = [], onPickGuide, start, numDays, tripId }: Props) {
+export default function PlacesMap({ places, onPick, start, numDays, tripId }: Props) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
-  const guideLayer = useRef<L.LayerGroup | null>(null)
+  const chipsEl = useRef<HTMLDivElement>(null)
+  const legendEl = useRef<HTMLDivElement>(null)
+  // room for the city chips (top) and the legend (bottom, at either side in Hebrew or English) so no pin hides under them
+  const fit = () => {
+    const box = el.current!.getBoundingClientRect()
+    const top = chipsEl.current ? Math.max(0, chipsEl.current.getBoundingClientRect().bottom - box.top) + 12 : 40
+    const bottom = legendEl.current ? Math.max(0, box.bottom - legendEl.current.getBoundingClientRect().top) + 12 : 40
+    return { paddingTopLeft: [40, top] as L.PointTuple, paddingBottomRight: [40, bottom] as L.PointTuple }
+  }
   const { rows: days } = useTripTable<DayInfo>('day_info', tripId, 'day')
   const pts = useMemo(() => places.filter((p) => p.lat != null && p.lng != null), [places])
   const cities = useMemo(() => {
@@ -67,17 +67,24 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
   useEffect(() => {
     map.current = L.map(el.current!, { zoomControl: false, attributionControl: true }).setView([35.0, 136.5], 6)
     // no tile service has Hebrew names for Tokyo's streets and areas; Esri labels Japan in English, not Japanese.
-    // Dark mode gets Esri's dark grey base with its labels on top (free, no key)
-    const base = 'https://server.arcgisonline.com/ArcGIS/rest/services/'
-    if (isDark()) {
-      L.tileLayer(base + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: 'Tiles © Esri' }).addTo(map.current)
-      L.tileLayer(base + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map.current)
-    } else {
-      L.tileLayer(base + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }).addTo(map.current)
+    // Esri Gray Canvas (free, no key): a base and a label overlay, a light set and a dark set. The sets swap when the
+    // theme changes, while the map is open. Labels sit in their own pane above the tiles and under the pins
+    const m = map.current
+    m.createPane('labels').style.zIndex = '350'
+    m.getPane('labels')!.style.pointerEvents = 'none'
+    let tiles: L.TileLayer[] = []
+    const setTiles = (dark: boolean) => {
+      tiles.forEach((l) => l.remove())
+      const u = grayUrls(dark)
+      const o = { maxZoom: 19, maxNativeZoom: TILE_NATIVE_ZOOM, attribution: 'Tiles © Esri' }
+      tiles = [L.tileLayer(u.base, o), L.tileLayer(u.labels, { ...o, pane: 'labels', attribution: '' })]
+      tiles.forEach((l) => l.addTo(m))
     }
-    guideLayer.current = L.layerGroup().addTo(map.current)
+    setTiles(isDark())
+    const stop = watchTheme(setTiles)
     layer.current = L.layerGroup().addTo(map.current)
     return () => {
+      stop()
       map.current?.remove()
       map.current = null
     }
@@ -111,7 +118,7 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
           const b = L.latLngBounds(c.pts.map((p) => [p.lat!, p.lng!]))
           const icon = L.divIcon({ className: '', html: `<div class="pin-cluster">${c.pts.length}</div>`, iconSize: [34, 34], iconAnchor: [17, 17] })
           L.marker(b.getCenter(), { icon })
-            .on('click', () => m.fitBounds(b, { padding: [50, 50], maxZoom: Math.max(m.getZoom() + 2, 15) }))
+            .on('click', () => m.fitBounds(b, { ...fit(), maxZoom: Math.max(m.getZoom() + 2, 15) }))
             .addTo(lay)
         }
       }
@@ -129,22 +136,15 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
     if (!m) return
     const inCity = pts.filter((p) => cityHe(p.city) === shownCity)
     const frame = inCity.length ? inCity : pts
-    if (frame.length) m.fitBounds(L.latLngBounds(frame.map((p) => [p.lat!, p.lng!])), { padding: [40, 40], maxZoom: 15 })
+    if (frame.length) m.fitBounds(L.latLngBounds(frame.map((p) => [p.lat!, p.lng!])), { ...fit(), maxZoom: 15 })
   }, [shownCity, pts.length]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!map.current || !guideLayer.current) return
-    guideLayer.current.clearLayers()
-    const icon = L.divIcon({ className: '', html: '<div class="pin guide"></div>', iconSize: [14, 14], iconAnchor: [7, 7] })
-    for (const g of guide) L.marker([g.lat, g.lng], { icon, title: g.name }).on('click', () => onPickGuide?.(g)).addTo(guideLayer.current)
-  }, [guide, onPickGuide])
 
   const used = new Set(pts.map((p) => (PIN_COLORS[p.category] ? p.category : 'other')))
   return (
     <div className="map-wrap">
       <div ref={el} className="map" />
       {cities.length > 1 && (
-        <div className="map-cities chips scroll">
+        <div ref={chipsEl} className="map-cities chips scroll">
           {cities.map(([c, n]) => (
             <button key={c} className={'chip' + (shownCity === c ? ' on' : '')} onClick={() => setCity(c)}>
               {cityLabel(c)} <span className="count">{n}</span>
@@ -152,7 +152,7 @@ export default function PlacesMap({ places, onPick, guide = [], onPickGuide, sta
           ))}
         </div>
       )}
-      <div className="map-legend" aria-hidden="true">
+      <div ref={legendEl} className="map-legend" aria-hidden="true">
         {LEGEND.filter(([k]) => used.has(k)).map(([k, label]) => (
           <span key={k}>
             <i style={{ background: PIN_COLORS[k] }} /> {label}
