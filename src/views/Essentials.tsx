@@ -448,7 +448,8 @@ export function JaLine({ text }: { text: string }) {
 function speak(ja: string) {
   const synth = window.speechSynthesis
   if (!synth) return
-  synth.cancel()
+  // cancel only what is really playing: on iPhone a cancel() right before speak() can swallow the new utterance
+  if (synth.speaking || synth.pending) synth.cancel()
   const u = new SpeechSynthesisUtterance(ja)
   u.lang = 'ja-JP'
   u.voice = synth.getVoices().find((v) => v.lang.startsWith('ja')) ?? null

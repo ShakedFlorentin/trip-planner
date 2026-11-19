@@ -146,7 +146,8 @@ export default function Translator({ tripId }: { tripId: string }) {
     if (v) u.voice = v
     const voice = v ? `${v.name} (${norm(v)})` : t('לא נמצא, ברירת מחדל')
     setSpoke(t('{lang}, קול: {voice}', { lang: as, voice }))
-    speechSynthesis.cancel()
+    // cancel only what is really playing: on iPhone a cancel() right before speak() can swallow the new utterance
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel()
     speechSynthesis.speak(u)
   }
 
