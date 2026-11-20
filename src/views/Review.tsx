@@ -6,6 +6,8 @@ import { errorText, useTripTable } from '../lib'
 import { t } from '../i18n'
 import { Icon } from '../icons'
 import { StarsInput, useRatings } from './Ratings'
+import { PhotoPicker } from './PlacePhotos'
+import { sendPhotos } from './photoSend'
 import { useProfile } from './Onboarding'
 import '../styles/ratings.css'
 import { say } from '../toast'
@@ -83,6 +85,13 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [thanks, setThanks] = useState(false)
+  // photos to send with the review: they stay picked when one fails, and the card stays open for the retry
+  const [files, setFiles] = useState<File[]>([])
+  const [rights, setRights] = useState(false)
+  const [photoMsg, setPhotoMsg] = useState('')
+  const [ratingDone, setRatingDone] = useState(false)
+  // once the rating is saved the place counts as rated and would drop out of the list: keep it while photos wait
+  const [pinned, setPinned] = useState<string | null>(null)
 
   const due = useMemo(() => {
     const startOfToday = new Date().setHours(0, 0, 0, 0)
@@ -95,7 +104,9 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   }, [places, cards])
   const ratings = useRatings(due.map((x) => x.card!.library_id))
 
-  const next = due.find((x) => !dismissed.includes(x.p.id) && !ratings.of(x.card!.library_id!).some((r) => r.user_id === userId))
+  const next =
+    due.find((x) => x.p.id === pinned) ??
+    due.find((x) => !dismissed.includes(x.p.id) && !ratings.of(x.card!.library_id!).some((r) => r.user_id === userId))
   if (!next && !thanks) return null
   if (!next) return <section className="card review-card" role="status">{t('תודה! הדירוג נשמר.')}</section>
 
@@ -103,11 +114,20 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   const category = p.category && p.category !== 'other' ? p.category : (card?.category ?? p.category)
   const questions = [questionFor(category), profile?.answers?.with?.includes('baby') ? STROLLER : null].filter((q): q is Question => !!q)
 
+  const resetPhotos = () => {
+    setFiles([])
+    setRights(false)
+    setPhotoMsg('')
+    setRatingDone(false)
+    setPinned(null)
+  }
+
   const dismiss = () => {
     const all = [...dismissed, p.id]
     setDismissed(all)
     setStars(0)
     setAnswers({})
+    resetPhotos()
     try {
       localStorage.setItem(DISMISSED, JSON.stringify(all))
     } catch {
@@ -116,16 +136,40 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   }
 
   const save = async () => {
-    if (!stars || busy) return
+    if (!stars || busy || (files.length && !rights)) return
     setBusy(true)
-    const row: Record<string, unknown> = { library_id: card!.library_id!, trip_id: tripId, stars }
-    const table = () => supabase.from('place_ratings')
-    let { error } = await table().upsert(Object.keys(answers).length ? { ...row, answers } : row, { onConflict: 'library_id,user_id' })
-    // the answers column isn't there yet: keep the stars
-    if (error && /answers/.test(error.message)) ({ error } = await table().upsert(row, { onConflict: 'library_id,user_id' }))
+    setPhotoMsg('')
+    // the rating goes first and stays saved whatever happens to the photos; a retry sends the photos only
+    if (!ratingDone) {
+      const row: Record<string, unknown> = { library_id: card!.library_id!, trip_id: tripId, stars }
+      const table = () => supabase.from('place_ratings')
+      let { error } = await table().upsert(Object.keys(answers).length ? { ...row, answers } : row, { onConflict: 'library_id,user_id' })
+      // the answers column isn't there yet: keep the stars
+      if (error && /answers/.test(error.message)) ({ error } = await table().upsert(row, { onConflict: 'library_id,user_id' }))
+      if (error) {
+        setBusy(false)
+        return void say(errorText(error.message), { error: true })
+      }
+      if (files.length) setPinned(p.id)
+      setRatingDone(true)
+      ratings.put({ library_id: card!.library_id!, trip_id: tripId, stars, user_id: userId, note: null, answers, updated_at: new Date().toISOString() })
+    }
+    if (files.length) {
+      const r = await sendPhotos(files, { tripId, libraryId: card!.library_id! })
+      setFiles(r.failed)
+      if (r.failed.length) {
+        setBusy(false)
+        return setPhotoMsg(
+          r.capped
+            ? t('יש כבר 20 תמונות שמחכות לאישור. הדירוג נשמר, ושאר התמונות יישארו כאן לניסיון מאוחר יותר.')
+            : r.failed.length === 1
+              ? t('לא הצלחתי לשלוח תמונה אחת. אפשר לנסות שוב.')
+              : t('לא הצלחתי לשלוח {n} תמונות. אפשר לנסות שוב.', { n: r.failed.length }),
+        )
+      }
+    }
     setBusy(false)
-    if (error) return void say(errorText(error.message), { error: true })
-    ratings.put({ library_id: card!.library_id!, trip_id: tripId, stars, user_id: userId, note: null, answers, updated_at: new Date().toISOString() })
+    resetPhotos()
     setStars(0)
     setAnswers({})
     setThanks(true)
@@ -140,7 +184,7 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
           <Icon as={X} />
         </button>
       </div>
-      <StarsInput value={stars} onChange={setStars} />
+      <StarsInput value={stars} onChange={(n) => { setStars(n); setRatingDone(false) }} />
       {stars > 0 &&
         questions.map((q) => (
           <div key={q.key} className="review-q">
@@ -151,7 +195,7 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
                   key={o.value}
                   className={'chip' + (answers[q.key] === o.value ? ' on' : '')}
                   aria-pressed={answers[q.key] === o.value}
-                  onClick={() => setAnswers((a) => (a[q.key] === o.value ? Object.fromEntries(Object.entries(a).filter(([k]) => k !== q.key)) : { ...a, [q.key]: o.value }))}
+                  onClick={() => { setRatingDone(false); setAnswers((a) => (a[q.key] === o.value ? Object.fromEntries(Object.entries(a).filter(([k]) => k !== q.key)) : { ...a, [q.key]: o.value })) }}
                 >
                   {o.label}
                 </button>
@@ -159,8 +203,10 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
             </div>
           </div>
         ))}
+      <PhotoPicker files={files} onChange={setFiles} rights={rights} onRights={setRights} disabled={busy} />
+      {photoMsg && <p className="msg" role="alert">{photoMsg}</p>}
       <div className="row">
-        <button className="primary" disabled={!stars || busy} onClick={save}>
+        <button className="primary" disabled={!stars || busy || (files.length > 0 && !rights)} onClick={save}>
           {t('שליחה')}
         </button>
         <button className="link small" onClick={dismiss}>
