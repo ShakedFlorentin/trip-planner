@@ -179,7 +179,7 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   return (
     <section className="card review-card">
       <div className="row spread">
-        <h3 dir="auto">{t('איך היה ב{name}?', { name: p.name })}</h3>
+        <h3 dir="auto">{/^[\p{L}\p{N}]/u.test(p.name.trim()) && !/^[\u0590-\u05FF]/.test(p.name.trim()) ? t('איך היה ב-{name}?', { name: p.name }) : t('איך היה ב{name}?', { name: p.name })}</h3>
         <button className="review-x" aria-label={t('לא עכשיו')} onClick={dismiss}>
           <Icon as={X} />
         </button>
