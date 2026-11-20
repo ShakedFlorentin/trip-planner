@@ -11,5 +11,7 @@ import { EN_PLAN2 } from './en-plan2'
 import { EN_REDESIGN } from './en-redesign'
 import { EN_SAFETY } from './en-safety'
 import { EN_FIXC } from './en-fixc'
+import { EN_PHOTOS } from './en-photos'
+import { EN_ALBUM } from './en-album'
 
-export const EN: Record<string, string> = { ...EN_SHARED, ...EN_A, ...EN_B, ...EN_C, ...EN_MONEY, ...EN_UX, ...EN_PLAN2, ...EN_REDESIGN, ...EN_SAFETY, ...EN_FIXC }
+export const EN: Record<string, string> = { ...EN_SHARED, ...EN_A, ...EN_B, ...EN_C, ...EN_MONEY, ...EN_UX, ...EN_PLAN2, ...EN_REDESIGN, ...EN_SAFETY, ...EN_FIXC, ...EN_PHOTOS, ...EN_ALBUM }

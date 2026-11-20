@@ -14,13 +14,12 @@ import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
 import { EmptyState, LoadNote, Sheet } from '../ui'
 import { nextMatch, queueMatches } from '../screenLogic'
-import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
 import Onboarding, { useProfile } from './Onboarding'
 import { answersOf, hidden, score } from '../prefs'
 import { categoryMeans, learnNotNow, learnTags, rankDeck, type Interest, type InterestBase } from '../rank'
 import { useSettings } from '../settings'
-import { Camera, CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info } from 'lucide-react'
+import { CircleCheck, Flame, SlidersHorizontal, SearchX, SkipForward, ChevronUp, Heart, Ban, X, Lightbulb, MapPin, MessageSquare, ReceiptText, Search, Sparkles, Star, Target, Timer, Users, Utensils, UtensilsCrossed, Wine, Baby, Info } from 'lucide-react'
 import { reducedMotion, springTo } from '../spring'
 import { AUDIENCE_ICON, CARD_ICON, Icon, type LucideIcon } from '../icons'
 import '../styles/game.css'
@@ -782,7 +781,6 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
 export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
   const hasBaby = useTripHasBaby(c.trip_id)
   const avoidsPork = useTripAvoidsPorkSeafood(c.trip_id)
-  const [addPhoto, setAddPhoto] = useState(false)
   // the planner's two facts: the card's own language, else the English kept in `en` (a row may carry only that)
   const planLine = ((isEn ? c.en?.plan_line : null) ?? c.plan_line)?.trim()
   const babyBlock = hasBaby ? ((isEn ? c.en?.baby_block : null) ?? c.baby_block)?.trim() : null
@@ -870,14 +868,7 @@ export function CardFull({ c, prior }: { c: Candidate; prior?: number }) {
       )}
       {/* what travellers on earlier trips thought, once someone has rated it */}
       <CardRatings libraryId={c.library_id} prior={prior} />
-      <MediaActions name={c.name} maps={c.maps_url} website={c.website_url} m={c}>
-        {c.library_id && (
-          <button className="action" onClick={() => setAddPhoto(true)}>
-            <Icon as={Camera} /> <span>{t('הוספת תמונה')}</span>
-          </button>
-        )}
-      </MediaActions>
-      {addPhoto && c.library_id && <AddPhoto name={c.name} tripId={c.trip_id} libraryId={c.library_id} onClose={() => setAddPhoto(false)} />}
+      <MediaActions name={c.name} maps={c.maps_url} website={c.website_url} m={c} />
       {c.sources.some((s) => safeUrl(s)) && (
         <div className="row">
           {c.sources.flatMap((s) => safeUrl(s) ?? []).slice(0, 4).map((s, i) => (

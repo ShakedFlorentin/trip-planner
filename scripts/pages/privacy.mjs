@@ -125,6 +125,7 @@ export function privacyPage(lang) {
 <h2>What you upload</h2>
 <ul>
 <li>Upload only photos and content that are yours or that you're allowed to share. They stay yours.</li>
+<li>A photo you send must not show people who can be recognised, unless they agreed.</li>
 <li>When you send a photo for a place and we approve it, you give Toogo a permanent, irrevocable, worldwide and free licence to use it: to show it in the app and on our websites, to resize or crop it, to use it to promote Toogo, and to let our service providers, and anyone who takes over Toogo, do the same.</li>
 <li>The licence isn't exclusive: the copyright stays yours, and you can keep using your photo anywhere. It stays after you delete your account, and approved photos aren't taken down on request. We will still remove a photo that breaks these rules or someone else's rights.</li>
 <li>Not allowed: hateful, insulting or threatening content; sexual or violent content; someone else's private details; spam or advertising; and information you know is false, such as made-up places.</li>
@@ -271,6 +272,7 @@ export function privacyPage(lang) {
 <h2>מה שאתם מעלים</h2>
 <ul>
 <li>העלו רק תמונות ותוכן שהם שלכם או שמותר לכם לשתף. הם נשארים שלכם.</li>
+<li>תמונה שאתם שולחים לא יכולה להראות אנשים שאפשר לזהות, אלא אם הם הסכימו.</li>
 <li>כששולחים תמונה של מקום ואנחנו מאשרים אותה, אתם נותנים ל-Toogo רישיון קבוע, בלתי חוזר, בכל העולם ובלי תשלום להשתמש בה: להציג אותה באפליקציה ובאתרים שלנו, להקטין או לחתוך אותה, להשתמש בה כדי לפרסם את Toogo, ולאפשר לספקים שלנו, ולמי שיקבל את Toogo לידיו, לעשות את אותו הדבר.</li>
 <li>הרישיון לא בלעדי: זכויות היוצרים נשארות שלכם, ואפשר להמשיך להשתמש בתמונה בכל מקום. הוא נשאר גם אחרי מחיקת החשבון, ותמונות שאושרו לא מוסרות לפי בקשה. נסיר תמונה שעוברת על הכללים או פוגעת בזכויות של מישהו אחר.</li>
 <li>אסור: תוכן שנאה, העלבה או איום; תוכן מיני או אלים; פרטים פרטיים של אדם אחר; ספאם או פרסום; ומידע שאתם יודעים שהוא שקרי, כמו מקומות מומצאים.</li>

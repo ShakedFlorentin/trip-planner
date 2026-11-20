@@ -1,86 +1,118 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogTitle } from '@ui-sdk/react/dialog'
 import { supabase } from '../supabase'
 import { EmptyState, Sheet } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
 import { safePhoto } from '../lib'
-import { Camera } from 'lucide-react'
+import { Camera, Images, X } from 'lucide-react'
+import { openExternal, privacyUrl } from '../native'
+import { MAX_PHOTOS_PER_REVIEW } from './photoSend'
 
-const MAX_SIDE = 1600
-
-/** The picked photo as a JPEG at most 1600px long; drawing it anew also drops its location and other hidden data. */
-async function toJpeg(file: File) {
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(bitmap.width * scale)
-  canvas.height = Math.round(bitmap.height * scale)
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-  bitmap.close()
-  return new Promise<Blob>((done, fail) => canvas.toBlob((b) => (b ? done(b) : fail(new Error('no image'))), 'image/jpeg', 0.85))
+/** One picked photo as a 72px square with its remove button; the preview URL is made and freed with the tile. */
+function PickedTile({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const url = useMemo(() => URL.createObjectURL(file), [file])
+  useEffect(() => () => URL.revokeObjectURL(url), [url])
+  return (
+    <div className="pp-tile pp-picked">
+      <img src={url} alt="" />
+      <button type="button" className="pp-x" aria-label={t('הסרת תמונה')} onClick={onRemove}>
+        <Icon as={X} size={14} />
+      </button>
+    </div>
+  )
 }
 
-/** A traveller sends their own photo of a place; it shows on the card only after an admin approves it. */
-export function AddPhoto({ name, tripId, libraryId, onClose }: { name: string; tripId: string; libraryId: string; onClose: () => void }) {
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [rights, setRights] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState('')
-  const [sent, setSent] = useState(false)
-
-  useEffect(() => {
-    if (!file) return setPreview(null)
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
-
-  const send = async () => {
-    if (!file || !rights) return
-    setBusy(true)
-    setErr('')
-    try {
-      const { data: auth } = await supabase.auth.getUser()
-      const path = `${tripId}/${auth.user?.id}/${crypto.randomUUID()}.jpg`
-      const up = await supabase.storage.from('photo-submissions').upload(path, await toJpeg(file), { contentType: 'image/jpeg' })
-      if (up.error) throw up.error
-      const row = await supabase.from('photo_submissions').insert({ library_id: libraryId, trip_id: tripId, path, rights_confirmed: true })
-      if (row.error) {
-        await supabase.storage.from('photo-submissions').remove([path])
-        throw row.error
-      }
-      setSent(true)
-    } catch (e) {
-      console.error('photo not sent', e)
-      setErr(t('לא הצלחתי לשלוח את התמונה. אפשר לנסות שוב.'))
-    }
-    setBusy(false)
+/**
+ * The "photos from the place" part of the day-after review: a camera tile and a gallery tile, the picked photos with
+ * their ✕ (at most 5), and, once something is picked, a line saying sending means agreeing to the terms. Sending is the parent's job
+ * (sendPhotos); the files stay here until it says they went.
+ */
+export function PhotoPicker(props: {
+  files: File[]
+  onChange: (files: File[]) => void
+  disabled?: boolean
+}) {
+  const { files, onChange, disabled } = props
+  const room = MAX_PHOTOS_PER_REVIEW - files.length
+  const add = (list: FileList | null) => {
+    if (list?.length) onChange([...files, ...Array.from(list)].slice(0, MAX_PHOTOS_PER_REVIEW))
   }
-
+  // an input that picked the same photo again would not fire onChange: clear it after each use
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    add(e.target.files)
+    e.target.value = ''
+  }
   return (
-    <Sheet title={t('הוספת תמונה')} onClose={onClose}>
-      {sent ? (
-        <>
-          <p>{t('התמונה נשלחה לאישור. היא תופיע בכרטיס אחרי שנאשר אותה.')}</p>
-          <button className="primary" onClick={onClose}>{t('סגירה')}</button>
-        </>
+    <div className="pp" role="group" aria-labelledby="pp-title">
+      <div className="pp-head" id="pp-title">
+        <b>{t('תמונות מהמקום')}</b> <span className="muted">{t('(לא חובה)')}</span>
+      </div>
+      <div className="pp-tiles">
+        {files.map((f, i) => (
+          <PickedTile key={`${f.name}-${f.size}-${f.lastModified}-${i}`} file={f} onRemove={() => onChange(files.filter((_, j) => j !== i))} />
+        ))}
+        {room > 0 && (
+          <>
+            <label className="pp-tile pp-add">
+              <Icon as={Camera} size={26} />
+              <span className="pp-sr">{t('צילום תמונה')}</span>
+              <input type="file" accept="image/*" capture="environment" disabled={disabled} onChange={pick} />
+            </label>
+            <label className="pp-tile pp-add">
+              <Icon as={Images} size={26} />
+              <span className="pp-sr">{t('בחירה מהגלריה')}</span>
+              <input type="file" accept="image/*" multiple disabled={disabled} onChange={pick} />
+            </label>
+          </>
+        )}
+      </div>
+      {files.length === 0 ? (
+        <p className="muted small pp-hint">{t('צלמו עכשיו או בחרו מהגלריה')}</p>
       ) : (
         <>
-          <p className="muted small" dir="auto">{name}</p>
-          <input type="file" accept="image/*" aria-label={t('בחירת תמונה')} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          {preview && <img className="photo-preview" src={preview} alt="" />}
-          <label className="photo-rights">
-            <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} />
-            <span>{t('צילמתי את התמונה בעצמי. אני מרשה ל-Toogo להציג אותה לכל המשתמשים ולהשתמש בה לתמיד, גם אחרי שאמחק את החשבון. אין בה אנשים שאפשר לזהות בלי הסכמתם.')}</span>
-          </label>
-          {err && <p className="msg" role="alert">{err}</p>}
-          <button className="primary" onClick={send} disabled={!file || !rights || busy}>
-            {busy ? t('שולח…') : t('שליחה לאישור')}
-          </button>
+          <p className="muted small pp-terms">
+            {t('בשליחה אתם מאשרים את')}{' '}
+            <button type="button" className="link pp-terms-link" onClick={() => openExternal(privacyUrl() + '#terms')}>
+              {t('תנאי השימוש')}
+            </button>{' '}
+            {t('לתמונות.')}
+          </p>
+          <p className="muted small">{t('התמונות יופיעו בכרטיס אחרי שנאשר אותן.')}</p>
         </>
       )}
-    </Sheet>
+    </div>
+  )
+}
+
+/** Approved traveller photos, full screen: swipe sideways between them (the dialog traps focus and closes on Escape). */
+export function PhotoViewer({ urls, start, onClose }: { urls: string[]; start: number; onClose: () => void }) {
+  const track = useRef<HTMLDivElement>(null)
+  const [at, setAt] = useState(start)
+  useEffect(() => {
+    const el = track.current
+    if (el) el.scrollLeft = (el.children[start] as HTMLElement | undefined)?.offsetLeft ?? 0
+  }, [start])
+  const onScroll = () => {
+    const el = track.current
+    if (el && el.clientWidth) setAt(Math.round(Math.abs(el.scrollLeft) / el.clientWidth))
+  }
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogBackdrop className="pv-backdrop" />
+      <DialogContent className="pv" initialFocus="[data-pv-close]">
+        <DialogTitle className="pp-sr">{t('תמונות של מטיילים')}</DialogTitle>
+        <DialogClose className="pv-close" data-pv-close aria-label={t('סגירה')}>
+          <Icon as={X} />
+        </DialogClose>
+        <div className="pv-track" ref={track} onScroll={onScroll}>
+          {urls.map((u, i) => (
+            <img key={u} className="pv-img" src={u} alt={t('תמונה {n} מתוך {total}', { n: i + 1, total: urls.length })} />
+          ))}
+        </div>
+        {urls.length > 1 && <p className="pv-count">{t('{n} מתוך {total}', { n: Math.min(at, urls.length - 1) + 1, total: urls.length })}</p>}
+      </DialogContent>
+    </Dialog>
   )
 }
 

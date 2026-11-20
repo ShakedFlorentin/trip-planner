@@ -43,7 +43,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Take a photo of a place or a booking document to add it to the trip.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose a photo of a place or a booking document to add it to the trip.</string>
+	<string>Toogo uses photos from your trip dates to build your album. No photo is uploaded.</string>
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>

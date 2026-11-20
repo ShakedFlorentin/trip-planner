@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { DrawerClose } from '@ui-sdk/react/drawer'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@ui-sdk/react/collapsible'
-import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronDown, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronDown, ChevronLeft, Images, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { Icon, type LucideIcon } from '../icons'
 import { t, locale } from '../i18n'
 import { Sheet } from '../ui'
@@ -12,6 +12,7 @@ import { MORE_TABS, type MoreTab } from './More'
 import { PhotoReviewRow } from './PlacePhotos'
 import { GUIDE_READY, openGuide } from './Guide'
 import { openExternal, privacyUrl } from '../native'
+import { albumAvailable } from '../album/photos'
 import SignOutSheet from './SignOutSheet'
 import '../styles/menu.css'
 
@@ -25,6 +26,7 @@ type Props = {
   onSettings: () => void
   onLeave: () => void
   onReport: () => void
+  onAlbum: () => void
 }
 
 /** "12–31 December" / "12–31 בדצמבר": the trip's first and last day, or nothing for a trip with no start date. */
@@ -83,6 +85,7 @@ export default function Menu(props: Props) {
           <Row icon={SettingsIcon} label={t('הגדרות')} onPress={go(props.onSettings)} />
           <Row icon={ArrowLeftRight} label={t('מעבר לטיול אחר')} onPress={go(props.onLeave)} />
           <PhotoReviewRow />
+          {albumAvailable && props.trip?.start_date && <Row icon={Images} label={t('אלבום הטיול')} onPress={go(props.onAlbum)} />}
           <Collapsible className="acct-more">
             <CollapsibleTrigger className="group-row acct-more-trigger">
               <span className="k">{t('עוד')}</span>
