@@ -74,17 +74,18 @@ export default function AlbumMap({ days, result, stops, cityByDay, onOpen }: Pro
       const icon = L.divIcon({
         className: '',
         html: `<div class="al-pin${p.placeId === here?.placeId ? ' on' : ''}"><i data-pin="${p.ids[0].replace(/"/g, '')}"></i><b>${p.ids.length}</b></div>`,
-        iconSize: [46, 46],
-        iconAnchor: [23, 23],
+        // 56 px square (72 px when selected) with an 8 px tail; the tail tip is the place
+        iconSize: p.placeId === here?.placeId ? [72, 82] : [56, 66],
+        iconAnchor: p.placeId === here?.placeId ? [36, 82] : [28, 66],
       })
-      const mk = L.marker([p.lat, p.lng], { icon, title: p.name, keyboard: true }).on('click', () => setPickedPlace(p.placeId)).addTo(lay)
+      const mk = L.marker([p.lat, p.lng], { icon, title: p.name, keyboard: true, zIndexOffset: p.placeId === here?.placeId ? 1000 : 0 }).on('click', () => setPickedPlace(p.placeId)).addTo(lay)
       void thumbUrl(p.ids[0], 120).then((u) => {
         const i = mk.getElement()?.querySelector<HTMLElement>('i')
         if (i && u) i.style.backgroundImage = `url("${u}")`
       })
     }
     // the top 100px belong to the day chips and the privacy label; the bottom to the panel
-    if (pins.length) m.fitBounds(L.latLngBounds(pins.map((p) => [p.lat, p.lng] as [number, number])), { paddingTopLeft: [48, 104], paddingBottomRight: [48, 190], maxZoom: 16 })
+    if (pins.length) m.fitBounds(L.latLngBounds(pins.map((p) => [p.lat, p.lng] as [number, number])), { paddingTopLeft: [56, 112], paddingBottomRight: [56, 196], maxZoom: 16 })
   }, [pins, here?.placeId])
 
   const sizeUp = () => map.current?.invalidateSize()

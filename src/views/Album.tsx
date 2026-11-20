@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
-import { BedDouble, CalendarDays, Images, List, Lock, Map as MapIcon, MapPin } from 'lucide-react'
+import { BedDouble, CalendarDays, ChevronRight, Images, List, Lock, Map as MapIcon, MapPin } from 'lucide-react'
 import { Icon } from '../icons'
 import { t } from '../i18n'
 import { cityLabel } from '../lib'
@@ -89,12 +89,12 @@ export default function Album({ trip, members, userId, onClose }: Props) {
   else {
     body = (
       <>
-        <SegmentedControl className="pl-seg al-seg" aria-label={t('תצוגה')} value={view} onValueChange={(v) => v && setView(v as 'list' | 'map')}>
-          <SegmentedControlIndicator className="pl-seg-ind" />
-          <SegmentedControlItem value="list" className="pl-seg-item">
+        <SegmentedControl className="al-seg" aria-label={t('תצוגה')} value={view} onValueChange={(v) => v && setView(v as 'list' | 'map')}>
+          <SegmentedControlIndicator className="al-seg-ind" />
+          <SegmentedControlItem value="list" className="al-seg-item">
             <Icon as={List} size={18} /> {t('רשימה')}
           </SegmentedControlItem>
-          <SegmentedControlItem value="map" className="pl-seg-item">
+          <SegmentedControlItem value="map" className="al-seg-item">
             <Icon as={MapIcon} size={18} /> {t('מפה')}
           </SegmentedControlItem>
         </SegmentedControl>
@@ -157,8 +157,16 @@ export default function Album({ trip, members, userId, onClose }: Props) {
 
   const dayStops = choosing != null ? [...new Map(stops.filter((s) => s.day === choosing).map((s) => [s.placeId, s])).values()] : []
   return (
-    <Sheet title={t('אלבום הטיול')} closeLabel={t('חזרה')} onClose={onClose} tall>
-      <div className={'al' + (view === 'map' && granted && total > 0 ? ' al-map-view' : '')}>{body}</div>
+    <div className="al-page" role="region" aria-label={t('אלבום הטיול')}>
+      <header className="al-head">
+        <button className="al-back" aria-label={t('חזרה')} onClick={onClose}>
+          <Icon as={ChevronRight} className="chev flip-ltr" />
+        </button>
+        <h1 className="al-title">{t('אלבום הטיול')}</h1>
+      </header>
+      <div className={'al-body' + (view === 'map' && granted && total > 0 ? ' al-map-view' : '')}>
+        <div className="al">{body}</div>
+      </div>
       {open && <Viewer ids={open.ids} start={open.start} title={open.title} onClose={() => setOpen(null)} />}
       {choosing != null && (
         <Sheet title={t('בחירת מקום')} closeLabel={t('ביטול')} onClose={() => setChoosing(null)}>
@@ -173,7 +181,7 @@ export default function Album({ trip, members, userId, onClose }: Props) {
           </div>
         </Sheet>
       )}
-    </Sheet>
+    </div>
   )
 }
 
