@@ -285,7 +285,7 @@ export const EN_B: Record<string, string> = {
   'שליחת הקישור': 'Send the link',
   'הקישור הועתק, אפשר להדביק בהודעה': 'Link copied, paste it into a message',
   'אפשר להעתיק את הקישור מכאן': 'You can copy the link from here',
-  'למי שכבר יש חשבון: קוד הטיול': 'Already have an account? Trip code',
+  'שתפו את הטיול עם הקוד': 'Share your trip with this code',
   'הקוד הועתק': 'Code copied',
   'העתקת קוד הטיול': 'Copy the trip code',
   'הוזמנתם לטיול. יוצרים חשבון ומצטרפים.': "You're invited to the trip. Create an account to join.",

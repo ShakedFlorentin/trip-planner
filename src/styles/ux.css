@@ -4,7 +4,7 @@
 [data-slot='toast-region'] {
   position: fixed;
   inset-inline: 16px;
-  bottom: calc(var(--tabbar-h) + 16px + 52px + 12px + env(safe-area-inset-bottom));
+  bottom: calc(var(--tabbar-h) + 8px + 52px + 12px + env(safe-area-inset-bottom));
   top: auto;
   margin: 0 auto;
   max-width: 420px;

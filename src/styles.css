@@ -117,7 +117,7 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }
+html { -webkit-text-size-adjust: 100%; scroll-padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(safe-area-inset-bottom)); }
 html, body { margin: 0; }
 /* the page itself never pans sideways; strips like the day chips scroll inside their own box */
 html, body { overflow-x: clip; }
@@ -314,7 +314,7 @@ form.card, .login .card { display: flex; flex-direction: column; gap: var(--s-3)
 main { padding: 14px 20px calc(var(--tabbar-h) + 36px + env(safe-area-inset-bottom)); }
 main.tab-swipe { padding-bottom: 0; }
 /* a page with the + button ends lower, so its last item can scroll clear of the button */
-main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }
+main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(safe-area-inset-bottom)); }
 
 /* Liquid Glass: blur and saturate what is behind, a bright rim where light catches the edge, a soft sheen
    across the face and a lifted shadow. Real lensing can't be done in Safari, so this is the closest web form */
@@ -383,8 +383,8 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env
 
 .fab {
   position: fixed;
-  bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
-  inset-inline-end: max(16px, calc(50% - 304px));
+  bottom: calc(var(--tabbar-h) + 8px + env(safe-area-inset-bottom));
+  inset-inline-end: max(48px, calc(50% - 272px));
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -1161,7 +1161,7 @@ html.inner-scroll main {
   -webkit-overflow-scrolling: touch;
   /* no top padding: sticky bars measure from the padding edge, so the title carries the room under the top bar */
   padding-top: 0;
-  scroll-padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(safe-area-inset-bottom));
 }
 html.inner-scroll main > .large-title:first-child { margin-top: calc(14px + var(--top-h) + env(safe-area-inset-top)); }
 html.inner-scroll .topbar { position: absolute; inset-inline: 0; top: 0; }

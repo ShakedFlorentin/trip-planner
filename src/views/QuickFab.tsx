@@ -14,11 +14,14 @@ const ACTIONS: { kind: QuickKind; icon: LucideIcon; label: string }[] = [
   { kind: 'list', icon: ListChecks, label: t('פריט לרשימה') },
   { kind: 'booking', icon: Ticket, label: t('הזמנה') },
 ]
-/** A drag this far off the + opens the wheel at once; holding still opens it after HOLD_MS. */
+/** A drag this far off the + opens the wheel at once; holding still opens it after HOLD_MS . */
 const DRAG_PX = 8
 const HOLD_MS = 220
 /** Closer than this to where the finger went down, nothing is chosen (letting go there closes the wheel). */
-const DEAD_PX = 16
+const DEAD_PX = 34
+/** Once a quarter is chosen it holds down to here, and a neighbour takes over only when the angle is this far inside it. */
+const KEEP_PX = 28
+const KEEP_DEG = 15
 /** The + slides away after this much downward scroll, and comes back on any upward scroll, at the top, or this long after scrolling stops. */
 const AWAY_PX = 10
 const BACK_MS = 700
@@ -40,11 +43,20 @@ const sector = (r1: number, r2: number, a1: number, a2: number) => {
   return `M${f(a)} ${f(b)}A${r2} ${r2} 0 0 0 ${f(c)} ${f(d)}L${f(e)} ${f(g)}A${r1} ${r1} 0 0 1 ${f(h)} ${f(i)}Z`
 }
 /** Which quarter a drag of (dx, dy) screen pixels points at, or -1 inside the dead zone. */
-function quarterOf(dx: number, dy: number) {
-  if (Math.hypot(dx, dy) < DEAD_PX) return -1
+function degOf(dx: number, dy: number) {
   let deg = (Math.atan2(-dy, dx) * 180) / Math.PI
   if (isEn) deg = 180 - deg
-  return Math.floor((((deg % 360) + 360) % 360) / 90)
+  return ((deg % 360) + 360) % 360
+}
+function quarterOf(dx: number, dy: number, prev = -1) {
+  if (Math.hypot(dx, dy) < (prev >= 0 ? KEEP_PX : DEAD_PX)) return -1
+  const deg = degOf(dx, dy)
+  const q = Math.floor(deg / 90)
+  if (prev >= 0 && q !== prev) {
+    const off = Math.abs(((deg - (prev * 90 + 45) + 540) % 360) - 180) // degrees from the chosen quarter's middle
+    if (off < 45 + KEEP_DEG) return prev
+  }
+  return q
 }
 const TICKS = Array.from({ length: 72 }, (_, i) => {
   const [x1, y1] = P(101, i * 5)
@@ -55,12 +67,14 @@ const TICKS = Array.from({ length: 72 }, (_, i) => {
 /**
  * The + of every screen. A tap adds what the screen is about, as before. Pressing and dragging off it opens the
  * action wheel at once (holding still opens it too, after a beat): the wheel tilts toward the finger, the quarter it
- * points at lights up, and letting go adds that from wherever you are. Letting go in the middle closes it.
+ * points at lights up, and letting go adds that from wherever you are. Letting go in the middle (after a hold, say)
+ * leaves the wheel open: each quarter is a big button to tap, and the scrim or the + closes it.
  * Keyboard: arrow up on the + opens it, arrows choose, Enter adds, Escape closes.
  */
 export default function QuickFab({ label, onTap, children }: { label: string; onTap: () => void; children?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [sel, setSel] = useState(-1)
+  const [pinned, setPinned] = useState(false) // finger lifted with nothing chosen: the quarters are tappable buttons
   const [closing, setClosing] = useState<'pick' | 'cancel' | null>(null)
   const btn = useRef<HTMLButtonElement>(null)
   const wheel = useRef<HTMLDivElement>(null)
@@ -70,6 +84,8 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
   const opened = useRef(false) // this press opened the wheel, so its click is not a tap
   const byKey = useRef(false)
   const selRef = useRef(-1)
+  const closingRef = useRef(false)
+  const pinnedAt = useRef(0) // the click that ends the press that pinned the wheel can land on the scrim: ignore it
 
   const choose = (k: number) => {
     selRef.current = k
@@ -91,22 +107,28 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
       n.setAttribute('transform', `rotate(${f((Math.atan2(dy, dx) * 180) / Math.PI)}) scale(${f(Math.min(1, len / 60))} 1)`)
       n.style.opacity = d > 4 ? '1' : '0'
     }
-    choose(quarterOf(dx, dy))
+    choose(quarterOf(dx, dy, selRef.current))
   }
   const show = (key: boolean) => {
     clearTimeout(timer.current)
     opened.current = true
     byKey.current = key
     setClosing(null)
+    setPinned(false)
     setOpen(true)
     choose(key ? 0 : -1)
+    if (!key) navigator.vibrate?.(10) // no haptics helper in the app yet (Swipe uses the same call); iOS ignores it
   }
   const finish = (k: number) => {
     press.current = null
+    if (closingRef.current) return
+    closingRef.current = true
     setClosing(k >= 0 ? 'pick' : 'cancel')
     window.setTimeout(
       () => {
+        closingRef.current = false
         setOpen(false)
+        setPinned(false)
         setClosing(null)
         choose(-1)
         if (k >= 0) requestAdd(ACTIONS[k].kind)
@@ -116,6 +138,13 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
     )
   }
   useEffect(() => () => clearTimeout(timer.current), [])
+  // a pinned wheel closes on Escape wherever focus is
+  useEffect(() => {
+    if (!pinned) return
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && finish(-1)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [pinned]) // eslint-disable-line react-hooks/exhaustive-deps
   // slide away while the list scrolls down (it would cover a row), back on scroll up / at the top / when scrolling stops.
   // Scroll does not bubble, so one capture listener on the document hears the page and any sheet's own scroller.
   // Class toggled on the button directly: no re-render per scroll event.
@@ -169,6 +198,15 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
     }
   }, [open, sel]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // a tap anywhere on a quarter's ring (between the inner disk and the rim) counts for that quarter, not just on its button
+  const ringQuarter = (e: { clientX: number; clientY: number }) => {
+    const box = wheel.current?.querySelector('svg')?.getBoundingClientRect()
+    if (!box) return -1
+    const dx = e.clientX - (box.left + box.width / 2)
+    const dy = e.clientY - (box.top + box.height / 2)
+    const r = Math.hypot(dx, dy) / (box.width / 360)
+    return r >= 98 && r <= 182 ? Math.floor(degOf(dx, dy) / 90) : -1
+  }
   const down = (e: PointerEvent<HTMLButtonElement>) => {
     if (open || e.button !== 0) return
     opened.current = false
@@ -187,7 +225,17 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
   const up = (cancel: boolean) => () => {
     clearTimeout(timer.current)
     if (!press.current) return
-    if (opened.current) finish(cancel ? -1 : selRef.current)
+    if (opened.current) {
+      if (!cancel && selRef.current < 0 && !byKey.current) {
+        // let go in the dead zone: keep the wheel open for a tap on a quarter
+        const w = wheel.current
+        w?.style.setProperty('--tx', '0deg')
+        w?.style.setProperty('--ty', '0deg')
+        needle.current && (needle.current.style.opacity = '0')
+        pinnedAt.current = Date.now()
+        setPinned(true)
+      } else finish(cancel ? -1 : selRef.current)
+    }
     press.current = null
   }
   const click = () => {
@@ -196,6 +244,7 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
       opened.current = false
       return
     }
+    if (open) return finish(-1) // the + while the wheel is open closes it
     onTap()
   }
   const key = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -239,9 +288,19 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
       </button>
       {open &&
         createPortal(
-          <div className={'wheel-layer' + (closing ? ' closing ' + closing : '')}>
-            <div className="wheel-scrim" />
-            <div ref={wheel} className="wheel" role="menu" aria-label={t('פעולות הוספה')}>
+          <div className={'wheel-layer' + (closing ? ' closing ' + closing : '') + (pinned ? ' pinned' : '')}>
+            <div className="wheel-scrim" onClick={() => Date.now() - pinnedAt.current > 400 && finish(-1)} />
+            <div
+              ref={wheel}
+              className="wheel"
+              role="menu"
+              aria-label={t('פעולות הוספה')}
+              onPointerDown={(e) => pinned && !closing && choose(ringQuarter(e))}
+              onClick={(e) => {
+                const k = pinned && !closing ? ringQuarter(e) : -1
+                if (k >= 0) finish(k)
+              }}
+            >
               <svg viewBox="-180 -180 360 360" width="340" height="340">
                 <defs>
                   <radialGradient id="wheel-wedge" cx="0" cy="0" r="182" gradientUnits="userSpaceOnUse">
@@ -262,10 +321,10 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
                 {ACTIONS.map((a, k) => {
                   const c = centre(k)
                   const [bx, by] = P(122, c)
-                  const [lx, ly] = P(164, c)
+                  const [lx, ly] = [bx, by + (by > 0 ? 40 : -40)]
                   const on = sel === k
                   return (
-                    <g key={a.kind} className={'quarter' + (on ? ' on' : sel >= 0 ? ' off' : '')} role="menuitem" aria-label={a.label}>
+                    <g key={a.kind} className={'quarter' + (on ? ' on' : sel >= 0 ? ' off' : '')}>
                       <path className="wedge" d={sector(98, 182, c - 44, c + 44)} fill="url(#wheel-wedge)" />
                       <path className="arc" d={arc(122, c - 40, c - 13)} />
                       <path className="arc" d={arc(122, c + 13, c + 40)} />
@@ -294,6 +353,23 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
                   <circle cx="26" cy="5" r="6" />
                 </g>
               </svg>
+              {ACTIONS.map((a, k) => {
+                const [hx, hy] = P(143, centre(k))
+                return (
+                  <button
+                    key={a.kind}
+                    type="button"
+                    role="menuitem"
+                    className="wheel-hit"
+                    aria-label={a.label}
+                    tabIndex={pinned ? 0 : -1}
+                    style={{ left: `${((180 + hx) / 360) * 100}%`, top: `${((180 + hy) / 360) * 100}%` }}
+                    onPointerDown={() => choose(k)}
+                    onFocus={() => pinned && choose(k)}
+                    onClick={() => finish(k)}
+                  />
+                )
+              })}
             </div>
             <div className="sr-only" aria-live="polite">
               {sel >= 0 ? t('נבחר: {what}', { what: ACTIONS[sel].label }) : t('נפתח גלגל פעולות')}

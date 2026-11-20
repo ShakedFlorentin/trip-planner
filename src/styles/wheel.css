@@ -1,9 +1,9 @@
 /* The action wheel on the + (QuickFab): opens mid-screen over a soft scrim, tilts toward the finger */
 .quick-fab { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.quick-fab.open { transform: scale(0.92); }
+.quick-fab.open { transform: scale(0.92); opacity: 0.18; }
 /* scrolling down slides the + off the bottom edge (translate, so the press scale on transform is untouched); the distance clears the tab bar */
 .fab.quick-fab { transition: transform var(--dur-1) var(--ease), translate var(--dur-2) cubic-bezier(0.3, 0.7, 0.2, 1), opacity var(--dur-2) var(--ease); }
-.fab.quick-fab.fab-away { translate: 0 calc(var(--tabbar-h) + 16px + 52px + 28px + env(safe-area-inset-bottom)); opacity: 0; pointer-events: none; }
+.fab.quick-fab.fab-away { translate: 0 calc(var(--tabbar-h) + 8px + 52px + 28px + env(safe-area-inset-bottom)); opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .fab.quick-fab { transition: opacity 150ms linear; }
   .fab.quick-fab.fab-away { translate: none; }
@@ -20,6 +20,7 @@
   backdrop-filter: blur(10px) saturate(1.2);
   animation: wheel-fade 0.2s ease-out both;
 }
+.wheel-layer.pinned, .wheel-layer.pinned .wheel-scrim { pointer-events: auto; }
 .wheel-layer.closing .wheel-scrim { animation: wheel-fade-out 0.18s ease-in both; }
 .wheel {
   position: relative;
@@ -31,6 +32,10 @@
 }
 .wheel-layer.closing.pick .wheel { animation: wheel-pick 0.2s ease-out both; }
 .wheel-layer.closing.cancel .wheel { animation: wheel-cancel 0.16s ease-in both; }
+/* tappable quarters (after a hold-and-release): invisible buttons over each quarter, big enough for a thumb */
+.wheel-hit { position: absolute; width: 116px; height: 100px; translate: -50% -50%; padding: 0; border: 0; border-radius: 28px; background: transparent; pointer-events: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.wheel-layer.pinned .wheel-hit { pointer-events: auto; }
+.wheel-hit:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 .wheel svg { display: block; overflow: visible; max-width: 92vw; height: auto; }
 @keyframes wheel-in { from { opacity: 0; scale: 0.55; } }
 @keyframes wheel-pick { to { opacity: 0; scale: 1.08; } }

@@ -100,7 +100,7 @@
 .empty-state .primary { margin-top: 10px; width: auto; padding-inline: 22px; }
 
 /* Discover's + (22) sits in the same spot as on the other tabs; the vote buttons sit just above it */
-.swipe-screen:has(> .fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 4px + env(safe-area-inset-bottom)); }
+.swipe-screen:has(> .fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 4px + env(safe-area-inset-bottom)); }
 main.tab-swipe:has(.fab) { padding-bottom: 0; }
 /* a card with no photo: a calm flat header (no gradient, no fake picture), about half as tall; the title sits at the bottom in the text colour */
 .card-hero.no-photo { height: auto; min-height: 130px; background: var(--fill); color: var(--text); }

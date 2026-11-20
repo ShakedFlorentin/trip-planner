@@ -386,7 +386,7 @@ function InviteFriend({ trip }: { trip: Trip }) {
         </p>
       )}
       <p className="muted small">
-        {t('למי שכבר יש חשבון: קוד הטיול')}{' '}
+        {t('שתפו את הטיול עם הקוד')}{' '}
         <button
           className="invite-code"
           onClick={() => {

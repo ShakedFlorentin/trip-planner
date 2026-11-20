@@ -232,7 +232,7 @@
 
 
 /* the + is fixed at the bottom: Plan's last row ends above it with room to spare */
-main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 16px + 52px + 32px + env(safe-area-inset-bottom)); }
+main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(safe-area-inset-bottom)); }
 
 /* ---- share sheet: the preview is the picker (views/Share.tsx) ---- */
 .share-pills { display: flex; flex-wrap: wrap; gap: var(--s-2); }
