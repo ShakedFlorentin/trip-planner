@@ -1,6 +1,7 @@
 // An app admin approves or rejects a photo a traveller sent. Approved: it is copied to the public card-photos bucket and
-// added to the card in the library and on every trip. Rejected: the file is deleted. Waiting photos are never public.
+// added to the card in the library and on every trip (a traveller's photo only where the card has none: see gallery.ts). Rejected: the file is deleted. Waiting photos are never public.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { galleryAfterApproval } from './gallery.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
   if (!id || typeof body?.approve !== 'boolean') return json({ error: 'bad request' }, 400)
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const { data: s } = await admin.from('photo_submissions').select('id,library_id,path,status').eq('id', id).maybeSingle()
+  const { data: s } = await admin.from('photo_submissions').select('id,library_id,path,status,source').eq('id', id).maybeSingle()
   if (!s) return json({ error: 'not found' }, 404)
   if (s.status !== 'pending') return json({ error: 'already reviewed' }, 409)
   // the row's path goes to the storage calls below, which run with full rights
@@ -51,15 +52,20 @@ Deno.serve(async (req) => {
   }
   const url = admin.storage.from(TO).getPublicUrl(path).data.publicUrl
 
-  // the card's photos, on the library row and on each trip's copy
-  const add = (photos: string[] | null) => [...(photos ?? []).filter((p) => p !== url), url]
+  // the card's photos, on the library row and on each trip's copy; each row is decided on its own (null = leave it)
+  const source: 'member' | 'server' = s.source === 'server' ? 'server' : 'member'
   const { data: lib } = await admin.from('place_library').select('photos').eq('id', s.library_id).maybeSingle()
-  await admin.from('place_library').update({ photos: add(lib?.photos ?? null) }).eq('id', s.library_id)
+  const libNew = galleryAfterApproval(source, lib?.photos ?? null, url)
+  if (libNew) await admin.from('place_library').update({ photos: libNew }).eq('id', s.library_id)
   const { data: cards } = await admin.from('candidates').select('id,photos').eq('library_id', s.library_id)
   for (const c of cards ?? []) {
-    await admin.from('candidates').update({ photos: add(c.photos) }).eq('id', c.id)
+    const cNew = galleryAfterApproval(source, c.photos, url)
+    if (cNew) await admin.from('candidates').update({ photos: cNew }).eq('id', c.id)
     const { data: places } = await admin.from('places').select('id,photos').eq('candidate_id', c.id)
-    for (const p of places ?? []) await admin.from('places').update({ photos: add(p.photos) }).eq('id', p.id)
+    for (const p of places ?? []) {
+      const pNew = galleryAfterApproval(source, p.photos, url)
+      if (pNew) await admin.from('places').update({ photos: pNew }).eq('id', p.id)
+    }
   }
   await admin.from('photo_submissions').update({ ...done, status: 'approved', public_url: url }).eq('id', id)
   await admin.storage.from(FROM).remove([s.path])

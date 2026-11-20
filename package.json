@@ -17,7 +17,8 @@
     "test:money": "node scripts/money-test.mjs",
     "test:widget": "node scripts/widget-test.mjs",
     "test:suggest-guard": "node scripts/suggest-place-guard-test.mjs",
-    "test:guard": "node scripts/guard-test.mjs"
+    "test:guard": "node scripts/guard-test.mjs",
+    "test:review-photo": "node scripts/review-photo-test.mjs"
   },
   "dependencies": {
     "@capacitor/app-launcher": "^8.0.1",
