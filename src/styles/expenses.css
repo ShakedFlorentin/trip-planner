@@ -4,7 +4,7 @@
 .exp-num { font-weight: 600; font-variant-numeric: tabular-nums; }
 .exp-num.plus, .exp-net.plus { color: var(--ok); }
 .exp-num.minus, .exp-net.minus { color: var(--nope); }
-.exp-link { min-height: 44px; padding: var(--s-1) var(--s-2); }
+.exp-link { min-height: 44px; min-width: 44px; padding: var(--s-1) var(--s-2); }
 .exp-label { margin: var(--s-4) var(--s-4) 0; font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); }
 
 /* the ¥ / ₪ switch: same look as the List / Map switch on Places */
@@ -96,7 +96,7 @@
 .expf-check::after { content: ''; position: absolute; inset: -11px; }
 .expf-person:not([data-on]) .ava { opacity: 0.4; }
 .expf-splithead { display: flex; align-items: center; justify-content: space-between; margin-inline-end: var(--s-2); }
-.expf-quick { display: inline-flex; gap: var(--s-1); margin-top: var(--s-4); }
+.expf-quick { display: inline-flex; gap: var(--s-2); margin-top: var(--s-4); }
 .expf-quick [aria-pressed='true'] { font-weight: 600; }
 .expf-date { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); min-height: 52px; padding: 0 var(--s-4); border-radius: var(--r-md); background: var(--card); font-size: var(--fs-body); }
 .expf-date input { min-height: 44px; border: 0; background: none; text-align: end; }

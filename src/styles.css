@@ -273,7 +273,8 @@ form.card, .login .card { display: flex; flex-direction: column; gap: var(--s-3)
   align-items: center;
   justify-content: flex-end;
   height: calc(var(--top-h) + env(safe-area-inset-top));
-  padding: env(safe-area-inset-top) 10px 0;
+  gap: var(--s-2);
+  padding: env(safe-area-inset-top) var(--s-3) 0;
   /* the large title sits on the page; the bar turns to glass, with a small title, once the page scrolls under it (9) */
   background: transparent;
   transition: background var(--dur-2);
@@ -473,7 +474,7 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(
 button.chip { min-height: 36px; }
 /* the pill stays 36px high; the part that takes a tap is 44px (measured from inside the 1px border). Scroll rows keep 4px of padding so it is not clipped */
 :where(button.chip, a.chip) { position: relative; }
-button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; inset: -5px -2px; }
+button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; inset: -5px 0; }
 .chip.on { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
 .chip.tiny { min-height: 0; font-size: var(--fs-caption); padding: 1px var(--s-2); margin-inline-start: var(--s-2); background: var(--fill); }
 .chip-sep { flex: none; width: 1px; height: 24px; align-self: center; background: var(--line); }
@@ -593,7 +594,7 @@ button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; 
   column-gap: var(--s-2);
   align-items: center;
   padding: var(--s-4) var(--s-2) var(--s-2);
-  touch-action: none;
+  touch-action: pan-y; /* a finger on the title row pans the sheet away; touch-action none stopped the drawer's own scrolling */
   flex: none;
 }
 .sheet-head h2 { font-size: var(--fs-body); line-height: 1.25; text-align: center; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; grid-column: 2; grid-row: 1; }
@@ -618,7 +619,7 @@ button.chip:not(.tiny)::after, a.chip::after { content: ""; position: absolute; 
 .sheet-body {
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto; /* ui-sdk sets contain on everything inside a sheet, which stopped a downward drag from the body ever reaching the sheet */
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
@@ -773,7 +774,7 @@ html[dir='rtl'] .ja { text-align: right; }
   display: inline-flex;
   align-items: center;
   gap: var(--s-1);
-  min-height: 36px;
+  min-height: 44px;
   padding: var(--s-1) var(--s-3);
   border-radius: var(--r-pill);
   background: var(--fill);
@@ -781,7 +782,7 @@ html[dir='rtl'] .ja { text-align: right; }
   font-size: var(--fs-footnote);
   font-weight: 500;
 }
-.actions.compact .action { min-height: 36px; padding: var(--s-1) var(--s-3); font-size: var(--fs-footnote); }
+.actions.compact .action { min-height: 44px; padding: var(--s-1) var(--s-3); font-size: var(--fs-footnote); }
 .sheet-body .btn-link { text-decoration: none; }
 
 @media (max-height: 700px) { .card-hero { height: 130px; } }
@@ -835,7 +836,7 @@ html[dir='rtl'] .ja { text-align: right; }
 /* line icons from src/icons.tsx: sit on the text baseline and take the text colour */
 .ic { flex: none; vertical-align: -0.17em; }
 h2 .ic, h3 .ic { margin-inline-end: 2px; }
-a.pill, button.pill { min-height: 36px; padding-inline: var(--s-3); }
+a.pill, button.pill { min-height: 44px; padding-inline: var(--s-3); }
 .chip .ic, .pill .ic, .segmented .ic { vertical-align: 0; }
 
 
@@ -996,7 +997,8 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
    Leaflet's tile and marker panes (400-700); the map as a whole stays under the tab bar, sheets and toasts */
 .places.map-mode .map .leaflet-bottom.leaflet-right { position: fixed; z-index: 1000; left: auto; right: auto; inset-inline-end: var(--s-2); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
 .places.map-mode .map .leaflet-control-attribution { margin: 0; padding: 1px var(--s-2); border-radius: var(--r-xs); background: color-mix(in srgb, var(--bg) 82%, transparent); color: var(--muted); font-size: var(--fs-micro); }
-.places.map-mode .map .leaflet-control-attribution a { color: inherit; }
+.places.map-mode .map .leaflet-control-attribution a { position: relative; color: inherit; }
+.places.map-mode .map .leaflet-control-attribution a::after { content: ''; position: absolute; inset: -28px -6px -4px; } /* 44pt tap height; it grows up into the map, so it never reaches the tab bar below, and sideways only 6px, away from the legend */
 .map-cities { position: absolute; z-index: 500; top: 10px; inset-inline: 0; padding: 0 var(--s-3); flex-wrap: nowrap; }
 /* .chips.scroll (above) pulls its box 20px past the edges and pads it back 20px, which put the first chip at the screen
    edge here: this row sits on the full-width map, so it gets its own 12px at both ends of the scroll */
@@ -1114,6 +1116,7 @@ html[dir='ltr'] .place-row { padding: var(--s-3) var(--s-4) var(--s-3) var(--s-4
 .pass-lines .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
 /* an on/off switch at the end of a settings row (ui-sdk Switch inside the row's label) */
 .switch { flex: none; position: relative; width: 46px; height: 28px; min-height: 0; margin-inline-start: auto; padding: 0; border-radius: var(--r-pill); background: var(--fill); transition: background var(--dur-2); }
+.switch::after { content: ''; position: absolute; inset: -8px 0; } /* 44pt tap height around the 28px track */
 .switch-thumb { position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: var(--elev-1); transition: inset-inline-start var(--dur-2); }
 .switch[data-checked] { background: var(--switch-on); }
 .switch[data-checked] .switch-thumb { inset-inline-start: 21px; }

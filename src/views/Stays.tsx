@@ -93,12 +93,12 @@ export default function StaysSheet({ tripId, date, couples, stays, cities, booki
           </button>
         )}
         {available && (
-          <button onClick={() => setCounting(true)}>
+          <button className="stays-link" onClick={() => setCounting(true)}>
             <Icon as={CalendarRange} /> {t('יודעים כמה לילות בכל עיר')}
           </button>
         )}
         {available && (
-          <button onClick={() => setSplit(true)}>
+          <button className="stays-link" onClick={() => setSplit(true)}>
             <Icon as={Wand2} /> {t('הצעה לחלוקת לילות')}
           </button>
         )}
