@@ -35,6 +35,7 @@ export async function sendPhotos(files: File[], o: { tripId: string; libraryId: 
     try {
       const up = await supabase.storage.from('photo-submissions').upload(path, await toJpeg(file), { contentType: 'image/jpeg' })
       if (up.error) throw up.error
+      // rights_confirmed is required by the table's check; it now means "sent under the terms of use"
       const row = await supabase.from('photo_submissions').insert({ library_id: o.libraryId, trip_id: o.tripId, path, rights_confirmed: true })
       if (row.error) {
         await supabase.storage.from('photo-submissions').remove([path])

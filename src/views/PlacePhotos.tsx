@@ -6,6 +6,7 @@ import { Icon } from '../icons'
 import { t } from '../i18n'
 import { safePhoto } from '../lib'
 import { Camera, Images, X } from 'lucide-react'
+import { openExternal, privacyUrl } from '../native'
 import { MAX_PHOTOS_PER_REVIEW } from './photoSend'
 
 /** One picked photo as a 72px square with its remove button; the preview URL is made and freed with the tile. */
@@ -24,17 +25,15 @@ function PickedTile({ file, onRemove }: { file: File; onRemove: () => void }) {
 
 /**
  * The "photos from the place" part of the day-after review: a camera tile and a gallery tile, the picked photos with
- * their ✕ (at most 5), and, once something is picked, the rights tick the upload needs. Sending is the parent's job
+ * their ✕ (at most 5), and, once something is picked, a line saying sending means agreeing to the terms. Sending is the parent's job
  * (sendPhotos); the files stay here until it says they went.
  */
 export function PhotoPicker(props: {
   files: File[]
   onChange: (files: File[]) => void
-  rights: boolean
-  onRights: (v: boolean) => void
   disabled?: boolean
 }) {
-  const { files, onChange, rights, onRights, disabled } = props
+  const { files, onChange, disabled } = props
   const room = MAX_PHOTOS_PER_REVIEW - files.length
   const add = (list: FileList | null) => {
     if (list?.length) onChange([...files, ...Array.from(list)].slice(0, MAX_PHOTOS_PER_REVIEW))
@@ -72,10 +71,13 @@ export function PhotoPicker(props: {
         <p className="muted small pp-hint">{t('צלמו עכשיו או בחרו מהגלריה')}</p>
       ) : (
         <>
-          <label className="photo-rights">
-            <input type="checkbox" checked={rights} onChange={(e) => onRights(e.target.checked)} />
-            <span>{t('צילמתי את התמונה בעצמי. אני מרשה ל-Toogo להציג אותה לכל המשתמשים ולהשתמש בה לתמיד, גם אחרי שאמחק את החשבון. אין בה אנשים שאפשר לזהות בלי הסכמתם.')}</span>
-          </label>
+          <p className="muted small pp-terms">
+            {t('בשליחה אתם מאשרים את')}{' '}
+            <button type="button" className="link pp-terms-link" onClick={() => openExternal(privacyUrl() + '#terms')}>
+              {t('תנאי השימוש')}
+            </button>{' '}
+            {t('לתמונות.')}
+          </p>
           <p className="muted small">{t('התמונות יופיעו בכרטיס אחרי שנאשר אותן.')}</p>
         </>
       )}

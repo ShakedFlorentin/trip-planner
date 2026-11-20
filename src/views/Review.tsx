@@ -87,7 +87,6 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   const [thanks, setThanks] = useState(false)
   // photos to send with the review: they stay picked when one fails, and the card stays open for the retry
   const [files, setFiles] = useState<File[]>([])
-  const [rights, setRights] = useState(false)
   const [photoMsg, setPhotoMsg] = useState('')
   const [ratingDone, setRatingDone] = useState(false)
   // once the rating is saved the place counts as rated and would drop out of the list: keep it while photos wait
@@ -116,7 +115,6 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
 
   const resetPhotos = () => {
     setFiles([])
-    setRights(false)
     setPhotoMsg('')
     setRatingDone(false)
     setPinned(null)
@@ -136,7 +134,7 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
   }
 
   const save = async () => {
-    if (!stars || busy || (files.length && !rights)) return
+    if (!stars || busy) return
     setBusy(true)
     setPhotoMsg('')
     // the rating goes first and stays saved whatever happens to the photos; a retry sends the photos only
@@ -203,10 +201,10 @@ export default function ReviewCard({ tripId, userId }: { tripId: string; userId:
             </div>
           </div>
         ))}
-      <PhotoPicker files={files} onChange={setFiles} rights={rights} onRights={setRights} disabled={busy} />
+      <PhotoPicker files={files} onChange={setFiles} disabled={busy} />
       {photoMsg && <p className="msg" role="alert">{photoMsg}</p>}
       <div className="row">
-        <button className="primary" disabled={!stars || busy || (files.length > 0 && !rights)} onClick={save}>
+        <button className="primary" disabled={!stars || busy} onClick={save}>
           {t('שליחה')}
         </button>
         <button className="link small" onClick={dismiss}>
