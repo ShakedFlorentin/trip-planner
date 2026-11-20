@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const out = await build({ entryPoints: [join(root, 'src/album/match.ts')], bundle: true, write: false, format: 'esm', platform: 'node' })
 const { matchPhotos } = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'))
+const vout = await build({ entryPoints: [join(root, 'src/album/visit.ts')], bundle: true, write: false, format: 'esm', platform: 'node' })
+const { visitMinutes } = await import('data:text/javascript;base64,' + Buffer.from(vout.outputFiles[0].text).toString('base64'))
 
 let bad = 0
 const ok = (c, m) => { if (!c) { bad++; console.log('  FAIL ' + m) } else console.log('  ok   ' + m) }
@@ -69,6 +71,9 @@ ok(ids(r, 2, 'inari')?.includes('xd'), 'nearest stop of any day within 300 m, un
 
 r = matchPhotos([{ id: 'la', time: Date.UTC(2026, 11, 12, 8, 0), ...A }], [{ day: 1, date: '2026-12-12', tz: 'America/Los_Angeles' }], [stops[0]], {})
 ok(r.days[0].places.length === 1, 'the day tz is used (08:00Z is 00:00 on 12 Dec in Los Angeles)')
+
+for (const [txt, want] of [['1-2 hours', 120], ['30-45 דקות', 45], ['כשעה', 60], ['About an hour', 60], ['שעה-שעתיים', 120], ['שעתיים', 120], ['כחצי שעה', 30], ['45 minutes', 45], ['About 1 hour', 60], ['', null], ['varies', null]])
+  ok(visitMinutes(txt) === want, `visit length "${txt}" is ${want}`)
 
 console.log(bad ? `${bad} FAILED` : 'all passed')
 process.exit(bad ? 1 : 0)
