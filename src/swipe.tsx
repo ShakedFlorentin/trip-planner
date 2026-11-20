@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from '
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
 import { project, reducedMotion, springTo } from './spring'
+import { decideRelease, releaseSpeed } from './swipeDecide'
 
 /** One round capsule behind a swiped row. */
 export type SwipeAction = { label: string; icon: LucideIcon; onClick: () => void; tone: 'edit' | 'del' | 'ok' }
@@ -127,27 +128,24 @@ export function SwipeRow({ children, end, start, hint }: { children: ReactNode; 
     if (s.lock !== 'h') return
     moved.current = true
     s.trail.push({ t: ev.timeStamp, x: ev.clientX })
-    if (s.trail.length > 6) s.trail.shift()
+    if (s.trail.length > 12) s.trail.shift()
     const k = sign()
     const along = Math.max(-startW * 1.6, Math.min(endW * 1.6, (s.from + dx) * k))
     show(along * k)
   }
-  const up = () => {
+  const up = (ev: PointerEvent) => {
     const s = g.current
     g.current = null
     if (!s || s.lock !== 'h') return
     const k = sign()
-    const a = s.trail[0]
-    const b = s.trail[s.trail.length - 1]
-    const v = b.t > a.t ? ((b.x - a.x) / (b.t - a.t)) * 1000 : 0
-    const rest = (pos.current + project(v)) * k
+    const r = decideRelease({ pos: pos.current, from: s.from, k, v: releaseSpeed(s.trail, ev.timeStamp), endW, startW, hasStart: !!start, project })
     // the start action is a single tap's worth: pulled far enough and let go, it happens (like Mail's "read")
-    if (start && rest < -startW * 1.2) {
+    if (r.kind === 'action') {
       settle(0)
-      start.onClick()
+      start!.onClick()
       return
     }
-    settle(rest > endW * 0.4 ? k * endW : start && rest < -startW * 0.4 ? -k * startW : 0, v)
+    settle(r.kind === 'end' ? k * endW : r.kind === 'start' ? -k * startW : 0, r.v)
   }
   // a drag (or a tap that only closes an open row) must not also click what is underneath
   const click = (ev: React.MouseEvent) => {
