@@ -67,8 +67,9 @@ const TICKS = Array.from({ length: 72 }, (_, i) => {
 /**
  * The + of every screen. A tap adds what the screen is about, as before. Pressing and dragging off it opens the
  * action wheel at once (holding still opens it too, after a beat): the wheel tilts toward the finger, the quarter it
- * points at lights up, and letting go adds that from wherever you are. Letting go in the middle (after a hold, say)
- * leaves the wheel open: each quarter is a big button to tap, and the scrim or the + closes it.
+ * points at lights up, and letting go adds that from wherever you are. Letting go in the middle after a hold (the
+ * finger never left the middle) leaves the wheel open: each quarter is a big button to tap, and the scrim or the +
+ * closes it. Dragging out and coming back to the middle is a change of mind: the wheel closes by itself.
  * Keyboard: arrow up on the + opens it, arrows choose, Enter adds, Escape closes.
  */
 export default function QuickFab({ label, onTap, children }: { label: string; onTap: () => void; children?: ReactNode }) {
@@ -82,6 +83,7 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
   const press = useRef<{ x: number; y: number; id: number } | null>(null)
   const timer = useRef(0)
   const opened = useRef(false) // this press opened the wheel, so its click is not a tap
+  const dragged = useRef(false) // this press went out of the middle: letting go back in the middle is a change of mind, so it closes
   const byKey = useRef(false)
   const selRef = useRef(-1)
   const closingRef = useRef(false)
@@ -210,6 +212,7 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
   const down = (e: PointerEvent<HTMLButtonElement>) => {
     if (open || e.button !== 0) return
     opened.current = false
+    dragged.current = false
     press.current = { x: e.clientX, y: e.clientY, id: e.pointerId }
     e.currentTarget.setPointerCapture(e.pointerId)
     timer.current = window.setTimeout(() => press.current && show(false), HOLD_MS)
@@ -220,14 +223,15 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
     const dx = e.clientX - p.x
     const dy = e.clientY - p.y
     if (!opened.current && Math.hypot(dx, dy) > DRAG_PX) show(false)
+    if (Math.hypot(dx, dy) >= DEAD_PX) dragged.current = true
     if (opened.current) aim(dx, dy)
   }
   const up = (cancel: boolean) => () => {
     clearTimeout(timer.current)
     if (!press.current) return
     if (opened.current) {
-      if (!cancel && selRef.current < 0 && !byKey.current) {
-        // let go in the dead zone: keep the wheel open for a tap on a quarter
+      if (!cancel && selRef.current < 0 && !byKey.current && !dragged.current) {
+        // held still and let go in the middle: keep the wheel open for a tap on a quarter (a drag that came back closes it)
         const w = wheel.current
         w?.style.setProperty('--tx', '0deg')
         w?.style.setProperty('--ty', '0deg')
