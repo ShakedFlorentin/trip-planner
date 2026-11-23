@@ -37,4 +37,6 @@ export const EN_UX: Record<string, string> = {
   '{n} מתוך {of} לילות{range}': '{n} of {of} nights{range}',
   'לטיסה אחת אין קוד אישור': 'One flight has no confirmation code',
   'ל-{n} טיסות אין קוד אישור': '{n} flights have no confirmation code',
+  'מופעל': 'On',
+  'כבוי': 'Off',
 }

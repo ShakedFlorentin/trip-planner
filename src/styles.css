@@ -1116,6 +1116,8 @@ html[dir='ltr'] .place-row { padding: var(--s-3) var(--s-4) var(--s-3) var(--s-4
 .pass-lines .ic { flex: none; width: 20px; height: 20px; color: var(--accent); }
 /* an on/off switch at the end of a settings row (ui-sdk Switch inside the row's label) */
 .switch { flex: none; position: relative; width: 46px; height: 28px; min-height: 0; margin-inline-start: auto; padding: 0; border-radius: var(--r-pill); background: var(--fill); transition: background var(--dur-2); }
+.switch-word { flex: none; margin-inline-start: auto; min-width: 3.2em; text-align: end; font-size: var(--fs-subhead); color: var(--muted); }
+.switch-word + .switch { margin-inline-start: 0; }
 .switch::after { content: ''; position: absolute; inset: -8px 0; } /* 44pt tap height around the 28px track */
 .switch-thumb { position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: var(--elev-1); transition: inset-inline-start var(--dur-2); }
 .switch[data-checked] { background: var(--switch-on); }

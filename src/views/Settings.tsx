@@ -154,6 +154,7 @@ function PhoneGroup() {
         {showPush && (
           <label className="group-row">
             <span className="k">{t('מאצ׳ים בטיול')}</span>
+            <SwitchWord on={on} />
             <Switch className="switch" checked={on} readOnly={stuck || busy} onCheckedChange={toggle}>
               <SwitchThumb className="switch-thumb" />
             </Switch>
@@ -173,12 +174,18 @@ function PhoneGroup() {
   )
 }
 
+/** The state in words beside a switch, so it is not only the colour and the knob. The switch itself carries the state for screen readers. */
+function SwitchWord({ on }: { on: boolean }) {
+  return <span className="switch-word" aria-hidden="true">{on ? t('מופעל') : t('כבוי')}</span>
+}
+
 /** "Help improve Toogo": usage counting on this device (src/track.ts), on unless turned off. */
 function CountingRow() {
   const [on, setOn] = useState(countingOn)
   return (
     <label className="group-row">
       <span className="k">{t('עזרה בשיפור Toogo')}</span>
+      <SwitchWord on={on} />
       <Switch
         className="switch"
         checked={on}
