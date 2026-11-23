@@ -1,5 +1,7 @@
 // English text for the UX-review fixes (messages, questions, plan marks)
 export const EN_UX: Record<string, string> = {
+  'לא הצלחנו להתחבר. בדקו את הפרטים ונסו שוב.': 'We could not sign you in. Check the details and try again.',
+  'מתחילים בלי חשבון': 'Start without an account',
   'מה צריך לסדר, לארוז או לקנות?': 'What is there to sort out, pack or buy?',
   'הוספת הפריט הראשון': 'Add the first item',
   'להציג את כל המקומות': 'Show all places',

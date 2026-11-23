@@ -216,7 +216,7 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
     setMsg('')
     const email = toEmail(name)
     if (!email) {
-      setMsg(t('לא מכירים את השם. אפשר שקד, מאור, אלמוג, שניר או אימייל.'))
+      setMsg(t('לא הצלחנו להתחבר. בדקו את הפרטים ונסו שוב.'))
       return
     }
     setBusy(true)
@@ -227,8 +227,8 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
     if (error.name === 'AuthRetryableFetchError' || !navigator.onLine) setMsg(t('אין אינטרנט. נסו שוב כשיש קליטה.'))
     else if (error.status === 429) setMsg(t('יותר מדי ניסיונות. חכו דקה ונסו שוב.'))
     else if (error.code === 'email_not_confirmed') setMsg(t('צריך לאשר קודם את המייל ששלחנו.'))
-    else if (email.endsWith('@japantrip.app')) setMsg(t('הסיסמה לא נכונה.'))
-    else setMsg(t('אימייל או סיסמה לא נכונים.'))
+    // one message for an unknown name, an unknown email and a wrong password: it says nothing about who has an account
+    else setMsg(t('לא הצלחנו להתחבר. בדקו את הפרטים ונסו שוב.'))
   }
 
   const signUp = async (e: FormEvent) => {
@@ -347,8 +347,8 @@ export default function Login({ onGuest, google = false }: { onGuest?: () => voi
         </form>
       )}
       {onGuest && !invite && (
-        <button className="link" onClick={onGuest}>
-          {t('אין לכם חשבון? מתחילים בלי')}
+        <button className="secondary" onClick={onGuest}>
+          {t('מתחילים בלי חשבון')}
         </button>
       )}
       {invite &&
