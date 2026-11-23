@@ -6,6 +6,7 @@ import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type 
 import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
+import { hapticLight } from '../haptics'
 import { askForRating } from '../rating'
 import { mayAskForPush, notifyMatch } from '../push'
 import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
@@ -494,6 +495,8 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   const stop = useRef<(() => void) | null>(null)
   const flying = useRef(false)
   const moved = useRef(false)
+  // true while the card is dragged past the point where letting go votes: one tap per crossing, not one per move
+  const crossed = useRef(false)
   const onInfo = useRef(false)
   const style = CARD_STYLE[c.category] ?? CARD_STYLE.sight
   const photos = (c.photos ?? []).filter((u) => safePhoto(u) && !broken.has(u))
@@ -532,7 +535,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
   // off the screen at the speed the finger let go with, in a straight line (a slow drag or a button still leaves briskly)
   const fly = (dir: 1 | -1, v = 0) => {
     flying.current = true
-    navigator.vibrate?.(12)
+    if (!crossed.current) hapticLight()
     const leave = async () => {
       // the swipe didn't save (e.g. offline): bring the card back instead of leaving it off-screen on top
       if (!(await onSwipe(dir === 1))) {
@@ -573,6 +576,7 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
     axis.current = null
     trail.current = [{ t: e.timeStamp, x: pos.current }]
     moved.current = false
+    crossed.current = false
     onInfo.current = !!(e.target as HTMLElement).closest('.card-info')
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }
@@ -598,6 +602,9 @@ export function Card({ c, top, likedBy, prior, onSwipe }: { c: Candidate; top: b
     const x = e.clientX - grab.current
     trail.current = [...trail.current.filter((p) => e.timeStamp - p.t < 100), { t: e.timeStamp, x }]
     show(x)
+    const past = Math.abs(x) > Math.min(140, (e.currentTarget as HTMLElement).offsetWidth * 0.38)
+    if (past && !crossed.current) hapticLight()
+    crossed.current = past
   }
   const up = (e: PointerEvent) => {
     if (grab.current === null) return

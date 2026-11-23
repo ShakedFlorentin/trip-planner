@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { hapticSelect } from '../haptics'
 import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { supabase } from '../supabase'
 import { itemDone, type ChecklistItem, type Member } from '../types'
@@ -130,7 +131,7 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
   return (
     <div className="stack">
       {/* each list's progress is a ring in its own tab (56): Toogo red, a full green ring and ✓ once it's all done */}
-      <Tabs className="tabs-root" value={list} onValueChange={(v) => v && setList(v)}>
+      <Tabs className="tabs-root" value={list} onValueChange={(v) => v && (hapticSelect(), setList(v))}>
         <TabsList className="segmented list-tabs" aria-label={t('רשימות')}>
           {LISTS.map((l) => {
             const all = inList(l.id)

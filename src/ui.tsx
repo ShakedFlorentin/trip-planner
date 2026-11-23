@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { hapticSelect } from './haptics'
 import { Icon, type LucideIcon } from './icons'
 import { t } from './i18n'
 import { Tabs as SdkTabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
@@ -150,7 +151,7 @@ export function Tabs(props: {
   onPick: (key: string) => void
 }) {
   return (
-    <SdkTabs className="tabs-root" value={props.current} onValueChange={(v) => v && props.onPick(v)}>
+    <SdkTabs className="tabs-root" value={props.current} onValueChange={(v) => v && (hapticSelect(), props.onPick(v))}>
       <TabsList className="tabs-bar" aria-label={props.label}>
         {Object.entries(props.tabs).map(([k, v]) => (
           <TabsTab key={k} value={k} className={'chip' + (props.current === k ? ' on' : '')}>

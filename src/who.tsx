@@ -1,4 +1,5 @@
 import { t } from './i18n'
+import { hapticSelect } from './haptics'
 import { RingsIcon } from './rings'
 
 /**
@@ -44,7 +45,7 @@ export function WhoChips({ couples, mine, value, onChange }: { couples: string[]
   return (
     <div className="chips scroll who-chips" role="group" aria-label={t('של מי')}>
       {whoChoices(couples, mine).map((w) => (
-        <button key={w} className={'chip' + (value === w ? ' on' : '')} aria-pressed={value === w} onClick={() => onChange(w)}>
+        <button key={w} className={'chip' + (value === w ? ' on' : '')} aria-pressed={value === w} onClick={() => (value !== w && hapticSelect(), onChange(w))}>
           {whoLabel(w)}
         </button>
       ))}

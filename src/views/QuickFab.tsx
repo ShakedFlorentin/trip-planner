@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { hapticLight } from '../haptics'
 import { createPortal } from 'react-dom'
 import { ListChecks, MapPin, Plus, Ticket, Wallet } from 'lucide-react'
 import { isEn, t } from '../i18n'
@@ -119,7 +120,7 @@ export default function QuickFab({ label, onTap, children }: { label: string; on
     setPinned(false)
     setOpen(true)
     choose(key ? 0 : -1)
-    if (!key) navigator.vibrate?.(10) // no haptics helper in the app yet (Swipe uses the same call); iOS ignores it
+    if (!key) hapticLight()
   }
   const finish = (k: number) => {
     press.current = null

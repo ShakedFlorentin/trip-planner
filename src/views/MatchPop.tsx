@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { hapticSuccess } from '../haptics'
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogTitle } from '@ui-sdk/react/dialog'
 import type { Candidate } from '../types'
 import { t } from '../i18n'
@@ -29,6 +30,7 @@ function letters(names: string[]) {
 export default function MatchPop({ match, onClose }: { match: Match; onClose: () => void }) {
   const photo = match.c.photos?.map(safePhoto).find(Boolean)
   const [broken, setBroken] = useState(false)
+  useEffect(hapticSuccess, [])
 
   // ui-sdk's Dialog moves focus into the pop-up, keeps Tab and Enter/Space inside it (the swipe card behind is inert),
   // closes on Escape and an outside press, and returns focus to where it was

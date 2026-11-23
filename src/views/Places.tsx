@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { hapticSelect } from '../haptics'
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
 import { supabase } from '../supabase'
 import { AUDIENCES, CATEGORIES, type Candidate, type DayInfo, type ItineraryItem, type Member, type Place, type Swipe, type Trip } from '../types'
@@ -158,7 +159,7 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
         ) : (
           <span className="who-text static">{shown.length === 1 ? t('מקום אחד') : t('{n} מקומות', { n: shown.length })}</span>
         )}
-        <SegmentedControl className="pl-seg" aria-label={t('תצוגה')} value={view} onValueChange={(v) => v && setView(v as 'list' | 'map')}>
+        <SegmentedControl className="pl-seg" aria-label={t('תצוגה')} value={view} onValueChange={(v) => v && (hapticSelect(), setView(v as 'list' | 'map'))}>
           <SegmentedControlIndicator className="pl-seg-ind" />
           <SegmentedControlItem value="list" className="pl-seg-item">
             <Icon as={List} size={18} /> {t('רשימה')}

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { hapticSelect } from '../haptics'
 import { createPortal } from 'react-dom'
 import { Meter, MeterIndicator, MeterTrack } from '@ui-sdk/react/meter'
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control'
@@ -146,7 +147,7 @@ export default function Expenses({ trip, members, userId }: Props) {
   const payerLabel = payer === 'all' ? t('כולם') : nameOf(payer)
 
   const curToggle = (
-    <SegmentedControl className="exp-seg" aria-label={t('מטבע להצגה')} value={show} onValueChange={(v) => v && setCur(v as string)}>
+    <SegmentedControl className="exp-seg" aria-label={t('מטבע להצגה')} value={show} onValueChange={(v) => v && (hapticSelect(), setCur(v as string))}>
       <SegmentedControlIndicator className="exp-seg-ind" />
       {(['JPY', 'ILS'] as const).map((c) => (
         <SegmentedControlItem key={c} value={c} className="exp-seg-item">
@@ -513,7 +514,7 @@ function ExpenseForm(props: {
             placeholder="0"
             autoFocus={!x.id}
           />
-          <SegmentedControl className="exp-seg" aria-label={t('מטבע')} value={currency} onValueChange={(v) => v && setCurrency(v as Cur)}>
+          <SegmentedControl className="exp-seg" aria-label={t('מטבע')} value={currency} onValueChange={(v) => v && (hapticSelect(), setCurrency(v as Cur))}>
             <SegmentedControlIndicator className="exp-seg-ind" />
             {(['JPY', 'ILS'] as const).map((c) => (
               <SegmentedControlItem key={c} value={c} className="exp-seg-item">
