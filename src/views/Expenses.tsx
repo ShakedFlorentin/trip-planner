@@ -13,10 +13,10 @@ import { couplesOf, fmtDay, mutate, useTripTable } from '../lib'
 import { t } from '../i18n'
 import { ask } from '../toast'
 import { balances, convert, coupleTotals, fmtAmount, fmtMoney, parseAmount, partiesOf, settleUp, toMinor, SYMBOL, type Cur, type Transfer } from '../money'
-import { Empty, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
 import { canSayBalanced, findSettleTwin, newExpenseCurrency } from '../screenLogic'
 import { Icon, type LucideIcon } from '../icons'
-import { BedDouble, Check, ChevronDown, Handshake, Minus, Package, Pencil, Plane, Plus, Trash2, ShoppingBag, Ticket, TrainFront, Utensils } from 'lucide-react'
+import { BedDouble, Check, ChevronDown, Handshake, Minus, Package, Pencil, Plane, Plus, Receipt, Trash2, ShoppingBag, Ticket, TrainFront, Utensils } from 'lucide-react'
 import '../styles/expenses.css'
 import { SwipeRow } from '../swipe'
 import { Avatar, coupleLook } from '../avatar'
@@ -228,7 +228,12 @@ export default function Expenses({ trip, members, userId }: Props) {
       {error && <LoadNote onRetry={reload} />}
       {loading && !rows.length && <Skeleton rows={3} />}
       {!loading && !error && rows.length === 0 && (
-        <Empty>{t('עוד אין הוצאות. מוסיפים הוצאה, בוחרים מי שילם ובין מי מחלקים, וכאן רואים מי חייב למי.')}</Empty>
+        <EmptyState
+          icon={Receipt}
+          title={t('עוד אין הוצאות')}
+          line={t('מוסיפים הוצאה, בוחרים מי שילם ובין מי מחלקים, וכאן רואים מי חייב למי.')}
+          action={{ label: t('הוצאה חדשה'), onClick: () => setEdit({}) }}
+        />
       )}
 
       {others.length > 0 && (
@@ -339,11 +344,14 @@ export default function Expenses({ trip, members, userId }: Props) {
         </button>
       </div>
 
-      <div className="exp-dock">
-        <button className="primary" onClick={() => setEdit({})}>
-          <Icon as={Plus} /> {t('הוצאה חדשה')}
-        </button>
-      </div>
+      {/* with no expenses yet the empty state above already holds this same button */}
+      {(loading || error || rows.length > 0) && (
+        <div className="exp-dock">
+          <button className="primary" onClick={() => setEdit({})}>
+            <Icon as={Plus} /> {t('הוצאה חדשה')}
+          </button>
+        </div>
+      )}
       {edit && <ExpenseForm trip={trip} members={members} couples={couples} userId={userId} expense={edit} rate={rate} myCouple={myCouple} shown={show} onClose={() => setEdit(null)} />}
       {settle && (
         <SettleSheet

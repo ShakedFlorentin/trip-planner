@@ -574,9 +574,9 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           />
         )}
         {tab === 'swipe' && <SwipeGame trip={trip} userId={props.userId} members={members} showCard={showCard} onCardShown={cardShown} onOpenPlaces={() => setTab('places')} />}
-        {tab === 'plan' && <Itinerary trip={trip} day={day} setDay={setDay} members={members} userId={props.userId} />}
+        {tab === 'plan' && <Itinerary trip={trip} day={day} setDay={setDay} members={members} userId={props.userId} onFind={() => setTab('swipe')} />}
         {tab === 'bookings' && <Bookings trip={trip} members={members} userId={props.userId} />}
-        {tab === 'places' && <Places trip={trip} me={me} userId={props.userId} members={members} onOpenDay={openDay} />}
+        {tab === 'places' && <Places trip={trip} me={me} userId={props.userId} members={members} onOpenDay={openDay} onOpenSwipe={() => setTab('swipe')} />}
       </main>
       {/* a flat, full-width iOS tab bar, as in the promo video: icon over a small label, red when current */}
       <nav className="tabbar" aria-label={t('ניווט ראשי')}>

@@ -40,9 +40,9 @@ const PLACE_TABS: Record<string, string> = {
 
 const CITY_ORDER = ['טוקיו', 'יוקוהמה', 'קיוטו', 'נארה', 'אוסקה', 'טיולי יום', 'טיול יום'] // he-only
 
-type Props = { trip: Trip; me: string; userId: string; members: Member[]; onOpenDay: (day: number) => void }
+type Props = { trip: Trip; me: string; userId: string; members: Member[]; onOpenDay: (day: number) => void; onOpenSwipe?: () => void }
 
-export default function Places({ trip, me, userId, members, onOpenDay }: Props) {
+export default function Places({ trip, me, userId, members, onOpenDay, onOpenSwipe }: Props) {
   const { rows: rawRows, loading, error, reload } = useTripTable<Place>('places', trip.id)
   const media = useMediaIndex()
   const hasBaby = useTripHasBaby(trip.id)
@@ -181,7 +181,18 @@ export default function Places({ trip, me, userId, members, onOpenDay }: Props) 
           {error && <LoadNote onRetry={reload} />}
           {loading && !rows.length && <Skeleton rows={4} />}
           {!loading && !error && shown.length === 0 && (
-            <EmptyState icon={MapPin} title={rows.length ? t('אין מקומות בסינון הזה') : t('עוד אין מקומות')} line={rows.length ? undefined : t('מקום שקיבל מאצ׳ בגילוי יופיע כאן')} />
+            <EmptyState
+              icon={MapPin}
+              title={rows.length ? t('אין מקומות בסינון הזה') : t('עוד אין מקומות')}
+              line={rows.length ? undefined : t('מקום שקיבל מאצ׳ בגילוי יופיע כאן')}
+              action={
+                rows.length
+                  ? { label: t('להציג את כל המקומות'), onClick: () => (setCat(''), setWhose('all')) }
+                  : onOpenSwipe
+                    ? { label: t('לגלות מקומות'), onClick: onOpenSwipe }
+                    : undefined
+              }
+            />
           )}
           {[...groups].map(([c, ps]) => (
             <section key={c} className="pl-city-block">

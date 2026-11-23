@@ -1,5 +1,13 @@
 // English text for the UX-review fixes (messages, questions, plan marks)
 export const EN_UX: Record<string, string> = {
+  'מה צריך לסדר, לארוז או לקנות?': 'What is there to sort out, pack or buy?',
+  'הוספת הפריט הראשון': 'Add the first item',
+  'להציג את כל המקומות': 'Show all places',
+  'לגלות מקומות': 'Discover places',
+  'מקום שקיבל מאצ׳ אפשר לשבץ ליום הזה': 'A place that got a match can be scheduled for this day',
+  'למצוא משהו ליום הזה': 'Find something for this day',
+  'עוד אין הוצאות': 'No expenses yet',
+  'מוסיפים הוצאה, בוחרים מי שילם ובין מי מחלקים, וכאן רואים מי חייב למי.': 'Add an expense, choose who paid and who it is split between, and here you see who owes whom.',
   'העתקת מספר האישור: {code}': 'Copy the confirmation number: {code}',
   'אפשר להעתיק את הקוד מכאן': 'You can copy the code from here',
   'הודעות': 'Messages',

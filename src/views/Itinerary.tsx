@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { BedDouble, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
+import { BedDouble, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Footprints, Heart, MapPin, Navigation, Pencil, PlaneLanding, Plus, Route, Share2, Trash2, Undo2, Users } from 'lucide-react'
 import { Checkbox, CheckboxIndicator } from '@ui-sdk/react/checkbox'
 import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@ui-sdk/react/menu'
 import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
@@ -10,7 +10,7 @@ import { CATEGORIES, CITY_HE, TOGETHER, whoOptions, type Booking, type Candidate
 import { cityLabel, couplesOf, currentDay, errorText, useTokyoHM, dayDate, keepRanges, dayOption, dayParts, fmtDayLong, mutate, replan, useMediaIndex, useTripTable, withMedia } from '../lib'
 import { isEn, t } from '../i18n'
 import { ask, say } from '../toast'
-import { Empty, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet, Skeleton, useRemembered } from '../ui'
 import { validWho, whoChoices, whoLabel } from '../who'
 import { RingsIcon } from '../rings'
 import { CARD_ICON, Icon } from '../icons'
@@ -42,9 +42,9 @@ import '../styles/fixc.css'
 import QuickFab from './QuickFab'
 import { arrivalLine, arrivalOf, type Arrival } from './arrivalLine'
 
-type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string }
+type Props = { trip: Trip; day: number; setDay: (d: number) => void; members?: Member[]; userId?: string; onFind?: () => void }
 
-export default function Itinerary({ trip, day, setDay, members = [], userId }: Props) {
+export default function Itinerary({ trip, day, setDay, members = [], userId, onFind }: Props) {
   const { rows: days, error: daysError, reload: reloadDays } = useTripTable<DayInfo>('day_info', trip.id, 'day')
   const { rows: items, put: putItems, loading: itemsLoading, error: itemsError, reload: reloadItems } = useTripTable<PlanItem>('itinerary_items', trip.id, 'sort')
   const { rows: bookings, loading: bookingsLoading, error: bookingsError, reload: reloadBookings } = useTripTable<Booking>('bookings', trip.id, 'starts_at')
@@ -338,7 +338,14 @@ export default function Itinerary({ trip, day, setDay, members = [], userId }: P
 
       {loadFailed && <LoadNote onRetry={reloadPlan} />}
       {entries.length === 0 && loading && <Skeleton rows={3} />}
-      {entries.length === 0 && !loading && !loadFailed && <Empty>{t('אין תוכניות ליום הזה')}</Empty>}
+      {entries.length === 0 && !loading && !loadFailed && (
+        <EmptyState
+          icon={CalendarDays}
+          title={t('אין תוכניות ליום הזה')}
+          line={onFind ? t('מקום שקיבל מאצ׳ אפשר לשבץ ליום הזה') : undefined}
+          action={onFind ? { label: t('למצוא משהו ליום הזה'), onClick: onFind } : undefined}
+        />
+      )}
       {sections.map((owner) => {
         const list = entries.filter((e) => owner === undefined || e.who === owner)
         // today: the thin "now" line sits before the first stop that has not started yet

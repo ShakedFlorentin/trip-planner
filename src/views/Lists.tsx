@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTab } from '@ui-sdk/react/tabs'
 import { supabase } from '../supabase'
 import { itemDone, type ChecklistItem, type Member } from '../types'
 import { couplesOf, keepRanges, mutate, useTripTable } from '../lib'
-import { EmptyState } from '../ui'
+import { EmptyState, LoadNote, Skeleton } from '../ui'
 import { Icon } from '../icons'
 import { t } from '../i18n'
 import { Check, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react'
@@ -21,7 +21,7 @@ const LISTS: { id: string; label: string }[] = [
 const UNDO_MS = 4500
 
 export default function Lists({ tripId, members, userId }: { tripId: string; members: Member[]; userId: string }) {
-  const { rows } = useTripTable<ChecklistItem>('checklist_items', tripId)
+  const { rows, loading, error, reload } = useTripTable<ChecklistItem>('checklist_items', tripId)
   const [list, setList] = useState('todo')
   const [text, setText] = useState('')
   const field = useRef<HTMLInputElement>(null)
@@ -189,7 +189,17 @@ export default function Lists({ tripId, members, userId }: { tripId: string; mem
         </div>
       )}
 
-      {items.length === 0 && <EmptyState icon={ListChecks} title={t('הרשימה ריקה')} />}
+      {error && <LoadNote onRetry={reload} />}
+      {loading && !rows.length && <Skeleton rows={3} slim />}
+      {/* empty only once the data is really in, and with the next step: the field above */}
+      {items.length === 0 && !loading && !error && (
+        <EmptyState
+          icon={ListChecks}
+          title={t('הרשימה ריקה')}
+          line={t('מה צריך לסדר, לארוז או לקנות?')}
+          action={{ label: t('הוספת הפריט הראשון'), onClick: () => field.current?.focus() }}
+        />
+      )}
       {items.map((i) => {
         const isDone = done(i)
         return (
