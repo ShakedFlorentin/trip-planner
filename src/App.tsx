@@ -38,7 +38,7 @@ import { track } from './track'
 import { OverlayLayer, say } from './toast'
 import { toast } from '@ui-sdk/react/toast'
 import { forgetPushSync, syncPush } from './push'
-import Guide, { GUIDE_READY, guideUnseen, onGuideOpen } from './views/Guide'
+import Guide, { type GuideMode, onGuideOpen } from './views/Guide'
 
 // solid glyphs, like Music's tab bar: every tab carries the same weight and only the colour marks the open one.
 // The glyphs differ in width (the pin is narrow, the ticket wide), so `nudge` moves each one by a fraction of a pixel
@@ -57,16 +57,16 @@ const UID_KEY = 'userId'
 const SESSION_WAIT_MS = 3000
 
 // a shared plan's link (?share=…) opens the read-only page for anyone, before the login gate.
-// The guide video plays over everything the first time the app opens on this device (after the opening rings, before
-// signing in), and again whenever the ☰ menu asks for it; a shared plan's visitor is not shown it on their own.
+// The guide never plays by itself: the account menu opens it, and the small card after the first match offers it
+// (to watch or to read).
 export default function App() {
   const [slug] = useState(slugInUrl)
-  const [guide, setGuide] = useState(() => GUIDE_READY && !slug && guideUnseen())
-  useEffect(() => onGuideOpen(() => setGuide(true)), [])
+  const [guide, setGuide] = useState<GuideMode | null>(null)
+  useEffect(() => onGuideOpen(setGuide), [])
   return (
     <>
       {slug ? <SharedPlan slug={slug} /> : <AppMain />}
-      {guide && <Guide onClose={() => setGuide(false)} />}
+      {guide && <Guide mode={guide} onClose={() => setGuide(null)} />}
     </>
   )
 }

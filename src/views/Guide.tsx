@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog'
 import { isEn, t } from '../i18n'
+import { reducedMotion } from '../spring'
 import '../styles/guide.css'
 
-// remembered on this device once the guide has been watched or skipped, so it opens by itself only the first time
+// remembered on this device once the guide has been offered, so the offer after the first match comes only once
 const SEEN_KEY = 'guideSeen'
 const OPEN_EVENT = 'guide:open'
-// the guide videos are in public/guide/ (guide-he.mp4, guide-en.mp4); false hides the first-open guide and the ☰ row
+// the guide videos are in public/guide/ (guide-he.mp4, guide-en.mp4); false hides the offer and the account-menu row
 export const GUIDE_READY = true
 
-/** The guide has not been shown on this device yet. */
+export type GuideMode = 'watch' | 'read'
+
+/** The guide has not been offered on this device yet. */
 export function guideUnseen() {
   try {
     return !localStorage.getItem(SEEN_KEY)
   } catch {
-    // no storage (private browsing): don't show it on every launch
+    // no storage (private browsing): never offer it by itself
     return false
   }
 }
 
-function markSeen() {
+export function markGuideSeen() {
   try {
     localStorage.setItem(SEEN_KEY, '1')
   } catch {
@@ -26,56 +30,75 @@ function markSeen() {
   }
 }
 
-/** Opens the guide again from anywhere (the ☰ menu); App listens for it. */
-export function openGuide() {
-  window.dispatchEvent(new Event(OPEN_EVENT))
+/** Opens the guide from anywhere (the account menu, the offer after the first match); App listens for it. */
+export function openGuide(mode: GuideMode = 'watch') {
+  window.dispatchEvent(new CustomEvent<GuideMode>(OPEN_EVENT, { detail: mode }))
 }
 
 /** Calls `f` whenever something asks for the guide (openGuide). */
-export function onGuideOpen(f: () => void) {
-  window.addEventListener(OPEN_EVENT, f)
-  return () => window.removeEventListener(OPEN_EVENT, f)
+export function onGuideOpen(f: (mode: GuideMode) => void) {
+  const h = (e: Event) => f((e as CustomEvent<GuideMode>).detail ?? 'watch')
+  window.addEventListener(OPEN_EVENT, h)
+  return () => window.removeEventListener(OPEN_EVENT, h)
+}
+
+/** What the video says, in three lines: the text alternative, and the "Read it" version. */
+const guideLines = () => [
+  t('מחליקים על מקומות. מה ששניכם אוהבים מקבל מאצ׳ ונכנס למסלול.'),
+  t('המסלול מסתדר לפי ימים ואזורים, וההזמנות וההוצאות במקום אחד.'),
+  t('מוסיפים מקום מקישור, והזמנה ממייל.'),
+]
+
+/**
+ * The small card after the first match: a 30 second tour, to watch, to read, or to close. Offered once per device.
+ * Nothing plays by itself and nothing is asked again.
+ */
+export function GuideOffer({ onClose }: { onClose: () => void }) {
+  return (
+    <aside className="guide-offer" aria-label={t('מדריך')}>
+      <button className="guide-offer-x" aria-label={t('סגירה')} onClick={onClose}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+      <b>{t('מאצ׳ ראשון!')}</b>
+      <p>{t('רוצים סיור של 30 שניות?')}</p>
+      <div className="guide-offer-acts">
+        <button
+          className="secondary"
+          onClick={() => {
+            onClose()
+            openGuide('read')
+          }}
+        >
+          {t('לקרוא')}
+        </button>
+        <button
+          className="primary"
+          onClick={() => {
+            onClose()
+            openGuide('watch')
+          }}
+        >
+          {t('לצפות')}
+        </button>
+      </div>
+    </aside>
+  )
 }
 
 /**
- * Waits for the opening rings (index.html #intro) to finish and leave, so the video starts on a clear screen rather
- * than under the rings. A fallback timer covers a page where the rings never get their start.
+ * The guide in a ui-sdk Dialog (focus stays inside, Escape closes, focus returns to what opened it): the 32-second
+ * video of how the app works, or the same three lines as text. The video starts only when asked for (Watch) and, with
+ * reduced motion, waits for a tap on play and shows the player's own controls. The video's language follows the app's.
  */
-function afterIntro(f: () => void) {
-  if (!document.getElementById('intro')) {
-    f()
-    return () => {}
-  }
-  let done = false
-  const go = () => {
-    if (done) return
-    done = true
-    obs.disconnect()
-    clearTimeout(timer)
-    f()
-  }
-  const obs = new MutationObserver(() => !document.getElementById('intro') && go())
-  obs.observe(document.body, { childList: true })
-  const timer = setTimeout(go, 2500)
-  return () => {
-    done = true
-    obs.disconnect()
-    clearTimeout(timer)
-  }
-}
-
-/**
- * The guide: a 32-second video of how the app works (swipe, the plan, adding from a link, bookings from an
- * email), full screen on the video's own cream, muted and with no player controls. "Skip" sits at the top all
- * along; at the end "Let's go" closes it and "Again" plays it once more. The video's language follows the app's.
- */
-export default function Guide({ onClose }: { onClose: () => void }) {
+export default function Guide({ mode, onClose }: { mode: GuideMode; onClose: () => void }) {
+  const [view, setView] = useState<GuideMode>(mode)
   const video = useRef<HTMLVideoElement>(null)
   const [ended, setEnded] = useState(false)
-  // autoplay refused (Low Power Mode, a strict browser): a play button instead of a still first frame
-  const [blocked, setBlocked] = useState(false)
-  const close = useRef(onClose)
-  close.current = onClose
+  const calm = reducedMotion()
+  // autoplay refused (Low Power Mode, a strict browser) or reduced motion: a play button instead of a moving first frame
+  const [blocked, setBlocked] = useState(calm)
 
   const play = () => {
     const v = video.current
@@ -83,24 +106,9 @@ export default function Guide({ onClose }: { onClose: () => void }) {
     setBlocked(false)
     v.play().catch(() => setBlocked(true))
   }
-
   useEffect(() => {
-    const stop = afterIntro(play)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && finish()
-    window.addEventListener('keydown', onKey)
-    return () => {
-      stop()
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [])
-
-  function finish() {
-    markSeen()
-    close.current()
-  }
+    if (view === 'watch' && !calm) play()
+  }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const again = () => {
     const v = video.current
@@ -111,49 +119,61 @@ export default function Guide({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="guide" role="dialog" aria-modal="true" aria-label={t('מדריך')}>
-      <video
-        ref={video}
-        className="guide-video"
-        src={`${import.meta.env.BASE_URL}guide/guide-${isEn ? 'en' : 'he'}.mp4`}
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        onEnded={() => {
-          markSeen()
-          setEnded(true)
-        }}
-        // no video (a missing file, no network on the web): straight into the app, never a blank screen. With no network
-        // the guide isn't marked as seen, so it plays the next time there is
-        onError={() => {
-          if (navigator.onLine) markSeen()
-          close.current()
-        }}
-      />
-      {!ended && (
-        <button className="guide-skip" onClick={finish}>
-          {t('דלג')}
-        </button>
-      )}
-      {blocked && !ended && (
-        <button className="guide-play" onClick={play} aria-label={t('הפעלה')}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
-          </svg>
-        </button>
-      )}
-      {ended && (
-        <div className="guide-end">
-          <button className="guide-go" onClick={finish} autoFocus>
-            {t('מתחילים')}
-          </button>
-          <button className="guide-again" onClick={again}>
-            {t('שוב')}
-          </button>
-        </div>
-      )}
-    </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="guide" initialFocus="[data-guide-close]">
+        <DialogClose className="guide-skip" data-guide-close>
+          {t('סגירה')}
+        </DialogClose>
+        {view === 'watch' ? (
+          <>
+            <video
+              ref={video}
+              className="guide-video"
+              src={`${import.meta.env.BASE_URL}guide/guide-${isEn ? 'en' : 'he'}.mp4`}
+              muted
+              playsInline
+              preload="metadata"
+              controls={calm}
+              disablePictureInPicture
+              disableRemotePlayback
+              aria-label={t('סרטון: איך Toogo עובד')}
+              onEnded={() => setEnded(true)}
+              // no video (a missing file, no network): the text version, never a blank screen
+              onError={() => setView('read')}
+            />
+            <DialogTitle className="sr-only">{t('איך Toogo עובד')}</DialogTitle>
+            <DialogDescription className="sr-only">{guideLines().join(' ')}</DialogDescription>
+            {blocked && !ended && (
+              <button className="guide-play" onClick={play} aria-label={t('הפעלה')}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+                </svg>
+              </button>
+            )}
+            {ended && (
+              <div className="guide-end">
+                <DialogClose className="guide-go">{t('מתחילים')}</DialogClose>
+                <button className="guide-again" onClick={again}>
+                  {t('שוב')}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="guide-read">
+            <DialogTitle render={<h2 />}>{t('איך Toogo עובד')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('שלוש שורות על האפליקציה')}</DialogDescription>
+            <ol>
+              {guideLines().map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ol>
+            <button className="guide-again" onClick={() => setView('watch')}>
+              {t('לצפות בסרטון')}
+            </button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

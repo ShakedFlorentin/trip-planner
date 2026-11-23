@@ -1,5 +1,16 @@
 // English text for the UX-review fixes (messages, questions, plan marks)
 export const EN_UX: Record<string, string> = {
+  'מאצ׳ ראשון!': 'First match!',
+  'רוצים סיור של 30 שניות?': 'Want a 30 second tour?',
+  'לקרוא': 'Read it',
+  'לצפות': 'Watch',
+  'לצפות בסרטון': 'Watch the video',
+  'איך Toogo עובד': 'How Toogo works',
+  'סרטון: איך Toogo עובד': 'Video: how Toogo works',
+  'שלוש שורות על האפליקציה': 'Three lines about the app',
+  'מחליקים על מקומות. מה ששניכם אוהבים מקבל מאצ׳ ונכנס למסלול.': 'Swipe on places. What you both like gets a match and goes into the plan.',
+  'המסלול מסתדר לפי ימים ואזורים, וההזמנות וההוצאות במקום אחד.': 'The plan is arranged by day and area, with bookings and expenses in one place.',
+  'מוסיפים מקום מקישור, והזמנה ממייל.': 'Add a place from a link, and a booking from an email.',
   'לא הצלחנו להתחבר. בדקו את הפרטים ונסו שוב.': 'We could not sign you in. Check the details and try again.',
   'מתחילים בלי חשבון': 'Start without an account',
   'מה צריך לסדר, לארוז או לקנות?': 'What is there to sort out, pack or buy?',

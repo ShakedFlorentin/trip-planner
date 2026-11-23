@@ -1,14 +1,22 @@
-/* The guide (views/Guide.tsx): the video full screen on its own cream, so its edges never show. The colours stay the
-   video's in dark mode too, since the layer is the video. Under the opening rings (#intro, z-index 1000). */
-.guide {
+/* The guide (views/Guide.tsx), a ui-sdk Dialog: the video full screen on its own cream, so its edges never show. The
+   colours stay the video's in dark mode too, since the layer is the video. */
+[data-slot='dialog-content'].guide {
   position: fixed;
   inset: 0;
   z-index: 900;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   background: #faf7f2;
   color: #1f1a17;
   overscroll-behavior: contain;
   touch-action: none;
 }
+[data-slot='dialog-content'].guide:focus-visible, .guide :focus-visible { outline: 2px solid #bc002d; outline-offset: 2px; }
 
 .guide-video {
   position: absolute;
@@ -19,11 +27,15 @@
   background: #faf7f2;
   pointer-events: none;
 }
+/* with reduced motion the player's own controls show, so the video takes taps */
+.guide-video[controls] { pointer-events: auto; }
 
 .guide-skip {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   inset-inline-end: 16px;
+  z-index: 1;
+  min-height: 44px;
   padding: var(--s-2) var(--s-4);
   border: 0;
   border-radius: var(--r-pill);
@@ -98,4 +110,37 @@
 
 @media (prefers-reduced-motion: reduce) {
   .guide-end { animation: none; }
+}
+
+/* the text version: the same three lines, large, on the video's cream */
+.guide-read { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--s-5); padding: var(--s-8) var(--s-6); overflow: auto; }
+.guide-read h2 { margin: 0; font-size: var(--fs-title); }
+.guide-read ol { margin: 0; padding-inline-start: var(--s-5); display: flex; flex-direction: column; gap: var(--s-4); font-size: var(--fs-body); line-height: 1.5; }
+.guide-read .guide-again { align-self: flex-start; min-height: 44px; margin-inline-start: calc(var(--s-4) * -1); }
+
+/* the offer after the first match: a small card above the tab bar, to watch, to read, or to close */
+.guide-offer {
+  position: fixed;
+  z-index: 8;
+  inset-inline: var(--s-3);
+  bottom: calc(var(--tabbar-h) + var(--s-3) + env(safe-area-inset-bottom));
+  max-width: 480px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--elev-2);
+  animation: guide-up 0.3s var(--ease) both;
+}
+.guide-offer b { padding-inline-end: 44px; font-size: var(--fs-body); }
+.guide-offer p { margin: 0; color: var(--muted); font-size: var(--fs-subhead); }
+.guide-offer-x { position: absolute; inset-block-start: 0; inset-inline-end: 0; width: 44px; height: 44px; display: grid; place-items: center; color: var(--muted); }
+.guide-offer-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.guide-offer-acts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin-top: var(--s-2); }
+.guide-offer-acts .secondary { background: var(--fill); }
+@media (prefers-reduced-motion: reduce) {
+  .guide-offer { animation: none; }
 }

@@ -6,6 +6,7 @@ import { AUDIENCES, CARD_STYLE, CITY_HE, KOSHER, VERDICTS, type Candidate, type 
 import { cityLabel, couplesOf, keepRanges, mutate, readCache, safePhoto, safeUrl, useMediaIndex, useTripAvoidsPorkSeafood, useTripHasBaby, useTripTable, withMedia, writeCache } from '../lib'
 import AddPlace from './AddPlace'
 import MatchPop, { type Match } from './MatchPop'
+import { GUIDE_READY, GuideOffer, guideUnseen, markGuideSeen } from './Guide'
 import { hapticLight } from '../haptics'
 import { askForRating } from '../rating'
 import { mayAskForPush, notifyMatch } from '../push'
@@ -73,10 +74,16 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
   const match = matchQueue[0] ?? null
   // a match is a happy moment: once its pop-up is closed, the app may ask for a rating (src/rating.ts decides)
   const [pushAsk, setPushAsk] = useState<'likes' | 'match' | null>(null)
+  // the 30 second tour is offered once, on this device, after the first match pop-up is closed
+  const [tourOffer, setTourOffer] = useState(false)
   const closeMatch = useCallback(() => {
     setMatchQueue(nextMatch)
     // the asks come after the last pop-up, not between two of them
     if (matchQueue.length > 1) return
+    if (GUIDE_READY && guideUnseen()) {
+      markGuideSeen()
+      setTourOffer(true)
+    }
     askForRating()
     // the web's notifications offer (the rating prompt is only in the App Store app, so the two never meet)
     if (members.length > 1) void mayAskForPush().then((ok) => ok && setPushAsk('match'))
@@ -490,6 +497,7 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
 
       {match && <MatchPop key={match.c.id + (match.who ?? '')} match={match} onClose={closeMatch} />}
       {pushAsk && !match && <PushAsk from={pushAsk} onClose={() => setPushAsk(null)} />}
+      {tourOffer && !match && !pushAsk && <GuideOffer onClose={() => setTourOffer(false)} />}
     </div>
   )
 }
