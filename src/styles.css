@@ -1030,8 +1030,8 @@ textarea.grow { resize: none; overflow: hidden; min-height: 64px; }
 .places.map-mode ~ .fab, .places.map-mode .fab { display: none; }
 
 /* Lists (55-57, 79) */
-.list-tabs button { gap: var(--s-2); min-height: 40px; padding-inline: var(--s-2); }
-.list-name { font-size: var(--fs-subhead); white-space: nowrap; }
+.list-tabs button { gap: var(--s-1); min-height: 40px; padding-inline: var(--s-1); flex: 1 1 auto; white-space: normal; }
+.list-name { font-size: var(--fs-subhead); line-height: 1.15; text-wrap: balance; }
 .list-left { font-size: var(--fs-footnote); color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
 .list-ok { color: var(--ok); width: 1em; height: 1em; }
 .list-ring { width: 18px; height: 18px; flex: none; rotate: -90deg; }
