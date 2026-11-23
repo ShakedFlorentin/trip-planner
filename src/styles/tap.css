@@ -1,0 +1,56 @@
+/* Tap size: every control answers to a 44pt area. The look stays: the area grows with a transparent ::after (or a
+   min-size where the box can grow unseen), and neighbours keep 8px between their visible parts. */
+
+/* segmented controls and the Lists tabs: 34 and 40 high to look at, 44 to tap */
+.segmented button, .list-tabs button { position: relative; }
+.segmented button::after { content: ''; position: absolute; inset: -5px 0; }
+.list-tabs button::after { content: ''; position: absolute; inset: -2px 0; }
+.group-block .segmented button::after { content: none; }
+
+/* round icon links on a place card (map, website, video) */
+.round-icon { position: relative; }
+.round-icon::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+
+/* undo: a time-critical tap, in the dark bar */
+.undo-bar .link { position: relative; }
+.undo-bar .link::after { content: ''; position: absolute; inset: -4px -8px; }
+
+/* the terms link under the sign-in: a 44pt area around the words */
+.login-legal .link { position: relative; }
+.login-legal .link::after { content: ''; position: absolute; inset: -14px -6px; }
+
+/* map pins: a 22px dot (34px for a cluster) centred in a 44px marker box */
+.pin-hit { display: grid; place-items: center; }
+
+/* guest header */
+.guest-prefs { position: relative; }
+.guest-prefs::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; }
+.guest-top .guest-save { min-height: 44px; }
+
+/* phrase actions, voice details, onboarding choices, Plan's spare days and back link */
+.phrase-acts .secondary { min-height: 44px; }
+.voice-details summary { min-height: 44px; display: flex; align-items: center; }
+.ob-seg button { min-height: 44px; }
+.spare summary { min-height: 44px; }
+.plan-back { min-height: 44px; }
+
+/* the chips under the recommended stay: rows 12px apart so the 44pt areas of two rows do not overlap */
+.stay-rec-alts { row-gap: var(--s-3); }
+.stay-rec-alts .chip { position: relative; }
+.stay-rec-alts button.chip:not(.tiny)::after { inset: -6px 0; }
+
+/* nights stepper: 36px buttons, 8px apart, 44pt each */
+.nights-step { gap: var(--s-2); }
+.nights-step button { position: relative; }
+.nights-step button::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+
+/* review close */
+.review-x { position: relative; }
+.review-x::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+
+/* the name field in settings: same look, taller to tap (the row does not grow) */
+.set-profile-text input { min-height: 44px; margin-block: -8px; }
+
+/* the offline bar's link */
+.net-bar .link { position: relative; min-height: 0; }
+.net-bar .link::after { content: ''; position: absolute; inset: -6px -8px; }

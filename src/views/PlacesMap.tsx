@@ -108,15 +108,15 @@ export default function PlacesMap({ places, onPick, start, numDays, tripId }: Pr
         if (c.pts.length === 1) {
           const p = c.pts[0]
           const icon = L.divIcon({
-            className: '',
+            className: 'pin-hit',
             html: `<div class="pin${p.visited ? ' visited' : ''}" style="background:${PIN_COLORS[p.category] ?? PIN_COLORS.other}"></div>`,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
           })
           L.marker([p.lat!, p.lng!], { icon, title: p.name }).on('click', () => onPick(p)).addTo(lay)
         } else {
           const b = L.latLngBounds(c.pts.map((p) => [p.lat!, p.lng!]))
-          const icon = L.divIcon({ className: '', html: `<div class="pin-cluster">${c.pts.length}</div>`, iconSize: [34, 34], iconAnchor: [17, 17] })
+          const icon = L.divIcon({ className: 'pin-hit', html: `<div class="pin-cluster">${c.pts.length}</div>`, iconSize: [44, 44], iconAnchor: [22, 22] })
           L.marker(b.getCenter(), { icon })
             .on('click', () => m.fitBounds(b, { ...fit(), maxZoom: Math.max(m.getZoom() + 2, 15) }))
             .addTo(lay)
