@@ -20,7 +20,7 @@
 .segmented button { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
 .chip { gap: var(--s-2); }
 .fab { display: grid; place-items: center; }
-.check .ic { display: block; margin: auto; color: #fff; }
+.check .ic { display: block; margin: auto; color: var(--on-ok); }
 .thumb .ic { color: var(--muted); }
 .primary, .secondary { gap: var(--s-2); }
 .link { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); }
@@ -37,7 +37,7 @@
 .step.wait .step-title { color: var(--muted); font-weight: 500; }
 .step-body { grid-column: 2; display: flex; flex-direction: column; gap: var(--s-1); margin-top: 2px; min-width: 0; font-size: var(--fs-footnote); color: var(--muted); overflow-wrap: anywhere; }
 .step-mark { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
-.step-mark.done { background: var(--ok); color: #fff; }
+.step-mark.done { background: var(--ok); color: var(--on-ok); }
 .step-mark.now { color: var(--accent); }
 .step-mark.wait { border: 1.5px solid color-mix(in srgb, var(--muted) 55%, transparent); }
 .step-mark.fail { background: var(--fill); color: var(--accent); }

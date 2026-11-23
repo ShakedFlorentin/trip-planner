@@ -303,7 +303,7 @@ main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32
 .pt-tick { border: 2px solid var(--control-edge); color: var(--on-accent); font-size: var(--fs-footnote); }
 .pt-tick > * { display: grid; place-items: center; }
 .pt-tick::after { content: ''; position: absolute; inset: -12px; } /* 44pt tap area: the inset is measured from inside the 2px border of the 24px node */
-.pt-tick[data-checked] { background: var(--ok); border-color: var(--ok); }
+.pt-tick[data-checked] { background: var(--ok); border-color: var(--ok); color: var(--on-ok); }
 .pt-dot { border: 1.5px solid var(--line); color: var(--muted); }
 .pt-dot .ic { width: 14px; height: 14px; }
 .pt-dot.quiet { opacity: 0.7; }
