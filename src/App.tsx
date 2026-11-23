@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { hapticSelect } from './haptics'
+import { reducedMotion } from './spring'
 import { supabase } from './supabase'
 import { setOutboxUser } from './outbox'
 import { t } from './i18n'
@@ -419,6 +420,8 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   useEffect(() => {
     pageScroller().scrollTo(0, 0)
   }, [tab])
+  // tapping the tab that is already open takes the page back to its top (as in every iOS app)
+  const toTop = () => pageScroller().scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' })
   useEffect(() => {
     if (!isNative) return
     document.documentElement.classList.add('inner-scroll')
@@ -581,7 +584,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       {/* a flat, full-width iOS tab bar, as in the promo video: icon over a small label, red when current */}
       <nav className="tabbar" aria-label={t('ניווט ראשי')}>
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => (tab !== t.id && hapticSelect(), setTab(t.id))}>
+          <button key={t.id} className={tab === t.id ? 'active' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => (tab === t.id ? toTop() : (hapticSelect(), setTab(t.id)))}>
             <svg className="tab-icon" viewBox="0 0 24 24" aria-hidden="true" style={{ '--nudge': t.nudge } as CSSProperties}>
               <path d={t.d} />
             </svg>

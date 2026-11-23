@@ -218,7 +218,7 @@ export default function Places({ trip, me, userId, members, onOpenDay, onOpenSwi
 
       {/* the + is the shared quick-add button; the page pads for it, so it covers no row */}
       <QuickFab
-        label={t('הוספת מקום')}
+        label={t('הצעת מקום')}
         onTap={() => {
           setSharedLink('')
           setAdding(true)

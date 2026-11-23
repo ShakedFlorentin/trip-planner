@@ -390,7 +390,9 @@ main:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32px + env(
   color: var(--tabbar-idle);
 }
 .tabbar button.active { color: var(--accent); }
-.tab-icon { width: 25px; height: 25px; fill: currentColor; fill-rule: evenodd; translate: calc(var(--nudge, 0) * -1px); }
+.tab-icon { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; fill-rule: evenodd; translate: calc(var(--nudge, 0) * -1px); }
+/* the open tab is the solid glyph, the others its outline: the shape changes, not only the colour */
+.tabbar button.active .tab-icon { fill: currentColor; stroke: none; }
 .search-icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
 .fab {

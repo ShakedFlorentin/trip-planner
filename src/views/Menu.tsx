@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { DrawerClose } from '@ui-sdk/react/drawer'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@ui-sdk/react/collapsible'
-import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronDown, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { ArrowLeftRight, ArrowUpRight, BookOpen, ChevronDown, ChevronLeft, MessageSquareWarning, Settings as SettingsIcon, ShieldCheck, SlidersHorizontal, Wallet } from 'lucide-react'
 import { Icon, type LucideIcon } from '../icons'
 import { t, locale } from '../i18n'
 import { Sheet } from '../ui'
@@ -50,7 +50,7 @@ export default function Menu(props: Props) {
   const go = (f: () => void) => () => {
     after.current = f
   }
-  const tools = MORE_TABS.filter((x) => x.id !== 'baby' || props.hasBaby)
+  const tools = MORE_TABS.filter((x) => x.id !== 'money' && (x.id !== 'baby' || props.hasBaby))
   const sub = [props.trip?.name, tripDates(props.trip)].filter(Boolean).join(' · ')
   return (
     <Sheet
@@ -72,6 +72,8 @@ export default function Menu(props: Props) {
               {sub && <small dir="auto">{sub}</small>}
             </span>
           </div>
+          {/* the tab bar is full (five tabs is the most iOS shows), so Expenses is the first row here, one tap after the avatar */}
+          <Row icon={Wallet} label={t('הוצאות')} onPress={go(() => props.onTool('money'))} />
           <Row icon={SlidersHorizontal} label={t('ההעדפות שלי')} onPress={go(props.onPrefs)} />
         </div>
         <div className="group acct-group">

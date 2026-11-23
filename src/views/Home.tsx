@@ -319,7 +319,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
       </section>
 
       {/* a tap adds a place (as on Places); press and drag for the wheel: expense, list item or booking */}
-      <QuickFab label={t('הוספת מקום')} onTap={() => requestAdd('place')} />
+      <QuickFab label={t('הצעת מקום')} onTap={() => requestAdd('place')} />
     </div>
   )
 }
