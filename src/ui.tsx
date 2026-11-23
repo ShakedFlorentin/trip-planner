@@ -114,12 +114,38 @@ export function Empty(props: { children: ReactNode }) {
   return <p className="empty">{props.children}</p>
 }
 
-/** Rows' worth of grey placeholders while a list loads. */
-export function Skeleton(props: { rows?: number }) {
+/**
+ * Grey placeholders while data loads, in the shape of what is coming so nothing jumps when it arrives: list rows (the
+ * default; `slim` for the checklist rows), `hero` (Home's photo tile), `card` (a card under it) or `deck` (Discover's card).
+ * No shimmer with reduced motion.
+ */
+export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card' | 'deck'; slim?: boolean }) {
+  if (props.shape === 'hero')
+    return (
+      <div className="skeleton" aria-hidden="true">
+        <div className="skeleton-row sk-hero" />
+      </div>
+    )
+  if (props.shape === 'card')
+    return (
+      <div className="skeleton" aria-hidden="true">
+        <div className="skeleton-row sk-card" />
+      </div>
+    )
+  if (props.shape === 'deck')
+    return (
+      <div className="sk-deck" aria-hidden="true">
+        <div className="skeleton-row sk-deck-card" />
+        <div className="sk-deck-lines">
+          <div className="skeleton-row sk-line" />
+          <div className="skeleton-row sk-line short" />
+        </div>
+      </div>
+    )
   return (
     <div className="skeleton" aria-hidden="true">
       {Array.from({ length: props.rows ?? 3 }, (_, i) => (
-        <div key={i} className="skeleton-row" />
+        <div key={i} className={'skeleton-row' + (props.slim ? ' sk-slim' : '')} />
       ))}
     </div>
   )

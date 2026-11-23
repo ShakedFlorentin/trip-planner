@@ -1165,6 +1165,18 @@ main { animation: view-in var(--dur-2) var(--ease); }
 .skeleton-row { flex: none; height: 72px; border-radius: var(--r-md); background: var(--card); animation: skeleton 1.4s ease-in-out infinite; }
 .skeleton-row:nth-child(2) { animation-delay: 0.15s; }
 .skeleton-row:nth-child(3) { animation-delay: 0.3s; }
+/* shapes: each one is the size of what replaces it, so nothing moves when the data arrives */
+.skeleton-row.sk-slim { height: 56px; }
+.skeleton-row.sk-hero { height: 192px; border-radius: var(--r-lg); }
+.skeleton-row.sk-card { height: 120px; }
+.sk-deck { position: absolute; inset: 0; display: flex; flex-direction: column; gap: var(--s-3); }
+.skeleton-row.sk-deck-card { flex: 1; min-height: 0; border-radius: var(--r-lg); }
+.sk-deck-lines { flex: none; display: flex; flex-direction: column; gap: var(--s-2); align-items: flex-end; }
+.skeleton-row.sk-line { height: 14px; width: 70%; border-radius: var(--r-pill); }
+.skeleton-row.sk-line.short { width: 45%; }
+.sk-buttons { justify-content: space-between; min-height: 78px; }
+.skeleton-row.sk-pill { width: 72px; height: 36px; border-radius: var(--r-pill); }
+.skeleton-row.sk-round { width: 60px; height: 60px; border-radius: 50%; }
 @media (prefers-reduced-motion: reduce) { .skeleton-row { animation: none; } }
 
 /* iOS app only (html.inner-scroll, set by App while the signed-in screens show): the page never scrolls or bounces.

@@ -4,7 +4,7 @@ import type { Booking, Essential, Member, Trip } from '../types'
 import { TOGETHER } from '../types'
 import { couplesOf, mutate, useTripTable } from '../lib'
 import { isEn, t } from '../i18n'
-import { EmptyState, Field, LoadNote, Sheet } from '../ui'
+import { EmptyState, Field, LoadNote, Sheet, Skeleton } from '../ui'
 import { PHRASES, type Phrase } from '../phrases'
 import { Icon, type LucideIcon } from '../icons'
 import { Baby, Car, Copy, Lightbulb, Luggage, MapPin, Snowflake, Utensils, ExternalLink, FileText, Hotel, Phone, Pin, Plus, ReceiptText, ShieldAlert, ShieldCheck, StickyNote, Users, X, Check, Volume2, Maximize2 } from 'lucide-react'
@@ -204,6 +204,7 @@ export default function Essentials({ trip, members, userId }: Props) {
           </p>
         )}
         {error && <LoadNote onRetry={reload} />}
+        {loading && !rows.length && <Skeleton rows={3} />}
         {!loading && !error && rows.length === 0 && (
           <EmptyState
             icon={FileText}

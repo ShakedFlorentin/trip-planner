@@ -37,7 +37,7 @@ import { readCache, cityLabel, couplesOf, currentDay, dayDate, dayParts, errorTe
 import { locale, t } from '../i18n'
 import { cityColor, cityPhoto } from '../cities'
 import { Icon, type LucideIcon } from '../icons'
-import { LoadNote } from '../ui'
+import { LoadNote, Skeleton } from '../ui'
 import type { MoreTab } from './More'
 import { useStays } from '../stays'
 import { dayEntries, fmtUntil, hotelFor, nightLines, stayInJapan, minutesOf, navUrl, nextStop, ymd, type Entry, type PlanItem } from './planUtils'
@@ -120,7 +120,9 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
     <div className="stack">
       {/* the top of Home is a large photo tile, Apple Music style (19): before the trip the first city, its country and the
           countdown; during the trip the day's city and date. A city with no photo gets its plain colour tile */}
-      {heroCity ? (
+      {daysT.loading && !days.length ? (
+        <Skeleton shape="hero" />
+      ) : heroCity ? (
         <button className={'city-tile hero-tile c' + cityColor(heroCity) + (heroPhoto ? ' has-photo' : '')} onClick={() => onOpenDay(today ?? heroFrom)}>
           {heroPhoto && <img src={heroPhoto} alt="" draggable={false} />}
           <span className="hero-kicker small">{today ? t('היום') : t('יפן')}</span>
@@ -172,6 +174,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
 
       {today && (
         <>
+          {planUnsure && <Skeleton shape="card" />}
           {!planUnsure && <NextCard next={next} nowHM={nowHM} hasPlan={entries.length > 0} leftCount={rest.length} onOpenDay={() => onOpenDay(today)} />}
 
           {nowHM >= '18:00' && <EveningRate trip={trip} userId={userId} />}
@@ -212,6 +215,7 @@ export default function Home({ trip, members, userId, onOpenDay, onOpenMore, onO
         </>
       )}
 
+      {!today && daysLeft !== null && daysLeft > 0 && gapsUnsure && <Skeleton shape="card" />}
       {!today && daysLeft !== null && daysLeft > 0 && !gapsUnsure && (
         <BeforeTrip
           days={days}

@@ -3,7 +3,7 @@ import { supabase } from '../supabase'
 import type { ChecklistItem, Member, Trip } from '../types'
 import { mutate, useTripTable } from '../lib'
 import { t } from '../i18n'
-import { LoadNote } from '../ui'
+import { LoadNote, Skeleton } from '../ui'
 import { PHRASES } from '../phrases'
 import { PhraseList } from './Essentials'
 import { Icon, type LucideIcon } from '../icons'
@@ -73,6 +73,7 @@ export default function Baby({ trip }: Props) {
           <button className="primary" aria-label={t('הוספה')}><Icon as={Plus} size="1.25em" /></button>
         </form>
         {error && <LoadNote onRetry={reload} />}
+        {loading && !items.length && <Skeleton rows={3} slim />}
         {!loading && !error && items.length === 0 && (
           <>
             <button className="secondary" onClick={addPreset} disabled={busy}>

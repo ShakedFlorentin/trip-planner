@@ -13,7 +13,7 @@ import { lookOpened, lookPause, lookPhoto, lookStart, lookTake } from '../look'
 import PushAsk from './PushAsk'
 import { CardRatings, useRatings } from './Ratings'
 import { isEn, t } from '../i18n'
-import { EmptyState, LoadNote, Sheet } from '../ui'
+import { EmptyState, LoadNote, Sheet, Skeleton } from '../ui'
 import { nextMatch, queueMatches } from '../screenLogic'
 import { AddPhoto } from './PlacePhotos'
 import { MediaActions } from '../media'
@@ -419,7 +419,14 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
         </Sheet>
       )}
 
+      {(loading || prefsLoading) && deck.length === 0 && (
+        <div className="chips scroll filters" aria-hidden="true">
+          <div className="skeleton-row sk-pill" />
+        </div>
+      )}
+
       <div className="deck">
+        {(loading || prefsLoading) && deck.length === 0 && <Skeleton shape="deck" />}
         {candidatesError && deck.length === 0 && !candidates.length && <LoadNote onRetry={reloadCandidates} />}
         {!loading && !prefsLoading && !(candidatesError && !candidates.length) && deck.length === 0 && (
           <div className="empty">
@@ -471,6 +478,13 @@ export default function SwipeGame({ trip, userId, members, showCard, onCardShown
             <Icon as={SkipForward} />
           </button>
           {deck.length > 0 && !batchOver && <span className="left-count" aria-live="polite">{open.length === 1 ? t('נשאר אחד') : t('נשארו {n}', { n: open.length })}</span>}
+        </div>
+      )}
+
+      {(loading || prefsLoading) && deck.length === 0 && (
+        <div className="swipe-buttons sk-buttons" aria-hidden="true">
+          <div className="skeleton-row sk-round" />
+          <div className="skeleton-row sk-round" />
         </div>
       )}
 
