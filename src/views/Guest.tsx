@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Heart, SlidersHorizontal, Sparkles, Users, CalendarDays } from 'lucide-react'
 import { t } from '../i18n'
 import { Icon, type LucideIcon } from '../icons'
 import { EmptyState, Sheet } from '../ui'
 import { Loading } from '../rings'
 import { guestCityInUrl, guestDeck, loadGuestCards, readGuest, writeGuest, type GuestState } from '../guest'
+import { nextPrompt, readAsked, writeAsked } from '../guestPrompt'
 import { track } from '../track'
 import type { Answers, Candidate } from '../types'
 import Onboarding from './Onboarding'
@@ -14,9 +15,8 @@ import { ToogoLogo } from './Login'
 import '../styles/game.css'
 import '../styles/guest.css'
 
-// after this many swipes (and again every PROMPT_EVERY more) the visitor is asked to sign in and keep what they liked
-const PROMPT_AFTER = 8
-const PROMPT_EVERY = 12
+// the visitor is asked to sign in and keep what they liked once after a few swipes and once at the end of the deck
+// (src/guestPrompt.ts); never on a repeating count
 
 /**
  * Toogo before an account (app_settings features.guest_mode): a welcome, the questionnaire, then real cards for the
@@ -106,9 +106,17 @@ function GuestCards({ g, update, onPrefs, onSignIn }: { g: GuestState; update: (
     const n = swiped + 1
     setSwiped(n)
     if ([1, 8, 20, 50, 100].includes(n)) track('guest_swipes', { n, liked: g.liked.length + (liked ? 1 : 0) })
-    if (n === PROMPT_AFTER || (n > PROMPT_AFTER && (n - PROMPT_AFTER) % PROMPT_EVERY === 0)) setAsk(true)
     return true
   }
+  const asked = useRef(readAsked())
+  useEffect(() => {
+    if (!cards) return
+    const r = nextPrompt({ swiped, deckLeft: deck.length, asked: asked.current })
+    if (!r.ask) return
+    asked.current = r.asked
+    writeAsked(r.asked)
+    setAsk(true)
+  }, [swiped, deck.length, cards])
   const undo = () => {
     const last = g.seen[g.seen.length - 1]
     if (!last) return
