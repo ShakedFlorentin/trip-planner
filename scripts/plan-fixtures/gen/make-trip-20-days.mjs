@@ -152,7 +152,6 @@ const sleep = (party, checkIn, checkOut, city, lat, lng, label) => ({
 })
 const fixture = {
   name: 'trip-20-days',
-  knownFailing: true,
   description:
     'Made up, shaped like a real trip: 20 days from 12 Dec 2026, Yokohama 1-3 → Tokyo 4-7 → Kyoto 8-11 → Osaka 12-14 → Tokyo 15-20. ' +
     'Couple A lands day 1 (HND) and leaves on the night of day 20; Couple B (with the baby) lands day 4 (NRT) and leaves on the morning of day 17. ' +

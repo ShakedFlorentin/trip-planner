@@ -37,3 +37,18 @@ trip_stays rows (`{ city, check_in, check_out, party?, area?, lat?, lng?, booked
 nothing back in town) with `dayTripDays` (at most that many days), `notFar`, and `oneBase` (each city's nights sleep at
 one point: no hotel change inside a city). The recommendation for each stretch prints under the fixture's line.
 Unit tests of `stay.ts` itself: `npm run test:stay`.
+
+## A made-up trip with places (`trip-20-days.json`)
+
+A 20-day, four-city, two-couple trip with 126 liked places, all invented people. It is generated, not written by hand:
+`node scripts/plan-fixtures/gen/make-trip-20-days.mjs scripts/plan-fixtures/trip-20-days.json`. Change the generator
+and run it again; do not edit the JSON. Never put real members' names in a fixture.
+
+## The fixes test and the numbers
+
+- `npm run test:plan-fixes` (`scripts/plan-fixes-test.mjs`): one test per planner fix of 2026-11-26 (meals, order on
+  the map, hours and season, couples and days apart, real points, move/landing/departure days, baby and card facts).
+- `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
+  closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
+  runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside
+  it (`../_shared/areas.ts`).
