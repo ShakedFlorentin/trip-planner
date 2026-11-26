@@ -215,6 +215,8 @@ const ABSENT_COST = 4
 // a day trip is worth its ride: at least an hour of places there, and at least this share of the ride there and back
 const TRIP_MIN = 60
 const TRIP_SHARE = 0.4
+// a day trip of a single place: at least this long there
+const TRIP_ALONE = 120
 // at most this many of a kind a day, per couple (meals go by slot instead: one lunch, one dinner)
 const PER_DAY: Record<string, number> = { food: 2, cafe: 2, nightlife: 2 }
 // how much a place counts: once for each couple that liked it, and a little more for one they share (the day together
@@ -867,10 +869,13 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       if (!far.length) continue
       const mins = far.reduce((s, u) => s + u.mins, 0)
       const there = Math.min(...far.map((u) => ride(p.hotel, u.point)))
-      if (mins >= TRIP_MIN && mins >= TRIP_SHARE * 2 * there) continue
+      // one place out there is a day trip only when it is most of a day by itself (a castle); an hour and a half at a
+      // lake and the ride back is not what the day is for
+      const content = far.length >= 2 || mins >= TRIP_ALONE
+      if (content && mins >= TRIP_MIN && mins >= TRIP_SHARE * 2 * there) continue
       for (const u of far) {
         thin.add(u.id)
-        if (mins >= TRIP_MIN) maybe.set(u.id, d.day)
+        if (content && mins >= TRIP_MIN) maybe.set(u.id, d.day)
       }
     }
   }

@@ -282,6 +282,21 @@ const tests = {
     const out = E.plan(d, [unit('alley', { category: 'nightlife', meal: true, best: 'afternoon', mins: 150, opens: H('11:00'), closes: H('22:30') })], [])
     t(out.issues.some((i) => i.kind === 'no_lunch'), `an alley at ${out.placed.has('alley') ? E.hhmm(out.placed.get('alley').start) : '-'} counted as the lunch`)
   },
+  r3: (t) => {
+    // a lake an hour and a half's visit, 85 km away, and nothing else out there: not a day trip
+    const d = [day(1, { A: pres() })]
+    const LAKE = east(TOKYO, -75, -40)
+    const lake = unit('lake', { far: true, mins: 90, priority: 4, best: 'evening', closes: H('17:00'), point: LAKE })
+    const alone = E.plan(d, [lake], [])
+    t(!alone.placed.has('lake'), `a lone 90-minute stop ${Math.round(E.km(TOKYO, LAKE))} km away is the whole day`)
+    // with a lunch and a second place beside it, it is one
+    const more = [lake, unit('soba', { far: true, category: 'food', mins: 60, opens: H('11:00'), closes: H('15:00'), point: east(LAKE, 1) }), unit('cave', { far: true, mins: 60, point: east(LAKE, 2) })]
+    const full = E.plan(d, more, [])
+    t(more.every((u) => full.placed.has(u.id)), `a day trip of three places near each other: ${full.placed.size}/3 planned`)
+    // and so is one long place on its own (a castle, half a day)
+    const castle = E.plan(d, [unit('castle', { far: true, mins: 150, priority: 4, best: 'morning', closes: H('17:00'), point: LAKE })], [])
+    t(castle.placed.has('castle'), 'a lone half-day place is not planned as a day trip')
+  },
 }
 
 const only = process.argv.slice(2)
