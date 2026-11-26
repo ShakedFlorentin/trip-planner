@@ -317,6 +317,21 @@ const tests = {
       if (here.length) t(!out.issues.some((i) => i.kind === 'no_lunch' && i.day === d.day), `day ${d.day}: ${here.length} stops in Tokyo and no lunch`)
     }
   },
+  r5: (t) => {
+    // the day they fly home in the evening ends at 19:10: too early for a bar, not for an early dinner
+    const d = [day(1, { A: pres({ end: H('19:10'), depart: true }) })]
+    const shops = unit('shops', { category: 'shopping', best: 'midday', mins: 120 })
+    const grill = unit('grill', { category: 'food', best: 'evening', opens: H('17:00'), closes: H('23:00'), point: east(TOKYO, 0.5) })
+    const out = E.plan(d, [shops, grill], [])
+    const g = out.placed.get('grill')
+    t(!!g && g.start >= H('17:00') && g.start + 60 <= H('19:10'), `an evening restaurant on a day that ends 19:10: ${g ? 'at ' + E.hhmm(g.start) : 'not planned (' + out.unplanned.get('grill') + ')'}`)
+    // and with no restaurant to give, the day says it has no dinner
+    const none = E.plan(d, [shops], [])
+    t(none.issues.some((i) => i.kind === 'no_dinner' && i.day === 1), 'a day that ends 19:10 with no dinner raises no "no_dinner"')
+    // a day that is over by 18:00 has no dinner to plan
+    const early = E.plan([day(1, { A: pres({ end: H('18:00'), depart: true }) })], [shops], [])
+    t(!early.issues.some((i) => i.kind === 'no_dinner'), 'a day that ends 18:00 asks for a dinner')
+  },
 }
 
 const only = process.argv.slice(2)

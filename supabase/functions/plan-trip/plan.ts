@@ -112,6 +112,8 @@ const MEAL_AT = {
   lunch: { from: 11 * 60, to: 14 * 60 + 45, want: 12 * 60 + 15 },
   dinner: { from: 17 * 60 + 15, to: 21 * 60, want: 18 * 60 + 30 },
 } as const
+// a day that runs at least to this hour has a dinner in it (the slot opens at 17:15)
+const DINNER_DAY = 18 * 60 + 30
 // a day with a meal slot nobody filled costs this much (the day's cost is in km and hours)
 const MEAL_MISS = 10
 // a morning meal this long can be the day's lunch
@@ -120,7 +122,7 @@ const LONG_MEAL = 60
 const MEAL_ROOM = 70
 
 /**
- * Which meals a couple needs that day: lunch when their day covers 13:00-13:30, dinner when it covers 19:00-19:30, and
+ * Which meals a couple needs that day: lunch when their day covers 13:00-13:30, dinner when it runs to 18:30 (an early dinner still fits: the evening they fly home), and
  * only where something fixed leaves an hour free in the slot. A fixed meal in the slot covers it (one with no hour
  * covers dinner first). Short landing and departure days so need one meal or none.
  */
@@ -136,7 +138,7 @@ export function mealNeeds(p: Presence, fx: Fixed[]) {
   }
   const need = {
     lunch: p.start <= 13 * 60 && p.end >= 13 * 60 + 30 && free(MEAL_AT.lunch.from, MEAL_AT.lunch.to + 60),
-    dinner: p.start <= 19 * 60 && p.end >= 19 * 60 + 30 && free(MEAL_AT.dinner.from, MEAL_AT.dinner.to + 60),
+    dinner: p.start <= 19 * 60 && p.end >= DINNER_DAY && free(MEAL_AT.dinner.from, MEAL_AT.dinner.to + 60),
   }
   for (const f of fx) {
     if (!f.meal) continue
@@ -155,9 +157,9 @@ function slotsFor(u: Unit, d: Day): MealSlot[] {
   const who = whoOn(u, d)
   const start = Math.max(...who.map((c) => d.at.get(c)!.start))
   const end = Math.min(...who.map((c) => d.at.get(c)!.end))
-  // lunch only on a day that starts by 13:00 (a day that starts at 14:00 has no lunch to plan), dinner on one that runs to 19:30
+  // lunch only on a day that starts by 13:00 (a day that starts at 14:00 has no lunch to plan), dinner on one that runs to 18:30
   const can = (s: 'lunch' | 'dinner') =>
-    (s === 'lunch' ? start <= 13 * 60 : end >= 19 * 60 + 30) &&
+    (s === 'lunch' ? start <= 13 * 60 : end >= DINNER_DAY) &&
     Math.max(u.opens ?? 0, start, MEAL_AT[s].from) <= Math.min((u.closes ?? 24 * 60) - u.mins, MEAL_AT[s].to, end - u.mins)
   // a nightlife place that serves a meal (an izakaya) is a dinner, never a lunch
   if (u.category === 'nightlife') return can('dinner') ? ['dinner'] : []
