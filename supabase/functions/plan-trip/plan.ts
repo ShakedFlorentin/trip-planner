@@ -64,6 +64,10 @@ export type Unit = {
   meal?: boolean
   /** out in the open (a garden, a shrine path, a lake): the visit is over by dusk */
   outdoor?: boolean
+  /** not a place for a baby: adults only, no strollers, stairs only, smoke (from the card) */
+  adults?: boolean
+  /** the place has to be booked ahead and no booking for it is in the trip yet */
+  booking?: boolean
   /**
    * point is not where the place is but its city's middle (no coordinates, and its address was not found): good
    * enough to say which city's days it belongs to, never used to measure a ride or to say what it is near
@@ -80,12 +84,19 @@ export type Outcome = {
   issues: Issue[]
   /** placed places that sit outside the city their people sleep in that day (not day trips): id → the place's city */
   away: Map<string, string>
+  /**
+   * places planned for fewer couples than liked them: id → the couples it is planned for (an adults-only place two
+   * couples liked goes to the couple without the baby)
+   */
+  only: Map<string, string[]>
 }
 /** What the final check found on a planned place: it should never happen, and the app shows it if it does. */
 export type Issue = {
   /** the place; '' for an issue about a day (a meal nobody planned), which carries day and couple instead */
   id: string
-  kind: 'overlap' | 'tight' | 'hours' | 'meals' | 'no_lunch' | 'no_dinner'
+  // booking: the place takes no walk-ins and nobody has booked it yet; baby: a place not for a baby (adults only, no
+  // strollers, smoke) is planned for the couple that has one, because only they liked it
+  kind: 'overlap' | 'tight' | 'hours' | 'meals' | 'no_lunch' | 'no_dinner' | 'booking' | 'baby'
   day?: number
   couple?: string
 }
@@ -260,7 +271,18 @@ const startFor = (u: Unit, p: Presence) => (opensEarly(u) && p.early != null ? M
  * The plan: each unit on the day that keeps the days compact and balanced, then a rough time for each. A place the
  * day's timetable can't fit before it closes is barred from that day and the days are worked out again.
  */
-export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
+export function plan(days: Day[], liked: Unit[], fixed: Fixed[]): Outcome {
+  // who travels with a baby (nobody, when the trip does not say: then nothing below changes anything)
+  const withBaby = new Set(days.flatMap((d) => [...d.at].filter(([, p]) => p.baby).map(([c]) => c)))
+  // a place that is not for a baby, liked by a couple with one and a couple without: it is the other couple's plan
+  const only = new Map<string, string[]>()
+  const units = liked.map((u) => {
+    if (!u.adults || !u.couples.some((c) => withBaby.has(c))) return u
+    const free = u.couples.filter((c) => !withBaby.has(c))
+    if (!free.length) return u
+    only.set(u.id, free)
+    return { ...u, couples: free }
+  })
   // a day's load and a day's timetable depend only on which places are on it: worked out once for the whole run
   const memo: Memo = { loads: new Map(), tables: new Map() }
   const solve = (settle: boolean, us = units) => {
@@ -329,7 +351,15 @@ export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
     if (worth(again) <= worth(out) * 1.02) break
     out = fill(again)
   }
-  return { placed: out.placed, unplanned: out.unplanned, issues: check(days, units, fixed, out.placed), away: awayOf(days, units, out.placed) }
+  const issues = check(days, units, fixed, out.placed)
+  for (const u of units) {
+    if (!out.placed.has(u.id)) continue
+    if (u.booking) issues.push({ id: u.id, kind: 'booking' })
+    // only the couple with the baby liked it: it stays in the plan (it is their choice), said out loud
+    if (u.adults && u.couples.some((c) => withBaby.has(c))) issues.push({ id: u.id, kind: 'baby' })
+  }
+  for (const id of [...only.keys()]) if (!out.placed.has(id)) only.delete(id)
+  return { placed: out.placed, unplanned: out.unplanned, issues, away: awayOf(days, units, out.placed), only }
 }
 
 /** Is this place in another city than where one of its couples sleeps on that day? A day trip is on purpose: never. */

@@ -365,6 +365,13 @@ const BABY_BLOCKER = /אסור|לא מתאים|לא מומלץ|לא נכנס|א�
 const babyLine = (b: string | null) => (b && BABY_BLOCKER.test(b) ? b : null)
 const BABY_BLOCKER_EN = /no stroller|not suitable|not recommended|stairs only|smok|adults only|no children|no kids|under age|not allowed|no access|hard with a stroller/i
 const babyLineEn = (b: string | null | undefined) => (b && BABY_BLOCKER_EN.test(b) ? b : null)
+// a nightlife card that is a place to eat a full meal (an izakaya, a food alley): it can be the day's dinner. Read from
+// the card's name and plan line; a bar that says nothing of the kind stays a bar
+const SERVES_MEAL = /izakaya|yokocho|yakitori|food alley|居酒屋|横丁|איזקאיה|יוקוצ׳ו|יוקוצ'ו|יאקיטורי|סמטת אוכל|סמטת האוכל/i
+// a sight under the open sky, by its name: the visit is over by dusk. A card that says "night" (lights, a night view)
+// is left alone
+const OUTDOOR = /\b(park|garden|gardens|shrine|temple|trail|hike|lake|beach|bamboo|grove|island)\b|פארק|גן |גני |מקדש|שביל|אגם|חוף|במבוק/i
+const KNOWN_ISSUE = new Set(['overlap', 'tight', 'hours', 'meals'])
 // when a card was never checked: when its kind is usually best
 const DEFAULT_TIME: Record<string, BestTime> = { nightlife: 'night' }
 /** The facts of a card that has them; undefined for one never checked. */
@@ -420,8 +427,15 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const cap = pace ? PACE[pace] : undefined
     if (m.couple && cap) capOf.set(m.couple, Math.min(capOf.get(m.couple) ?? cap, cap))
   }
+  // the couples travelling with a baby: a member said so in the questionnaire (answers.with). Nobody answered = not
+  // known = planned as before (the app shows baby notes then; the planner does not shorten anybody's day on a guess)
+  const baby = new Set<string>()
+  for (const m of members) {
+    const w = (profiles ?? []).find((x) => x.user_id === m.user_id)?.answers?.with
+    if (m.couple && Array.isArray(w) && w.includes('baby')) baby.add(m.couple)
+  }
   // a trip with no start date is not ready to be planned
-  if (!trip.start_date) return { stats: { placed: 0, insert: 0, update: 0, remove: 0, unplanned: 0 }, summary: { unplanned: [], warnings: [], issues: [], away: [], facts_pending: 0, days: [], stay_areas: [] } }
+  if (!trip.start_date) return { stats: { placed: 0, insert: 0, update: 0, remove: 0, unplanned: 0 }, summary: { unplanned: [], warnings: [], issues: [], issues_more: [], away: [], facts_pending: 0, days: [], stay_areas: [] } }
   const start = new Date(trip.start_date + 'T00:00:00Z')
   const dateOf = (day: number) => new Date(start.getTime() + (day - 1) * 86400000).toISOString().slice(0, 10)
 
@@ -544,7 +558,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
 
   // the booked trains: on a day the city changes, the day starts after the train arrives
   const trains = bookings.filter((b) => b.kind === 'train')
-  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, trains, capOf, past })
+  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, trains, baby, capOf, past })
   // each city's middle, from the hotels in it
   const basePt = basePoints(days)
 
@@ -570,6 +584,10 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       continue
     }
     const category = c.category ?? 'sight'
+    const best = (f?.best_time as BestTime) ?? DEFAULT_TIME[category] ?? 'any'
+    // already booked: a booking in the trip carries the place's name
+    const key = factKey(p.name)
+    const booked = bookings.some((b) => factKey(b.title) === key || (key.length > 3 && factKey(b.title).includes(key)))
     let opens = mins(f?.opens)
     let closes = mins(f?.closes)
     if (opens != null && closes != null && closes <= opens) closes = 24 * 60
@@ -582,7 +600,12 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       approx: !own && !!point,
       mins: Math.min(visitMins(f, c.time_needed, category), 420),
       category,
-      best: (f?.best_time as BestTime) ?? DEFAULT_TIME[category] ?? 'any',
+      best,
+      meal: category === 'nightlife' && SERVES_MEAL.test([c.name, f?.plan_line, c.en?.plan_line].filter(Boolean).join(' ')),
+      outdoor: (category === 'sight' || category === 'experience') && best !== 'night' && OUTDOOR.test(c.name),
+      // not for a baby, by the card's checked baby line (the same test that decides whether the line is shown)
+      adults: !!f && (!!babyLine(f.baby_block) || !!babyLineEn(c.en?.baby_block)),
+      booking: f?.booking === 'required' && !booked,
       opens,
       closes,
       closedWeekdays: f?.closed_weekdays ?? [],
@@ -681,7 +704,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       notes_en: noteOfEn(u),
       category: itemCategory(u.c.category ?? 'sight'),
       place_id: id,
-      who: u.p.who,
+      // planned for fewer couples than liked it (a place not for a baby): the item says whose it is
+      who: out.only.get(id)?.join(' + ') ?? u.p.who,
       sort: 100 + pl.order,
       auto: true,
     })
@@ -748,7 +772,14 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   const summary = {
     unplanned,
     warnings,
-    issues: out.issues.map((x) => ({ place_id: x.id, kind: x.kind })),
+    // the four kinds the app knows; the newer ones go beside them (issues_more) so an app that has not learned them
+    // yet shows nothing wrong
+    issues: out.issues.filter((x) => KNOWN_ISSUE.has(x.kind)).map((x) => ({ place_id: x.id, kind: x.kind })),
+    // no_lunch / no_dinner: a day (day, couple) with room for a meal and none planned; booking: the place has to be
+    // booked ahead and no booking for it is in the trip; baby: a place not for a baby, planned for the couple with one
+    issues_more: out.issues
+      .filter((x) => !KNOWN_ISSUE.has(x.kind))
+      .map((x) => ({ place_id: x.id || null, kind: x.kind, ...(x.day != null ? { day: x.day } : {}), ...(x.couple ? { couple: x.couple } : {}) })),
     // planned places outside the city their people sleep in that day (not day trips): the app says "in {city}" on them.
     // city is the place's city id; day is where it sits, so a place a person moves later loses the label
     away: [...out.away].map(([id, city]) => ({ place_id: id, day: out.placed.get(id)!.day, city })),
