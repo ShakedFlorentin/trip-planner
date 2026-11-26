@@ -103,6 +103,8 @@ export function buildDays(inp: PresenceInput): Day[] {
       }
       if (!h.city) continue
       const p: PresenceInfo = { base: h.city, hotel: h.point, start: s, end: Math.max(s, e), cap: capOf.get(c), label: h.label }
+      // a plain day (no landing, no move): for a place that is best early they may leave the hotel from 8:00
+      if (s === 9 * 60 + 30) p.early = 8 * 60
       if (!h.booked) p.estimate = true
       if (arrivalInfo) { p.landing = true; p.arrival = arrivalInfo }
       atMap.set(c, p)

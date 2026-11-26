@@ -8,7 +8,16 @@ export type BestTime = 'morning' | 'midday' | 'afternoon' | 'evening' | 'night' 
  * Where one couple is on one day and the hours they have for plans (minutes after midnight); cap: how much of a day
  * they want filled, from the pace they chose (DAY_CAP when nobody said)
  */
-export type Presence = { base: string; hotel: Point; start: number; end: number; cap?: number; landing?: true }
+export type Presence = {
+  base: string
+  hotel: Point
+  start: number
+  end: number
+  cap?: number
+  landing?: true
+  /** on a plain day (no landing, no move): the earliest they would leave the hotel for a place that is best early */
+  early?: number
+}
 
 export type Day = {
   day: number
@@ -49,6 +58,8 @@ export type Unit = {
   current: number | null // the day it is on now, if any
   /** a nightlife place that serves a full meal (an izakaya, a food alley): it can be the day's dinner */
   meal?: boolean
+  /** out in the open (a garden, a shrine path, a lake): the visit is over by dusk */
+  outdoor?: boolean
 }
 
 // late: the day's timetable only reaches it after it closes (or after the day's hours)
@@ -195,22 +206,71 @@ export function ride(a: Point | null, b: Point | null) {
 }
 
 /**
+ * Sunset at a point on a date, in minutes after midnight (tz: hours ahead of UTC, Japan by default). The sun's
+ * declination and the equation of time from the day of the year: good to a few minutes, no table to keep.
+ */
+export function sunset(date: string, point: Point, tz = 9) {
+  const n = Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(date.slice(0, 4) + '-01-01T00:00:00Z')) / 86400000) + 1
+  const r = Math.PI / 180
+  const decl = -23.44 * Math.cos(r * (360 / 365) * (n + 10))
+  const b = r * (360 / 365) * (n - 81)
+  const eot = 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b)
+  const cosH = (Math.sin(-0.833 * r) - Math.sin(point.lat * r) * Math.sin(decl * r)) / (Math.cos(point.lat * r) * Math.cos(decl * r))
+  const h = Math.acos(Math.max(-1, Math.min(1, cosH))) / r
+  return Math.round(720 - eot - 4 * (point.lng - 15 * tz) + h * 4)
+}
+// an outdoor place may run this long after sunset (the light lasts a little)
+const DUSK_SLACK = 20
+const dusks = new Map<string, number>()
+/** Sunset where a place is (or where the day's people sleep) on that day. */
+function duskOf(d: Day, u: Unit) {
+  const p = u.point ?? [...d.at.values()][0]?.hotel
+  if (!p) return 17 * 60
+  const k = d.date + '|' + p.lat.toFixed(1) + '|' + p.lng.toFixed(1)
+  let v = dusks.get(k)
+  if (v == null) dusks.set(k, (v = sunset(d.date, p)))
+  return v
+}
+/** When a visit has to be over on a day: closing time, and dusk for a place out in the open. */
+const closesOf = (u: Unit, d: Day) => Math.min(u.closes ?? 24 * 60, u.outdoor ? duskOf(d, u) + DUSK_SLACK : 24 * 60)
+/** A morning place that is open early: its people may leave the hotel before the day's usual start for it. */
+const opensEarly = (u: Unit) => u.best === 'morning' && u.opens != null && u.opens <= 8 * 60 + 30
+/** When a couple's day can start for a place. */
+const startFor = (u: Unit, p: Presence) => (opensEarly(u) && p.early != null ? Math.min(p.early, p.start) : p.start)
+
+/**
  * The plan: each unit on the day that keeps the days compact and balanced, then a rough time for each. A place the
  * day's timetable can't fit before it closes is barred from that day and the days are worked out again.
  */
 export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
+  // a day's load and a day's timetable depend only on which places are on it: worked out once for the whole run
+  const memo: Memo = { loads: new Map(), tables: new Map() }
   const solve = (settle: boolean, us = units) => {
     const barred = new Map<string, Set<number>>()
-    let out = arrange(days, us, fixed, barred, settle)
-    for (let round = 0; round < 3 && out.late.length; round++) {
-      for (const { id, day } of out.late) barred.set(id, new Set([...(barred.get(id) ?? []), day]))
-      out = arrange(days, us, fixed, barred, settle)
+    const dropped = new Set<string>()
+    const run = () => arrange(days, dropped.size ? us.filter((u) => !dropped.has(u.id)) : us, fixed, barred, settle, memo)
+    let out = run()
+    for (let round = 0; round < 10 && out.late.length; round++) {
+      for (const { id, day } of out.late) {
+        // when the plan as it stands is kept, a place that was fine on its day is not the one to go: the least wanted
+        // of the places just added to that day is (it is what made the day too long)
+        let goes = id
+        if (settle && us.find((u) => u.id === id)!.current === day) {
+          const added = us.filter((v) => v.current !== day && out.placed.get(v.id)?.day === day && !barred.get(v.id)?.has(day))
+          if (added.length) goes = added.sort((a, b) => a.priority - b.priority)[0].id
+        }
+        // three days tried and late on each: better left for the people to place than put where it is closed, and the
+        // days are worked out without it so the times of the rest are real
+        if (goes === id && (barred.get(id)?.size ?? 0) >= 3) dropped.add(id)
+        else barred.set(goes, new Set([...(barred.get(goes) ?? []), day]))
+      }
+      out = run()
     }
-    // still late after that: better left for the people to place than put where it is closed
     for (const { id } of out.late) {
       out.placed.delete(id)
       out.unplanned.set(id, 'full')
     }
+    for (const id of dropped) out.unplanned.set(id, 'full')
     return out
   }
   // the plan worked out afresh, and the plan as it stands with only new places added to it: the fresh one replaces
@@ -229,14 +289,27 @@ export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
     const noMeal = check(days, units, fixed, o.placed).filter((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner').length
     return value - missed * 2 - noMeal * 3
   }
-  let out = kept && worth(fresh) <= worth(kept) * 1.02 ? kept : fresh
+  const from = (o: typeof fresh) => units.map((u) => ({ ...u, current: o.placed.get(u.id)?.day ?? null }))
   // a place taken off for being late leaves room behind it: fill that room now, with the plan as it stands kept, so
   // the next run finds nothing left to add (the plan must not grow by itself from one run to the next)
-  for (let round = 0; round < 4; round++) {
-    const again = solve(true, units.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })))
-    const same = again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.day === p.day)
-    if (same || worth(again) < worth(out)) break
-    out = again
+  const fill = (o: typeof fresh) => {
+    for (let round = 0; round < 4; round++) {
+      const again = solve(true, from(o))
+      const same = again.placed.size === o.placed.size && [...again.placed].every(([id, p]) => o.placed.get(id)?.day === p.day)
+      if (same || worth(again) < worth(o)) break
+      o = again
+    }
+    return o
+  }
+  let out = fill(kept && worth(fresh) <= worth(kept) * 1.02 ? kept : fresh)
+  // and the same question the next run would ask, asked now: starting from this plan, is a plan worked out afresh
+  // clearly better? Then that one is the plan, today and not on the next swipe. Nothing to ask when the plan came out
+  // as it went in.
+  for (let round = 0; round < 2; round++) {
+    if (units.every((u) => (u.current ?? null) === (out.placed.get(u.id)?.day ?? null))) break
+    const again = solve(false, from(out))
+    if (worth(again) <= worth(out) * 1.02) break
+    out = fill(again)
   }
   return { placed: out.placed, unplanned: out.unplanned, issues: check(days, units, fixed, out.placed), away: awayOf(days, units, out.placed) }
 }
@@ -304,7 +377,8 @@ export function check(days: Day[], units: Unit[], fixed: Fixed[], placed: Map<st
   return issues
 }
 
-function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string, Set<number>>, settle = false) {
+type Memo = { loads: Map<string, number>; tables: Map<string, Map<string, Placed>> }
+function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string, Set<number>>, settle = false, memo: Memo = { loads: new Map(), tables: new Map() }) {
   const byDay = new Map(days.map((d) => [d.day, d]))
   const fixedMins = new Map<string, number>()
   const fixedPts = new Map<string, Point[]>()
@@ -341,10 +415,10 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       anyDay = true
       if (u.closedWeekdays.includes(d.weekday) || u.closedDates.includes(d.date) || barred.get(u.id)?.has(d.day)) return false
       if (u.openDates.length && !u.openDates.includes(d.date)) return false
-      // open long enough inside the hours everyone has that day
-      const start = Math.max(...u.couples.map((c) => d.at.get(c)!.start), u.opens ?? 0)
-      const end = Math.min(...u.couples.map((c) => d.at.get(c)!.end), u.closes ?? 24 * 60)
-      return end - start >= Math.min(u.mins, 90)
+      // open for the whole visit inside the hours everyone has that day (and in daylight, for a place out in the open)
+      const start = Math.max(...u.couples.map((c) => startFor(u, d.at.get(c)!)), u.opens ?? 0)
+      const end = Math.min(...u.couples.map((c) => d.at.get(c)!.end), closesOf(u, d))
+      return end - start >= u.mins
     })
     if (ok.length) options.set(u.id, ok.map((d) => d.day))
     else unplanned.set(u.id, anyDay ? 'closed' : 'no_day')
@@ -365,7 +439,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   }
   // the day's plans plus the rides between them: from the hotel to the nearest place, on to the nearest after it, and
   // back (a day in three corners of the city is a longer day than one in a single neighbourhood)
-  const loads = new Map<string, number>()
+  const loads = memo.loads
   const load = (day: number, c: string, extra?: Unit) => {
     const us = [...group(day, c)].map((id) => unitById.get(id)!)
     if (extra) us.push(extra)
@@ -472,17 +546,18 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if (u.current != null && u.current !== day) cost += 1.5
     // a day that leaves little of the place's opening hours (a market that closes at 14:30 on an arrival day): only
     // if no roomier day will do
-    const from = Math.max(u.opens ?? 0, ...u.couples.map((c) => d.at.get(c)!.start))
-    if ((u.closes ?? 24 * 60) - from < u.mins + 90) cost += 2
+    const from = Math.max(u.opens ?? 0, ...u.couples.map((c) => startFor(u, d.at.get(c)!)))
+    if (closesOf(u, d) - from < u.mins + 90) cost += 2
     return cost
   }
-  const fits = (u: Unit, day: number) => {
+  // keep: a place already on that day in the plan as it stands; no room is held back from it for a meal still to come
+  const fits = (u: Unit, day: number, keep = false) => {
     // a meal needs a slot of its own for each of its people: no two lunches, no two dinners
     if (isMeal(u) && [...slotsOn(day, u).values()].some((s) => s == null)) return false
     return u.couples.every((c) => {
       const d = byDay.get(day)!
       // room stays for the lunch and the dinner still to come, while a meal that could fill them waits
-      const room = mealGaps(day, c, true, isMeal(u) ? u : undefined) * MEAL_ROOM
+      const room = keep ? 0 : mealGaps(day, c, true, isMeal(u) ? u : undefined) * MEAL_ROOM
       if (load(day, c, u) + room > cap(day, c) + 15) return false
       if (!isMeal(u) && u.couples.length < together(d, c).length && apartLoad(day, c) + u.mins > APART_CAP) return false
       let same = 0
@@ -554,7 +629,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       options.get(a.id)!.length - options.get(b.id)!.length,
   )
   for (const u of order) at.set(u.id, null)
-  for (const u of order) if (u.current != null && options.get(u.id)!.includes(u.current) && fits(u, u.current)) put(u, u.current)
+  for (const u of order) if (u.current != null && options.get(u.id)!.includes(u.current) && fits(u, u.current, true)) put(u, u.current)
   // then the rest, greedy: the most wanted first, each where it adds least. First round: places of another city wait
   // while the day's own city has places that could take the room; second round: they fill what is left
   const greedy = (round: number) => {
@@ -639,7 +714,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   }
 
   // a day's times, worked out once for each set of places the day is tried with
-  const tables = new Map<string, Map<string, Placed>>()
+  const tables = memo.tables
   const timesOf = (day: number) => {
     const ids = live.filter((u) => at.get(u.id) === day)
     if (!ids.length) return new Map<string, Placed>()
@@ -710,6 +785,7 @@ const SLOT: Record<BestTime, number | null> = {
   any: null,
 }
 const round15 = (m: number) => Math.round(m / 15) * 15
+const floor15 = (m: number) => Math.floor(m / 15) * 15
 // the whole visit has to end by closing time (it used to be enough to arrive an hour before)
 const stay = (u: Unit) => u.mins
 // two full meals for the same people at least this far apart (start to start)
@@ -728,11 +804,21 @@ const BACK_COST = 20
 /** The point to measure rides from. */
 const pt = (u: Unit) => u.point
 /** Would this start leave the place after it closes, or begin after its people's day is over? */
-const isLate = (_d: Day, u: Unit, s: number, end: number) => s + stay(u) > (u.closes ?? 24 * 60) || s > end + 30
-// the time of day a place asks for; "morning" for a place that opens at noon means as soon as it opens
-const wantOf = (u: Unit) => {
-  const s = SLOT[u.best]
-  return s == null ? null : Math.max(s, u.opens ?? 0)
+const isLate = (d: Day, u: Unit, s: number, end: number) => s + stay(u) > closesOf(u, d) || s + stay(u) > end
+/**
+ * The time of day a place asks for on a day. "Morning" for a place that opens at noon means as soon as it opens, and
+ * for one open from early morning 9:00, not the day's 9:30. "Evening" for a sight, a view or a market is that date's
+ * dusk, half an hour before the sun sets (16:00 in December, not a flat 18:00); a dinner or a bar keeps the evening.
+ * Never an hour that would end the visit after closing, after dark for a place out in the open, or after the day.
+ */
+const wantOn = (u: Unit, d: Day, end: number) => {
+  let s = SLOT[u.best]
+  if (s == null) return null
+  if (u.best === 'evening' && !isMeal(u) && u.category !== 'nightlife') s = Math.max(15 * 60 + 30, Math.min(18 * 60, duskOf(d, u) - 30))
+  if (opensEarly(u)) s = 9 * 60
+  s = Math.max(s, u.opens ?? 0)
+  const last = floor15(Math.min(closesOf(u, d), end) - u.mins)
+  return last >= (u.opens ?? 0) ? Math.min(s, last) : s
 }
 
 // the earliest a place is worth starting, by the hour its card asks for: an afternoon place is not a 10:30 place
@@ -768,13 +854,13 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
   const fixedMeals = fixedMealsOf(fixed, d.day)
   // a meal's hour is its slot's: the hour its card asks for when that is inside the slot, else 12:15 or 18:30
   for (const u of units) {
-    const w = wantOf(u)
+    const w = wantOn(u, d, endOf(u))
     const slot = isMeal(u) ? slots.get(u.id) : null
     if (slot === 'lunch' || slot === 'dinner') {
       const m = MEAL_AT[slot]
       const own = w != null && w >= m.from && w <= m.to ? w : m.want
       const start = Math.max(...who.get(u.id)!.map((c) => d.at.get(c)!.start))
-      want.set(u.id, Math.max(m.from, Math.min(Math.max(own, u.opens ?? 0, start), m.to, (u.closes ?? 24 * 60) - u.mins)))
+      want.set(u.id, Math.max(m.from, Math.min(Math.max(own, u.opens ?? 0, start), m.to, floor15(Math.min(closesOf(u, d), endOf(u)) - u.mins))))
     } else want.set(u.id, w ?? (u.category === 'cafe' ? 15 * 60 : u.category === 'nightlife' ? 20 * 60 : null))
   }
   const fixedBusy = new Map<string, [number, number][]>(couples.map((c) => [c, []]))
@@ -787,16 +873,18 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
     const busy = new Map(couples.map((c) => [c, [...fixedBusy.get(c)!]]))
     const meal = new Map<string, number>()
     const starts = new Map<string, number>()
+    // still at the hotel: a place that is best early in the morning may be the reason to leave before the usual hour
+    const fresh = new Set(couples)
     const line = new Map<string, Point[]>(couples.map((c) => [c, []]))
     const nightDone = new Set<string>()
     let cost = 0
     for (const u of order) {
       const cs = who.get(u.id)!
-      const arrive = Math.max(...cs.map((c) => clock.get(c)! + ride(where.get(c)!, pt(u))))
+      const arrive = Math.max(...cs.map((c) => (fresh.has(c) ? startFor(u, d.at.get(c)!) : clock.get(c)!) + ride(where.get(c)!, pt(u))))
       let t = arrive
       const w = want.get(u.id)
-      // an evening place waits for the evening; a daytime one waits only when its hour is close
-      if (w != null && w > t && (w >= 17 * 60 || isMeal(u) || w - t < 120)) t = w
+      // an evening place waits for the evening (a sunset view for the sunset); a daytime one waits only when its hour is close
+      if (w != null && w > t && (w >= 17 * 60 || u.best === 'evening' || u.best === 'night' || isMeal(u) || w - t < 120)) t = w
       // and never starts before the part of the day its card asks for
       t = Math.max(t, Math.min(NOT_BEFORE[u.best] ?? 0, w ?? 24 * 60), u.opens ?? 0)
       // a full meal waits until the last one has settled (a café or dessert stop doesn't count)
@@ -808,7 +896,9 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
         if (!clash && near == null) break
         t = Math.max(clash ? clash[1] + 15 : t, near != null ? near + MEAL_GAP : t)
       }
-      const s = round15(t)
+      // to the quarter hour, never back into the visit before it (a 50-minute stop ends at :20, the next starts at :30)
+      let s = round15(t)
+      if (cs.some((c) => !fresh.has(c) && s < clock.get(c)!)) s += 15
       starts.set(u.id, s)
       // minutes on the way, counted once per couple that makes the trip
       for (const c of cs) cost += ride(where.get(c)!, pt(u))
@@ -823,6 +913,7 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
       // after a night place (a bar) nothing else comes that day
       if (cs.some((c) => nightDone.has(c))) cost += 60
       for (const c of cs) {
+        fresh.delete(c)
         clock.set(c, s + u.mins)
         where.set(c, pt(u) ?? where.get(c)!)
         busy.get(c)!.push([s, s + u.mins])
@@ -901,7 +992,7 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
   const sorted = [...best.order].sort((x, y) => starts.get(x.id)! - starts.get(y.id)!)
   sorted.forEach((u, i) => {
     const s = starts.get(u.id)!
-    const w = wantOf(u)
+    const w = want.get(u.id) ?? null
     out.set(u.id, { day: d.day, start: s, order: i, late: isLate(d, u, s, endOf(u)), missed: w != null && w < 17 * 60 && s - w > 120 })
   })
   return out
