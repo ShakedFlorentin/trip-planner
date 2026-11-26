@@ -47,6 +47,8 @@ export type Unit = {
   openDates: string[] // runs only on these dates (a market, an event); empty = no such limit
   priority: number
   current: number | null // the day it is on now, if any
+  /** a nightlife place that serves a full meal (an izakaya, a food alley): it can be the day's dinner */
+  meal?: boolean
 }
 
 // late: the day's timetable only reaches it after it closes (or after the day's hours)
@@ -60,7 +62,102 @@ export type Outcome = {
   away: Map<string, string>
 }
 /** What the final check found on a planned place: it should never happen, and the app shows it if it does. */
-export type Issue = { id: string; kind: 'overlap' | 'tight' | 'hours' | 'meals' }
+export type Issue = {
+  /** the place; '' for an issue about a day (a meal nobody planned), which carries day and couple instead */
+  id: string
+  kind: 'overlap' | 'tight' | 'hours' | 'meals' | 'no_lunch' | 'no_dinner'
+  day?: number
+  couple?: string
+}
+
+/**
+ * A full meal: a restaurant, or a nightlife place whose card says it serves one. A café never is, and neither is a
+ * food stop of under 40 minutes (a mochi stand, an omelette stall): a snack on the way.
+ */
+export const isMeal = (u: Unit) => (u.category === 'food' && u.mins >= 40) || (u.category === 'nightlife' && !!u.meal)
+export type MealSlot = 'breakfast' | 'lunch' | 'dinner'
+// a meal starts inside its slot; `want` is the hour a meal with no hour of its own gets
+const MEAL_AT = {
+  lunch: { from: 11 * 60, to: 14 * 60 + 45, want: 12 * 60 + 15 },
+  dinner: { from: 17 * 60 + 15, to: 21 * 60, want: 18 * 60 + 30 },
+} as const
+// a day with a meal slot nobody filled costs this much (the day's cost is in km and hours)
+const MEAL_MISS = 10
+// room kept on a day for a meal still to be placed there
+const MEAL_ROOM = 70
+
+/**
+ * Which meals a couple needs that day: lunch when their day covers 13:00-13:30, dinner when it covers 19:00-19:30, and
+ * only where something fixed leaves an hour free in the slot. A fixed meal in the slot covers it (one with no hour
+ * covers dinner first). Short landing and departure days so need one meal or none.
+ */
+export function mealNeeds(p: Presence, fx: Fixed[]) {
+  const free = (from: number, to: number) => {
+    let t = Math.max(from, p.start)
+    const end = Math.min(to, p.end)
+    for (const f of fx.filter((x) => x.start != null).sort((a, b) => a.start! - b.start!)) {
+      if (Math.min(f.start!, end) - t >= 60) return true
+      t = Math.max(t, f.start! + f.mins)
+    }
+    return end - t >= 60
+  }
+  const need = {
+    lunch: p.start <= 13 * 60 && p.end >= 13 * 60 + 30 && free(MEAL_AT.lunch.from, MEAL_AT.lunch.to + 60),
+    dinner: p.start <= 19 * 60 && p.end >= 19 * 60 + 30 && free(MEAL_AT.dinner.from, MEAL_AT.dinner.to + 60),
+  }
+  for (const f of fx) {
+    if (!f.meal) continue
+    if (f.start == null) need[need.dinner ? 'dinner' : 'lunch'] = false
+    else if (f.start >= MEAL_AT.lunch.from - 30 && f.start <= MEAL_AT.lunch.to + 30) need.lunch = false
+    else if (f.start >= MEAL_AT.dinner.from - 30 && f.start <= MEAL_AT.dinner.to + 30) need.dinner = false
+  }
+  return need
+}
+
+/** The couples of a place that are there on a day. */
+export const whoOn = (u: Unit, d: Day) => u.couples.filter((c) => d.at.has(c))
+
+/** The slots a meal could take on a day: the hour its card asks for, inside its opening hours and its people's day. */
+function slotsFor(u: Unit, d: Day): MealSlot[] {
+  const who = whoOn(u, d)
+  const start = Math.max(...who.map((c) => d.at.get(c)!.start))
+  const end = Math.min(...who.map((c) => d.at.get(c)!.end))
+  // lunch only on a day that starts by 13:00 (a day that starts at 14:00 has no lunch to plan), dinner on one that runs to 19:30
+  const can = (s: 'lunch' | 'dinner') =>
+    (s === 'lunch' ? start <= 13 * 60 : end >= 19 * 60 + 30) &&
+    Math.max(u.opens ?? 0, start, MEAL_AT[s].from) <= Math.min((u.closes ?? 24 * 60) - u.mins, MEAL_AT[s].to, end - u.mins)
+  const asked: MealSlot[] =
+    u.best === 'morning' ? (start >= 10 * 60 + 45 ? ['lunch'] : ['breakfast'])
+    : u.best === 'midday' || u.best === 'afternoon' ? ['lunch']
+    : u.best === 'evening' || u.best === 'night' ? ['dinner']
+    : ['lunch', 'dinner']
+  const ok = asked.filter((s) => s === 'breakfast' || can(s))
+  // the hour the card asks for is outside its opening hours that day: the hours decide
+  return ok.length ? ok : (['lunch', 'dinner'] as const).filter(can)
+}
+
+/**
+ * Each meal's slot on one day: a couple has at most one breakfast, one lunch and one dinner, and a fixed meal takes
+ * its slot first. null: no slot left for it (the day already has that meal for one of its people).
+ */
+export function mealSlots(d: Day, meals: Unit[], fixed: Fixed[]): Map<string, MealSlot | null> {
+  const taken = new Map<string, Set<MealSlot>>()
+  for (const [c, p] of d.at) {
+    const need = mealNeeds(p, [])
+    const after = mealNeeds(p, fixed.filter((f) => f.day === d.day && f.meal && f.couples.includes(c)))
+    taken.set(c, new Set((['lunch', 'dinner'] as const).filter((s) => need[s] && !after[s])))
+  }
+  const opts = new Map(meals.map((u) => [u.id, slotsFor(u, d)]))
+  const out = new Map<string, MealSlot | null>()
+  const order = [...meals].sort((a, b) => opts.get(a.id)!.length - opts.get(b.id)!.length || b.priority - a.priority || (a.id < b.id ? -1 : 1))
+  for (const u of order) {
+    const who = whoOn(u, d)
+    const slot = opts.get(u.id)!.find((s) => who.every((c) => !taken.get(c)!.has(s))) ?? null
+    out.set(u.id, slot)
+    if (slot) for (const c of who) taken.get(c)!.add(slot)
+  }
+  return out
+}
 
 // a day's plans add up to at most this much, whatever the window; a baby and December daylight set the pace
 const DAY_CAP = 510
@@ -76,8 +173,10 @@ const NEAR_KM = 30
 // a place in another city than where the day's people sleep costs this much more than one in their own city: the own
 // city's places come first, and the other city's only fill what they leave (or a day with none of its own)
 const AWAY_COST = 1.5
-// at most this many of a kind a day, per couple
+// at most this many of a kind a day, per couple (meals go by slot instead: one lunch, one dinner)
 const PER_DAY: Record<string, number> = { food: 2, cafe: 2, nightlife: 2 }
+// what PER_DAY counts a place as: a restaurant meal is counted by its slot, a snack as food
+const kindOf = (u: Unit) => (u.category === 'food' && isMeal(u) ? 'meal' : u.category)
 
 export function km(a: Point, b: Point) {
   const r = Math.PI / 180
@@ -124,7 +223,9 @@ export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
       value += u.priority * (0.5 + u.mins / 120)
       if (p.missed) missed++
     }
-    return value - missed * 2
+    // a day left without a lunch or a dinner counts against a plan
+    const noMeal = check(days, units, fixed, o.placed).filter((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner').length
+    return value - missed * 2 - noMeal * 3
   }
   const out = kept && worth(fresh) <= worth(kept) * 1.02 ? kept : fresh
   return { placed: out.placed, unplanned: out.unplanned, issues: check(days, units, fixed, out.placed), away: awayOf(days, units, out.placed) }
@@ -177,11 +278,17 @@ export function check(days: Day[], units: Unit[], fixed: Fixed[], placed: Map<st
         else if (prev && prev.s + prev.u.mins + ride(prev.u.point, u.point) > s + 10) flag(id, 'tight')
         if (busy.some((f) => s < f.start! + f.mins && s + u.mins > f.start!)) flag(id, 'overlap')
         if ((u.opens != null && s < u.opens) || (u.closes != null && s + u.mins > u.closes)) flag(id, 'hours')
-        if (u.category === 'food') {
+        if (isMeal(u)) {
           if ((lastMeal != null && s - lastMeal < MEAL_GAP) || fixedMeals.some((f) => Math.abs(s - f) < MEAL_GAP)) flag(id, 'meals')
           lastMeal = s
         }
       })
+      // a lunch and a dinner every day the hours allow: a slot with no meal in it is said out loud
+      const need = mealNeeds(d.at.get(c)!, fixed.filter((f) => f.day === d.day && f.couples.includes(c)))
+      for (const slot of ['lunch', 'dinner'] as const) {
+        if (!need[slot] || mine.some(({ u, s }) => isMeal(u) && s >= MEAL_AT[slot].from && s <= MEAL_AT[slot].to)) continue
+        issues.push({ id: '', kind: slot === 'lunch' ? 'no_lunch' : 'no_dinner', day: d.day, couple: c })
+      }
     }
   }
   return issues
@@ -191,13 +298,10 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const byDay = new Map(days.map((d) => [d.day, d]))
   const fixedMins = new Map<string, number>()
   const fixedPts = new Map<string, Point[]>()
-  // full meals already fixed on a day count toward the day's meals (a booked dinner leaves room for one more)
-  const fixedMealCount = new Map<string, number>()
   for (const f of fixed) {
     for (const c of f.couples) {
       const k = f.day + '|' + c
       fixedMins.set(k, (fixedMins.get(k) ?? 0) + f.mins)
-      if (f.meal) fixedMealCount.set(k, (fixedMealCount.get(k) ?? 0) + 1)
       if (f.point) fixedPts.set(k, [...(fixedPts.get(k) ?? []), f.point])
     }
   }
@@ -241,6 +345,8 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   // state: the day of each unit (or null) and the units on each day/couple
   const at = new Map<string, number | null>()
   const groups = new Map<string, Set<string>>()
+  const mealCands = new Map<string, Unit[]>()
+  for (const u of live) if (isMeal(u)) for (const day of options.get(u.id)!) for (const c of u.couples) mealCands.set(day + '|' + c, [...(mealCands.get(day + '|' + c) ?? []), u])
   const group = (day: number, c: string) => {
     const k = day + '|' + c
     let g = groups.get(k)
@@ -265,15 +371,43 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     let m = 0
     for (const id of group(day, c)) {
       const u = unitById.get(id)!
-      if (u.couples.length < others) m += u.mins
+      // a meal is not time apart: each couple eats somewhere
+      if (u.couples.length < others && !isMeal(u)) m += u.mins
     }
     return m
+  }
+  // meals: the slots each couple needs filled on each day, the meals that could fill them, and who has which now
+  const needOf = new Map<string, { lunch: boolean; dinner: boolean }>()
+  for (const d of days) for (const [c, p] of d.at) needOf.set(d.day + '|' + c, mealNeeds(p, fixed.filter((f) => f.day === d.day && f.couples.includes(c))))
+  const slotsOn = (day: number, extra?: Unit) => {
+    const d = byDay.get(day)!
+    const meals = new Map<string, Unit>()
+    for (const c of d.at.keys()) for (const id of group(day, c)) if (isMeal(unitById.get(id)!)) meals.set(id, unitById.get(id)!)
+    if (extra) meals.set(extra.id, extra)
+    return mealSlots(d, [...meals.values()], fixed)
+  }
+  /** The needed meal slots of a couple's day that nothing fills: all of them, or only those a meal still unplaced could. */
+  const mealGaps = (day: number, c: string, fillable: boolean, extra?: Unit) => {
+    const need = needOf.get(day + '|' + c)
+    if (!need || (!need.lunch && !need.dinner)) return 0
+    const slots = slotsOn(day, extra)
+    const d = byDay.get(day)!
+    let n = 0
+    for (const s of ['lunch', 'dinner'] as const) {
+      if (!need[s]) continue
+      if ([...slots].some(([id, sl]) => sl === s && unitById.get(id)!.couples.includes(c))) continue
+      if (fillable && !(mealCands.get(day + '|' + c) ?? []).some((w) => w !== extra && at.get(w.id) == null && slotsFor(w, d).includes(s))) continue
+      n++
+    }
+    return n
   }
 
   /** Cost of one couple's day: spread around its middle (km), crowding, and a long day weighs more than two short ones. */
   const groupCost = (day: number, c: string) => {
     const ids = [...group(day, c)]
-    if (!ids.length) return 0
+    // a missing lunch or dinner costs the day, an empty day too
+    const noMeal = mealGaps(day, c, false) * MEAL_MISS
+    if (!ids.length) return noMeal
     const d = byDay.get(day)!
     const pres = d.at.get(c)!
     const pts = (far: boolean) =>
@@ -295,12 +429,13 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     const hours = load(day, c) / 60
     const capH = Math.max(1, cap(day, c) / 60)
     const crowd = Math.max(0, hours - capH * 0.8) * 4
-    return spread + crowd + hours * hours * 0.35
+    return spread + crowd + hours * hours * 0.35 + noMeal
   }
   const unitCost = (u: Unit, day: number | null) => {
     // leaving a place out costs its priority, more for a bigger one: a two-hour shrine is more of the trip than a
     // forty-minute café of the same priority, which the day would otherwise always pick for fitting more in
-    if (day == null) return u.priority * 14 * (0.5 + u.mins / 120)
+    // a meal left out costs more than a shop or a sight of the same priority: people eat every day
+    if (day == null) return u.priority * 14 * (0.5 + (isMeal(u) ? Math.max(u.mins, 150) : u.mins) / 120)
     let cost = 0
     const d = byDay.get(day)!
     if (isAway(d, u)) {
@@ -309,7 +444,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       cost += AWAY_COST + (awayPres && u.point ? ride(awayPres.hotel, u.point) / 60 : 0)
     }
     // a couple's own place fits best on a day the other couple is elsewhere
-    if (u.couples.length < together(d, u.couples[0]).length) cost += 2
+    if (u.couples.length < together(d, u.couples[0]).length && !isMeal(u)) cost += 2
     if (u.current != null && u.current !== day) cost += 1.5
     // a day that leaves little of the place's opening hours (a market that closes at 14:30 on an arrival day): only
     // if no roomier day will do
@@ -317,23 +452,27 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if ((u.closes ?? 24 * 60) - from < u.mins + 90) cost += 2
     return cost
   }
-  const fits = (u: Unit, day: number) =>
-    u.couples.every((c) => {
+  const fits = (u: Unit, day: number) => {
+    // a meal needs a slot of its own for each of its people: no two lunches, no two dinners
+    if (isMeal(u) && [...slotsOn(day, u).values()].some((s) => s == null)) return false
+    return u.couples.every((c) => {
       const d = byDay.get(day)!
       const extra = u.far ? Math.max(0, 2 * ride(d.at.get(c)!.hotel, u.point) - tripRide(day, c)) : 0
-      if (load(day, c) + u.mins + HOP + extra > cap(day, c) + 15) return false
-      if (u.couples.length < together(d, c).length && apartLoad(day, c) + u.mins > APART_CAP) return false
+      // room stays for the lunch and the dinner still to come, while a meal that could fill them waits
+      const room = mealGaps(day, c, true, isMeal(u) ? u : undefined) * MEAL_ROOM
+      if (load(day, c) + u.mins + HOP + extra + room > cap(day, c) + 15) return false
+      if (!isMeal(u) && u.couples.length < together(d, c).length && apartLoad(day, c) + u.mins > APART_CAP) return false
       let same = 0
       for (const id of group(day, c)) {
         const v = unitById.get(id)!
-        if (v.category === u.category) same++
+        if (kindOf(v) === kindOf(u)) same++
         // a day trip fills the day: no places back in town, and its places sit near each other
         if (u.far !== v.far) return false
         if (u.far && v.far && u.point && v.point && km(u.point, v.point) > TRIP_SPREAD) return false
       }
-      if (u.category === 'food') same += fixedMealCount.get(day + '|' + c) ?? 0
-      return same < (PER_DAY[u.category] ?? 99)
+      return same < (PER_DAY[kindOf(u)] ?? 99)
     })
+  }
   // an away place waits while a place of the day's own city that could take the room is still unplaced: the city's
   // own places are placed first, the other city's only fill what they leave (or a day with none of its own)
   const blockedAway = (u: Unit, day: number) => {
@@ -391,7 +530,15 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
 
   // the plan as it stands first: each place stays on the day it is on while that day still takes it, so running the
   // planner again on its own plan changes nothing (it runs after every swipe; the days must not shift each time)
-  const order = [...live].sort((a, b) => b.priority - a.priority || options.get(a.id)!.length - options.get(b.id)!.length)
+  // meals first, the ones more people share before a couple's own (a shared dinner fills everyone's slot; a couple's own
+  // meal placed first would leave the others with none), then by how much each is wanted
+  const order = [...live].sort(
+    (a, b) =>
+      Number(isMeal(b)) - Number(isMeal(a)) ||
+      (isMeal(a) ? b.couples.length - a.couples.length : 0) ||
+      b.priority - a.priority ||
+      options.get(a.id)!.length - options.get(b.id)!.length,
+  )
   for (const u of order) at.set(u.id, null)
   for (const u of order) if (u.current != null && options.get(u.id)!.includes(u.current) && fits(u, u.current)) put(u, u.current)
   // then the rest, greedy: the most wanted first, each where it adds least. First round: places of another city wait
@@ -442,7 +589,10 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
                 const awayV = isAway(byDay.get(day)!, v)
                 const awayU = isAway(byDay.get(day)!, u)
                 if (awayU && !awayV) continue
-                if ((v.priority > u.priority && !(awayV && !awayU)) || !fitsWithout(u, day, v)) continue
+                // a meal is not taken off for a sight or a shop; a meal may take the room of one a little above it
+                if (isMeal(v) && !isMeal(u)) continue
+                const above = isMeal(u) && !isMeal(v) ? 1 : 0
+                if ((v.priority > u.priority + above && !(awayV && !awayU)) || !fitsWithout(u, day, v)) continue
                 const dl = delta(u, day, v)
                 if (dl < best.dl) best = { day, ev: v, dl }
               }
@@ -493,7 +643,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
         if (p.missed) missed++
         const w = wantOf(u)
         if (w != null && w < 17 * 60) behind += Math.max(0, p.start - w)
-        if (u.category === 'food') for (const c of u.couples) meals.set(c, [...(meals.get(c) ?? []), p.start])
+        if (isMeal(u)) for (const c of u.couples) meals.set(c, [...(meals.get(c) ?? []), p.start])
       }
       // two full meals too close together for the same people
       let crowded = 0
@@ -595,24 +745,19 @@ const wantOf = (u: Unit) => {
  */
 function timetables(d: Day, units: Unit[], fixed: Fixed[]) {
   const couples = [...d.at.keys()]
-  const meals = new Map<string, number[]>()
   const want = new Map<string, number | null>()
+  const slots = mealSlots(d, units.filter(isMeal), fixed)
   const fixedMeals = fixedMealsOf(fixed, d.day)
-  const nearFixedMeal = (cs: string[], t: number) => cs.some((c) => (fixedMeals.get(c) ?? []).some((f) => Math.abs(t - f) < MEAL_GAP))
-  // meals without a stated hour: lunch if the couple's day starts early enough, then dinner (per group of couples)
-  for (const u of [...units].sort((a, b) => b.priority - a.priority)) {
+  // a meal's hour is its slot's: the hour its card asks for when that is inside the slot, else 12:15 or 18:30
+  for (const u of units) {
     const w = wantOf(u)
-    if (w != null) {
-      want.set(u.id, w)
-      continue
-    }
-    const k = [...u.couples].sort().join('+')
-    if (!meals.has(k)) {
+    const slot = isMeal(u) ? slots.get(u.id) : null
+    if (slot === 'lunch' || slot === 'dinner') {
+      const m = MEAL_AT[slot]
+      const own = w != null && w >= m.from && w <= m.to ? w : m.want
       const start = Math.max(...u.couples.map((c) => d.at.get(c)!.start))
-      // a slot a fixed meal already covers (a booked lunch or dinner) is not offered again
-      meals.set(k, [...(start <= 13 * 60 + 30 ? [12 * 60 + 15] : []), 18 * 60 + 30].filter((t) => !nearFixedMeal(u.couples, t)))
-    }
-    want.set(u.id, u.category === 'food' ? meals.get(k)!.shift() ?? null : u.category === 'cafe' ? 15 * 60 : u.category === 'nightlife' ? 20 * 60 : null)
+      want.set(u.id, Math.max(m.from, Math.min(Math.max(own, u.opens ?? 0, start), m.to, (u.closes ?? 24 * 60) - u.mins)))
+    } else want.set(u.id, w ?? (u.category === 'cafe' ? 15 * 60 : u.category === 'nightlife' ? 20 * 60 : null))
   }
   const fixedBusy = new Map<string, [number, number][]>(couples.map((c) => [c, []]))
   for (const f of fixed) if (f.start != null) for (const c of f.couples) fixedBusy.get(c)?.push([f.start, f.start + f.mins])
@@ -630,14 +775,14 @@ function timetables(d: Day, units: Unit[], fixed: Fixed[]) {
       let t = Math.max(...u.couples.map((c) => clock.get(c)! + ride(where.get(c)!, u.point)))
       const w = want.get(u.id)
       // an evening place waits for the evening; a daytime one waits only when its hour is close
-      if (w != null && w > t && (w >= 17 * 60 || u.category === 'food' || w - t < 120)) t = w
+      if (w != null && w > t && (w >= 17 * 60 || isMeal(u) || w - t < 120)) t = w
       if (u.opens != null && t < u.opens) t = u.opens
       // a full meal waits until the last one has settled (a café or dessert stop doesn't count)
-      if (u.category === 'food') for (const c of u.couples) if (meal.has(c)) t = Math.max(t, meal.get(c)! + MEAL_GAP)
+      if (isMeal(u)) for (const c of u.couples) if (meal.has(c)) t = Math.max(t, meal.get(c)! + MEAL_GAP)
       for (let guard = 0; guard < 6; guard++) {
         const clash = u.couples.flatMap((c) => busy.get(c)!).find(([a, b]) => t < b && t + u.mins > a)
         // a full meal not within MEAL_GAP of a fixed one (before or after it): it goes after that meal has settled
-        const near = u.category === 'food' ? u.couples.flatMap((c) => fixedMeals.get(c) ?? []).find((f) => Math.abs(t - f) < MEAL_GAP) : undefined
+        const near = isMeal(u) ? u.couples.flatMap((c) => fixedMeals.get(c) ?? []).find((f) => Math.abs(t - f) < MEAL_GAP) : undefined
         if (!clash && near == null) break
         t = Math.max(clash ? clash[1] + 15 : t, near != null ? near + MEAL_GAP : t)
       }
@@ -649,7 +794,7 @@ function timetables(d: Day, units: Unit[], fixed: Fixed[]) {
         clock.set(c, s + u.mins)
         where.set(c, u.point ?? where.get(c)!)
         busy.get(c)!.push([s, s + u.mins])
-        if (u.category === 'food') meal.set(c, s)
+        if (isMeal(u)) meal.set(c, s)
       }
     }
     return { starts, late, closed }
