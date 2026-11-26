@@ -14,7 +14,23 @@ export type Sleep = {
   key: string // two nights in a row with the same key are the same place (no move in between)
   confirmed: boolean
   booked: boolean // a hotel booking stands behind it; without one the day's times are estimates
+  /** check-out time in minutes, when the booking says one (else 10:45) */
+  outMin?: number
 }
+
+/** A booked train: who rides it and when. On a day the city changes it is the move. */
+export type TrainLite = { who: string | null; starts_at: string | null; ends_at: string | null }
+
+// a day that moves to another city, with no train booked: out of the hotel by this hour
+const CHECK_OUT = 10 * 60 + 45
+// from the last hotel's door to being out again in the new city, on top of the ride: to the station and the platform,
+// from the station to the new hotel, the bags left at the desk
+const MOVE_EXTRA = 45
+// the same after a booked train has arrived
+const AFTER_TRAIN = 40
+// at the airport this long before an international flight
+const AIRPORT_EARLY = 180
+const ceil15 = (m: number) => Math.ceil(m / 15) * 15
 
 export type FlightLite = { who: string | null; title: string; starts_at: string | null; ends_at: string | null }
 
@@ -40,6 +56,10 @@ export type PresenceInput = {
   /** day_info.who per day: a day written for one couple is not the everyone-stays'. */
   dayWho: Map<number, string | null>
   flights: FlightLite[]
+  /** booked trains (optional): on a day the city changes, the day starts after the train arrives */
+  trains?: TrainLite[]
+  /** the couples travelling with a baby (optional): their day ends earlier */
+  baby?: Set<string>
   capOf: Map<string, number>
   /** a day that has passed takes no new plans */
   past: (day: number) => boolean
@@ -93,16 +113,40 @@ export function buildDays(inp: PresenceInput): Day[] {
           s = Math.max(s, 15 * 60)
         }
       }
+      let depart = false
       if (!tonight && last) {
         const f = flightOf(c, date, 'out')
-        e = Math.min(e, f ? at(f.starts_at)!.min - 210 : 12 * 60)
+        if (f) {
+          // back at the hotel for the bags in time to be at the airport three hours before the flight: the ride to
+          // that airport counts (Yokohama to Narita is not Tokyo to Haneda); never later than the old three and a half
+          const code = japanAirportCode(f.title.split(ROUTE)[0])
+          const airportPt = code ? AIRPORT_PT[code] : null
+          const off = at(f.starts_at)!.min
+          e = Math.min(e, off - 210, airportPt ? off - AIRPORT_EARLY - ride(last.point, airportPt) : off - 210)
+          depart = true
+        } else e = Math.min(e, 12 * 60)
       }
       const h = (tonight ?? last)!
       if (tonight && last && tonight.key !== last.key) {
-        s = Math.max(s, tonight.city !== last.city ? 14 * 60 : 12 * 60)
+        if (tonight.city === last.city) s = Math.max(s, 12 * 60)
+        else {
+          // another city: after the booked train arrives when there is one; else from the check-out and the ride
+          // between the two hotels (Kyoto to Osaka is not Tokyo to Kyoto), not a flat 14:00
+          const train = (inp.trains ?? [])
+            .filter((t) => (!t.who || t.who === c) && t.starts_at?.slice(0, 10) === date && t.ends_at?.slice(0, 10) === date)
+            .map((t) => at(t.ends_at)!.min)
+            .filter((m) => Number.isFinite(m))
+            .sort((a, b) => a - b)[0]
+          s = Math.max(s, ceil15(train != null ? train + AFTER_TRAIN : (last.outMin ?? CHECK_OUT) + ride(last.point, tonight.point) + MOVE_EXTRA))
+        }
       }
       if (!h.city) continue
+      const baby = !!inp.baby?.has(c)
+      // with a baby the day is over by 20:30
+      if (baby) e = Math.min(e, 20 * 60 + 30)
       const p: PresenceInfo = { base: h.city, hotel: h.point, start: s, end: Math.max(s, e), cap: capOf.get(c), label: h.label }
+      if (baby) p.baby = true
+      if (depart) p.depart = true
       // a plain day (no landing, no move): for a place that is best early they may leave the hotel from 8:00
       if (s === 9 * 60 + 30) p.early = 8 * 60
       if (!h.booked) p.estimate = true

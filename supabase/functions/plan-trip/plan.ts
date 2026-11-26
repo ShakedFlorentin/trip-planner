@@ -17,6 +17,10 @@ export type Presence = {
   landing?: true
   /** on a plain day (no landing, no move): the earliest they would leave the hotel for a place that is best early */
   early?: number
+  /** the day they fly home: end is when they must be back at the hotel for the bags, so a stop ends a ride before it */
+  depart?: true
+  /** the couple travels with a baby */
+  baby?: true
 }
 
 export type Day = {
@@ -190,6 +194,8 @@ const TRIP_SPREAD = 20
 const NEAR_KM = 30
 // a place in another city than where the day's people sleep costs this much more than one in their own city: the own
 // city's places come first, and the other city's only fill what they leave (or a day with none of its own)
+// how much of a usual day the landing day holds
+const LANDING_SHARE = 0.6
 const AWAY_COST = 3
 // a place of two couples on a day one of them is not in the country
 const ABSENT_COST = 4
@@ -245,6 +251,8 @@ function duskOf(d: Day, u: Unit) {
 const closesOf = (u: Unit, d: Day) => Math.min(u.closes ?? 24 * 60, u.outdoor ? duskOf(d, u) + DUSK_SLACK : 24 * 60)
 /** A morning place that is open early: its people may leave the hotel before the day's usual start for it. */
 const opensEarly = (u: Unit) => u.best === 'morning' && u.opens != null && u.opens <= 8 * 60 + 30
+/** When a couple's day is over for a place: on the day they fly, the ride back to the hotel for the bags comes off. */
+const endFor = (u: Unit, p: Presence) => (p.depart ? p.end - ride(u.approx ? null : u.point, p.hotel) + 15 : p.end)
 /** When a couple's day can start for a place. */
 const startFor = (u: Unit, p: Presence) => (opensEarly(u) && p.early != null ? Math.min(p.early, p.start) : p.start)
 
@@ -402,7 +410,8 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const cap = (day: number, c: string) => {
     const p = byDay.get(day)?.at.get(c)
     if (!p) return 0
-    return Math.max(0, Math.min(p.cap ?? DAY_CAP, p.end - p.start) - (fixedMins.get(day + '|' + c) ?? 0))
+    // the day they land is a lighter day, whatever hour the flight came in
+    return Math.max(0, Math.min((p.cap ?? DAY_CAP) * (p.landing ? LANDING_SHARE : 1), p.end - p.start) - (fixedMins.get(day + '|' + c) ?? 0))
   }
   // the couples sleeping in the same city as this couple that day
   const together = (d: Day, c: string) => [...d.at].filter(([, p]) => p.base === d.at.get(c)!.base).map(([o]) => o)
@@ -429,7 +438,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       if (u.openDates.length && !u.openDates.includes(d.date)) return false
       // open for the whole visit inside the hours everyone has that day (and in daylight, for a place out in the open)
       const start = Math.max(...here.map((c) => startFor(u, d.at.get(c)!)), u.opens ?? 0)
-      const end = Math.min(...here.map((c) => d.at.get(c)!.end), closesOf(u, d))
+      const end = Math.min(...here.map((c) => endFor(u, d.at.get(c)!)), closesOf(u, d))
       return end - start >= u.mins
     })
     // the days with everyone come first: a day without one of its couples only when there is no day with them all
@@ -970,7 +979,7 @@ export function outAndBack(pts: Point[]) {
 function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
   const couples = [...d.at.keys()]
   const who = new Map(units.map((u) => [u.id, whoOn(u, d)]))
-  const endOf = (u: Unit) => Math.min(...who.get(u.id)!.map((c) => d.at.get(c)!.end))
+  const endOf = (u: Unit) => Math.min(...who.get(u.id)!.map((c) => endFor(u, d.at.get(c)!)))
   const want = new Map<string, number | null>()
   const slots = mealSlots(d, units.filter(isMeal), fixed)
   const fixedMeals = fixedMealsOf(fixed, d.day)

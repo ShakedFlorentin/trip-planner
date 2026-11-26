@@ -293,6 +293,13 @@ async function media() {
   return mediaCache!
 }
 
+/** A hotel booking's check-out hour, when it carries one that can be a check-out (07:00 to 13:00); else not known. */
+function checkOutMin(ends: string | null) {
+  const m = ends?.slice(11, 16).match(/^(\d{2}):(\d{2})$/)
+  const t = m ? Number(m[1]) * 60 + Number(m[2]) : null
+  return t != null && t >= 7 * 60 && t <= 13 * 60 ? t : undefined
+}
+
 // network lookups one run may make (each waits over a second); what is left over is looked up on the next run
 const GEO_BUDGET = 8
 /**
@@ -529,12 +536,15 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       key: h.title,
       confirmed: true,
       booked: true,
+      outMin: checkOutMin(h.ends_at),
     }))
   }
   const dayWho = new Map(dayInfo.map((d) => [d.day, d.who]))
   const flights = bookings.filter((b) => b.kind === 'flight')
 
-  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, capOf, past })
+  // the booked trains: on a day the city changes, the day starts after the train arrives
+  const trains = bookings.filter((b) => b.kind === 'train')
+  const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, trains, capOf, past })
   // each city's middle, from the hotels in it
   const basePt = basePoints(days)
 
