@@ -297,6 +297,26 @@ const tests = {
     const castle = E.plan(d, [unit('castle', { far: true, mins: 150, priority: 4, best: 'morning', closes: H('17:00'), point: LAKE })], [])
     t(castle.placed.has('castle'), 'a lone half-day place is not planned as a day trip')
   },
+  r4: (t) => {
+    // a couple sleeping in Yokohama for a Sunday and a Monday; everything they liked is in Tokyo, 25 km away: two
+    // sights and a market food crawl (mornings, closed on Sunday). The day in Tokyo is the day the market is open,
+    // and the crawl is its lunch
+    const YOKO = east(TOKYO, 0, -25)
+    const days = [6, 7].map((d) => day(d, { A: pres({ base: 'yokohama', hotel: YOKO }) }))
+    t(days[0].weekday === 0, 'the first day of the scenario should be a Sunday')
+    const units = [
+      unit('museum', { best: 'morning', mins: 90 }),
+      unit('shops', { category: 'shopping', best: 'afternoon', mins: 90, point: east(TOKYO, 1) }),
+      unit('market', { category: 'food', best: 'morning', mins: 90, opens: H('8:00'), closes: H('14:00'), closedWeekdays: [0], point: east(TOKYO, 0.5) }),
+    ]
+    const out = E.plan(days, units, [])
+    const m = out.placed.get('market')
+    t(!!m && inSlot(m.start, '11:00', '14:45'), `the market crawl is ${m ? 'at ' + E.hhmm(m.start) : 'not planned'}: not the day's lunch`)
+    for (const d of days) {
+      const here = [...out.placed].filter(([, p]) => p.day === d.day)
+      if (here.length) t(!out.issues.some((i) => i.kind === 'no_lunch' && i.day === d.day), `day ${d.day}: ${here.length} stops in Tokyo and no lunch`)
+    }
+  },
 }
 
 const only = process.argv.slice(2)
