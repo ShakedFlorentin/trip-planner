@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
+import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, locate, type GeoDeps } from './geo.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
@@ -365,12 +366,6 @@ const BABY_BLOCKER = /אסור|לא מתאים|לא מומלץ|לא נכנס|א�
 const babyLine = (b: string | null) => (b && BABY_BLOCKER.test(b) ? b : null)
 const BABY_BLOCKER_EN = /no stroller|not suitable|not recommended|stairs only|smok|adults only|no children|no kids|under age|not allowed|no access|hard with a stroller/i
 const babyLineEn = (b: string | null | undefined) => (b && BABY_BLOCKER_EN.test(b) ? b : null)
-// a nightlife card that is a place to eat a full meal (an izakaya, a food alley): it can be the day's dinner. Read from
-// the card's name and plan line; a bar that says nothing of the kind stays a bar
-const SERVES_MEAL = /izakaya|yokocho|yakitori|food alley|居酒屋|横丁|איזקאיה|יוקוצ׳ו|יוקוצ'ו|יאקיטורי|סמטת אוכל|סמטת האוכל/i
-// a sight under the open sky, by its name: the visit is over by dusk. A card that says "night" (lights, a night view)
-// is left alone
-const OUTDOOR = /\b(park|garden|gardens|shrine|temple|trail|hike|lake|beach|bamboo|grove|island)\b|פארק|גן |גני |מקדש|שביל|אגם|חוף|במבוק/i
 const KNOWN_ISSUE = new Set(['overlap', 'tight', 'hours', 'meals'])
 // when a card was never checked: when its kind is usually best
 const DEFAULT_TIME: Record<string, BestTime> = { nightlife: 'night' }
@@ -591,6 +586,15 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     let opens = mins(f?.opens)
     let closes = mins(f?.closes)
     if (opens != null && closes != null && closes <= opens) closes = 24 * 60
+    const card = {
+      category,
+      name: c.name,
+      best: f?.best_time ?? null,
+      visitMins: f?.visit_mins ?? null,
+      opens: opens ?? null,
+      closes: closes ?? null,
+      notes: [f?.plan_line, c.en?.plan_line],
+    }
     units.push({
       id: p.id,
       couples: unitCouples,
@@ -601,8 +605,9 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       mins: Math.min(visitMins(f, c.time_needed, category), 420),
       category,
       best,
-      meal: category === 'nightlife' && SERVES_MEAL.test([c.name, f?.plan_line, c.en?.plan_line].filter(Boolean).join(' ')),
-      outdoor: (category === 'sight' || category === 'experience') && best !== 'night' && OUTDOOR.test(c.name),
+      // from the card's checked facts only (flags.ts): a card never checked gets neither
+      meal: servesDinner(card),
+      outdoor: daylightOnly(card),
       // not for a baby, by the card's checked baby line (the same test that decides whether the line is shown)
       adults: !!f && (!!babyLine(f.baby_block) || !!babyLineEn(c.en?.baby_block)),
       booking: f?.booking === 'required' && !booked,

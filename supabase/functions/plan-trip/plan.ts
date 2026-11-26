@@ -157,6 +157,8 @@ function slotsFor(u: Unit, d: Day): MealSlot[] {
   const can = (s: 'lunch' | 'dinner') =>
     (s === 'lunch' ? start <= 13 * 60 : end >= 19 * 60 + 30) &&
     Math.max(u.opens ?? 0, start, MEAL_AT[s].from) <= Math.min((u.closes ?? 24 * 60) - u.mins, MEAL_AT[s].to, end - u.mins)
+  // a nightlife place that serves a meal (an izakaya) is a dinner, never a lunch
+  if (u.category === 'nightlife') return can('dinner') ? ['dinner'] : []
   const asked: MealSlot[] =
     u.best === 'morning' ? (start >= 10 * 60 + 45 ? ['lunch'] : ['breakfast'])
     : u.best === 'midday' || u.best === 'afternoon' ? ['lunch']

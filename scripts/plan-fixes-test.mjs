@@ -256,6 +256,32 @@ const tests = {
     const next = E.plan(days, units.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })), [])
     t(next.placed.size === out.placed.size && [...next.placed.keys()].every((id) => out.placed.has(id)), 'the plan changed when run again on its own result')
   },
+  r2: (t) => {
+    // the flags come from the card's facts, not from words in its name (made-up cards)
+    t(!!F, 'no flags.ts: the flags are still guessed where the trip is read')
+    if (!F) return
+    const card = (x) => ({ category: 'sight', name: 'x', best: 'any', visitMins: 60, opens: null, closes: null, notes: [], ...x })
+    const day_ = (name, x) => t(!F.daylightOnly(card({ name, ...x })), `"${name}" is held to daylight`)
+    day_('Harbor Sea Life Park', { best: 'morning', opens: H('9:30'), closes: H('17:00') })
+    day_('Cloud Tower Floating Garden Observatory', { best: 'evening', opens: H('9:30'), closes: H('22:30') })
+    day_('Old Temple Garden', { best: 'morning', opens: H('6:00'), closes: H('18:00') })
+    day_('Lantern Shrine Night Lights', { best: 'night' })
+    day_('Garden View Cafe', { category: 'cafe', best: 'morning' })
+    day_('Riverside Park', { best: null })
+    t(F.daylightOnly(card({ name: 'Riverside Path', best: 'morning' })), 'open ground with no hours and a card that asks for the morning is not held to daylight')
+    const bar = (name, x) => F.servesDinner(card({ category: 'nightlife', name, best: 'night', visitMins: 90, ...x }))
+    t(!bar('Lantern Yokocho', { best: 'afternoon', visitMins: 150, opens: H('11:00'), closes: H('22:30') }), 'an afternoon alley counts as a meal')
+    t(!bar('Stone Yokocho', { visitMins: 45, notes: ['step into a small izakaya'] }), 'a 45-minute alley stop counts as a meal')
+    t(!bar('Memory Yokocho'), 'an alley whose card says nothing about food counts as a meal')
+    t(!bar('Bar Quiet'), 'a bar counts as a meal')
+    t(!bar('Never Checked Izakaya', { best: null, visitMins: null }), 'a card never checked counts as a meal')
+    t(bar('Backstreet izakaya alleys'), 'an evening izakaya of an hour and a half is not a dinner')
+    t(bar('Smoke Lane', { best: 'evening', visitMins: 60, notes: [null, 'Yakitori counters, cash only'] }), 'a card whose plan line says yakitori is not a dinner')
+    // and in the plan: a nightlife meal is a dinner only. Open from 11:00, it does not stand in for the lunch
+    const d = [day(1, { A: pres() })]
+    const out = E.plan(d, [unit('alley', { category: 'nightlife', meal: true, best: 'afternoon', mins: 150, opens: H('11:00'), closes: H('22:30') })], [])
+    t(out.issues.some((i) => i.kind === 'no_lunch'), `an alley at ${out.placed.has('alley') ? E.hhmm(out.placed.get('alley').start) : '-'} counted as the lunch`)
+  },
 }
 
 const only = process.argv.slice(2)
