@@ -1,2 +1,3 @@
 "ShortcutAddExpense" = "Add expense";
 "ShortcutTranslate" = "Translate";
+"NSPhotoLibraryUsageDescription" = "Toogo uses photos from your trip dates to build your album. No photo is uploaded.";

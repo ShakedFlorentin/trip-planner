@@ -1,12 +1,13 @@
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ratingRow } from './ratingRow'
-import { Star } from 'lucide-react'
+import { Star, Users } from 'lucide-react'
 import { supabase } from '../supabase'
 import type { PlaceRating } from '../types'
-import { mutate, readCache, writeCache } from '../lib'
+import { mutate, readCache, safePhoto, writeCache } from '../lib'
 import { locale, t } from '../i18n'
 import { Icon } from '../icons'
 import { smoothedStars } from '../rank'
+import { PhotoViewer } from './PlacePhotos'
 import '../styles/ratings.css'
 
 // Ratings hang on the shared library card, not on the trip's copy, so a later trip with the same place sees what
@@ -215,19 +216,22 @@ export function StarsInput({ value, onChange }: { value: number; onChange: (n: n
  * "★ 4.5 · 3 ratings" and the latest notes; nothing at all when nobody has rated yet. The number is a Bayesian mean
  * (see rank.ts): `prior` is the average of the place's category, so three 5-star ratings don't read as a perfect 5.0.
  */
-export function RatingSummary({ stars, notes, label, prior }: { stars: number[]; notes: string[]; label?: string; prior?: number }) {
-  if (!stars.length) return null
-  const avg = smoothedStars(stars, prior)
+export function RatingSummary({ stars, notes, label, prior, above }: { stars: number[]; notes: string[]; label?: string; prior?: number; above?: ReactNode }) {
+  if (!stars.length && !above) return null
+  const avg = stars.length ? smoothedStars(stars, prior) : 0
   const avgText = avg.toLocaleString(locale, { maximumFractionDigits: 1 })
   return (
     <div className="rate-sum">
-      <div className="rate-avg">
-        {label && <span>{label}: </span>}
-        <span className="rate-star" aria-hidden="true">
-          ★
-        </span>
-        <span className="rate-sr">{t('ממוצע כוכבים')}</span> <bdi>{avgText}</bdi> · {countLabel(stars.length)}
-      </div>
+      {stars.length > 0 && (
+        <div className="rate-avg">
+          {label && <span>{label}: </span>}
+          <span className="rate-star" aria-hidden="true">
+            ★
+          </span>
+          <span className="rate-sr">{t('ממוצע כוכבים')}</span> <bdi>{avgText}</bdi> · {countLabel(stars.length)}
+        </div>
+      )}
+      {above}
       {notes.map((n, i) => (
         <p key={i} className="rate-note clamp">
           <bdi>{n}</bdi>
@@ -237,18 +241,69 @@ export function RatingSummary({ stars, notes, label, prior }: { stars: number[];
   )
 }
 
+/** Approved photos earlier travellers took of these cards (RPC traveller_photos). An error, or no RPC yet, is no photos. */
+function useTravellerPhotos(libraryId?: string | null) {
+  const [urls, setUrls] = useState<string[]>([])
+  useEffect(() => {
+    setUrls([])
+    if (!libraryId) return
+    let live = true
+    void Promise.resolve(supabase.rpc('traveller_photos', { library_ids: [libraryId] })).then(
+      ({ data, error }) => {
+        if (!live || error || !Array.isArray(data)) return
+        const row = (data as { library_id: string; urls: string[] | null }[]).find((r) => r.library_id === libraryId)
+        setUrls((row?.urls ?? []).flatMap((u) => safePhoto(u) ?? []))
+      },
+      () => {},
+    )
+    return () => {
+      live = false
+    }
+  }, [libraryId])
+  return urls
+}
+
+const SHOWN_PHOTOS = 3
+
+/** Up to three squares and a "+N" tile, then who they are from; a tap opens them full screen. */
+function TravellerPhotos({ urls }: { urls: string[] }) {
+  const [open, setOpen] = useState<number | null>(null)
+  const more = urls.length - SHOWN_PHOTOS
+  return (
+    <div className="tp">
+      <div className="tp-row">
+        {urls.slice(0, SHOWN_PHOTOS).map((u, i) => (
+          <button key={u} type="button" className="tp-tile" aria-label={t('תמונה {n} מתוך {total}', { n: i + 1, total: urls.length })} onClick={() => setOpen(i)}>
+            <img src={u} alt="" loading="lazy" />
+          </button>
+        ))}
+        {more > 0 && (
+          <button type="button" className="tp-tile tp-more" aria-label={t('עוד {n} תמונות', { n: more })} onClick={() => setOpen(SHOWN_PHOTOS)}>
+            <bdi dir="ltr">+{more}</bdi>
+          </button>
+        )}
+      </div>
+      <p className="tp-line">
+        <Icon as={Users} size={14} /> {t('תמונות של מטיילים · אושרו על ידינו')}
+      </p>
+      {open !== null && <PhotoViewer urls={urls} start={open} onClose={() => setOpen(null)} />}
+    </div>
+  )
+}
+
 /** A card's ratings from everyone who rated it (the swipe card's full view); loads them itself, one query. */
 export function CardRatings({ libraryId, prior }: { libraryId?: string | null; prior?: number }) {
   const ratings = useRatings([libraryId])
+  const urls = useTravellerPhotos(libraryId)
   if (!libraryId) return null
   const all = ratings.others(libraryId)
-  if (!all.stars.length) return null
+  if (!all.stars.length && !urls.length) return null
   return (
     <div className="fact">
       <b className="fact-label">
         <Icon as={Star} /> {t('מטיילים שהיו שם')}
       </b>
-      <RatingSummary {...all} prior={prior} />
+      <RatingSummary {...all} prior={prior} above={urls.length ? <TravellerPhotos urls={urls} /> : undefined} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { hapticSelect } from './haptics'
 import { reducedMotion } from './spring'
 import { supabase } from './supabase'
@@ -18,6 +18,8 @@ import Bookings from './views/Bookings'
 import Places from './views/Places'
 import { PrefsSheet, ToolSheet, type MoreTab } from './views/More'
 import Menu from './views/Menu'
+// the trip album exists in the iOS app only: its code is a separate chunk the website never loads
+const Album = lazy(() => import('./views/Album'))
 import { Avatar } from './avatar'
 import Settings from './views/Settings'
 import { ReplanSheet } from './views/Replan'
@@ -322,6 +324,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [settings, setSettings] = useState(false)
   const [prefs, setPrefs] = useState(false)
   const [reporting, setReporting] = useState(false)
+  const [album, setAlbum] = useState(false)
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
   useEffect(
@@ -604,7 +607,13 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           onSettings={() => setSettings(true)}
           onLeave={props.onLeave}
           onReport={() => setReporting(true)}
+          onAlbum={() => setAlbum(true)}
         />
+      )}
+      {album && (
+        <Suspense fallback={null}>
+          <Album trip={trip} members={members} userId={props.userId} onClose={() => setAlbum(false)} />
+        </Suspense>
       )}
       {tool && <ToolSheet trip={trip} members={members} userId={props.userId} sub={tool} onClose={() => setTool(null)} />}
       {settings && <Settings trip={trip} me={me} userId={props.userId} onClose={() => setSettings(false)} />}
