@@ -19,9 +19,11 @@ const rules = (f, out) => {
     const d = dayOf.get(p.day)
     if (!u) { errs.push(`${id}: placed but not a unit`); continue }
     if (!d) { errs.push(`${id}: on day ${p.day}, which does not exist`); continue }
+    // a place two couples liked may be planned for the one who is there when the other is not in the country
+    if (!u.couples.some((c) => d.at.has(c))) errs.push(`${id}: on day ${p.day} but none of its couples is present`)
     for (const c of u.couples) {
       const pr = d.at.get(c)
-      if (!pr) { errs.push(`${id}: on day ${p.day} but ${c} is not present`); continue }
+      if (!pr) continue
       const near = u.point && E.km(pr.hotel, u.point) <= (u.far ? 150 : NEAR_KM)
       if (!u.far && pr.base !== u.base && !near) errs.push(`${id}: on day ${p.day}, ${c} is in ${pr.base}, place is ${u.base}`)
       if (u.far && !near) errs.push(`${id}: day trip on day ${p.day} too far from ${c}'s hotel`)

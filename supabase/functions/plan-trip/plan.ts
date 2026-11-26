@@ -185,7 +185,12 @@ const TRIP_SPREAD = 20
 const NEAR_KM = 30
 // a place in another city than where the day's people sleep costs this much more than one in their own city: the own
 // city's places come first, and the other city's only fill what they leave (or a day with none of its own)
-const AWAY_COST = 1.5
+const AWAY_COST = 3
+// a place of two couples on a day one of them is not in the country
+const ABSENT_COST = 4
+// a day trip is worth its ride: at least an hour of places there, and at least this share of the ride there and back
+const TRIP_MIN = 60
+const TRIP_SHARE = 0.4
 // at most this many of a kind a day, per couple (meals go by slot instead: one lunch, one dinner)
 const PER_DAY: Record<string, number> = { food: 2, cafe: 2, nightlife: 2 }
 // what PER_DAY counts a place as: a restaurant meal is counted by its slot, a snack as food
@@ -296,7 +301,7 @@ export function plan(days: Day[], units: Unit[], fixed: Fixed[]): Outcome {
     for (let round = 0; round < 4; round++) {
       const again = solve(true, from(o))
       const same = again.placed.size === o.placed.size && [...again.placed].every(([id, p]) => o.placed.get(id)?.day === p.day)
-      if (same || worth(again) < worth(o)) break
+      if (same) break
       o = again
     }
     return o
@@ -402,9 +407,11 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   for (const u of units) {
     let anyDay = false
     const ok = days.filter((d) => {
-      const there = u.couples.every((c) => {
-        const p = d.at.get(c)
-        if (!p) return false
+      // a place both couples liked may be planned for the couple that is there on a day the other is not in the country
+      // (only when no day with everyone can take it: see below)
+      const here = whoOn(u, d)
+      const there = here.length > 0 && here.every((c) => {
+        const p = d.at.get(c)!
         // a day trip needs a day that starts in the morning, with time for the ride there and back
         if (u.far) return !!u.point && km(p.hotel, u.point) <= 150 && p.start <= TRIP_START && p.end - p.start >= 2 * ride(p.hotel, u.point) + u.mins
         // on the landing day: places more than 40 min from the hotel are saved for a later day
@@ -416,11 +423,13 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       if (u.closedWeekdays.includes(d.weekday) || u.closedDates.includes(d.date) || barred.get(u.id)?.has(d.day)) return false
       if (u.openDates.length && !u.openDates.includes(d.date)) return false
       // open for the whole visit inside the hours everyone has that day (and in daylight, for a place out in the open)
-      const start = Math.max(...u.couples.map((c) => startFor(u, d.at.get(c)!)), u.opens ?? 0)
-      const end = Math.min(...u.couples.map((c) => d.at.get(c)!.end), closesOf(u, d))
+      const start = Math.max(...here.map((c) => startFor(u, d.at.get(c)!)), u.opens ?? 0)
+      const end = Math.min(...here.map((c) => d.at.get(c)!.end), closesOf(u, d))
       return end - start >= u.mins
     })
-    if (ok.length) options.set(u.id, ok.map((d) => d.day))
+    // the days with everyone come first: a day without one of its couples only when there is no day with them all
+    const all = ok.filter((d) => whoOn(u, d).length === u.couples.length)
+    if (ok.length) options.set(u.id, (all.length ? all : ok).map((d) => d.day))
     else unplanned.set(u.id, anyDay ? 'closed' : 'no_day')
   }
   const live = units.filter((u) => options.has(u.id))
@@ -430,7 +439,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const at = new Map<string, number | null>()
   const groups = new Map<string, Set<string>>()
   const mealCands = new Map<string, Unit[]>()
-  for (const u of live) if (isMeal(u)) for (const day of options.get(u.id)!) for (const c of u.couples) mealCands.set(day + '|' + c, [...(mealCands.get(day + '|' + c) ?? []), u])
+  for (const u of live) if (isMeal(u)) for (const day of options.get(u.id)!) for (const c of whoOn(u, byDay.get(day)!)) mealCands.set(day + '|' + c, [...(mealCands.get(day + '|' + c) ?? []), u])
   const group = (day: number, c: string) => {
     const k = day + '|' + c
     let g = groups.get(k)
@@ -539,14 +548,17 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if (isAway(d, u)) {
       // the away penalty grows with the ride, so nearer parts of the next city come before far ones
       const awayPres = u.couples.map((c) => d.at.get(c)).find((p) => p && p.base !== u.base)
-      cost += AWAY_COST + (awayPres && u.point ? ride(awayPres.hotel, u.point) / 60 : 0)
+      cost += AWAY_COST + (awayPres && u.point ? ride(awayPres.hotel, u.point) / 30 : 0)
     }
     // a couple's own place fits best on a day the other couple is elsewhere
-    if (u.couples.length < together(d, u.couples[0]).length && !isMeal(u)) cost += 2
+    const here = whoOn(u, d)
+    if (here.length < together(d, here[0]).length && !isMeal(u)) cost += 2
+    // a day one of its couples is not in the country: only when no day with everyone will do
+    cost += (u.couples.length - here.length) * ABSENT_COST
     if (u.current != null && u.current !== day) cost += 1.5
     // a day that leaves little of the place's opening hours (a market that closes at 14:30 on an arrival day): only
     // if no roomier day will do
-    const from = Math.max(u.opens ?? 0, ...u.couples.map((c) => startFor(u, d.at.get(c)!)))
+    const from = Math.max(u.opens ?? 0, ...here.map((c) => startFor(u, d.at.get(c)!)))
     if (closesOf(u, d) - from < u.mins + 90) cost += 2
     return cost
   }
@@ -554,7 +566,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const fits = (u: Unit, day: number, keep = false) => {
     // a meal needs a slot of its own for each of its people: no two lunches, no two dinners
     if (isMeal(u) && [...slotsOn(day, u).values()].some((s) => s == null)) return false
-    return u.couples.every((c) => {
+    return whoOn(u, byDay.get(day)!).every((c) => {
       const d = byDay.get(day)!
       // room stays for the lunch and the dinner still to come, while a meal that could fill them waits
       const room = keep ? 0 : mealGaps(day, c, true, isMeal(u) ? u : undefined) * MEAL_ROOM
@@ -589,9 +601,9 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   }
   const put = (u: Unit, day: number | null) => {
     const was = at.get(u.id)
-    if (was != null) for (const c of u.couples) group(was, c).delete(u.id)
+    if (was != null) for (const c of whoOn(u, byDay.get(was)!)) group(was, c).delete(u.id)
     at.set(u.id, day)
-    if (day != null) for (const c of u.couples) group(day, c).add(u.id)
+    if (day != null) for (const c of whoOn(u, byDay.get(day)!)) group(day, c).add(u.id)
   }
   // the change in total cost if u moved to day (and, optionally, evicted went off the plan)
   const delta = (u: Unit, day: number | null, evicted?: Unit) => {
@@ -670,7 +682,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
             if (dl < best.dl) best = { day, dl }
           } else {
             // the day is full: try taking off one less wanted place to make room
-            for (const c of u.couples) {
+            for (const c of whoOn(u, byDay.get(day)!)) {
               // a copy: trying a swap takes places off the day and puts them back, which would re-run a live Set
               for (const id of [...group(day, c)]) {
                 const v = unitById.get(id)!
@@ -701,6 +713,111 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   improve(true)
   greedy(1)
   improve(false)
+
+  // everything the plan costs as it stands
+  const total = () => {
+    let s = 0
+    for (const d of days) for (const c of d.at.keys()) s += groupCost(d.day, c)
+    for (const u of live) s += unitCost(u, at.get(u.id) ?? null)
+    return s
+  }
+  // day trips left out: places are placed one at a time, and one far place rarely beats a day in town, so a group of
+  // far places near each other is tried as a whole: it takes a day (the town places on it go where they fit on other
+  // days) when the plan as a whole is better for it
+  const tryTrips = () => {
+    const left = order.filter((u) => u.far && u.point && at.get(u.id) == null)
+    const clusters: Unit[][] = []
+    for (const u of left) {
+      const g = clusters.find((cl) => cl.every((v) => km(v.point!, u.point!) <= TRIP_SPREAD))
+      if (g) g.push(u)
+      else clusters.push([u])
+    }
+    const value = (cl: Unit[]) => cl.reduce((s, u) => s + u.priority * u.mins, 0)
+    for (const cl of clusters.sort((a, b) => value(b) - value(a))) {
+      if (cl.length < 2) continue
+      let best: { day: number; cost: number } | null = null
+      const base = total()
+      const attempt = (day: number, keep: boolean) => {
+        const d = byDay.get(day)!
+        const cs = [...new Set(cl.flatMap((u) => whoOn(u, d)))]
+        const snap = new Map(live.map((u) => [u.id, at.get(u.id) ?? null]))
+        const out = live.filter((u) => at.get(u.id) === day && whoOn(u, d).some((c) => cs.includes(c)))
+        // a day that already holds a day trip is not taken
+        if (out.some((u) => u.far)) return
+        for (const u of out) put(u, null)
+        for (const u of cl) if (options.get(u.id)!.includes(day) && fits(u, day)) put(u, day)
+        const on = cl.filter((u) => at.get(u.id) === day)
+        if (on.length >= 2) {
+          for (const u of order) {
+            if (!out.includes(u)) continue
+            let to: number | null = null
+            let toD = 0
+            for (const x of options.get(u.id)!) {
+              if (x === day || !fits(u, x)) continue
+              const dl = delta(u, x)
+              if (dl < toD) {
+                toD = dl
+                to = x
+              }
+            }
+            put(u, to)
+          }
+          const cost = total()
+          if (cost < base - 0.01 && (!best || cost < best.cost)) best = { day, cost }
+          if (keep) return
+        }
+        for (const u of live) if ((at.get(u.id) ?? null) !== snap.get(u.id)) put(u, null)
+        for (const u of live) if (snap.get(u.id) != null && at.get(u.id) == null) put(u, snap.get(u.id)!)
+      }
+      for (const day of new Set(cl.flatMap((u) => options.get(u.id)!))) attempt(day, false)
+      if (best) attempt((best as { day: number }).day, true)
+    }
+  }
+  if (!settle) tryTrips()
+  // a day trip that is not worth its ride (a fifteen-minute stall two hours away, alone) comes off, and the day goes
+  // back to the places in town
+  const thin = new Set<string>()
+  // the ones with an hour of places but a long ride for it: they come off only if the day then goes to something else
+  const maybe = new Map<string, number>()
+  for (const d of days) {
+    for (const [c, p] of d.at) {
+      const far = [...group(d.day, c)].map((id) => unitById.get(id)!).filter((u) => u.far)
+      if (!far.length) continue
+      const mins = far.reduce((s, u) => s + u.mins, 0)
+      const there = Math.min(...far.map((u) => ride(p.hotel, u.point)))
+      if (mins >= TRIP_MIN && mins >= TRIP_SHARE * 2 * there) continue
+      for (const u of far) {
+        thin.add(u.id)
+        if (mins >= TRIP_MIN) maybe.set(u.id, d.day)
+      }
+    }
+  }
+  if (thin.size) {
+    for (const id of thin) put(unitById.get(id)!, null)
+    for (const u of order) {
+      // only places in town: a day trip put here now would not have been asked whether it is worth its ride
+      if (u.far || at.get(u.id) != null) continue
+      let best: number | null = null
+      let bestD = 0
+      for (const day of options.get(u.id)!) {
+        if (!fits(u, day)) continue
+        const dl = delta(u, day)
+        if (dl < bestD) {
+          bestD = dl
+          best = day
+        }
+      }
+      put(u, best)
+    }
+    // nothing else took the day: a long ride for an hour or two there is still better than a day with nothing
+    for (const [id, day] of maybe) {
+      const u = unitById.get(id)!
+      if (whoOn(u, byDay.get(day)!).every((c) => [...group(day, c)].every((x) => maybe.get(x) === day)) && fits(u, day)) {
+        put(u, day)
+        thin.delete(id)
+      }
+    }
+  }
 
   function fitsWithout(u: Unit, day: number, v: Unit | null) {
     const vDay = v ? at.get(v.id) ?? null : null
@@ -762,7 +879,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const late: { id: string; day: number }[] = []
   for (const u of live) {
     const day = at.get(u.id)
-    if (day == null) unplanned.set(u.id, 'full')
+    if (day == null) unplanned.set(u.id, thin.has(u.id) ? 'no_day' : 'full')
   }
   for (const d of days) {
     const ids = live.filter((u) => at.get(u.id) === d.day)
