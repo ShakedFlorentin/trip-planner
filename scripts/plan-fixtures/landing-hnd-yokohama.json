@@ -1,6 +1,6 @@
 {
  "name": "landing-hnd-yokohama",
- "description": "Couple lands at HND 09:15 on day 1 (2026-12-12), sleeps Yokohama Bashamichi days 1-2. Two Tokyo-based units (sg=Shinagawa, od=Odaiba). Both are >40 min from the Yokohama hotel, so they are excluded from the landing day. Day 2 (Yokohama, non-landing, normal start): cap=min(510,810)=510 — 2×(240+20)=520 ≤ 525, so both fit. Within day 2, arrangeOrder picks [sg,od]: hotel→sg≈50 min + sg→od≈23 min = 73 min < hotel→od≈52 min + od→sg≈23 min = 75 min, so sg starts before od. A Tokyo move-day was deliberately NOT added: presence.ts forces start=840 on a hotel-change day, leaving cap=min(510,450)=450 — only 1 unit fits (520>465), so a 3-day version with 4 units would yield placedMin=3, not 4.",
+ "description": "Couple lands at HND 09:15 on day 1 (2026-12-12), sleeps Yokohama Bashamichi days 1-2. Two Tokyo-based units (sg=Shinagawa, od=Odaiba). Both are >40 min from the Yokohama hotel, so they are excluded from the landing day. Day 2 (Yokohama, non-landing, normal start): cap=510, and since 26 Nov 2026 the day's load counts the real rides (hotel→sg≈50, sg→od≈23, the ride home past its first half hour≈22, 5 a stop), so the two visits are 200 minutes each (2×200+105=505 ≤ 525; at 240 each the day would be ten hours of visits and trains, over the cap). Within day 2 the order is [sg,od]: hotel→sg≈50 min + sg→od≈23 min = 73 min < hotel→od≈52 min + od→sg≈23 min = 75 min, so sg starts before od. A Tokyo move-day was deliberately NOT added: presence.ts forces start=840 on a hotel-change day, leaving cap=min(510,450)=450 — only 1 unit fits (520>465), so a 3-day version with 4 units would yield placedMin=3, not 4.",
  "presence": {
   "startDate": "2026-12-12",
   "numDays": 2,
@@ -39,7 +39,7 @@
    "base": "tokyo",
    "far": false,
    "point": {"lat": 35.6285, "lng": 139.7387},
-   "mins": 240,
+   "mins": 200,
    "category": "sight",
    "best": "any",
    "opens": null,
@@ -56,7 +56,7 @@
    "base": "tokyo",
    "far": false,
    "point": {"lat": 35.6267, "lng": 139.7757},
-   "mins": 240,
+   "mins": 200,
    "category": "sight",
    "best": "any",
    "opens": null,
