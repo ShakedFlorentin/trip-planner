@@ -47,7 +47,12 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
 ## The fixes test and the numbers
 
 - `npm run test:plan-fixes` (`scripts/plan-fixes-test.mjs`): one test per planner fix of 2026-11-26 (meals, order on
-  the map, hours and season, couples and days apart, real points, move/landing/departure days, baby and card facts).
+  the map, hours and season, couples and days apart, real points, move/landing/departure days, baby and card facts),
+  and `r1` to `r7` for the round-2 fixes of 2026-11-27 (a place both couples liked comes first, flags from the card's
+  facts in `flags.ts`, a lone far place is not a day trip, meals on a day in another city, an early dinner on the day
+  they fly home, known points before unknown ones, an "afternoon" restaurant as a late lunch).
+  `node scripts/plan-fixes-test.mjs r3 r4` runs only those; `PLAN_DIR=<a copy of plan-trip>` runs them on another
+  version (each must fail on the version before its fix).
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
   closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
   runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside

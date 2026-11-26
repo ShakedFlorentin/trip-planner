@@ -15,12 +15,13 @@ plan-trip puts every matched place on a day its people are near it, close to the
 - `presence.ts` (`buildDays`): who is where each day (stays, bookings, couples' own days). On the branch `planner-fixes-2026-11-26` (not in main, not deployed): a city-change day starts after the booked train or from check-out plus the ride, the departure day counts the ride to its airport, a couple with a baby ends by 20:30. Date-only tickets are a known weak spot (qa).
 - `geo.ts` (`locate`, `addressVariants`; same branch): address to coordinates through `geo_cache` only (free, cached; a miss is asked again after 14 days).
 - `plan.ts` (`plan`, `hhmm`, `km`): the day packer. `stay.ts` (`baseFor`, `sleepsFromStays`): the hotel base point per night. `split.ts` (`suggestSplit`, `openNights`): "suggest a split" of open nights between cities, reads `cities` (route, ideal nights, season).
+- `flags.ts` (`servesDinner`, `daylightOnly`; same branch, round 2): the two flags a card gets, from its facts (category, best time, visit minutes, hours, plan line), never from words in its name. A nightlife card is a dinner only when it says izakaya or yakitori, asks for the evening and takes an hour; a sight is held to daylight only when it has no hours and asks for the daytime. Cards carry no "outdoors" fact: a flag that can't be known is left off.
 - Client side: `replan` in `src/lib.ts` asks for a re-plan; the Plan tab opens call it too.
 
 **Rules**
 - A plan item a person added, moved or edited is never touched; only `auto` items are. Bookings and expenses must never change (planner fixes ship before 12 Dec only after replay passes, memory notes).
 - Triggers call it after each swipe, match, booking, stay change; `request_plan()` sets `plan_state.dirty` and only starts the function when no planner runs.
-- Tests: `npm run test:plan` (fixtures in `scripts/plan-fixtures/`), `npm run test:plan-fixes` (one test per fix of 2026-11-26; before/after numbers with `node scripts/plan-metrics.mjs`), `npm run test:split`, `npm run test:stay`, `node scripts/rank-test.mjs`. For a bug write the failing fixture first.
+- Tests: `npm run test:plan` (fixtures in `scripts/plan-fixtures/`), `npm run test:plan-fixes` (one test per fix of 2026-11-26, and `r1` to `r7` for the round-2 fixes of 2026-11-27: shared places first, flags from facts, a lone far place, meals on a day in another city, an early dinner, known points, a late lunch; before/after numbers with `node scripts/plan-metrics.mjs`), `npm run test:split`, `npm run test:stay`, `node scripts/rank-test.mjs`. For a bug write the failing fixture first.
 - Real trip stays untouched: prove with fixtures, never run the planner on it (dry run needs the planner token, not for agents).
 
 Known open (qa): hotelBase picks Kanagawa before Hakone; some Tokyo wards missing (couple's days dropped); undated trip says "updated" but does nothing; same-coordinate places.
