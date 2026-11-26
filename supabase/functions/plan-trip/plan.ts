@@ -204,6 +204,8 @@ export function mealSlots(d: Day, meals: Unit[], fixed: Fixed[]): Map<string, Me
 const DAY_CAP = 510
 // a couple's own plans on a day both couples are in the same city: the day is mostly together
 const APART_CAP = 180
+// what a place with no known point counts as in a day's spread (km): about what a place across town adds
+const UNKNOWN_KM = 4
 // minutes lost at each place on top of the ride to it (finding the door, the queue, the lift)
 const HOP = 5
 // the ride back to the hotel after a day in town counts toward the day only past this much (a day trip's counts whole)
@@ -608,7 +610,10 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     const crowd = Math.max(0, hours - capH * 0.8) * 4
     // going into another city is a trip of its own: its places come on one day, not one a day
     const awayDay = ids.some((id) => !unitById.get(id)!.far && pres.base !== unitById.get(id)!.base) ? AWAY_DAY : 0
-    return spread + crowd + hours * hours * 0.35 + noMeal + awayDay
+    // a place whose point is not known adds nothing to the spread it can't be measured in: it is charged a usual
+    // one instead, so of two places alike the one that is known to be near is the one planned
+    const unknown = ids.filter((id) => unitById.get(id)!.approx).length * UNKNOWN_KM
+    return spread + unknown + crowd + hours * hours * 0.35 + noMeal + awayDay
   }
   const unitCost = (u: Unit, day: number | null) => {
     // leaving a place out costs its priority, more for a bigger one: a two-hour shrine is more of the trip than a
@@ -713,6 +718,8 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       Number(isMeal(b)) - Number(isMeal(a)) ||
       (isMeal(a) ? b.couples.length - a.couples.length : 0) ||
       b.priority - a.priority ||
+      // of two alike, the one whose point is known is placed first
+      Number(!!a.approx) - Number(!!b.approx) ||
       options.get(a.id)!.length - options.get(b.id)!.length,
   )
   for (const u of order) at.set(u.id, null)

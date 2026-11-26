@@ -332,6 +332,20 @@ const tests = {
     const early = E.plan([day(1, { A: pres({ end: H('18:00'), depart: true }) })], [shops], [])
     t(!early.issues.some((i) => i.kind === 'no_dinner'), 'a day that ends 18:00 asks for a dinner')
   },
+  r6: (t) => {
+    // two evening restaurants alike and one dinner to plan: the one whose point is known is the one planned
+    const d = [day(1, { A: pres() })]
+    const eve = (id, x) => unit(id, { category: 'food', best: 'evening', mins: 90, priority: 4, opens: H('17:00'), closes: H('23:00'), ...x })
+    for (const order of [0, 1]) {
+      const two = [eve('a-nowhere', { approx: true }), eve('b-known', { point: east(TOKYO, 3) })]
+      const out = E.plan(d, order ? two.reverse() : two, [unit('sight', { point: east(TOKYO, 0.4) })])
+      t(out.placed.has('b-known') && !out.placed.has('a-nowhere'), `of two dinners alike, planned: ${[...out.placed.keys()].join(', ')}`)
+    }
+    // and the ride to a place with no known point is never nothing: 25 minutes each way in the day's times
+    const out = E.plan(d, [unit('first', { best: 'morning' }), unit('nowhere', { best: 'morning', approx: true })], [])
+    const [x, y] = ['first', 'nowhere'].map((id) => out.placed.get(id)).sort((p, q) => p.start - q.start)
+    t(y.start - (x.start + 60) >= 25, `${y.start - (x.start + 60)} minutes between a place and one with no known point`)
+  },
 }
 
 const only = process.argv.slice(2)
