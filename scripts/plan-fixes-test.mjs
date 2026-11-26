@@ -346,6 +346,22 @@ const tests = {
     const [x, y] = ['first', 'nowhere'].map((id) => out.placed.get(id)).sort((p, q) => p.start - q.start)
     t(y.start - (x.start + 60) >= 25, `${y.start - (x.start + 60)} minutes between a place and one with no known point`)
   },
+  r7: (t) => {
+    // the day they move to a new city starts at 12:45: a liked restaurant whose card says "afternoon" is that day's
+    // lunch, eaten in the lunch hours, not held to 14:30 and then pushed past them by a two-hour store
+    const d = [day(1, { A: pres({ start: H('12:45') }) })]
+    const out = E.plan(d, [
+      unit('store', { category: 'shopping', best: 'morning', mins: 120, opens: H('10:00'), closes: H('20:00'), priority: 5 }),
+      unit('cutlet', { category: 'food', best: 'afternoon', mins: 60, opens: H('11:00'), closes: H('22:00'), point: east(TOKYO, 0, -5) }),
+      unit('market', { category: 'shopping', best: 'evening', mins: 60, opens: H('12:00'), closes: H('22:00'), point: east(TOKYO, 1), priority: 4 }),
+      unit('arcade', { category: 'shopping', best: 'afternoon', mins: 90, opens: null, closes: null, point: east(TOKYO, 2.2), priority: 4.5 }),
+      unit('grill', { category: 'food', best: 'evening', mins: 90, opens: H('17:00'), closes: H('23:00'), point: east(TOKYO, 2), priority: 5 }),
+    ], [])
+    const at = out.placed.get('cutlet')?.start
+    t(at != null && at >= H('11:00') && at <= H('14:45'), `the afternoon restaurant is at ${at == null ? 'no time' : E.hhmm(at)}`)
+    t(!out.issues.some((i) => i.kind === 'no_lunch'), 'no_lunch raised on a day with a liked lunch in reach')
+    t(out.placed.has('store') && out.placed.has('grill'), 'the store and the dinner stay in the day')
+  },
 }
 
 const only = process.argv.slice(2)

@@ -116,6 +116,8 @@ const MEAL_AT = {
 const DINNER_DAY = 18 * 60 + 30
 // a day with a meal slot nobody filled costs this much (the day's cost is in km and hours)
 const MEAL_MISS = 10
+// the hour a lunch whose card says "afternoon" asks for
+const LATE_LUNCH = 13 * 60 + 15
 // a morning meal this long can be the day's lunch
 const LONG_MEAL = 60
 // room kept on a day for a meal still to be placed there
@@ -1116,7 +1118,8 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
     const slot = isMeal(u) ? slots.get(u.id) : null
     if (slot === 'lunch' || slot === 'dinner') {
       const m = MEAL_AT[slot]
-      const own = w != null && w >= m.from && w <= m.to ? w : m.want
+      // an "afternoon" lunch is a late lunch (13:15), not one held back to 14:30 while the day goes on without it
+      const own = slot === 'lunch' && u.best === 'afternoon' ? LATE_LUNCH : w != null && w >= m.from && w <= m.to ? w : m.want
       const start = Math.max(...who.get(u.id)!.map((c) => d.at.get(c)!.start))
       want.set(u.id, Math.max(m.from, Math.min(Math.max(own, u.opens ?? 0, start), m.to, floor15(Math.min(closesOf(u, d), endOf(u)) - u.mins))))
     } else want.set(u.id, w ?? (u.category === 'cafe' ? 15 * 60 : u.category === 'nightlife' ? 20 * 60 : null))
