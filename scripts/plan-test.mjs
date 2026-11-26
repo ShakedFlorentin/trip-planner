@@ -1,78 +1,14 @@
 // Regression harness for the trip planner's engine (supabase/functions/plan-trip/plan.ts).
 // Bundles plan.ts with esbuild, runs each scripts/plan-fixtures/*.json through plan(days, units, fixed) the way
 // index.ts does, and checks the engine's rules plus the fixture's own `expect`. `node scripts/plan-test.mjs [name…]`.
-import { build } from 'esbuild'
 import { readdirSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { engine, fixturesDir as dir, load as loadWith } from './plan-harness.mjs'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const dir = join(root, 'scripts/plan-fixtures')
-const bundle = await build({
-  entryPoints: [join(root, 'supabase/functions/plan-trip/plan.ts')],
-  bundle: true, write: false, format: 'esm', platform: 'node', target: 'node18',
-})
-const PB = await build({
-  entryPoints: [join(root, 'supabase/functions/plan-trip/presence.ts')],
-  bundle: true, write: false, format: 'esm', platform: 'node', target: 'node18',
-})
-const SB = await build({
-  entryPoints: [join(root, 'supabase/functions/plan-trip/stay.ts')],
-  bundle: true, write: false, format: 'esm', platform: 'node', target: 'node18',
-})
-const S = await import('data:text/javascript;base64,' + Buffer.from(SB.outputFiles[0].text).toString('base64'))
-const P = await import('data:text/javascript;base64,' + Buffer.from(PB.outputFiles[0].text).toString('base64'))
-const E = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'))
-
-// a fixture's days carry `at` as an object (as the dry run's `input` does); the engine wants a Map
-// a fixture with `presence` (stays, flights, day_info.who) gets its days from presence.ts, the way index.ts builds them
-// a fixture with `trip` starts one step earlier, like index.ts with no hotel: stays (trip_stays rows) or the city written
-// on each day (dayCities) → stay.ts picks where to sleep → buildDays → each place's base and day trip (baseFor) → units
-const load = (f) => {
-  if (f.trip) {
-    const x = f.trip
-    const dateOf = (d) => new Date(Date.parse(x.startDate + 'T00:00:00Z') + (d - 1) * 86400000).toISOString().slice(0, 10)
-    const base = Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, { lat: c.lat, lng: c.lng }]))
-    const ctx = {
-      base,
-      nameEn: Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, c.en])),
-      nameHe: Object.fromEntries(Object.entries(x.cities).map(([id, c]) => [id, c.he])),
-      places: x.places.map((p) => ({ id: p.id, point: p.point ?? null, city: p.city, weight: p.priority ?? 3, mins: p.mins ?? 90, parties: p.couples ?? null })),
-    }
-    const r = x.stays
-      ? S.sleepsFromStays(x.stays.map((s) => ({ party: null, lat: null, lng: null, area: null, status: 'proposed', booked: false, hotelPoint: null, hotelTitle: null, ...s })), ctx)
-      : S.sleepsFromDays(Array.from({ length: x.numDays }, (_, i) => S.cityIdOf(x.dayCities?.[String(i + 1)], ctx)), x.numDays, dateOf, ctx)
-    const days = P.buildDays({
-      numDays: x.numDays, dateOf, sleeps: r.sleeps, couples: x.couples, flights: x.flights ?? [],
-      dayWho: new Map(Object.entries(x.dayWho ?? {}).map(([d, w]) => [Number(d), w])), capOf: new Map(), past: () => false,
-    })
-    const basePt = S.basePoints(days)
-    const units = []
-    for (const p of x.places) {
-      const couples = p.couples ?? x.couples
-      const bases = [...new Set(days.flatMap((d) => couples.map((c) => d.at.get(c)?.base).filter(Boolean)))]
-      const point = p.point ?? base[p.city] ?? null
-      const { base: b, far } = S.baseFor(point, p.city, bases, basePt, base)
-      if (!b) continue
-      units.push({
-        id: p.id, couples, base: b, far, point, mins: p.mins ?? 90, category: p.category ?? 'sight', best: p.best ?? 'any',
-        opens: null, closes: null, closedWeekdays: [], closedDates: [], openDates: [], priority: p.priority ?? 3, current: null,
-      })
-    }
-    return { ...f, days, units, fixed: f.fixed ?? [], sleeps: r.sleeps, recs: r.recs }
-  }
-  if (f.presence) {
-    const x = f.presence
-    const dateOf = (d) => new Date(Date.parse(x.startDate + 'T00:00:00Z') + (d - 1) * 86400000).toISOString().slice(0, 10)
-    const days = P.buildDays({
-      numDays: x.numDays, dateOf, sleeps: x.sleeps, couples: x.couples, flights: x.flights ?? [],
-      dayWho: new Map(Object.entries(x.dayWho ?? {}).map(([d, w]) => [Number(d), w])),
-      capOf: new Map(Object.entries(x.capOf ?? {})), past: () => false,
-    })
-    return { ...f, days }
-  }
-  return { ...f, days: f.days.map((d) => ({ ...d, at: new Map(Object.entries(d.at)) })) }
-}
+// the fixture loader (days from presence.ts, units from stay.ts) lives in plan-harness.mjs, shared with the metrics
+const mods = await engine()
+const { E } = mods
+const load = (f) => loadWith(f, mods)
 const NEAR_KM = 30 // mirrors plan.ts
 const rules = (f, out) => {
   const errs = []

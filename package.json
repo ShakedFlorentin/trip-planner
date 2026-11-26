@@ -9,6 +9,8 @@
     "pages:data": "node scripts/pages/export-cards.mjs",
     "preview": "vite preview",
     "test:plan": "node scripts/plan-test.mjs",
+    "test:plan-fixes": "node scripts/plan-fixes-test.mjs",
+    "plan:metrics": "node scripts/plan-metrics.mjs",
     "test:split": "node scripts/split-test.mjs",
     "test:stay": "node scripts/stay-test.mjs",
     "test:recheck": "node scripts/recheck-test.mjs",
