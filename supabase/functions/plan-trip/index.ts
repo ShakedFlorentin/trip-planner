@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
+import { addressVariants, locate, type GeoDeps } from './geo.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
@@ -292,27 +293,38 @@ async function media() {
   return mediaCache!
 }
 
-/** Coordinates for an address or a name, from OpenStreetMap, kept in geo_cache (misses too). */
-async function geocode(admin: SupabaseClient, q: string): Promise<Point | null> {
-  const key = q.trim().toLowerCase()
-  if (!key) return null
-  const { data: hit } = await admin.from('geo_cache').select('lat,lng').eq('q', key).maybeSingle()
-  if (hit) return hit.lat == null ? null : { lat: hit.lat, lng: hit.lng }
-  let p: Point | null = null
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(q)}`,
-      { headers: { 'User-Agent': 'japan-trip-planner/1.0' }, signal: AbortSignal.timeout(8000) },
-    )
-    const [first] = r.ok ? await r.json() : []
-    if (first) p = { lat: Number(first.lat), lng: Number(first.lon) }
-  } catch {
-    // no point: the city's middle stands in
+// network lookups one run may make (each waits over a second); what is left over is looked up on the next run
+const GEO_BUDGET = 8
+/**
+ * The cache and the network for geo.ts: coordinates from OpenStreetMap, kept in geo_cache. A miss is kept too, with
+ * its date, and asked again after two weeks (geo.ts); a lookup that failed (no answer from the server) is not a miss.
+ */
+function geoDeps(admin: SupabaseClient): GeoDeps {
+  return {
+    now: Date.now(),
+    budget: { left: GEO_BUDGET },
+    get: async (q) => {
+      const { data } = await admin.from('geo_cache').select('lat,lng,at').eq('q', q).maybeSingle()
+      return data ?? null
+    },
+    put: async (q, p) => {
+      await admin.from('geo_cache').upsert({ q, lat: p?.lat ?? null, lng: p?.lng ?? null, at: new Date().toISOString() })
+    },
+    fetch: async (q) => {
+      try {
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(q)}`,
+          { headers: { 'User-Agent': 'japan-trip-planner/1.0' }, signal: AbortSignal.timeout(8000) },
+        )
+        if (!r.ok) throw new Error('geocode ' + r.status)
+        const [first] = await r.json()
+        return first ? { lat: Number(first.lat), lng: Number(first.lon) } : null
+      } finally {
+        // OpenStreetMap asks for at most one request a second
+        await new Promise((r) => setTimeout(r, 1100))
+      }
+    },
   }
-  await admin.from('geo_cache').upsert({ q: key, lat: p?.lat ?? null, lng: p?.lng ?? null })
-  // OpenStreetMap asks for at most one request a second
-  await new Promise((r) => setTimeout(r, 1100))
-  return p
 }
 
 /** How long a visit takes, in minutes: the card's checked length, else its Hebrew estimate, else by kind. */
@@ -451,16 +463,21 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   // ---- where everyone sleeps, and the hours each couple has each day
   const hotels = bookings.filter((b) => b.kind === 'hotel' && b.starts_at && b.ends_at)
   const hotelPt = new Map<string, Point>()
+  const geo = geoDeps(admin)
   for (const h of hotels) {
     if (hotelPt.has(h.id)) continue
     const base = hotelBase(h.title + ' ' + (h.location ?? ''))
     const same = hotels.find((o) => o.id !== h.id && hotelPt.has(o.id) && o.title.trim().toLowerCase() === h.title.trim().toLowerCase())
+    // by its name, then by its address written the ways a map search understands; an answer outside the hotel's city
+    // is another hotel of that name, and the next way of writing it is tried
     const p =
       (same && hotelPt.get(same.id)) ||
-      (await geocode(admin, h.title)) ||
-      (h.location ? await geocode(admin, h.location) : null)
-    // a geocode that lands outside the hotel's city is wrong; the city's middle is closer to the truth
-    hotelPt.set(h.id, p && base && BASE[base] && km(p, BASE[base]) < 40 ? p : base && BASE[base] ? BASE[base] : p ?? BASE.tokyo)
+      (await locate(
+        { queries: [h.title, ...addressVariants(h.location, h.title, base ? NAME_EN[base] : null)], near: base ? BASE[base] : null, maxKm: 40 },
+        geo,
+      ))
+    // not found: the city's middle is closer to the truth than nothing
+    hotelPt.set(h.id, p ?? (base && BASE[base] ? BASE[base] : BASE.tokyo))
   }
   const bookingById = new Map(bookings.map((b) => [b.id, b]))
   // the liked places, for where to sleep before a hotel is booked (stay.ts)
@@ -526,7 +543,13 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   const unitPlace = new Map<string, { p: Place; c: Cand; f?: Facts; point: Point | null; base: string }>()
   for (const { p, c } of want) {
     const f = factsOf(c)
-    const own = ownPoint(c)
+    // where it is: its own coordinates, else its address looked up (the same free cached lookup as the hotels), else
+    // not known: the city's middle then only says which city's days it belongs to (approx)
+    const own =
+      ownPoint(c) ??
+      (c.address && c.city && BASE[c.city]
+        ? await locate({ address: c.address, name: c.name, city: NAME_EN[c.city] ?? c.city, near: BASE[c.city] }, geo)
+        : null)
     const unitCouples = p.who ? p.who.split(' + ') : couples
     // the nearest city its couples sleep in
     const bases = [...new Set(days.flatMap((d) => unitCouples.map((x) => d.at.get(x)?.base).filter((b): b is string => !!b)))]
@@ -546,6 +569,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       base,
       far,
       point,
+      approx: !own && !!point,
       mins: Math.min(visitMins(f, c.time_needed, category), 420),
       category,
       best: (f?.best_time as BestTime) ?? DEFAULT_TIME[category] ?? 'any',
@@ -607,7 +631,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     // a booked table or ticket at a place we know: plan near it
     const known = places.find((p) => factKey(p.name) === factKey(b.title) || factKey(b.title).includes(factKey(p.name)))
     let point: Point | null = known?.lat != null ? { lat: known.lat, lng: known.lng! } : null
-    if (!point && b.kind !== 'train' && b.location) point = await geocode(admin, b.location)
+    if (!point && b.kind !== 'train' && b.location) point = await locate({ address: b.location }, geo)
     // a booked table is a full meal: the planner adds no other meal around it
     fixed.push({ day, couples: whoOf(b.who, day), point, start: s.min, mins: len, meal: b.kind === 'restaurant' })
   }

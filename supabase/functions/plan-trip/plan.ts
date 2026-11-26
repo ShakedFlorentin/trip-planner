@@ -60,6 +60,11 @@ export type Unit = {
   meal?: boolean
   /** out in the open (a garden, a shrine path, a lake): the visit is over by dusk */
   outdoor?: boolean
+  /**
+   * point is not where the place is but its city's middle (no coordinates, and its address was not found): good
+   * enough to say which city's days it belongs to, never used to measure a ride or to say what it is near
+   */
+  approx?: boolean
 }
 
 // late: the day's timetable only reaches it after it closes (or after the day's hours)
@@ -363,7 +368,7 @@ export function check(days: Day[], units: Unit[], fixed: Fixed[], placed: Map<st
         const prev = mine[i - 1]
         if (prev && prev.s + prev.u.mins > s) flag(id, 'overlap')
         // ten minutes of slack: the times are rounded to a quarter of an hour
-        else if (prev && prev.s + prev.u.mins + ride(prev.u.point, u.point) > s + 10) flag(id, 'tight')
+        else if (prev && prev.s + prev.u.mins + ride(pt(prev.u), pt(u)) > s + 10) flag(id, 'tight')
         if (busy.some((f) => s < f.start! + f.mins && s + u.mins > f.start!)) flag(id, 'overlap')
         if ((u.opens != null && s < u.opens) || (u.closes != null && s + u.mins > u.closes)) flag(id, 'hours')
         if (isMeal(u)) {
@@ -518,7 +523,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     const d = byDay.get(day)!
     const pres = d.at.get(c)!
     const pts = (far: boolean) =>
-      ids.map((id) => unitById.get(id)!).filter((u) => u.far === far && u.point).map((u) => u.point!)
+      ids.map((id) => unitById.get(id)!).filter((u) => u.far === far && pt(u)).map((u) => u.point!)
     const fx = fixedPts.get(day + '|' + c) ?? []
     // the hotel pulls the middle a little: a day near where you sleep beats one across town
     const spreadOf = (ps: Point[], around: Point[], pull: number) => {
@@ -919,7 +924,7 @@ const MEAL_OFF_COST = 300
 const CLOSED_COST = 1000
 const BACK_COST = 20
 /** The point to measure rides from. */
-const pt = (u: Unit) => u.point
+const pt = (u: Unit) => (u.approx ? null : u.point)
 /** Would this start leave the place after it closes, or begin after its people's day is over? */
 const isLate = (d: Day, u: Unit, s: number, end: number) => s + stay(u) > closesOf(u, d) || s + stay(u) > end
 /**
@@ -1032,7 +1037,7 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
       for (const c of cs) {
         fresh.delete(c)
         clock.set(c, s + u.mins)
-        where.set(c, pt(u) ?? where.get(c)!)
+        where.set(c, pt(u))
         busy.get(c)!.push([s, s + u.mins])
         if (isMeal(u)) meal.set(c, s)
         if (pt(u)) line.get(c)!.push(pt(u)!)
