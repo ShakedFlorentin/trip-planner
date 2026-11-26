@@ -1,9 +1,10 @@
 // One small scenario per planner fix of 26 Nov 2026 (meals, order on the map, hours and sunset, couples and days apart,
 // real points, move/landing/departure days, baby and card facts). Each fails on the code before its fix.
-// `node scripts/plan-fixes-test.mjs [1 2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
+// r1…r7: the second round (what a replay of a real trip showed), same rule: each fails on the code before its fix.
+// `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { engine, sunsetMin } from './plan-harness.mjs'
 
-const { E, P, G } = await engine()
+const { E, P, G, F } = await engine()
 const H = (s) => { const [a, b] = s.split(':').map(Number); return a * 60 + b }
 const TOKYO = { lat: 35.693, lng: 139.7 }
 const east = (p, kmE, kmN = 0) => ({ lat: p.lat + kmN / 111, lng: p.lng + kmE / 90.4 })
@@ -237,6 +238,24 @@ const tests = {
     t(out.issues.some((i) => i.id === 'kaiseki' && i.kind === 'baby'), 'an adults-only place planned for the couple with the baby raised no issue')
     t(!out.issues.some((i) => i.id === 'park' && (i.kind === 'baby' || i.kind === 'booking')), 'a plain park raised a baby or booking issue')
   },
+  r1: (t) => {
+    // one day both couples share, full as the plan stands: three places both liked and two own places each, the own
+    // ones with more stars than the place both liked that is still waiting. It takes the room of one own place of each
+    const days = [day(1, { A: pres(), B: pres() })]
+    const both = ['A', 'B']
+    const units = [
+      ...[0, 1, 2].map((i) => unit('shared' + i, { couples: both, mins: 100, priority: 5, current: 1 })),
+      ...[0, 1].map((i) => unit('ownA' + i, { couples: ['A'], mins: 90, priority: 4.5, current: 1 })),
+      ...[0, 1].map((i) => unit('ownB' + i, { couples: ['B'], mins: 90, priority: 4.5, current: 1 })),
+      unit('waiting', { couples: both, mins: 100, priority: 4 }),
+    ]
+    const out = E.plan(days, units, [])
+    t(out.placed.has('waiting'), `a place both couples liked is "${out.unplanned.get('waiting')}" while the day holds ${[...out.placed.keys()].filter((id) => id.startsWith('own')).length} places only one couple liked`)
+    t([0, 1, 2].every((i) => out.placed.has('shared' + i)), 'a place both liked was taken off for another')
+    // and the plan stays as it is on the next run
+    const next = E.plan(days, units.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })), [])
+    t(next.placed.size === out.placed.size && [...next.placed.keys()].every((id) => out.placed.has(id)), 'the plan changed when run again on its own result')
+  },
 }
 
 const only = process.argv.slice(2)
@@ -249,7 +268,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  fix ${n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? 'round 2, fix ' + n.slice(1) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }

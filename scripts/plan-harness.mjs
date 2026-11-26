@@ -17,7 +17,7 @@ const bundleOf = async (file) => {
 /** The planner's modules: E = plan.ts, P = presence.ts, S = stay.ts, G = geo.ts (null where the file does not exist). */
 export async function engine(dir = process.env.PLAN_DIR ? resolve(process.env.PLAN_DIR) : join(root, 'supabase/functions/plan-trip')) {
   const opt = async (name) => (existsSync(join(dir, name)) ? bundleOf(join(dir, name)) : null)
-  return { E: await bundleOf(join(dir, 'plan.ts')), P: await bundleOf(join(dir, 'presence.ts')), S: await bundleOf(join(dir, 'stay.ts')), G: await opt('geo.ts'), dir }
+  return { E: await bundleOf(join(dir, 'plan.ts')), P: await bundleOf(join(dir, 'presence.ts')), S: await bundleOf(join(dir, 'stay.ts')), G: await opt('geo.ts'), F: await opt('flags.ts'), dir }
 }
 
 /** Sunset at a point on a date, minutes after midnight, Japan time: the harness's own sum, so it can check the engine's. */

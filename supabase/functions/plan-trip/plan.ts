@@ -215,6 +215,9 @@ const TRIP_MIN = 60
 const TRIP_SHARE = 0.4
 // at most this many of a kind a day, per couple (meals go by slot instead: one lunch, one dinner)
 const PER_DAY: Record<string, number> = { food: 2, cafe: 2, nightlife: 2 }
+// how much a place counts: once for each couple that liked it, and a little more for one they share (the day together
+// is worth more than each couple's own stop of the same stars)
+const weightOf = (u: Unit) => u.couples.length * (u.couples.length > 1 ? 1.5 : 1)
 // what PER_DAY counts a place as: a restaurant meal is counted by its slot, a snack as food
 const kindOf = (u: Unit) => (u.category === 'food' && isMeal(u) ? 'meal' : u.category)
 
@@ -285,6 +288,19 @@ export function plan(days: Day[], liked: Unit[], fixed: Fixed[]): Outcome {
   })
   // a day's load and a day's timetable depend only on which places are on it: worked out once for the whole run
   const memo: Memo = { loads: new Map(), tables: new Map() }
+  const worth = (o: { placed: Map<string, Placed> }) => {
+    let value = 0
+    let missed = 0
+    for (const [id, p] of o.placed) {
+      const u = units.find((x) => x.id === id)!
+      value += weightOf(u) * u.priority * (0.5 + u.mins / 120)
+      if (p.missed) missed++
+    }
+    // what a plan is worth: each placed place by its stars and its length, once for each couple that liked it
+    // a day left without a lunch or a dinner counts against a plan
+    const noMeal = check(days, units, fixed, o.placed).filter((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner').length
+    return value - missed * 2 - noMeal * 3
+  }
   const solve = (settle: boolean, us = units) => {
     const barred = new Map<string, Set<number>>()
     const dropped = new Set<string>()
@@ -317,18 +333,6 @@ export function plan(days: Day[], liked: Unit[], fixed: Fixed[]): Outcome {
   // what people already see only when it is clearly better, so the plan settles instead of shifting on every run
   const fresh = solve(false)
   const kept = units.some((u) => u.current != null) ? solve(true) : null
-  const worth = (o: typeof fresh) => {
-    let value = 0
-    let missed = 0
-    for (const [id, p] of o.placed) {
-      const u = units.find((x) => x.id === id)!
-      value += u.priority * (0.5 + u.mins / 120)
-      if (p.missed) missed++
-    }
-    // a day left without a lunch or a dinner counts against a plan
-    const noMeal = check(days, units, fixed, o.placed).filter((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner').length
-    return value - missed * 2 - noMeal * 3
-  }
   const from = (o: typeof fresh) => units.map((u) => ({ ...u, current: o.placed.get(u.id)?.day ?? null }))
   // a place taken off for being late leaves room behind it: fill that room now, with the plan as it stands kept, so
   // the next run finds nothing left to add (the plan must not grow by itself from one run to the next)
@@ -341,7 +345,15 @@ export function plan(days: Day[], liked: Unit[], fixed: Fixed[]): Outcome {
     }
     return o
   }
-  let out = fill(kept && worth(fresh) <= worth(kept) * 1.02 ? kept : fresh)
+  let first = kept && worth(fresh) <= worth(kept) * 1.02 ? kept : fresh
+  // both of those start from the plan as it stands, and a plan can stand in its own way: a place both couples liked
+  // sits on a day that no longer takes it, and every day it could move to is held by what is already there. So the
+  // days are also worked out from nothing, as if no plan existed, and that plan is the one when it is clearly better
+  if (kept) {
+    const scratch = solve(false, units.map((u) => ({ ...u, current: null })))
+    if (worth(scratch) > worth(first) * 1.02) first = scratch
+  }
+  let out = fill(first)
   // and the same question the next run would ask, asked now: starting from this plan, is a plan worked out afresh
   // clearly better? Then that one is the plan, today and not on the next swipe. Nothing to ask when the plan came out
   // as it went in.
@@ -586,7 +598,8 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     // leaving a place out costs its priority, more for a bigger one: a two-hour shrine is more of the trip than a
     // forty-minute café of the same priority, which the day would otherwise always pick for fitting more in
     // a meal left out costs more than a shop or a sight of the same priority: people eat every day
-    if (day == null) return u.priority * 14 * (0.5 + (isMeal(u) ? Math.max(u.mins, 150) : u.mins) / 120)
+    // and a place two couples liked is two couples' loss (its hours are counted on each couple's day too)
+    if (day == null) return weightOf(u) * u.priority * 14 * (0.5 + (isMeal(u) ? Math.max(u.mins, 150) : u.mins) / 120)
     let cost = 0
     const d = byDay.get(day)!
     if (isAway(d, u)) {
@@ -650,26 +663,28 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if (day != null) for (const c of whoOn(u, byDay.get(day)!)) group(day, c).add(u.id)
   }
   // the change in total cost if u moved to day (and, optionally, evicted went off the plan)
-  const delta = (u: Unit, day: number | null, evicted?: Unit) => {
+  const delta = (u: Unit, day: number | null, evicted: Unit[] = []) => {
     const was = at.get(u.id) ?? null
     const touched = new Set<string>()
     for (const c of u.couples) {
       if (was != null) touched.add(was + '|' + c)
       if (day != null) touched.add(day + '|' + c)
     }
-    if (evicted) for (const c of evicted.couples) touched.add(at.get(evicted.id) + '|' + c)
+    const evDays = evicted.map((v) => at.get(v.id) ?? null)
+    evicted.forEach((v, i) => {
+      for (const c of v.couples) touched.add(evDays[i] + '|' + c)
+    })
     const cost = () =>
       [...touched].reduce((s, k) => {
         const [dd, c] = k.split('|')
         return s + groupCost(Number(dd), c)
       }, 0)
-    const before = cost() + unitCost(u, was) + (evicted ? unitCost(evicted, at.get(evicted.id) ?? null) : 0)
-    const evDay = evicted ? at.get(evicted.id) ?? null : null
-    if (evicted) put(evicted, null)
+    const before = cost() + unitCost(u, was) + evicted.reduce((s, v, i) => s + unitCost(v, evDays[i]), 0)
+    for (const v of evicted) put(v, null)
     put(u, day)
-    const after = cost() + unitCost(u, day) + (evicted ? unitCost(evicted, null) : 0)
+    const after = cost() + unitCost(u, day) + evicted.reduce((s, v) => s + unitCost(v, null), 0)
     put(u, was)
-    if (evicted) put(evicted, evDay)
+    evicted.forEach((v, i) => put(v, evDays[i]))
     return after - before
   }
 
@@ -712,7 +727,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       let improved = false
       for (const u of order) {
         const was = at.get(u.id) ?? null
-        let best: { day: number | null; ev?: Unit; dl: number } = { day: was, dl: -0.01 }
+        let best: { day: number | null; ev?: Unit[]; dl: number } = { day: was, dl: -0.01 }
         const tries: (number | null)[] = [null, ...options.get(u.id)!]
         for (const day of tries) {
           if (day === was) continue
@@ -720,32 +735,53 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
           // a place on a day in its own city stays there once the own city's places are settled: the other city's
           // places that arrived since must not push it off (a day crowded only by what fills its leftover room)
           if (!homeOnly && was != null && !isAway(byDay.get(was)!, u)) continue
-          if (day == null || fitsWithout(u, day, null)) {
+          if (day == null || fitsWithout(u, day, [])) {
             if (day != null && blockedAway(u, day)) continue
             const dl = delta(u, day)
             if (dl < best.dl) best = { day, dl }
           } else {
             // the day is full: try taking off one less wanted place to make room
-            for (const c of whoOn(u, byDay.get(day)!)) {
+            const here = whoOn(u, byDay.get(day)!)
+            const may = (v: Unit) => {
+              // a place of the day's own city may take the room of a higher one from another city, never the reverse
+              const awayV = isAway(byDay.get(day)!, v)
+              const awayU = isAway(byDay.get(day)!, u)
+              if (awayU && !awayV) return false
+              // a meal is not taken off for a sight or a shop; a meal may take the room of one a little above it
+              if (isMeal(v) && !isMeal(u)) return false
+              const above = isMeal(u) && !isMeal(v) ? 1 : 0
+              // what both couples liked may take the room of what one of them liked, whatever its stars (the cost
+              // of leaving each out, which counts both, still has to say the day is better for it)
+              const fewer = v.couples.length < u.couples.length
+              return !(v.priority > u.priority + above && !(awayV && !awayU) && !fewer)
+            }
+            let one = false
+            for (const c of here) {
               // a copy: trying a swap takes places off the day and puts them back, which would re-run a live Set
               for (const id of [...group(day, c)]) {
                 const v = unitById.get(id)!
-                // a place of the day's own city may take the room of a higher one from another city, never the reverse
-                const awayV = isAway(byDay.get(day)!, v)
-                const awayU = isAway(byDay.get(day)!, u)
-                if (awayU && !awayV) continue
-                // a meal is not taken off for a sight or a shop; a meal may take the room of one a little above it
-                if (isMeal(v) && !isMeal(u)) continue
-                const above = isMeal(u) && !isMeal(v) ? 1 : 0
-                if ((v.priority > u.priority + above && !(awayV && !awayU)) || !fitsWithout(u, day, v)) continue
-                const dl = delta(u, day, v)
-                if (dl < best.dl) best = { day, ev: v, dl }
+                if (!may(v) || !fitsWithout(u, day, [v])) continue
+                one = true
+                const dl = delta(u, day, [v])
+                if (dl < best.dl) best = { day, ev: [v], dl }
+              }
+            }
+            // a place two couples liked on a day each couple has filled with its own: no one place makes the room, so
+            // one own place of each couple is tried together (what both liked comes before what one of them liked)
+            if (!one && here.length === 2) {
+              const own = (c: string) => [...group(day, c)].map((id) => unitById.get(id)!).filter((v) => whoOn(v, byDay.get(day)!).length === 1 && may(v))
+              for (const v of own(here[0])) {
+                for (const w of own(here[1])) {
+                  if (!fitsWithout(u, day, [v, w])) continue
+                  const dl = delta(u, day, [v, w])
+                  if (dl < best.dl) best = { day, ev: [v, w], dl }
+                }
               }
             }
           }
         }
         if (best.day !== was) {
-          if (best.ev) put(best.ev, null)
+          for (const v of best.ev ?? []) put(v, null)
           put(u, best.day)
           improved = true
         }
@@ -863,14 +899,14 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     }
   }
 
-  function fitsWithout(u: Unit, day: number, v: Unit | null) {
-    const vDay = v ? at.get(v.id) ?? null : null
+  function fitsWithout(u: Unit, day: number, vs: Unit[]) {
+    const vDays = vs.map((v) => at.get(v.id) ?? null)
     const uDay = at.get(u.id) ?? null
-    if (v) put(v, null)
+    for (const v of vs) put(v, null)
     put(u, null)
     const ok = fits(u, day)
     put(u, uDay)
-    if (v) put(v, vDay)
+    vs.forEach((v, i) => put(v, vDays[i]))
     return ok
   }
 
@@ -903,7 +939,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       if (was == null || !timesOf(was).get(u.id)?.missed) continue
       const before = missedOn(was)
       for (const day of options.get(u.id)!) {
-        if (day === was || !fitsWithout(u, day, null)) continue
+        if (day === was || !fitsWithout(u, day, [])) continue
         const there = missedOn(day)
         put(u, day)
         const p = timesOf(day).get(u.id)!
