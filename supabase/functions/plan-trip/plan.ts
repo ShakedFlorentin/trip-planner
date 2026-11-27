@@ -195,6 +195,28 @@ function slotsFor(u: Unit, d: Day): MealSlot[] {
   return ok.length ? ok : (['lunch', 'dinner'] as const).filter(can)
 }
 
+// One order for the places that does not turn on their ids: what more couples liked first, then more stars, then the
+// shorter visit (of two wanted alike, the short one leaves room for another), then everything else the place is
+// (where, what, its hours). The id decides only between two places alike in all of that, and then either way round
+// gives the same plan with the two names changed over. So the plan is the same whatever ids the places carry, and
+// wherever two places tie in the search below, the one that comes first here goes first.
+const whatIs = new WeakMap<Unit, string>()
+const whatOf = (u: Unit) => {
+  let k = whatIs.get(u)
+  if (k == null) {
+    k = JSON.stringify([u.base, u.category, u.point, u.best, u.opens, u.closes, u.closedWeekdays, u.closedDates, u.openDates, u.far, !!u.meal, !!u.outdoor, !!u.adults, !!u.booking, !!u.approx, u.couples])
+    whatIs.set(u, k)
+  }
+  return k
+}
+export function inOrder(a: Unit, b: Unit): number {
+  const d = b.couples.length - a.couples.length || b.priority - a.priority || a.mins - b.mins
+  if (d) return d
+  const x = whatOf(a)
+  const y = whatOf(b)
+  return x < y ? -1 : x > y ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+}
+
 /**
  * Each meal's slot on one day: a couple has at most one breakfast, one lunch and one dinner, and a fixed meal takes
  * its slot first. null: no slot left for it (the day already has that meal for one of its people).
@@ -208,7 +230,7 @@ export function mealSlots(d: Day, meals: Unit[], fixed: Fixed[]): Map<string, Me
   }
   const opts = new Map(meals.map((u) => [u.id, slotsFor(u, d)]))
   const out = new Map<string, MealSlot | null>()
-  const order = [...meals].sort((a, b) => opts.get(a.id)!.length - opts.get(b.id)!.length || b.priority - a.priority || (a.id < b.id ? -1 : 1))
+  const order = [...meals].sort((a, b) => opts.get(a.id)!.length - opts.get(b.id)!.length || b.priority - a.priority || inOrder(a, b))
   for (const u of order) {
     const who = whoOn(u, d)
     const slot = opts.get(u.id)!.find((s) => who.every((c) => !taken.get(c)!.has(s))) ?? null
@@ -309,8 +331,9 @@ const startFor = (u: Unit, p: Presence) => (opensEarly(u) && p.early != null ? M
  * day's timetable can't fit before it closes is barred from that day and the days are worked out again.
  */
 export function plan(days: Day[], input: Unit[], fixed: Fixed[]): Outcome {
-  // the places in one order of their own, whatever order they came in: the same places give the same plan
-  const liked = [...input].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  // the places in one order of their own, whatever order they came in and whatever their ids: the same places give
+  // the same plan
+  const liked = [...input].sort(inOrder)
   // who travels with a baby (nobody, when the trip does not say: then nothing below changes anything)
   const withBaby = new Set(days.flatMap((d) => [...d.at].filter(([, p]) => p.baby).map(([c]) => c)))
   // a place that is not for a baby, liked by a couple with one and a couple without: it is the other couple's plan
@@ -1438,6 +1461,59 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   const kept = (a: Rides, b: Rides) => a.back < b.back || (a.back === b.back && a.knot <= b.knot)
   const isSlotMeal = (u: Unit, day: number) => isMeal(u) && inSlot(timesOf(day).get(u.id)?.start ?? -1)
   const lossOf = (u: Unit) => unitCost(u, null)
+  // a place the day's timetable only reaches after it closes (or after the day is over). The days are not worked out
+  // again for it (every place would be dealt anew, and the plan would turn on which place was looked at first): the
+  // day is mended where it stands. Of the stops whose leaving puts the day on time, one moves to a day that takes
+  // it on time (nothing late there, no ride back, no meal out of its slot, no more places past their hour); when none
+  // can, the one that costs least to leave out waits, and the free hours below may still take it on another day.
+  // When the plan as it stands is kept, a place that was fine on its day is not the one to go while a place just
+  // added to the day can (it is what made the day too long). A meal in its slot stays unless it is the late one.
+  const mendLate = () => {
+    for (const d of days) {
+      for (let round = 0; round < 6; round++) {
+        const here = ridesOf(d.day)
+        if (!here.late) break
+        const t = timesOf(d.day)
+        let cands = live.filter((u) => at.get(u.id) === d.day && (t.get(u.id)!.late || !isSlotMeal(u, d.day)))
+        if (settle && cands.some((u) => u.current !== d.day)) cands = cands.filter((u) => u.current !== d.day)
+        let best: { u: Unit; to: number | null; late: number; cost: number } | null = null
+        for (const u of cands) {
+          const wasLate = !!t.get(u.id)!.late
+          put(u, null)
+          const left = ridesOf(d.day)
+          let to: number | null = null
+          let toD = Infinity
+          const helps = left.late < here.late && left.back <= here.back && (wasLate || left.meals >= here.meals)
+          if (helps) {
+            for (const day of options.get(u.id)!) {
+              if (day === d.day || (isAway(byDay.get(day)!, u) && blockedAway(u, day)) || !fits(u, day, false, true)) continue
+              const before = ridesOf(day)
+              const dl = delta(u, day)
+              put(u, day)
+              const p = timesOf(day).get(u.id)!
+              const after = ridesOf(day)
+              put(u, null)
+              if (p.late || p.missed || after.late > before.late || after.back > before.back || after.meals < before.meals || after.bad > before.bad) continue
+              if (dl < toD) {
+                toD = dl
+                to = day
+              }
+            }
+          }
+          put(u, d.day)
+          if (!helps) continue
+          // fewest left late, a move before a wait, then what the plan loses least by
+          const cost = to != null ? toD : lossOf(u)
+          const better = !best || left.late < best.late || (left.late === best.late && (to != null) !== (best.to != null) ? to != null : left.late === best.late && cost < best.cost)
+          if (better) best = { u, to, late: left.late, cost }
+        }
+        const b = best as { u: Unit; to: number | null } | null
+        if (!b) break
+        put(b.u, b.to)
+      }
+    }
+  }
+  mendLate()
   for (const d of days) {
     for (let round = 0; round < 8; round++) {
       const here = ridesOf(d.day)
@@ -1445,7 +1521,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       const { far, near } = detours(d.day)
       const cands = [...far, ...[...near].filter((u) => !far.has(u))]
         .filter((u) => !isSlotMeal(u, d.day))
-        .sort((a, b) => whoOn(a, d).length - whoOn(b, d).length || Number(far.has(b)) - Number(far.has(a)) || a.priority - b.priority || (a.id < b.id ? -1 : 1))
+        .sort((a, b) => whoOn(a, d).length - whoOn(b, d).length || Number(far.has(b)) - Number(far.has(a)) || a.priority - b.priority || inOrder(a, b))
       const others = (u: Unit) => options.get(u.id)!.filter((day) => day !== d.day && !(isAway(byDay.get(day)!, u) && blockedAway(u, day)))
       // 1. one moves; off the day first, to see that the ride really is its doing
       let done = false
@@ -1533,7 +1609,27 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
           for (let k = j + 1; k < cands.length; k++) attempt([cands[i], cands[j], cands[k]])
         }
       }
-      const goes = (drop as { us: Unit[] } | null)?.us ?? (part as { us: Unit[] } | null)?.us
+      let goes = (drop as { us: Unit[] } | null)?.us ?? (part as { us: Unit[] } | null)?.us
+      if (!goes) {
+        // 4. nothing above undoes it without a meal leaving its slot (a snack and a food market side by side, a shop
+        //    across town between them): no day keeps such a ride, so now a meal may give way too. The fewest meals
+        //    out of their slot first, then the least wanted
+        const every = [...far, ...[...near].filter((u) => !far.has(u))].sort(inOrder)
+        let last: { us: Unit[]; meals: number; loss: number } | null = null
+        const hard = (us: Unit[]) => {
+          for (const u of us) put(u, null)
+          const left = ridesOf(d.day)
+          for (const u of us) put(u, d.day)
+          if (left.back || left.late > here.late) return
+          const loss = us.reduce((x, u) => x + lossOf(u), 0)
+          if (!last || left.meals > last.meals || (left.meals === last.meals && loss < last.loss)) last = { us, meals: left.meals, loss }
+        }
+        for (let i = 0; i < every.length; i++) {
+          hard([every[i]])
+          for (let j = i + 1; j < every.length; j++) hard([every[i], every[j]])
+        }
+        goes = (last as { us: Unit[] } | null)?.us
+      }
       if (!goes) break
       for (const u of goes) put(u, null)
     }
@@ -1656,25 +1752,146 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   }
   fillMeals()
 
-  for (const u of order) {
-    if (at.get(u.id) != null || u.far || !pt(u)) continue
-    let best: number | null = null
-    let bestD = Infinity
-    for (const day of options.get(u.id)!) {
-      if (isAway(byDay.get(day)!, u) || !fits(u, day, false, true)) continue
-      const before = dayState(day)
-      const dl = delta(u, day)
-      put(u, day)
-      const p = timesOf(day).get(u.id)!
-      const after = dayState(day)
-      put(u, null)
-      if (p.late || p.missed || after.bad > before.bad || after.back > before.back || after.meals < before.meals + (isMeal(u) ? whoOn(u, byDay.get(day)!).length : 0)) continue
-      if (dl < bestD) {
-        bestD = dl
-        best = day
+  // would the day take a place that is off the plan now: within the day's pace (a meal counted as the sit-down it
+  // is), on time, with nothing else on the day made late or pushed past its hour, no meal out of its slot and no
+  // ride back across town? before: what the day was like before anything was taken off it
+  const takes = (u: Unit, day: number, before: DayState) => {
+    if (isAway(byDay.get(day)!, u) || !fits(u, day, false, true)) return false
+    put(u, day)
+    const p = timesOf(day).get(u.id)!
+    const after = dayState(day)
+    put(u, null)
+    return !(p.late || p.missed || after.bad > before.bad || after.back > before.back || after.meals < before.meals + (isMeal(u) ? whoOn(u, byDay.get(day)!).length : 0))
+  }
+  const freeHours = () => {
+    let any = false
+    for (const u of order) {
+      if (at.get(u.id) != null || u.far || !pt(u)) continue
+      let best: number | null = null
+      let bestD = Infinity
+      for (const day of options.get(u.id)!) {
+        if (!takes(u, day, dayState(day))) continue
+        const dl = delta(u, day)
+        if (dl < bestD) {
+          bestD = dl
+          best = day
+        }
+      }
+      if (best != null) {
+        put(u, best)
+        any = true
       }
     }
-    if (best != null) put(u, best)
+    return any
+  }
+  freeHours()
+  // what is wanted most goes in first. A place left out is tried on each of its days with one stop of that day
+  // taken off: the stop moves to another day that takes it (then nothing is lost), or, when the place left out
+  // comes before it, waits in its stead. What both couples liked at four stars or more comes before everything
+  // that is not; otherwise a place comes before one of fewer stars that no more people liked. The day's lunch and
+  // dinner stay, and so does a day trip
+  const high = (u: Unit) => u.couples.length > 1 && u.priority >= 4
+  const before2 = (u: Unit, v: Unit) => (high(u) && !high(v)) || (!high(v) && u.couples.length >= v.couples.length && u.priority > v.priority)
+  type Way = { loss: number; moves: [Unit, number | null][] }
+  // would the day take u with all of these stops off it? When not, the day is passed over: taking off only some of
+  // them is not tried (one question instead of one for each stop; a day only gets easier as stops come off)
+  const roomIf = (u: Unit, day: number, off: Unit[], before: DayState) => {
+    for (const x of off) put(x, null)
+    const ok = takes(u, day, before)
+    for (const x of off) put(x, day)
+    return ok
+  }
+  // a way to put u (off the plan now) on a day: straight in, or with one stop of the day taken off, which then
+  // needs a way of its own (deep more steps) or waits when top comes before it. used: the days already changed
+  const wayIn = (u: Unit, top: Unit, deep: number, used: number[]): Way | null => {
+    let day0: number | null = null
+    let d0 = Infinity
+    for (const day of options.get(u.id)!) {
+      if (used.includes(day) || !takes(u, day, dayState(day))) continue
+      const dl = delta(u, day)
+      if (dl < d0) {
+        d0 = dl
+        day0 = day
+      }
+    }
+    if (day0 != null) return { loss: 0, moves: [[u, day0]] }
+    if (!deep) return null
+    let best: Way | null = null
+    for (const day of options.get(u.id)!) {
+      if (used.includes(day) || isAway(byDay.get(day)!, u)) continue
+      const before = dayState(day)
+      const stops = live.filter((x) => at.get(x.id) === day && !x.far && pt(x) && !isSlotMeal(x, day))
+      if (!roomIf(u, day, stops, before)) continue
+      for (const v of stops) {
+        const may = before2(top, v)
+        put(v, null)
+        if (takes(u, day, before)) {
+          put(u, day)
+          const sub = wayIn(v, top, deep - 1, [...used, day])
+          put(u, null)
+          const loss = sub ? sub.loss : may ? lossOf(v) : Infinity
+          if (loss < (best?.loss ?? Infinity)) best = { loss, moves: [[v, null], [u, day], ...(sub?.moves ?? [])] }
+        }
+        put(v, day)
+        if (best && !best.loss) return best
+      }
+    }
+    // what both couples liked at four stars or more is left out only when it cannot fit at all: where no one stop
+    // makes the room for it, two or three stops that come after it are taken off together (the pair before the three,
+    // the least wanted first), and each goes to another day that takes it or waits
+    if (u === top && high(u) && !best) {
+      for (const n of [2, 3]) {
+        for (const day of options.get(u.id)!) {
+          if (used.includes(day) || isAway(byDay.get(day)!, u)) continue
+          const before = dayState(day)
+          const offs = live.filter((x) => at.get(x.id) === day && !x.far && pt(x) && !isSlotMeal(x, day) && before2(top, x)).sort((a, b) => lossOf(a) - lossOf(b)).slice(0, 7)
+          if (offs.length < n || !roomIf(u, day, offs, before)) continue
+          const sets: Unit[][] = []
+          for (let a = 0; a < offs.length; a++)
+            for (let b = a + 1; b < offs.length; b++) {
+              if (n === 2) sets.push([offs[a], offs[b]])
+              else for (let c = b + 1; c < offs.length; c++) sets.push([offs[a], offs[b], offs[c]])
+            }
+          for (const off of sets) {
+            for (const x of off) put(x, null)
+            if (takes(u, day, before)) {
+              put(u, day)
+              const moves: [Unit, number | null][] = [...off.map((x) => [x, null] as [Unit, null]), [u, day]]
+              let loss = 0
+              const back: Unit[] = []
+              for (const x of off) {
+                const sub = wayIn(x, top, 0, [...used, day])
+                if (sub) {
+                  for (const [y, to] of sub.moves) put(y, to), moves.push([y, to]), back.push(y)
+                } else loss += lossOf(x)
+              }
+              for (const y of back) put(y, null)
+              put(u, null)
+              if (loss < (best?.loss ?? Infinity)) best = { loss, moves }
+            }
+            for (const x of off) put(x, day)
+          }
+        }
+        if (best) break
+      }
+    }
+    return best
+  }
+  const lift = () => {
+    let any = false
+    const waiting = order.filter((u) => at.get(u.id) == null && !u.far && pt(u)).sort((a, b) => Number(high(b)) - Number(high(a)) || weightOf(b) * b.priority - weightOf(a) * a.priority)
+    for (const u of waiting) {
+      if (at.get(u.id) != null) continue
+      const way = wayIn(u, u, high(u) ? 2 : 1, [])
+      if (!way) continue
+      for (const [x, day] of way.moves) put(x, day)
+      any = true
+    }
+    return any
+  }
+  for (let round = 0; round < 3; round++) {
+    if (!lift()) break
+    freeHours()
   }
 
   const placed = new Map<string, Placed>()
