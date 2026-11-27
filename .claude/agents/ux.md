@@ -15,6 +15,7 @@ skills:
   - toogo-first-run
   - ui-sdk
   - toogo-ux-ui-craft
+  - toogo-ux-audit
 ---
 
 # UX — User Experience Design

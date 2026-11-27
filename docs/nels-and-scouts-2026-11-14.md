@@ -76,3 +76,10 @@ Skip: his move to SwiftUI, Expo Go, the iPhone Duo reel, the Mac apps, and the h
 4. **Claude Code hooks** for the two rules most often missed.
 5. Try the **Mobbin MCP and Impeccable** on one screen, Discover, and compare before and after.
 6. The rest after the Japan trip: onboarding with one real swipe first, a demo trip for new users, the credit screen, the rating prompt, PostHog.
+
+## Full re-read 2026-11-27 (@nels_ysng, captions via signed-in Chrome 2026-11-26, read only)
+- **Count:** 95 of 95 posts listed (the registry said 83); 19 already in this doc, **76 new read, 0 failed**. All reels. No challenge or rate limit. Frames: 0 (most captions are "Comment X for the guide", so the tips live in the video text).
+- **Kept (about 45):** Tiles build log (DgNg4DvOZRm, DgDc7R4OiTw, Df21HSdOrRX, DfxuD74uhlH, DfvKbSvu7Jd, DfnY2Z7OjXF, DfVYEUXOxEq, DfS1AhiORxa, DfQQ_fQOGZ4); Claude Code workflow (DdPa2EeuVhs, DdR8LreOk-N, DdW_qmXulCC, DfiToSjue0w, Dez2DHKOSdC, DeaDCrIu0_u, Dehzr_kubi1); UI and design tools (DbVKtwiox1k, DesH8C4uzqX, Dec3xydOvBm, DekX6NvOUQR, DeXeDLyOtX_, DeU-EtQu7mg, De2QqRMO3WG, DZrx9RIO6le, Df0Ugb3OVZr); first-app lessons (DasNnFROctO, Dac0F0DOhzg, DaflcGAscXR, DZcxX54suIU, DX6zJlfMAu1, Db_HwTlMKGD, Dcorz64Oq9P, Dc13ucruQXP); backend and billing (DYMWCBruzec, DYeJY6czlWl, DXey4S8DPNt, DdCXDPnuplR); launch (DfX9sS0usjK, Df-J6wxOiTM, DdzbAR5O4ES).
+- **Skipped:** promos and sponsored tools (Kanbuild, Demi AI, CouCou, HiNoter, Vorssaint, Renoise, Videotto, Df-WZhtuRzu); earnings brags (DfLILxXOJmg, DeC4XGIOtXG); personal and travel (DcTTYSoujM4, DZKiI6oMsvJ, DYop39KTn_1, DYRtVOKMaB5, DZ8IgHeu0Zu); his comment-to-DM tool (DdHtQ2guNR5); sale-price stories (his claims).
+- **Went to:** ux-ui-craft, premium-feel (sounds, haptics), first-run (sign-in disagreement), app-review (sandbox, policy URLs), indie-launch, marketing-craft (waitlist, build in public), backend-craft (dev/prod, admin view).
+- **Still worth reading by frame (11):** DfsjocVuDDf, DgGO1h5OgjN, DfVYEUXOxEq, DfxuD74uhlH, Dc13ucruQXP, Dec3xydOvBm, DesH8C4uzqX, De2QqRMO3WG, Dez2DHKOSdC, Dehzr_kubi1, DcbvQL7ucoJ.

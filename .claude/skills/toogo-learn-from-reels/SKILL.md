@@ -15,9 +15,26 @@ The owner sends creator links; each one is source material. The job: read, filte
 
 ## 1. Read
 
-- Open the profile in the built-in browser, **signed out**. Never sign in, never use the owner's account, never enter credentials.
+- **Read EVERY post, not the first 12.**
+  - **Owner's decision, 2026-11-26:** they said "yes always" to reading through their own Chrome, which is signed in to Instagram, read only. They had complained: "every time you said there are 12 but you just blocked."
+  - **Default path:** Claude in Chrome (`mcp__claude-in-chrome__*`).
+  - **List the profile:**
+    - open a new tab of your own;
+    - scroll the profile grid in steps (`scrollBy(0,900)`, about 1.3 s apart);
+    - add the shortcodes seen at each step to a Set until it stops growing (the grid recycles DOM nodes);
+    - check the total against "N posts" in the header.
+  - **Read each post:** open `instagram.com/p/<code>/` and read the caption from the page (the og:description meta holds the full caption). Two readers can split a long list.
+  - **Read only:**
+    - never like, follow, comment, save, share or DM;
+    - never call Instagram's private `/api/v1/...` endpoints with the session;
+    - about 2 seconds between posts;
+    - stop on a challenge or a rate limit and report how far you got;
+    - never enter credentials.
+  - **Lists:** Chrome blocks a second automatic download in a row, so return lists as text.
+  - **Tabs:** close your tab at the end and leave the owner's tabs alone.
+- **Fallback (only when Chrome isn't connected):** the built-in browser pane, signed out. Never sign in there for the owner. Then the limits below apply.
 - List posts and reels by shortcode.
-- **Signed out, Instagram shows only the first 12 posts of a profile.** Scrolling loads nothing more without signing in. So 12 is never "all of them":
+- **Signed out (fallback only), Instagram shows only the first 12 posts of a profile.** Scrolling loads nothing more without signing in. So 12 is never "all of them":
   - read the account's total post count from the profile header and always report "12 of N" (or "all N" only when N ≤ 12)
   - also open the reels tab (`instagram.com/<account>/reels/`); it can list reels the main grid doesn't, so merge the two lists by shortcode
   - list in the report how many posts were NOT reachable, and mark the registry row "partial: 12 of N"
@@ -96,18 +113,31 @@ When a lesson belongs to a narrow topic skill below, put the detail there and a 
 | Account | Who | Last read | Read how | Report |
 |---|---|---|---|---|
 | @ayoships | Ayo Omolewa, YC W25, 15+ apps; takes apart big apps' code | 2026-11-12 (28) | frames | `docs/ayoships-reels-2026-11-12.md` |
-| @nels_ysng | Nelson, solo iOS dev (Claude Code) | 2026-11-14 (47 of 83) | frames | `docs/nels-and-scouts-2026-11-14.md` |
-| @danh.app | Andrew Do, small iPhone apps | 2026-11-16 (account has 86 posts; check the report for how many) | frames | `docs/danh-app-reels-2026-11-16.md` |
+| @nels_ysng | Nelson, solo iOS dev (Claude Code) | 2026-11-27 (95 of 95, captions via signed-in Chrome 2026-11-26; earlier 47 by frame) | captions; frames: 0 new, 11 to-do (DfsjocVuDDf DgGO1h5OgjN DfVYEUXOxEq DfxuD74uhlH Dc13ucruQXP Dec3xydOvBm DesH8C4uzqX De2QqRMO3WG Dez2DHKOSdC Dehzr_kubi1 DcbvQL7ucoJ) | `docs/nels-and-scouts-2026-11-14.md` (Full re-read 2026-11-27) |
+| @danh.app | Andrew Do, small iPhone apps | 2026-11-27 (96 of 96, captions via signed-in Chrome 2026-11-26; earlier frames) | captions; frames: 9 to-do (DgCbx1py-sq Df_2_8WS-ky Df6tYq4ScMy DeynLO0hVwT DewCYNcBv5I DdtMhI6BqzX DTERvHpEu1w De3wwXUBUFV DdyeLsVvdKp) | `docs/danh-app-reels-2026-11-16.md` (Full re-read 2026-11-27) |
 | @theglidestudio | motion-graphics studio for startups | 2026-11-16 (22 of 22 read, signed in; 3 reels watched by frame 2026-11-16) | captions + frames for 3 | `docs/theglidestudio-reels-2026-11-16.md` |
 | @charles.unemployed | Charles Liu, Gleam co-founder, UI rules | 2026-11-16 (94 of 94 listed, 4 substantive read plus 9 earlier, signed in; 3 reels watched by frame 2026-11-16) | captions + frames for 3 | `docs/charles-unemployed-reels-2026-11-16.md` |
-| @aniakubow | Ania Kubow, YouTube coder (500k subs claim), CSS UI-component reels | 2026-11-16 (59 of 810 read, the 60 most recent, signed in; 5 reels watched by frame 2026-11-16) | captions + frames for 5 | `docs/aniakubow-reels-2026-11-16.md` |
+| @aniakubow | Ania Kubow, YouTube coder (500k subs claim), CSS UI-component reels | 2026-11-27 (816 of 816, captions via signed-in Chrome; 5 reels by frame 2026-11-16) | captions; frames: 23 to-do (16 first, 7 low-priority 2023 portfolio reels) | `docs/aniakubow-reels-2026-11-16.md` (Full re-read 2026-11-27) |
+| @kunaluxui | Indian UX designer, personal account turned UX/AI tool lists | 2026-11-27 (672 of 672, captions via signed-in Chrome 2026-11-26/27; 534 personal posts skipped; 2 reels by frame 2026-11-22) | captions; frames: 18 to-do (12 empty-caption reels, 2 photos, DJ5i92xR45H DGB7yAWS7vq DF5ffGdpx6y DKps7t4RNjX) | `docs/kunaluxui-reels-2026-11-22-profile.md` (Full re-read 2026-11-27) |
+| @synsation_ | Software engineer and UX series ("Build for Good UX"), 47 sponsored funnels | 2026-11-27 (529 of 532 listed, captions via signed-in Chrome; 24 UX reels by frame signed out, subtitles read by eye, audio not transcribed) | captions + frames for 24; frames: 0 required | `docs/synsation-reels-2026-11-17.md` (Full re-read 2026-11-27) |
 | @itstundeanthony | Tunde Alao, 369K followers | 2026-11-16 (1 reel of 366 posts, the owner's link; skipped as a funnel, owner says it shows Voice Studio) | caption only | `docs/itstundeanthony-reels-2026-11-16.md` |
 | @luca_radez | Luca Radez, brand identity and motion designer, 7,125 followers | 2026-11-16 (35 of 35 listed, all read by caption, signed in; 2 reels watched by frame 2026-11-16) | captions + frames for 2 | `docs/luca-radez-reels-2026-11-16.md` |
+| @ceciliakimdesign | Cecilia Kim, product designer + engineer, 13K followers; "launching my first app" 10-part series | 2026-11-26 (117 of 117 by caption; frames read for 13 posts the same day: 10 reels plus 3 carousels' slides, including the 5 that had no usable caption) | captions + frames for 13 | `docs/ceciliakimdesign-reels-2026-11-26.md` (Part 3) |
 
 Re-checking a source: open the profile, compare shortcodes with its report's processed list, and read only the new ones.
 
 Note 2026-11-16 (teacher run 1): the four craft skills were built from all reports above. Frame reading was attempted on @charles.unemployed (DfxOhZmyLXz) and could not be done (no shell, screenshots unreadable, see "Reading frames"); the rows for @charles.unemployed, @aniakubow, @theglidestudio and @luca_radez stay "captions only, 0 frames". Next run: start with their shortlisted reels (charles DfxOhZmyLXz, DfphRvFBx54, DffBKUZhy6B; aniakubow Dfhr3ySRqzw, DfAOZLNoVVV, DdrMjrwK7IR, DdtlmICKd8p, DcwFH02NF3i; glide DfwhC1riuuO, Dfv1BkEO_YT, Dfvja0XCyIi; luca DfuQmy0ArN8, DfKL3ANARku) once a shell or image-capable agent is available.
 
 Note 2026-11-16: signed in, the overlay is gone, but a sub-agent's browser screenshots come back as raw image data it cannot view, and in-page OCR or file hand-off is blocked. Frame reading needs an agent that can see images.
+
+Note 2026-11-26 (@ceciliakimdesign frames):
+- **Claude in Chrome falls short for frames.** It masks the signed mp4 URL ("[BLOCKED: Cookie/query string data]"), and its screenshots and zoom come back as raw base64. Use it for captions only.
+- **What worked for the download:** the Playwright MCP browser, signed out.
+  - `browser_run_code_unsafe` reads `video_versions` and `image_versions2` URLs from `page.content()`.
+  - It opens each URL in a second page, `fetch`es it same-origin into a blob, and clicks an `<a download>`.
+  - `download.saveAs(<scratchpad path>)` writes the file. No cookies are involved and no `/api/v1` calls are made.
+- **Carousel slides are short videos** (5.4 s, 720x900). The last frame (`ffmpeg -sseof -0.3`) holds the full slide; tesseract eng reads it almost perfectly.
+- **Reels:** contact sheets read well with Read: `fps=1/2` frames tiled 6x2 at 300 px wide. Her burned-in subtitles carry the voice-over, so "voice only" no longer applies to creators who caption.
+- Close the Playwright browser at the end.
 
 Note 2026-11-16 (step 2): frames CAN be read. In the signed-in browser pane the reel page HTML holds the real mp4 as video_url (find the one whose nearest preceding "code" equals the shortcode; the page auto-advances, so match the code, not the tab URL); curl it without cookies, ffmpeg fps=1/2 or 1/3, tesseract eng; open 1-2 frames with Read. Hebrew traineddata is not installed (eng, osd only). Voice-over is still unheard.

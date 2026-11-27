@@ -53,3 +53,10 @@ Deliverable format: a table per locale with each field, its character count, and
 
 ## Added 2026-11-16, signed-in pass (from @luca_radez, caption only)
 One idea can drive mark, palette, type and every touchpoint (https://www.instagram.com/reel/DfKL3ANARku/, Alba concept, his claim). Pick one idea for Toogo, use the accent only as light, and keep a display face plus a plain readable face that both carry Hebrew.
+
+## Added 2026-11-26 from @ceciliakimdesign (captions only)
+- Real screens, one benefit per screenshot, show the app in use (not logo/login/splash), one 1320x2868 size is enough (up to 10), caption words may help search, custom product pages and screenshot tests after launch (her claims). Hebrew and English sets. https://www.instagram.com/ceciliakimdesign/reel/Dfxxe3mSQn_/
+
+## Added 2026-11-27 from @danh.app and @nels_ysng (captions only)
+- Store screenshots matter; do not forget them (details on screen, frames not read). https://www.instagram.com/reel/De3wwXUBUFV/
+- Say plainly what the app does: AI assistants and Google read the store text. See `toogo-marketing-craft`.

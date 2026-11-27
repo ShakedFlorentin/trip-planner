@@ -36,3 +36,12 @@ Toogo has no analytics (2026-11-14). Without it, onboarding work is blind: he la
 - **Reward early, punish late** (https://www.instagram.com/charles.unemployed/reel/Dfm33XyhRN3/): in sign-up and password fields show progress and a strong-password closure as the person types, but hold error messages until they leave the field. Check passwords and common-password hints inline. Wording in Hebrew and English.
 - **Chunk and match** (same reel): show long strings (codes, suggested passwords) in small groups; a sound or haptic should match something visible on screen at the same moment.
 - **Choices and speed** (https://www.instagram.com/charles.unemployed/reel/DfphRvFBx54/): fewer choices per first-run screen (Hick), respond within 400 ms or show a skeleton (Doherty), accept messy input and return it clean (Postel: dates, place names, pasted links in a messy form still work).
+
+## Added 2026-11-26 from @ceciliakimdesign (https://www.instagram.com/ceciliakimdesign/reel/DfvIobNyuzx/, captions only)
+- Let people try the step with pretend data (nothing saved); say rough answers are fine; a "later" skip for anything they may not know; keep "I already have an account" one tap away; ask for permissions only when the feature is used. Idea for owner: a practice swipe at the end of onboarding (must not put a place in the trip, rule 3).
+
+## Added 2026-11-27 from @danh.app, @nels_ysng, @synsation_ (captions; frames for empty states and forms)
+- **Onboarding comes before features:** if nobody gets past the first screens nothing else matters; he lists a bad onboarding flow and too many v1 features as his top mistakes. Click every onboarding button after each change (a broken one got him rejected). https://www.instagram.com/reel/DUAqphCko6F/ , https://www.instagram.com/reel/DewCYNcBv5I/ , https://www.instagram.com/reel/DTSzyk0kp4H/
+- **Disagreement on sign-in:** @nels_ysng says do not leave sign-in until late (rework, DasNnFROctO); the rules above say no forced sign-in before value. **Toogo:** build sign-in early so it is tested, but show it after the first swipes.
+- **The first empty trip says why and gives one action;** a 5-step setup checklist ("1 of 5 done") is fine if every step is real. https://www.instagram.com/reel/DY5PkUjyhMv/
+- **Pre-fill what the app knows and accept any input format;** Sign in with Apple saves typing. https://www.instagram.com/reel/DYyzrdpIixM/

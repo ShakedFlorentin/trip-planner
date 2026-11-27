@@ -18,6 +18,13 @@ tools:
   - mcp__Claude_Browser__javascript_tool
   - mcp__Claude_Browser__tabs_context
   - mcp__Claude_Browser__browser_batch
+  - mcp__claude-in-chrome__tabs_context_mcp
+  - mcp__claude-in-chrome__tabs_create_mcp
+  - mcp__claude-in-chrome__tabs_close_mcp
+  - mcp__claude-in-chrome__navigate
+  - mcp__claude-in-chrome__get_page_text
+  - mcp__claude-in-chrome__javascript_tool
+  - mcp__claude-in-chrome__read_page
 skills:
   - toogo-rules
   - toogo-learn-from-reels

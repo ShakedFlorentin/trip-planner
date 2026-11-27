@@ -31,3 +31,7 @@ Credits are an AI-cost wallet, priced to cover cost plus a little. Affiliate hot
 
 ## Added 2026-11-16 from @danh.app
 - His in-app purchase screen in the review reel (https://www.instagram.com/danh.app/reel/Dfy_BeWSnqN/, second 44) lists Monthly $4.99, Yearly $39.99, Lifetime $79.99, all marked "Missing Metadata". When Toogo adds credit packs through Apple in-app purchase for Israel, every product needs its metadata and review screenshot before submission (see `toogo-app-review`). Nothing else on pricing or paywalls was found in his reels; his subscription prices are not advice for Toogo.
+
+## Added 2026-11-26 from @ceciliakimdesign (her claims, options only)
+- Show monthly beside yearly on one screen; plan for Apple's cut (up to 30%, 15% small business); one subscription group so nobody pays twice; Restore purchases visible; cancel one tap away (opens Apple's screen); biggest number is the real charge. https://www.instagram.com/ceciliakimdesign/reel/Dfp6X0DSG3l/ and https://www.instagram.com/ceciliakimdesign/reel/DfsZN3jSSUV/
+- Her hard-paywall-converts-better claim is NOT taken: Toogo v1 is free with capped AI and no rigged free tier (rule 7).

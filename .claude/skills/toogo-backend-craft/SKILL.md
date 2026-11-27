@@ -46,3 +46,19 @@ Rigged difficulty, popularity-based upsells, inflated purchase reports to ad net
 
 Seen in video frames, 2026-11-16. No backend lesson came out of the 13 reels watched.
 - **AI answers must name what data they used** (from the AI-chat reel https://www.instagram.com/reel/DffBKUZhy6B/): the edge function should return the list of sources it read (counts, dates) along with the text so the UI can show them; and any write the AI suggests is returned as a proposal the user confirms, never applied by the function. Fits rule 2 (one-off, cacheable calls only).
+
+## Added 2026-11-26 from @ceciliakimdesign (captions only)
+- **Crash and analytics events carry no personal data:** only "something happened" (no names, notes, trip details, IP). Why: trust, and a trip app holds private plans. https://www.instagram.com/ceciliakimdesign/reel/DfkmZ8Sy_BX/ and https://www.instagram.com/ceciliakimdesign/reel/DfnZYfrykam/. Any tool is an owner decision (idea, not rule).
+- **Test messy real input** (money typed as "$1,200", pasted links) before release. Same source.
+- **Before the first outside tester:** only the public key in the client, a second account to check row-level security, and a search for TODO / REPLACE / YOUR_API_KEY. Why: cheap last gate. https://www.instagram.com/ceciliakimdesign/reel/DexFOPgSkIL/ (see also `toogo-ship-check`)
+
+## Added 2026-11-27 from @synsation_, @nels_ysng, @danh.app (captions; frames only for @synsation_ UX)
+Links https://www.instagram.com/reel/<code>/.
+- **Edge functions return a short safe message plus a code, never the raw error.** Her demo leaked a database connection string; the client maps the code to a Hebrew/English line (UX side in `toogo-ux-ui-craft`). Why: raw errors leak internals and nobody understands them. DYr7cKLIQo6
+- **Separate dev and prod projects;** test purchases in the StoreKit sandbox before review. Matches `toogo-supabase-prelaunch`. @nels_ysng DYMWCBruzec
+- **A small admin view to seed data and manage releases** beat hand SQL for him. Idea for the owner after the trip, never on the real trip. @nels_ysng DYeJY6czlWl
+- **Plain fixed rules for repeatable features; agents vary run to run.** Backs rule 2: sorting, travel times and ranking stay code; AI only for the planner and one-off adds. @synsation_ DNhSbtiA2VF, DNtXx3UYnzi (caption only)
+- **Before launch have three things:** monitoring, tests, a deployment plan. Add to the Feb 2027 list. @synsation_ DZNV8U5NXpI (caption only)
+- **Add analytics early** to learn why people use the app, with the owner's privacy decision first (Settings says no outside tools). @danh.app De1L-BABlti
+- **When a vulnerability forces a migration,** use AI to speed it but keep a human checking each step. @danh.app Df1jzdWymvS
+- **AI should improve the product, not be the product;** auth, accounts, invites and the manual flow work first. @danh.app DTLqiZmE25I, DUItJNIku09

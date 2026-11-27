@@ -83,3 +83,10 @@ Position = Reels tab order, then the grid-only ones. "read" means the video was 
 15. https://www.instagram.com/danh.app/reel/DeEQ16uBGdF/ — advice for software engineers in 2026; "don't outsource your own intelligence". read, captions word by word
 16. https://www.instagram.com/danh.app/reel/DeoT5k8Bg9q/ — "My journey to $10K MRR begins", Mealo meal plan screens. read, few captions
 17. https://www.instagram.com/danh.app/reel/DdELXgxSBNf/ — "i built the strava of tennis called Rallio" (9 Sep 2026): activity share card, trophies. read
+
+## Full re-read 2026-11-27 (@danh.app, captions via signed-in Chrome 2026-11-26, read only)
+- **Count:** 96 of 96 listed (86 on 16 Nov). 12 were already here; **84 new read, 0 failed**; 29 are Jan-Feb 2026 posts not visible signed out. Five codes from the old list are no longer on the grid (DfrQoL-SwEG, Dforz_gS3xS, DfMXFIHS-UE, DfjiPD2yHB8, Dfg9dmrS443), probably deleted duplicates. Frames: 0.
+- **Kept (about 35):** UX and looks (DgHlaPry1bg, DgCbx1py-sq, Df_2_8WS-ky, Df6tYq4ScMy, DeRIxlVh_Ep, DeOj979Bu7U, DTh0R0Pkk33, DUK790zEm6i, DUItJNIku09, Dd8pTWDhWnm, DUAqphCko6F, DewCYNcBv5I, DdtMhI6BqzX), launch and App Review (DTSzyk0kp4H, DTXY_-Dks0j, DUF0IHukmsp, Dd_OH4_h-VH, Detdg5bB6wx, DTLqiZmE25I, DTPosSTkt8m, DTcnbnNklsk, DTERvHpEu1w), marketing (DgMu9vJSX6h, DeL_Qf-hg_d, DeynLO0hVwT, De6Vf5sBgbR, De3wwXUBUFV, DdyeLsVvdKp, DeBy6PBhs70), feedback and analytics (DfUFbPFS7iz, De1L-BABlti, DT7hmrrElJm), backend (Df1jzdWymvS, DeeAx9dBviZ).
+- **Skipped:** about 40 motivation, AI-news, tool-opinion (Codex vs Claude Code vs Grok Bot), humour and filler posts (incl. duplicate kickflip filler DfmHEOtyIj3 / DfMXImISCD6, AI game demos, DS829fskgvv).
+- **Went to:** ux-ui-craft, first-run, app-review, indie-launch, marketing-craft, premium-feel, store-listing, backend-craft.
+- **Still worth reading by frame (9):** DgCbx1py-sq (button copy), Df_2_8WS-ky (loading states), Df6tYq4ScMy (redesign), DeynLO0hVwT (paywall), DewCYNcBv5I (onboarding), DdtMhI6BqzX (UI before/after), DTERvHpEu1w (3 rules), De3wwXUBUFV (store photos), DdyeLsVvdKp (first users).

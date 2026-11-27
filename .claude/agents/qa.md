@@ -15,6 +15,7 @@ skills:
   - toogo-ship-check
   - toogo-app-review
   - ui-sdk
+  - toogo-ux-audit
 ---
 
 # QA — Quality Assurance

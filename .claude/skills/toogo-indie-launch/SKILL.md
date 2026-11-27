@@ -33,3 +33,16 @@ Three doors on one Support screen: suggest (public ideas with votes), report a p
 
 ## Added 2026-11-16 from @charles.unemployed (captions read)
 - **"Give this to your AI agent" rules block** (https://www.instagram.com/charles.unemployed/reel/DfxOhZmyLXz/): a short bullet list of concrete design rules the agent follows in every UI it builds works better than "make it nice". Keep one such list for Toogo (the CSS rules in toogo-premium-feel) and point the frontend agent at it for every screen.
+
+## Added 2026-11-26 from @ceciliakimdesign (captions only)
+- **First user test, no helping:** five-second test, give a task not a tour, ask them to think aloud, watch the first tap, stopwatch the main task (for Toogo: reach a match and open the plan), write down every word they ask about, then reword it in Hebrew and English. Why: you see what the owner can no longer see. https://www.instagram.com/ceciliakimdesign/reel/DerlGknRC37/
+- **Make your own case perfect first;** overbuilding for everyone broke her core use. https://www.instagram.com/ceciliakimdesign/reel/DcrmDVTSgfx/
+
+## Added 2026-11-27 from @danh.app, @nels_ysng, @kunaluxui (captions; their numbers are claims)
+- **Ship the messiest simple v1 and learn from real use;** features are not value, UX details compound, structured feedback, shipping teaches fastest. @danh.app https://www.instagram.com/reel/DUF0IHukmsp/ , https://www.instagram.com/reel/Dd_OH4_h-VH/
+- **Test on a real phone every day** and put UI work in early. @nels_ysng https://www.instagram.com/reel/DasNnFROctO/ , https://www.instagram.com/reel/Dac0F0DOhzg/
+- **Check that notifications work when daily use is low** (only for real events, rule 7). @nels_ysng https://www.instagram.com/reel/Dcorz64Oq9P/
+- **An in-app feedback board** is a good door, but outside tools need the owner's privacy decision. @danh.app https://www.instagram.com/reel/DfUFbPFS7iz/
+- **Claude Code habits:** keep CLAUDE.md maintained, Plan mode, parallel subagents on separate branches (our worktree flow), MCPs for outside data. Already how this org works. @nels_ysng https://www.instagram.com/reel/DdR8LreOk-N/ , https://www.instagram.com/reel/DdW_qmXulCC/
+- **Solo costs to budget** ($99 a year Apple, AI tools, backend). @danh.app https://www.instagram.com/reel/DTcnbnNklsk/
+- **Handoff:** write down decisions that affect the build and review the real build after it ships. @kunaluxui https://www.instagram.com/reel/DdmMR9jFs3L/

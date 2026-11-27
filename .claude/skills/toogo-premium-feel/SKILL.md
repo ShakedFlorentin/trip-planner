@@ -91,3 +91,42 @@ Luca Radez is a brand-identity and motion designer (7,125 followers). His reels 
 - **Optimistic update, layout stability, human in the loop** (https://www.instagram.com/p/DffBKUZhy6B/): show the result at once with a clear failed state; reserve space so nothing jumps; suggestions ask before changing the user's data (planner never touches bookings or expenses).
 - **Tabular figures** for prices, times and counters so digits do not shift (https://www.instagram.com/p/DfPruJSxggG/, https://www.instagram.com/reel/DdtlmICKd8p/).
 - **New CSS:** check the lowest iOS WebView version before using anchor positioning or sibling-index() (https://www.instagram.com/reel/DdrMjrwK7IR/). Material 3 Expressive button groups are an Android look; not adopted.
+
+## Added 2026-11-26 from @ceciliakimdesign (watched by frame: 13 posts, burned-in subtitles and slides read)
+Cecilia Kim built a money app (Nessie) in SwiftUI and showed the before/after screens and code. Her numbers are her claims, tested on her app, not in Toogo. SwiftUI is translated to CSS in a WebView here; code detail in `toogo-frontend-craft`. Every check in Hebrew (RTL) and English.
+
+**The 8-point UI review** (carousel https://www.instagram.com/ceciliakimdesign/p/DeFddsdI1Vy/). Start with the most-used screen; for Toogo, the day plan. Every AI prompt says what to keep the same, not just what to fix. Add these to the AI-look audit (section 4):
+1. **Icons:** match how bold they look (optical size, stroke weight, alignment), not just their box size. Keep meanings, selected states, labels and tap targets.
+2. **Contrast:** quiet text must still be easy to read. Check against the real background, transparency included, and report the ratios.
+3. **Corners:** one radius per element type; nested shapes match; pills stay pills.
+4. **Shadows:** depth only where something sits on top of something else. No heavy shadows, no glow.
+5. **Line spacing:** fix line height before making the card bigger; let the box grow, and check large text does not clip.
+6. **Type hierarchy:** the main number is big, the details small. In her "after", the number was much bigger and the sub-line smaller.
+7. **Alignment:** titles and labels on one leading edge, amounts in one trailing column. In RTL the leading edge is the right one.
+8. **Long text:** test the longest real string, not lorem ipsum ("Harborview Collective spring campaign retainer" with $128,450). For Toogo that means long Hebrew place names and long translated strings. It must wrap and never be cut off.
+
+**Premium details, with her numbers:**
+- **Tinted shadow, not black** (https://www.instagram.com/ceciliakimdesign/reel/DeCl4Ynyl68/): the button's shadow uses the brand colour at about 24% opacity, offset 4, blur radius 12 (SwiftUI `.shadow(color: cobalt.opacity(0.24), radius: 12, y: 4)`). She showed black next to tinted: black "looks muddy". Toogo's `--elev-*` tokens are pure black today.
+- **Numbers roll to their new value in about 0.2 s** (https://www.instagram.com/ceciliakimdesign/reel/Dd9unmGyVmp/), so you see the money change. "Keep every animation around 0.2 s so it never feels slow."
+- **Save one big animation for the top moment:** her "Saved" toast became a "Paid off!" burst with confetti for clearing a debt. For Toogo, that moment is a match or a finished trip plan (section 2).
+- **A skeleton while loading:** a soft outline of the screen "because you can already see where everything will be". Her "before" was a centered icon with "Getting Nessie ready".
+- **A slow-moving background makes the app feel alive,** but under Reduce Motion it goes still. Hers was a Metal water shader with film grain. In Toogo it would be at most a login or onboarding hero, never on list, map or swipe screens.
+- **Timing by comparison** (https://www.instagram.com/ceciliakimdesign/reel/Dcb6pEryfoj/): the same screen reveal at 150 ms was "too fast" and at 400 ms was "the sweet spot"; she says the second got about 10x the views. Give feedback as a number ("start at 400 ms"), not as "make it smoother". This disagrees with @charles.unemployed's "under 300 ms". House reading: about 0.2 s for anything used often, up to about 0.4 s only for one rare reveal.
+- **Hide amounts:** one tap turns every amount into dots ($••••) with the toast "Done. Amounts are hidden for presentation." (SwiftUI `.privacySensitive()`). For Toogo this could cover trip costs and expenses when showing the phone to someone. It is an idea for the owner.
+- **The right keyboard per field:** amounts open a number pad (`.decimalPad`), and sentence fields the full keyboard.
+- **Dark and tinted app icon variants** (iOS 18+): the icon follows the home screen. This needs native assets, so it goes on the App Store build list.
+- **"Nobody notices these details, but everyone notices when they're missing."**
+
+**What the AI's first look was, and how she got out of it** (https://www.instagram.com/ceciliakimdesign/reel/DdHeJxgSG0Y/, https://www.instagram.com/ceciliakimdesign/reel/Dd4IkyvxooA/):
+- **The AI default:** a cream background, a serif headline ("August, at a glance."), a dark green card and a yellow progress bar. Treat that look as a sign of AI, the same as purple gradients.
+- **Her fixes, in order:** colour from what the category means (finance apps are "almost always blue = trust + clarity"); a palette to match; a few gradients; rounder corners; friendlier copy ("Say it naturally. Review every detail before saving."); draggable cards for priorities. Then 10 directions and 5 title fonts, with a dark deep-blue background and darker cards (her reference was Partiful), film grain, and one serif italic for titles (EB Garamond italic) next to Inter. No more than 2 fonts.
+- **Reorder in one place:** a drag handle and arrows on every row felt clunky. She replaced them with one "Reorder" button that opens its own sheet ("Drag a task by its handle"), then "Done" and a toast ("funding queue updated"). For Toogo, reordering the day plan could work this way, mirrored in RTL.
+- **For Toogo:** take the colour from the subject (Japan, the `--accent` red #bc002d) rather than copying her blue. A serif italic display face needs Hebrew glyphs and the owner's choice; the system fonts stay until then.
+
+## Added 2026-11-27 from @nels_ysng and @danh.app (captions), @synsation_ (frames)
+- **Sounds and haptics make an app feel alive.** Backs section 1 (haptics); sounds are a new option: short, optional, off in silent mode, owner decides. https://www.instagram.com/reel/Db_HwTlMKGD/
+- **Negative space makes an app feel expensive;** removing clutter improved his main screen. Three premium changes in his list: space, a few micro-interactions, system glass used lightly. https://www.instagram.com/reel/DeRIxlVh_Ep/ , https://www.instagram.com/reel/DeOj979Bu7U/
+- **Personality from one custom icon family** made with a fixed art-style prompt, then vectorised (see section 3); a hidden easter egg is a cheap delight. https://www.instagram.com/reel/DTh0R0Pkk33/
+- **Pressed state on touch:** a small scale-down plus the haptic, loading inside the button. https://www.instagram.com/reel/DcjkR2PSkml/
+- **Glass is an accent only;** Apple keeps Liquid Glass for the controls layer, not content. https://www.instagram.com/reel/Dd49V2Ns1a4/
+- Add to the AI-look audit (section 4): purple-blue gradient, the "New: AI-powered" pill, stock icons. https://www.instagram.com/reel/DgHlaPry1bg/

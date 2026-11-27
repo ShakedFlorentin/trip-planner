@@ -18,6 +18,7 @@ skills:
   - ui-sdk
   - toogo-frontend-craft
   - toogo-ux-ui-craft
+  - toogo-ux-audit
 ---
 
 # Frontend — Frontend Engineering
