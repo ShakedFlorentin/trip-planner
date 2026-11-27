@@ -229,6 +229,8 @@ button:disabled { cursor: default; }
 .msg { color: var(--accent); font-size: var(--fs-subhead); margin: 0; }
 .msg.ok { color: var(--ok); display: flex; align-items: flex-start; gap: var(--s-2); }
 button + .msg { margin-top: var(--s-2); }
+/* a button that is working keeps the page's text colour in light and dark (the dark sheet rule below turns .secondary red) */
+.sheet button.secondary.moving { color: var(--text); }
 .empty { text-align: center; color: var(--muted); padding: var(--s-8) var(--s-4); }
 
 .stack { display: flex; flex-direction: column; gap: var(--s-3); }

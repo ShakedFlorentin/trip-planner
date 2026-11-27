@@ -412,7 +412,7 @@ export function CreditWallet({ tripId }: { tripId: string }) {
       <Field label={t('להעביר לטיול')}>
         <input type="number" min={1} max={Math.max(w.paid, 1)} value={give} onChange={(e) => setGive(Math.max(1, Math.floor(+e.target.value || 1)))} />
       </Field>
-      <button className="secondary" disabled={sending || w.paid < 1 || give > w.paid} onClick={send}>
+      <button className={'secondary' + (sending ? ' moving' : '')} disabled={sending || w.paid < 1 || give > w.paid} onClick={send}>
         {sending ? <><Icon as={LoaderCircle} className="spin" /> {t('מעבירים…')}</> : t('העברה לטיול')}
       </button>
       {msg && (
