@@ -485,6 +485,50 @@ const tests = {
     const p = out.placed.get('path')
     t(!p || p.start + 90 <= dusk + 20, `the walk ends ${p ? E.hhmm(p.start + 90) : '-'}, dusk is ${E.hhmm(dusk)}`)
   },
+  r14: (t) => {
+    // both couples reach the new city at 14:00 and have not eaten: the food market they both liked is a late lunch,
+    // the first stop of the day, started by 14:45, and the day keeps its dinner
+    const both = { couples: ['A', 'B'] }
+    const late = (x = {}) => [day(1, { A: pres({ start: H('14:00'), early: undefined, ...x }), B: pres({ start: H('14:00'), early: undefined, ...x }) })]
+    const us = [
+      unit('market', { ...both, category: 'food', best: 'morning', mins: 75, opens: H('9:00'), closes: H('18:00'), priority: 4, point: east(TOKYO, 0.3) }),
+      unit('arcade', { ...both, category: 'shopping', best: 'midday', mins: 60, opens: null, closes: null, priority: 5.5, point: east(TOKYO, -1.5) }),
+      unit('moss', { ...both, best: 'morning', mins: 30, opens: H('9:00'), closes: H('17:00'), priority: 5, point: east(TOKYO, -8, 2) }),
+      unit('shops', { ...both, category: 'shopping', best: 'morning', mins: 90, opens: H('10:00'), closes: H('20:00'), priority: 4, point: east(TOKYO, 0.5) }),
+      unit('grill', { ...both, category: 'food', best: 'evening', mins: 75, opens: H('11:00'), closes: H('21:00'), priority: 5, point: east(TOKYO, -0.2) }),
+    ]
+    const out = E.plan(late(), us, [])
+    const line = [...out.placed].sort((a, b) => a[1].start - b[1].start)
+    const say = line.map(([id, p]) => `${E.hhmm(p.start)} ${id}`).join(', ')
+    const meals = line.filter(([id]) => id === 'market' || id === 'grill').map(([, p]) => p.start)
+    t(meals.some((s) => inSlot(s, '14:00', '14:45')), `no late lunch on a day that starts at 14:00: ${say}`)
+    t(line.length > 0 && (line[0][0] === 'market' || line[0][0] === 'grill'), `the late lunch is not the first stop: ${say}`)
+    t(meals.some((s) => inSlot(s, '17:15', '21:00')), `the day lost its dinner: ${say}`)
+    t(!meals.some((s) => s > H('14:45') && s < H('17:15')), `a meal between lunch and dinner: ${say}`)
+    t(!out.issues.some((i) => i.kind === 'no_lunch'), 'no_lunch raised with a late lunch planned')
+    // the hours say when a day has a lunch in it: a start by 14:15 leaves half an hour to reach it before 14:45
+    const need = (x, fx = []) => E.mealNeeds(pres({ early: undefined, ...x }), fx).lunch
+    t(need({ start: H('14:00') }) && need({ start: H('14:15') }), 'a day that starts at 14:00 or 14:15 has no lunch in it')
+    t(!need({ start: H('14:30') }) && !need({ start: H('15:30') }), 'a day that starts at 14:30 or later has a lunch in it')
+    t(!need({ start: H('14:00') }, [{ day: 1, couples: ['A'], point: null, start: H('14:00'), mins: 120 }]), 'a lunch is asked for while something fixed fills 14:00 to 16:00')
+    t(!need({ start: H('14:00'), end: H('14:40') }), 'a lunch is asked for on a day of forty minutes')
+    // a restaurant too far to reach by 14:45 is not a late lunch: no meal in the middle of the afternoon
+    const far = E.plan(late(), [unit('soba', { ...both, category: 'food', best: 'midday', mins: 60, opens: H('11:00'), closes: H('16:30'), point: east(TOKYO, 22) })], [])
+    const s = far.placed.get('soba')?.start
+    t(s == null || s <= H('14:45'), `a lunch 22 km away on a day that starts at 14:00 is at ${s == null ? '-' : E.hhmm(s)}`)
+    // two lunch restaurants open till the evening on such a day: one is the late lunch, the other the dinner; and the
+    // plan is the same when the planner runs again on it
+    const noodle = (id, x) => unit(id, { ...both, category: 'food', best: 'midday', mins: 75, opens: H('11:00'), closes: H('21:00'), priority: 4, ...x })
+    const pair = [noodle('ramen', { point: east(TOKYO, 0.4) }), noodle('udon', { point: east(TOKYO, -0.4) })]
+    const two = E.plan(late(), pair, [])
+    const st = pair.map((u) => two.placed.get(u.id)?.start).sort((x, y) => x - y)
+    t(st.length === 2 && inSlot(st[0] ?? 0, '14:00', '14:45') && inSlot(st[1] ?? 0, '17:15', '21:00'), `two lunch restaurants on a day from 14:00: ${st.map((x) => (x == null ? '-' : E.hhmm(x))).join(', ')}`)
+    const again = E.plan(late(), us.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), 'a second run on its own plan changed it')
+    // and a day that starts at 15:30 has no lunch to plan: the midday restaurant is its dinner, nothing is flagged
+    const eve = E.plan(late({ start: H('15:30') }), [{ ...us[4], best: 'midday' }], [])
+    t(eve.placed.get('grill')?.start >= H('17:15') && !eve.issues.some((i) => i.kind === 'no_lunch'), `a day that starts at 15:30: the restaurant at ${eve.placed.has('grill') ? E.hhmm(eve.placed.get('grill').start) : '-'}`)
+  },
 }
 
 const only = process.argv.slice(2)

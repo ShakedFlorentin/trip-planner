@@ -120,14 +120,21 @@ const MEAL_MISS = 10
 const LATE_LUNCH = 13 * 60 + 15
 // a morning meal this long can be the day's lunch
 const LONG_MEAL = 60
+// a day that starts by this hour has a lunch in it. Up to 13:00 it is a lunch like any day's; after that (a couple that
+// reaches the new city in the early afternoon and has not eaten) it is a late lunch, the first stop of the day, and it
+// still starts by the end of the lunch hours (14:45): kitchens take the last lunch orders about then, and the dinner
+// three hours later (MEAL_GAP) is still at its usual hour. 14:15 leaves half an hour to get to the table
+const LUNCH_DAY = 14 * 60 + 15
+const LUNCH_PLAIN = 13 * 60
 // room kept on a day for a meal still to be placed there
 const MEAL_ROOM = 70
 // a meal counts this much, at most, toward the pace of the day: sitting down to eat is the day's rest, not its load
 const MEAL_PACE = 45
 
 /**
- * Which meals a couple needs that day: lunch when their day covers 13:00-13:30, dinner when it runs to 18:30 (an early dinner still fits: the evening they fly home), and
- * only where something fixed leaves an hour free in the slot. A fixed meal in the slot covers it (one with no hour
+ * Which meals a couple needs that day: lunch when their day covers 13:00-13:30 or starts by 14:15 (a late lunch, the
+ * first stop of the day they arrive), dinner when it runs to 18:30 (an early dinner still fits: the evening they fly
+ * home), and only where something fixed leaves an hour free in the slot. A fixed meal in the slot covers it (one with no hour
  * covers dinner first). Short landing and departure days so need one meal or none.
  */
 export function mealNeeds(p: Presence, fx: Fixed[]) {
@@ -141,7 +148,7 @@ export function mealNeeds(p: Presence, fx: Fixed[]) {
     return end - t >= 60
   }
   const need = {
-    lunch: p.start <= 13 * 60 && p.end >= 13 * 60 + 30 && free(MEAL_AT.lunch.from, MEAL_AT.lunch.to + 60),
+    lunch: p.start <= LUNCH_DAY && p.end >= 13 * 60 + 30 && free(MEAL_AT.lunch.from, MEAL_AT.lunch.to + 60),
     dinner: p.start <= 19 * 60 && p.end >= DINNER_DAY && free(MEAL_AT.dinner.from, MEAL_AT.dinner.to + 60),
   }
   for (const f of fx) {
@@ -161,10 +168,13 @@ function slotsFor(u: Unit, d: Day): MealSlot[] {
   const who = whoOn(u, d)
   const start = Math.max(...who.map((c) => d.at.get(c)!.start))
   const end = Math.min(...who.map((c) => d.at.get(c)!.end))
-  // lunch only on a day that starts by 13:00 (a day that starts at 14:00 has no lunch to plan), dinner on one that runs to 18:30
+  // lunch only on a day that starts by 14:15 (a day that starts at 15:30 has no lunch to plan), dinner on one that runs
+  // to 18:30. On a day that starts after 13:00 the lunch is the first stop, so the ride from the hotel counts: a
+  // table they can't reach by the end of the lunch hours is not that day's lunch
+  const reach = start > LUNCH_PLAIN ? round15(Math.max(...who.map((c) => d.at.get(c)!.start + ride(d.at.get(c)!.hotel, pt(u))))) : start
   const can = (s: 'lunch' | 'dinner') =>
-    (s === 'lunch' ? start <= 13 * 60 : end >= DINNER_DAY) &&
-    Math.max(u.opens ?? 0, start, MEAL_AT[s].from) <= Math.min((u.closes ?? 24 * 60) - u.mins, MEAL_AT[s].to, end - u.mins)
+    (s === 'lunch' ? start <= LUNCH_DAY : end >= DINNER_DAY) &&
+    Math.max(u.opens ?? 0, s === 'lunch' ? reach : start, MEAL_AT[s].from) <= Math.min((u.closes ?? 24 * 60) - u.mins, MEAL_AT[s].to, end - u.mins)
   // a nightlife place that serves a meal (an izakaya) is a dinner, never a lunch
   if (u.category === 'nightlife') return can('dinner') ? ['dinner'] : []
   const asked: MealSlot[] =
@@ -177,6 +187,10 @@ function slotsFor(u: Unit, d: Day): MealSlot[] {
     : u.best === 'evening' || u.best === 'night' ? ['dinner']
     : ['lunch', 'dinner']
   const ok = asked.filter((s) => s === 'breakfast' || can(s))
+  // on a day that starts after 13:00 a lunch restaurant is the dinner, as on any day with no lunch hours of its own,
+  // or the late lunch when the day already has a dinner: of two such restaurants one is each, and a place that can
+  // only be a lunch (a market that closes at 18:00) takes the late lunch first
+  if (start > LUNCH_PLAIN && ok.length && !ok.includes('dinner') && can('dinner')) ok.unshift('dinner')
   // the hour the card asks for is outside its opening hours that day: the hours decide
   return ok.length ? ok : (['lunch', 'dinner'] as const).filter(can)
 }
