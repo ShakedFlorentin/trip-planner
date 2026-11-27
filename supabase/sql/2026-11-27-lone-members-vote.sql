@@ -23,6 +23,8 @@
 -- match_place), because the files hold two versions of it (2026-11-02-discovery.sql, and
 -- 2026-11-02-solo-couple-both-like.sql) and this works on either. If the text is not what the patch expects it
 -- stops with an error and nothing is changed. If the patch is already in, it does nothing.
+-- The live function was saved with Windows line ends; the patch takes them out (the function is rewritten with
+-- plain line ends, nothing else in it moves).
 --
 -- How to undo: run again the plan_place_couples part (the function and its revoke line) of whichever of the two
 -- files above was live before. Or, by hand: take the two "lone" parts and the two "|| array(select l.voice ..."
@@ -36,7 +38,9 @@ begin
     raise notice 'plan_place_couples already counts members with no couple; nothing changed';
     return;
   end if;
-  n := d;
+  -- the live text has Windows line ends (CR LF); the patterns below are written with LF alone, so the CRs go first.
+  -- A CR is only ever a line end here, so the function reads the same without them.
+  n := replace(d, E'\r', '');
   -- 1. the members with no couple (only when the trip has couples), and their votes
   n := replace(n, E'  votes as (\n',
     E'  lone as (select m.user_id from public.members m\n'
