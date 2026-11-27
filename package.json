@@ -11,6 +11,7 @@
     "test:plan": "node scripts/plan-test.mjs",
     "test:plan-fixes": "node scripts/plan-fixes-test.mjs",
     "test:plan-cpu": "node scripts/plan-cpu-test.mjs",
+    "test:plan-parties": "node scripts/plan-parties-test.mjs",
     "plan:metrics": "node scripts/plan-metrics.mjs",
     "test:split": "node scripts/split-test.mjs",
     "test:stay": "node scripts/stay-test.mjs",

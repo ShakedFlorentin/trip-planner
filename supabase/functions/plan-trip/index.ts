@@ -11,6 +11,7 @@ import { failBody, type FailCode } from './errors.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
 import { loop } from './lease.ts'
+import { ownerOf, partiesOf, partyOf, shown, shownKey, wanted, yesCount, type Vote } from './parties.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
@@ -349,7 +350,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     q<Place[]>(
       admin.from('places').select('id,candidate_id,name,city,area,lat,lng,who,visited,auto_planned').eq('trip_id', tid).not('candidate_id', 'is', null),
     ),
-    q<{ candidate_id: string; couples: string[]; voted: string[]; yes: string[] }[]>(admin.rpc('plan_place_couples', { tid })),
+    q<Vote[]>(admin.rpc('plan_place_couples', { tid })),
     media(),
     optional<StayRow[]>(admin.from('trip_stays').select('id,party,city,lat,lng,area,check_in,check_out,status,booking_id').eq('trip_id', tid)),
     optional<CityRow[]>(admin.from('cities').select('id,name_en,name_he,lat,lng')),
@@ -375,21 +376,24 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     : []
   const candById = new Map(cands.map((c) => [c.id, c]))
   const voteById = new Map(votes.map((v) => [v.candidate_id, v]))
-  const couples = [...new Set(members.map((m) => m.couple).filter((c): c is string => !!c))].sort()
+  // the parties: the couples, or everyone as one party when the trip has no couples (parties.ts)
+  const { parties: couples, one } = partiesOf(members)
   // the pace each person chose in the questionnaire; a couple's days are as full as its calmer half wants
   const { data: profiles } = await admin.from('profiles').select('user_id,answers').in('user_id', members.map((m) => m.user_id))
   const capOf = new Map<string, number>()
   for (const m of members) {
     const pace = (profiles ?? []).find((x) => x.user_id === m.user_id)?.answers?.pace as string | undefined
     const cap = pace ? PACE[pace] : undefined
-    if (m.couple && cap) capOf.set(m.couple, Math.min(capOf.get(m.couple) ?? cap, cap))
+    const party = partyOf(m, one)
+    if (party && cap) capOf.set(party, Math.min(capOf.get(party) ?? cap, cap))
   }
   // the couples travelling with a baby: a member said so in the questionnaire (answers.with). Nobody answered = not
   // known = planned as before (the app shows baby notes then; the planner does not shorten anybody's day on a guess)
   const baby = new Set<string>()
   for (const m of members) {
     const w = (profiles ?? []).find((x) => x.user_id === m.user_id)?.answers?.with
-    if (m.couple && Array.isArray(w) && w.includes('baby')) baby.add(m.couple)
+    const party = partyOf(m, one)
+    if (party && Array.isArray(w) && w.includes('baby')) baby.add(party)
   }
   // a trip with no start date is not ready to be planned
   if (!trip.start_date) return { stats: { placed: 0, insert: 0, update: 0, remove: 0, unplanned: 0 }, summary: { unplanned: [], warnings: [], issues: [], issues_more: [], away: [], facts_pending: 0, days: [], stay_areas: [] } }
@@ -418,9 +422,10 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     if (fixedPlaceIds.has(p.id) || fixedNames.has(factKey(p.name))) continue
     // the planner put it in once and someone took it out: leave it out
     if (p.auto_planned && !autoByPlace.has(p.id)) continue
-    const v = voteById.get(p.candidate_id)
-    if (!v?.yes.length) continue
-    if (v.couples.some((x) => !v.voted.includes(x))) {
+    // liked: a yes from a couple, and every couple it is for has voted; in a trip with no couples every place is
+    const w = wanted(voteById.get(p.candidate_id), one)
+    if (w === 'skip') continue
+    if (w === 'waiting') {
       unplanned.push({ place_id: p.id, name: p.name, reason: 'waiting', who: p.who })
       continue
     }
@@ -429,8 +434,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
 
   // how much a liked place matters (verdict, a local pick, both couples said yes, a high Tabelog score)
   const priorityOf = (c: Cand) => {
-    const v = voteById.get(c.id)!
-    return (VERDICT[c.verdict ?? ''] ?? 2.5) + (c.local_pick ? 0.5 : 0) + (v.yes.length > 1 ? 1 : 0) + ((c.tabelog_score ?? 0) >= 3.6 ? 0.3 : 0)
+    return (VERDICT[c.verdict ?? ''] ?? 2.5) + (c.local_pick ? 0.5 : 0) + (yesCount(voteById.get(c.id), one) > 1 ? 1 : 0) + ((c.tabelog_score ?? 0) >= 3.6 ? 0.3 : 0)
   }
   // where a card is: its media point, else its own coordinates
   const ownPoint = (c: Cand): Point | null => {
@@ -469,7 +473,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       city: c.city,
       weight: priorityOf(c),
       mins: Math.min(visitMins(factsOf(c), c.time_needed, c.category ?? 'sight'), 420),
-      parties: p.who ? p.who.split(' + ') : null,
+      parties: ownerOf(p.who, one)?.split(' + ') ?? null,
     })),
   }
   // the stays: the trip_stays table when it exists and has any, else the hotel bookings (today's way), else the city
@@ -481,7 +485,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       stayRows.map((s) => {
         const b = s.booking_id ? bookingById.get(s.booking_id) : undefined
         const booked = !!b && b.kind === 'hotel'
-        return { ...s, booked, hotelPoint: (booked && hotelPt.get(b!.id)) || null, hotelTitle: booked ? b!.title : null }
+        return { ...s, party: ownerOf(s.party, one), booked, hotelPoint: (booked && hotelPt.get(b!.id)) || null, hotelTitle: booked ? b!.title : null }
       }),
       stayCtx,
     )
@@ -510,11 +514,13 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       outMin: checkOutMin(h.ends_at),
     }))
   }
-  const dayWho = new Map(dayInfo.map((d) => [d.day, d.who]))
-  const flights = bookings.filter((b) => b.kind === 'flight')
+  // a trip with no couples is one party: every stay, day, flight and train is theirs, whatever name a row carries
+  if (one) sleeps = sleeps.map((s) => ({ ...s, party: null }))
+  const dayWho = new Map(dayInfo.map((d) => [d.day, ownerOf(d.who, one)]))
+  const flights = bookings.filter((b) => b.kind === 'flight').map((b) => ({ ...b, who: ownerOf(b.who, one) }))
 
   // the booked trains: on a day the city changes, the day starts after the train arrives
-  const trains = bookings.filter((b) => b.kind === 'train')
+  const trains = bookings.filter((b) => b.kind === 'train').map((b) => ({ ...b, who: ownerOf(b.who, one) }))
   const days: Day[] = buildDays({ numDays: trip.num_days, dateOf, sleeps, couples, dayWho, flights, trains, baby, capOf, past })
   // each city's middle, from the hotels in it
   const basePt = basePoints(days)
@@ -531,7 +537,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       (c.address && c.city && BASE[c.city]
         ? await locate({ address: c.address, name: c.name, city: NAME_EN[c.city] ?? c.city, near: BASE[c.city] }, geo)
         : null)
-    const unitCouples = p.who ? p.who.split(' + ') : couples
+    const unitCouples = ownerOf(p.who, one)?.split(' + ') ?? couples
     // the nearest city its couples sleep in
     const bases = [...new Set(days.flatMap((d) => unitCouples.map((x) => d.at.get(x)?.base).filter((b): b is string => !!b)))]
     // neither: the neighbourhood its card names (its main station), a point to plan it among its neighbours by
@@ -609,7 +615,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   }
   const whoOf = (who: string | null, day: number) => {
     const present = [...(days[day - 1]?.at.keys() ?? [])]
-    return who ? who.split(' + ').filter((x) => present.includes(x)) : present
+    const whose = ownerOf(who, one)
+    return whose ? whose.split(' + ').filter((x) => present.includes(x)) : present
   }
   const fixed: Fixed[] = []
   for (const i of fixedItems) {
@@ -674,7 +681,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       category: itemCategory(u.c.category ?? 'sight'),
       place_id: id,
       // planned for fewer couples than liked it (a place not for a baby): the item says whose it is
-      who: out.only.get(id)?.join(' + ') ?? u.p.who,
+      // (the single party of a trip with no couples has no name: the row keeps what the place says)
+      who: out.only.get(id)?.filter(shown).join(' + ') || u.p.who,
       sort: 100 + pl.order,
       auto: true,
     })
@@ -748,7 +756,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     // booked ahead and no booking for it is in the trip; baby: a place not for a baby, planned for the couple with one
     issues_more: out.issues
       .filter((x) => !KNOWN_ISSUE.has(x.kind))
-      .map((x) => ({ place_id: x.id || null, kind: x.kind, ...(x.day != null ? { day: x.day } : {}), ...(x.couple ? { couple: x.couple } : {}) })),
+      .map((x) => ({ place_id: x.id || null, kind: x.kind, ...(x.day != null ? { day: x.day } : {}), ...(x.couple && shown(x.couple) ? { couple: x.couple } : {}) })),
     // planned places outside the city their people sleep in that day (not day trips): the app says "in {city}" on them.
     // city is the place's city id; day is where it sits, so a place a person moves later loses the label
     away: [...out.away].map(([id, city]) => ({ place_id: id, day: out.placed.get(id)!.day, city })),
@@ -764,13 +772,14 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
             .map(([c, p]) => {
               const a = (p as PA).arrival!
               // ready: the moment the couple reaches the hotel door (landing + 60 min border/bags + ride)
-              return [c, { airport: a.airport, ride_min: a.ride_min, ready: hhmm(a.landing_min + 60 + a.ride_min) }]
+              return [shownKey(c), { airport: a.airport, ride_min: a.ride_min, ready: hhmm(a.landing_min + 60 + a.ride_min) }]
             }),
         )
         return {
           day: d.day,
           ...([...d.at.values()].some((p) => (p as PA).estimate) ? { estimate: true } : {}),
-          hotels: Object.fromEntries([...d.at].map(([c, p]) => [c, (p as PA).label ?? null])),
+          // keyed by couple; the party of a trip with no couples has no name, its key is ''
+          hotels: Object.fromEntries([...d.at].map(([c, p]) => [shownKey(c), (p as PA).label ?? null])),
           ...(Object.keys(arrivals).length ? { arrival: arrivals } : {}),
         }
       }),
@@ -855,7 +864,7 @@ async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city:
     q<{ couple: string | null; user_id: string }[]>(admin.from('members').select('couple,user_id').eq('trip_id', tid)),
     q<Booking[]>(admin.from('bookings').select('id,kind,title,starts_at,ends_at,who,location').eq('trip_id', tid)),
     q<Place[]>(admin.from('places').select('id,candidate_id,name,city,area,lat,lng,who,visited,auto_planned').eq('trip_id', tid).not('candidate_id', 'is', null)),
-    q<{ candidate_id: string; couples: string[]; voted: string[]; yes: string[] }[]>(admin.rpc('plan_place_couples', { tid })),
+    q<Vote[]>(admin.rpc('plan_place_couples', { tid })),
     media(),
     optional<(StayRow & { locked: boolean; source: string | null })[]>(
       admin.from('trip_stays').select('id,party,city,lat,lng,area,check_in,check_out,status,booking_id,locked,source').eq('trip_id', tid),
@@ -873,18 +882,18 @@ async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city:
   const been = answers.map((a) => a.answers?.been_to_japan).filter((b): b is boolean => typeof b === 'boolean')
   // a first visit unless everyone who answered has been before
   const firstVisit = !been.length || been.some((b) => !b)
-  const couples = [...new Set(members.map((m) => m.couple).filter((c): c is string => !!c))].sort()
-  const flights = bookings.filter((b) => b.kind === 'flight')
-  // a trip with no couples set is one party, so its flights still say where it lands and leaves from
-  const parties = couples.length ? couples.map((c) => partyStretch(flights, c, trip.start_date!, trip.num_days)) : [partyStretch(flights, '*', trip.start_date!, trip.num_days)]
+  // a trip with no couples set is one party (parties.ts), so its flights still say where it lands and leaves from
+  const { parties: couples, one } = partiesOf(members)
+  const flights = bookings.filter((b) => b.kind === 'flight').map((b) => ({ ...b, who: ownerOf(b.who, one) }))
+  const parties = couples.map((c) => partyStretch(flights, c, trip.start_date!, trip.num_days))
   // where people sleep now: the stays table, else the hotel bookings (like the planner does)
   const stays: SplitStay[] = stayRows?.length
-    ? stayRows.map((s) => ({ party: s.party, city: s.city, checkIn: s.check_in, checkOut: s.check_out, status: s.status, locked: s.locked, source: s.source }))
+    ? stayRows.map((s) => ({ party: ownerOf(s.party, one), city: s.city, checkIn: s.check_in, checkOut: s.check_out, status: s.status, locked: s.locked, source: s.source }))
     : bookings
         .filter((b) => b.kind === 'hotel' && b.starts_at && b.ends_at)
         .flatMap((b) => {
           const city = hotelBase(b.title + ' ' + (b.location ?? ''))
-          return city ? [{ party: b.who, city, checkIn: b.starts_at!.slice(0, 10), checkOut: b.ends_at!.slice(0, 10), status: 'confirmed', locked: true, source: 'booking' }] : []
+          return city ? [{ party: ownerOf(b.who, one), city, checkIn: b.starts_at!.slice(0, 10), checkOut: b.ends_at!.slice(0, 10), status: 'confirmed', locked: true, source: 'booking' }] : []
         })
   // the liked places: a yes from someone, not visited yet
   const candIds = places.map((p) => p.candidate_id)
@@ -895,7 +904,8 @@ async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city:
   for (const p of places) {
     const c = candById.get(p.candidate_id)
     const v = voteById.get(p.candidate_id)
-    if (!c || p.visited || !v?.yes.length) continue
+    // (a trip with no couples: every place of the trip is liked, by its one party)
+    if (!c || p.visited || wanted(v, one) === 'skip') continue
     const m = mediaIdx[c.name]
     const own = m?.lat != null ? { lat: m.lat, lng: m.lng! } : c.lat != null ? { lat: c.lat, lng: c.lng! } : p.lat != null ? { lat: p.lat, lng: p.lng! } : null
     const f = factsOf(c)
@@ -906,7 +916,7 @@ async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city:
       lng: own?.lng ?? null,
       mins: visitMins(f, c.time_needed, c.category ?? 'sight'),
       openDates: (f?.open_dates ?? []).map((d) => d.slice(0, 10)),
-      parties: v.yes.length >= couples.length ? [] : v.yes,
+      parties: one || (v?.yes?.length ?? 0) >= couples.length ? [] : v!.yes!,
     })
   }
   const input = { startDate: trip.start_date, numDays: trip.num_days, parties, stays, cities, places: liked, firstVisit, picked, counts }

@@ -76,3 +76,13 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
   runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside
   it (`../_shared/areas.ts`).
+
+## Who a trip is planned for (`scripts/plan-parties-test.mjs`)
+
+`npm run test:plan-parties` runs plan-trip's own `index.ts` (the dry path) on a made-up trip built in the script: six
+days, Tokyo then Kyoto, 24 made-up places, made-up people. A stand-in for the Supabase client serves the rows; there is
+no network and no database. The shapes: one, two and three people with no couples (the app's own trips: the vote rows
+come as `couples: null, voted: [], yes: []`), one named couple, a couple and a party of one, a couple and a member with
+no couple, and the where-to-sleep answer for a trip with no couples. Each must plan its places, take nothing off, have
+no out-and-back and no bad time, fill meals, and show the app no made-up couple name.
+`PLAN_DIR=<another copy of supabase/functions/plan-trip>` runs it on that code (the copy needs `_shared` beside it).
