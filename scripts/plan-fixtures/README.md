@@ -75,7 +75,9 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   `PLAN_DIR=<a copy of plan-trip>` measures another version. The goal of 800 ms is met, barely.
 - `npm run test:plan-skip` (`node scripts/plan-skip-test.mjs`, round 12): a run asked to plan the input it has just
   planned gets the kept plan back (`memo.ts`), and that plan is the plan a new run gives, on every fixture here; any
-  change in the input is planned again; the planner does not change what it is given.
+  change in the input is planned again; the planner does not change what it is given. Round 13: the addresses a run may
+  look up are read from `geo_cache` in one read (`primed` in `geo.ts`), and every lookup asks and answers as it did
+  with one read for each. The run loop's wait (a change inside it costs no second run) is in `plan-error-test.mjs`.
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
   closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
   runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside
