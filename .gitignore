@@ -7,3 +7,6 @@ supabase/.temp
 
 # code graph (rebuilt locally: PYTHONPATH=~/prytan python3 -m core.knowledge.codegrapher scan .)
 codegrapher_out/
+
+# session handoff files (toogo-auto-handoff)
+.handoffs/
