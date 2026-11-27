@@ -1105,11 +1105,14 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     }
     return { bad, meals, back }
   }
-  // a detour: a place only some of the day's people liked, far from where the day is, planned between two stops in
-  // the same part of town (a tea house 12 km south between a lunch and a dinner in the centre), so they ride out and
-  // back for it. It moves on its own to a day that takes it on time with no such ride, nothing late and no meal out of
-  // its slot; with no such day it waits, and the hours it leaves are filled below. A place everyone on the day shares
-  // is the day's plan and stays, and so does a meal (its slot decides where it goes)
+  // a ride out and back: the day's line leaves a part of town and comes back to it (a tea house 12 km south between a
+  // lunch and a dinner in the centre; a street next to the first stop, planned after a stop across town). One of the
+  // stops that make it moves on its own to a day that takes it on time with no such ride, nothing late and no meal
+  // out of its slot: the place of the fewest people first (one couple's own before what everyone there shares), the
+  // far one before the two near each other. When no day takes any of them, a place only some of the day's people
+  // liked waits (and so does a place of a couple that is alone that day), the least wanted first; the hours it
+  // leaves are filled below. A place everyone on a shared day liked only ever moves, and a meal stays (its slot
+  // decides where it goes)
   const lineOf = (day: number, c: string) =>
     [...timesOf(day)]
       .filter(([id]) => unitById.get(id)!.couples.includes(c) && pt(unitById.get(id)!))
@@ -1117,12 +1120,17 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       .map(([id]) => unitById.get(id)!)
   const detours = (day: number, c: string) => {
     const line = lineOf(day, c)
-    const found: Unit[] = []
+    const far = new Set<Unit>()
+    const near = new Set<Unit>()
     for (let i = 2; i < line.length; i++)
-      for (let j = 0; j < i - 1; j++)
-        if (km(line[i].point!, line[j].point!) <= BACK_NEAR)
-          for (let q = j + 1; q < i; q++) if (km(line[q].point!, line[j].point!) >= BACK_FAR && !found.includes(line[q])) found.push(line[q])
-    return found
+      for (let j = 0; j < i - 1; j++) {
+        if (km(line[i].point!, line[j].point!) > BACK_NEAR) continue
+        const out = line.slice(j + 1, i).filter((q) => km(q.point!, line[j].point!) >= BACK_FAR)
+        if (!out.length) continue
+        for (const q of out) far.add(q)
+        near.add(line[i]).add(line[j])
+      }
+    return { far, near }
   }
   for (const d of days) {
     for (const c of d.at.keys()) {
@@ -1130,9 +1138,13 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
         const here = dayState(d.day)
         if (!here.back) break
         const all = together(d, c).length
-        let fixedIt = false
-        for (const u of detours(d.day, c)) {
-          if (isMeal(u) || whoOn(u, d).length >= all) continue
+        const { far, near } = detours(d.day, c)
+        const cands = [...far, ...[...near].filter((u) => !far.has(u))]
+          .filter((u) => !isMeal(u))
+          .sort((a, b) => whoOn(a, d).length - whoOn(b, d).length || Number(far.has(b)) - Number(far.has(a)) || a.priority - b.priority || (a.id < b.id ? -1 : 1))
+        // where each could go; off the day first, to see that the ride really is its doing
+        const tries: { u: Unit; to: number | null }[] = []
+        for (const u of cands) {
           put(u, null)
           const left = dayState(d.day)
           if (left.back >= here.back || left.bad > here.bad || left.meals < here.meals) {
@@ -1142,7 +1154,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
           let best: number | null = null
           let bestD = Infinity
           for (const day of options.get(u.id)!) {
-            if (day === d.day || isAway(byDay.get(day)!, u) || !fits(u, day)) continue
+            if (day === d.day || (isAway(byDay.get(day)!, u) && blockedAway(u, day)) || !fits(u, day, false, true)) continue
             const before = dayState(day)
             const dl = delta(u, day)
             put(u, day)
@@ -1155,11 +1167,12 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
               best = day
             }
           }
-          if (best != null) put(u, best)
-          fixedIt = true
-          break
+          put(u, d.day)
+          tries.push({ u, to: best })
         }
-        if (!fixedIt) break
+        const pick = tries.find((t) => t.to != null) ?? tries.find((t) => whoOn(t.u, d).length < all || all === 1)
+        if (!pick) break
+        put(pick.u, pick.to)
       }
     }
   }

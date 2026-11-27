@@ -567,6 +567,37 @@ const tests = {
     const way = E.plan(one, us.filter((x) => x.id !== 'bento'), [])
     t(way.placed.has('tea') && back(lineOf(way, 1, 'B')) === 0, `with no lunch in the centre: ${lineOf(way, 1, 'B').join(' > ')}`)
   },
+  r16: (t) => {
+    // both couples reach town at 14:00. A kitchen street across town that closes at 17:00 comes first; then the mall
+    // by the hotel both liked, and couple A's dinner. Couple B's own market is next to the kitchen street: after the
+    // mall it is a ride back across town. It goes to a day that takes it without that ride, or waits
+    const k = (x = {}) => pres({ start: H('14:00'), ...x })
+    const u = (id, x = {}) => unit(id, { couples: ['A', 'B'], category: 'shopping', priority: 4, mins: 90, ...x })
+    const STREET = east(TOKYO, 3.5, 3)
+    const us = [
+      u('street', { opens: H('9:30'), closes: H('17:00'), priority: 5.5, point: STREET }),
+      u('mall', { best: 'afternoon', opens: H('11:00'), closes: H('21:00'), point: east(TOKYO, 0.2) }),
+      u('market', { couples: ['B'], opens: H('10:00'), closes: H('20:00'), priority: 3.5, point: east(STREET, -0.9) }),
+      u('grill', { couples: ['A'], category: 'food', best: 'evening', mins: 120, opens: H('17:30'), closes: H('23:00'), priority: 3.3, point: east(TOKYO, -1, -3) }),
+    ]
+    const pts = new Map(us.map((x) => [x.id, x.point]))
+    const back = (out, d, c) => E.outAndBack([...out.placed].filter(([id, p]) => p.day === d && us.find((x) => x.id === id).couples.includes(c)).sort((a, b) => a[1].start - b[1].start).map(([id]) => pts.get(id)))
+    const one = [day(1, { A: k(), B: k() })]
+    const out = E.plan(one, us, [])
+    t(back(out, 1, 'B') === 0, `couple B rides back across town: ${[...out.placed].filter(([id]) => id !== 'grill').sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')}`)
+    t(['street', 'mall', 'grill'].every((id) => out.placed.has(id)), 'a place both liked, or the dinner, was taken off for it')
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size, 'a second run changed the plan')
+    // with a morning of their own the next day, the market is planned there
+    const two = E.plan([one[0], day(2, { B: pres() })], us, [])
+    t(two.placed.get('market')?.day === 2 && back(two, 1, 'B') === 0, `with a second day: the market on day ${two.placed.get('market')?.day ?? '-'}`)
+    // a couple alone that day (the others fly in later): the same ride back is not planned for them either, and the
+    // places both liked stay
+    const lone = us.filter((x) => x.id !== 'grill').map((x) => ({ ...x, couples: ['B'] }))
+    const alone = E.plan([day(1, { B: k() })], lone, [])
+    t(back(alone, 1, 'B') === 0, `a couple alone rides back across town: ${[...alone.placed].sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')}`)
+    t(alone.placed.size >= 2, `a couple alone: only ${alone.placed.size} of 3 places left on the day`)
+  },
 }
 
 const only = process.argv.slice(2)
@@ -579,7 +610,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }
