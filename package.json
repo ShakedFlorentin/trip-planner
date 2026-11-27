@@ -21,7 +21,8 @@
     "test:guest": "node scripts/guest-prompt-test.mjs",
     "test:review-photo": "node scripts/review-photo-test.mjs",
     "test:photo-send": "node scripts/photo-send-test.mjs",
-    "test:album": "node scripts/album-test.mjs"
+    "test:album": "node scripts/album-test.mjs",
+    "test:ux-fixes": "node scripts/ux-fixes-test.mjs"
   },
   "dependencies": {
     "@capacitor/app-launcher": "^8.0.1",

@@ -7,6 +7,7 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
+import { tripLoadFailure } from './screenLogic'
 import { LoaderCircle, MapPinOff, Wand2 } from 'lucide-react'
 import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
@@ -304,10 +305,22 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
     const back = lastTrip()
     return <TripPicker onPick={choose} trips={tripIds} backTo={back && tripIds.includes(back) ? back : null} />
   }
-  return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
+  // the trip is deleted or this person was removed: drop it from the list too, or it would be offered again
+  const forgetGone = () => {
+    const ids = tripIds.filter((x) => x !== tripId)
+    setTripIds(ids)
+    writeCache('memberTrips:' + userId, ids)
+    try {
+      if (localStorage.getItem('lastTrip') === tripId) localStorage.removeItem('lastTrip')
+    } catch {
+      // the next launch just tries it once more
+    }
+    choose(null)
+  }
+  return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} onGone={forgetGone} />
 }
 
-function TripApp(props: { tripId: string; userId: string; onLeave: () => void }) {
+function TripApp(props: { tripId: string; userId: string; onLeave: () => void; onGone: () => void }) {
   const { tripId } = props
   // the last good copy opens the app with no network
   const [tripCache] = useState(() => readCache<Trip>('trip:' + tripId))
@@ -328,9 +341,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [album, setAlbum] = useState(false)
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
+  // the wand's status line on the Plan tab: the stage it is at, or why it stopped, with a Retry
+  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'slow'>(null)
   useEffect(
     () => () => {
       wandRun.current?.stop()
+      setWandNote(null)
     },
     [tripId],
   )
@@ -341,8 +357,6 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (wandRun.current) return
     setReplanning(true)
   }
-  // the wand's status line on the Plan tab: the stage it is at, or why it stopped, with a Retry
-  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'slow'>(null)
   const wand = () => {
     if (wandRun.current) return
     let stopped = false
@@ -361,9 +375,9 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       setWandNote(null)
       say(msg, { error, duration: 2500 })
     }
-    const stopWith = (note: 'failed' | 'slow') => {
+    const fail = () => {
       run.stop()
-      setWandNote(note)
+      setWandNote('failed')
     }
     const read = async () => {
       try {
@@ -380,18 +394,22 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       await replan(tripId)
       if (stopped) return
       setWandNote('work')
-      const deadline = Date.now() + 30_000
+      const slowAt = Date.now() + 30_000
+      const giveUpAt = Date.now() + 5 * 60_000
       const poll = async () => {
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return stopWith('failed')
+        if (row?.error && row.error !== before?.error) return fail()
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
           // no rating prompt here: a re-plan is not a moment of delight
           return finish(t('המסלול עודכן'))
         }
-        if (Date.now() >= deadline) return stopWith('slow')
-        timer = setTimeout(poll, 1000)
+        // slow is not failed: the planner may still finish, so keep looking (less often) and only say it takes longer
+        const slow = Date.now() >= slowAt
+        if (slow) setWandNote('slow')
+        if (Date.now() >= giveUpAt) return run.stop()
+        timer = setTimeout(poll, slow ? 5000 : 1000)
       }
       timer = setTimeout(poll, 1000)
     })()
@@ -463,7 +481,10 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         setMembers(m.data as Member[])
         writeCache('members:' + tripId, m.data)
       }
-      setFailed(t.error ? (t.error.code === 'PGRST116' ? 'gone' : 'offline') : '')
+      const why = tripLoadFailure(t.error)
+      // a saved copy of a trip that is gone must not keep showing it
+      if (why === 'gone') setTrip(null)
+      setFailed(why)
       setStale(!!t.error || !!m.error)
       if (!t.error && !m.error) setSyncedAt(Date.now())
     }
@@ -531,7 +552,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (trip) setDay(pointedDay.current ?? currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
-  if (!trip) return failed ? <LoadError gone={failed === 'gone'} onRetry={() => setAttempt((a) => a + 1)} onLeave={props.onLeave} /> : <Loading />
+  if (!trip) return failed ? <LoadError gone={failed === 'gone'} onRetry={() => setAttempt((a) => a + 1)} onLeave={props.onGone} /> : <Loading />
   const me = members.find((m) => m.user_id === props.userId)?.display_name ?? ''
   const openDay = (d: number) => {
     setDay(d)
@@ -564,6 +585,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
+            disabled={wandNote === 'send' || wandNote === 'work' || wandNote === 'slow'}
             onClick={askThenWand}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />

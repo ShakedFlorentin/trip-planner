@@ -1,4 +1,5 @@
 import type { Expense, Report } from './types'
+import { t } from './i18n'
 
 /** A report that is still waiting in the phone's outbox has no status and no id yet: it counts as open. */
 export const reportStatus = (r: Pick<Report, 'status'>): Report['status'] => r.status ?? 'open'
@@ -40,3 +41,22 @@ export const newExpenseCurrency = (shown: string): 'JPY' | 'ILS' => (shown === '
 /** Matches that arrive together are shown one at a time: the first is on screen, the rest wait. */
 export const queueMatches = <T,>(waiting: T[], arrived: T[]) => [...waiting, ...arrived]
 export const nextMatch = <T,>(waiting: T[]) => waiting.slice(1)
+
+/** A save failed: plain words in the app's language. Never the server's raw text (policies, SQL, codes). `fallback` names the failed step when the cause is not one we know. */
+export function errorText(message: string, fallback = t('לא הצלחנו לשמור. נסו שוב בעוד רגע.')) {
+  if (!navigator.onLine || /failed to fetch|network|load failed|timeout|timed out/i.test(message)) return t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
+  if (/row-level security|violates row|permission denied|not allowed|jwt|unauthori[sz]ed|forbidden/i.test(message)) return t('אין לכם הרשאה לשינוי הזה בטיול.')
+  if (/duplicate key|already exists|unique/i.test(message)) return t('זה כבר קיים.')
+  if (/violates (check|foreign key|not-null)|invalid input|null value/i.test(message)) return t('משהו בפרטים לא תקין, ולכן לא נשמר.')
+  return fallback
+}
+
+/**
+ * Why the trip did not load. 'gone': the server answered and the trip is not there for this person (deleted, or they were
+ * removed: .single() finds 0 rows, PGRST116), so Retry can never work. 'offline': anything else, no answer or a server hiccup.
+ */
+export const tripLoadFailure = (error: { code?: string } | null): '' | 'gone' | 'offline' => (!error ? '' : error.code === 'PGRST116' ? 'gone' : 'offline')
+
+/** The calm line after credits moved to the trip, singular for one. */
+export const creditsGivenText = (n: number) =>
+  n === 1 ? t('קרדיט אחד הועבר לטיול. הוא זמין לכולם בטיול.') : t('{n} קרדיטים הועברו לטיול. הם זמינים לכולם בטיול.', { n })

@@ -6,6 +6,7 @@ import { supabase } from '../supabase'
 import type { Trip } from '../types'
 import { dayDate, errorText, fmtDay, mutate } from '../lib'
 import { ymd } from './planUtils'
+import { creditsGivenText } from '../screenLogic'
 import { isEn, lang, locale, setLang, t } from '../i18n'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
@@ -391,7 +392,7 @@ export function CreditWallet({ tripId }: { tripId: string }) {
     if (error) setMsg(errorText(error.message))
     else if (!(data as { ok?: boolean } | null)?.ok) setMsg(t('אין לך מספיק קרדיטים'))
     else {
-      setMsg(give === 1 ? t('קרדיט אחד הועבר לטיול. הוא זמין לכולם בטיול.') : t('{n} קרדיטים הועברו לטיול. הם זמינים לכולם בטיול.', { n: give }))
+      setMsg(creditsGivenText(give))
       setDone(true)
       tap.current = null
     }

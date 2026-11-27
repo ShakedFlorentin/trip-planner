@@ -405,7 +405,7 @@ function BookingForm(props: {
     let filePath = f.file_path ?? null
     if (file) {
       if (!isDocType(file.type)) {
-        say(t('העלאת הקובץ נכשלה: {msg}', { msg: 'PDF, JPG, PNG' }), { error: true })
+        setErr(t('אפשר לצרף רק PDF, JPG או PNG.'))
         setBusy(false)
         return
       }
@@ -413,7 +413,7 @@ function BookingForm(props: {
       const path = `${tripId}/${crypto.randomUUID()}.${ext}`
       const { error } = await supabase.storage.from('docs').upload(path, file, { contentType: file.type })
       if (error) {
-        setErr(errorText(error.message))
+        setErr(errorText(error.message, t('העלאת הקובץ נכשלה. נסו שוב, או שמרו בלי הקובץ.')))
         setBusy(false)
         return
       }

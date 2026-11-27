@@ -6,6 +6,7 @@ import { isEn, locale, t } from './i18n'
 import { CACHE_PREFIX, readCache, writeCache } from './cache'
 import { dropTableStores, tableStore } from './tableStore'
 import { say } from './toast'
+import { errorText } from './screenLogic'
 
 export { readCache, writeCache }
 
@@ -143,14 +144,7 @@ export const keepRanges = (s: string) =>
     // word, instead of the hyphen sticking to the English before it ("Shibuya Sky-ו teamLab") (78)
     .replace(/([\u05D0-\u05EA])-(?=[A-Za-z0-9])/g, '$1-\u200F')
 
-/** A save failed: plain words in the app's language. Never the server's raw text (policies, SQL, codes). */
-export function errorText(message: string) {
-  if (!navigator.onLine || /failed to fetch|network|load failed|timeout|timed out/i.test(message)) return t('אין אינטרנט, לא נשמר. נסו שוב כשיש קליטה.')
-  if (/row-level security|violates row|permission denied|not allowed|jwt|unauthori[sz]ed|forbidden/i.test(message)) return t('אין לכם הרשאה לשינוי הזה בטיול.')
-  if (/duplicate key|already exists|unique/i.test(message)) return t('זה כבר קיים.')
-  if (/violates (check|foreign key|not-null)|invalid input|null value/i.test(message)) return t('משהו בפרטים לא תקין, ולכן לא נשמר.')
-  return t('לא הצלחנו לשמור. נסו שוב בעוד רגע.')
-}
+export { errorText }
 
 export async function mutate(promise: PromiseLike<{ error: { message: string } | null }>) {
   const { error } = await promise
