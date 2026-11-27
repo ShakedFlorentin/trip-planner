@@ -70,6 +70,8 @@ export const EN_UX: Record<string, string> = {
   'המתכנן מסדר את הימים…': 'The planner is arranging the days…',
   'המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.': 'The planner could not rearrange the days. Your plan is as it was.',
   'זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.': 'This is taking longer than usual. The plan will update by itself when the planner is done.',
+  'אין חיבור לאינטרנט, אז הבקשה לא נשלחה. המסלול נשאר כמו שהיה.': 'No internet, so the request was not sent. Your plan is as it was.',
+  'המתכנן עוד לא סיים. אפשר לנסות שוב מאוחר יותר.': 'The planner has not finished yet. You can try again later.',
   'אפשר לצרף רק PDF, JPG או PNG.': 'You can only attach a PDF, JPG or PNG.',
   'העלאת הקובץ נכשלה. נסו שוב, או שמרו בלי הקובץ.': 'The file did not upload. Try again, or save without the file.',
 }

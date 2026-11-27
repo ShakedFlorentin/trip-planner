@@ -90,6 +90,16 @@ for (const [name, L, E] of [['he', he, null], ['en', en, true]]) {
     eq(L.tripLoadFailure({ code: '42501' }, true), 'offline')
   })
 
+  test(name + ': wand start: offline, refused, accepted, server hiccup', () => {
+    eq(L.wandStartFailure({ error: null }, false), 'offline')
+    eq(L.wandStartFailure(null, true), 'failed')
+    eq(L.wandStartFailure({ error: { name: 'FunctionsFetchError' } }, true), 'offline')
+    eq(L.wandStartFailure({ error: { name: 'FunctionsHttpError', context: { status: 401 } } }, true), 'failed')
+    eq(L.wandStartFailure({ error: { name: 'FunctionsHttpError', context: { status: 403 } } }, true), 'failed')
+    eq(L.wandStartFailure({ error: { name: 'FunctionsHttpError', context: { status: 504 } } }, true), '')
+    eq(L.wandStartFailure({ error: null }, true), '')
+  })
+
   test(name + ': wallet line is singular for 1 and plural with the number otherwise', () => {
     eq(L.creditsGivenText(1), say('קרדיט אחד הועבר לטיול. הוא זמין לכולם בטיול.', '1 credit moved to the trip. Everyone on the trip can use it.'))
     eq(L.creditsGivenText(5), say('5 קרדיטים הועברו לטיול. הם זמינים לכולם בטיול.', '5 credits moved to the trip. Everyone on the trip can use them.'))

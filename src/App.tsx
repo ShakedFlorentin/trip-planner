@@ -7,7 +7,7 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
-import { goneConfirmed, tripLoadFailure } from './screenLogic'
+import { goneConfirmed, tripLoadFailure, wandStartFailure } from './screenLogic'
 import { LoaderCircle, MapPinOff, Wand2 } from 'lucide-react'
 import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
@@ -342,7 +342,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
   // the wand's status line on the Plan tab: the stage it is at, or why it stopped, with a Retry
-  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'slow'>(null)
+  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'offline' | 'slow' | 'late'>(null)
   useEffect(
     () => () => {
       wandRun.current?.stop()
@@ -375,9 +375,9 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
       setWandNote(null)
       say(msg, { error, duration: 2500 })
     }
-    const fail = () => {
+    const fail = (kind: 'failed' | 'offline' = 'failed') => {
       run.stop()
-      setWandNote('failed')
+      setWandNote(kind)
     }
     const read = async () => {
       try {
@@ -391,8 +391,11 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
       // what the row says before the tap, so an old error or run time is not taken for the answer (and no clock skew)
       const before = await read()
       if (stopped) return
-      await replan(tripId)
+      const res = await replan(tripId)
       if (stopped) return
+      // offline or refused (401/403): say so now, not "working, will update by itself"
+      const bad = wandStartFailure(res, navigator.onLine)
+      if (bad) return fail(bad)
       setWandNote('work')
       const slowAt = Date.now() + 30_000
       const giveUpAt = Date.now() + 5 * 60_000
@@ -400,7 +403,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return fail()
+        if (row?.error && row.error !== before?.error) return fail('failed')
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
           // no rating prompt here: a re-plan is not a moment of delight
           return finish(t('המסלול עודכן'))
@@ -408,7 +411,11 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
         // slow is not failed: the planner may still finish, so keep looking (less often) and only say it takes longer
         const slow = Date.now() >= slowAt
         if (slow) setWandNote('slow')
-        if (Date.now() >= giveUpAt) return run.stop()
+        if (Date.now() >= giveUpAt) {
+          // stop looking, free the button, and say it is not finished: not "failed", the planner may still finish
+          run.stop()
+          return setWandNote('late')
+        }
         timer = setTimeout(poll, slow ? 5000 : 1000)
       }
       timer = setTimeout(poll, 1000)
@@ -622,15 +629,17 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
       <main className={'tab-' + tab}>
         <h1 className="large-title">{TABS.find((t) => t.id === tab)?.label}</h1>
         {tab === 'plan' && wandNote && (
-          <p className={'wand-note' + (wandNote === 'failed' ? ' fail' : '')} role={wandNote === 'failed' ? 'alert' : 'status'}>
+          <p className={'wand-note' + (wandNote === 'failed' || wandNote === 'offline' ? ' fail' : '')} role={wandNote === 'failed' || wandNote === 'offline' ? 'alert' : 'status'}>
             {(wandNote === 'send' || wandNote === 'work') && <Icon as={LoaderCircle} className="spin" />}
             <span>
               {wandNote === 'send' && t('שולחים את הבקשה למתכנן…')}
               {wandNote === 'work' && t('המתכנן מסדר את הימים…')}
               {wandNote === 'failed' && t('המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.')}
+              {wandNote === 'offline' && t('אין חיבור לאינטרנט, אז הבקשה לא נשלחה. המסלול נשאר כמו שהיה.')}
               {wandNote === 'slow' && t('זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.')}
+              {wandNote === 'late' && t('המתכנן עוד לא סיים. אפשר לנסות שוב מאוחר יותר.')}
             </span>
-            {wandNote === 'failed' && (
+            {(wandNote === 'failed' || wandNote === 'offline' || wandNote === 'late') && (
               <button className="link" onClick={wand}>
                 {t('נסו שוב')}
               </button>

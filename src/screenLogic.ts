@@ -69,3 +69,18 @@ export const goneConfirmed = (hasUser: boolean, again: { error: unknown; data: u
 /** The calm line after credits moved to the trip, singular for one. */
 export const creditsGivenText = (n: number) =>
   n === 1 ? t('קרדיט אחד הועבר לטיול. הוא זמין לכולם בטיול.') : t('{n} קרדיטים הועברו לטיול. הם זמינים לכולם בטיול.', { n })
+
+/**
+ * What the planner's answer to the wand tap says. 'offline': no network, so nothing was sent. 'failed': no answer object, or the
+ * server refused (4xx, e.g. 401/403), so waiting is pointless. '': keep watching: it was accepted, or it is a 5xx or a timeout
+ * and the planner may still finish (the poll of plan_state decides).
+ */
+export const wandStartFailure = (res: { error?: { name?: string; context?: { status?: number } } | null } | null, online: boolean): '' | 'offline' | 'failed' => {
+  if (!online) return 'offline'
+  if (!res) return 'failed'
+  const e = res.error
+  if (!e) return ''
+  if (e.name === 'FunctionsFetchError') return 'offline'
+  const status = e.context?.status
+  return typeof status === 'number' && status >= 400 && status < 500 ? 'failed' : ''
+}
