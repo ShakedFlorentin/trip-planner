@@ -377,6 +377,21 @@ const tests = {
     t(G.areaPoint('טוקיו', 'Somewhere nice', '1-2-3 Nowhere') === null, 'an area and an address that fit no neighbourhood stay unknown') // he-only
     t(G.areaPoint('טוקיו', 'Various', null) === null && G.areaPoint(null, 'Ebisu', null) === null, 'no place named, or no city: unknown') // he-only
   },
+  r9: (t) => {
+    // a place nobody knows the point of does not go between two places that are known: the ride to it and from it
+    // can't be measured, so it comes first or last and the known stretch of the day stays in one piece
+    const d = [day(1, { A: pres() })]
+    const out = E.plan(d, [
+      unit('west', { best: 'morning', mins: 90, point: east(TOKYO, -6) }),
+      unit('east', { best: 'afternoon', mins: 90, point: east(TOKYO, 6) }),
+      unit('late', { category: 'shopping', best: 'evening', mins: 90, point: east(TOKYO, 6, 1) }),
+      unit('nowhere', { mins: 60, approx: true }),
+    ], [])
+    const line = [...out.placed].sort((a, b) => a[1].start - b[1].start).map(([id]) => id)
+    t(line.length === 4, `${line.length} of 4 planned`)
+    const i = line.indexOf('nowhere')
+    t(i === 0 || i === line.length - 1, `the day goes ${line.join(' > ')}`)
+  },
 }
 
 const only = process.argv.slice(2)

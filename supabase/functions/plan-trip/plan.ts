@@ -1061,6 +1061,8 @@ const MISSED_COST = 150
 const MEAL_OFF_COST = 300
 const CLOSED_COST = 1000
 const BACK_COST = 20
+// a place with no known point between two places that are known (not a meal: its slot decides where it goes)
+const UNKNOWN_MID = 60
 /** The point to measure rides from. */
 const pt = (u: Unit) => (u.approx ? null : u.point)
 /** Would this start leave the place after it closes, or begin after its people's day is over? */
@@ -1138,6 +1140,8 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
     const fresh = new Set(couples)
     const line = new Map<string, Point[]>(couples.map((c) => [c, []]))
     const nightDone = new Set<string>()
+    // places with no known point since the last known one, per couple: the next known place closes them in
+    const blind = new Map<string, number>()
     let cost = 0
     for (const u of order) {
       const cs = who.get(u.id)!
@@ -1179,7 +1183,11 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[]): Map<string, Placed> {
         where.set(c, pt(u))
         busy.get(c)!.push([s, s + u.mins])
         if (isMeal(u)) meal.set(c, s)
-        if (pt(u)) line.get(c)!.push(pt(u)!)
+        if (pt(u)) {
+          cost += (blind.get(c) ?? 0) * UNKNOWN_MID
+          blind.set(c, 0)
+          line.get(c)!.push(pt(u)!)
+        } else if (!isMeal(u) && line.get(c)!.length) blind.set(c, (blind.get(c) ?? 0) + 1)
         if (u.best === 'night') nightDone.add(c)
       }
     }
