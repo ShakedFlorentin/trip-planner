@@ -7,7 +7,7 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
-import { tripLoadFailure } from './screenLogic'
+import { goneConfirmed, tripLoadFailure } from './screenLogic'
 import { LoaderCircle, MapPinOff, Wand2 } from 'lucide-react'
 import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
@@ -481,8 +481,31 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
         setMembers(m.data as Member[])
         writeCache('members:' + tripId, m.data)
       }
-      const why = tripLoadFailure(t.error)
-      // a saved copy of a trip that is gone must not keep showing it
+      let why = tripLoadFailure(t.error, true)
+      if (t.error?.code === 'PGRST116') {
+        // 0 rows can also mean an expired login (the request went out as anon). Gone only after a session check and a second look.
+        let session = false
+        try {
+          session = !!(await supabase.auth.getSession()).data.session
+        } catch {
+          session = false
+        }
+        why = tripLoadFailure(t.error, session)
+        if (why === 'gone') {
+          let sure = false
+          try {
+            const [u, again] = await Promise.all([
+              supabase.auth.getUser(),
+              supabase.from('trips').select('id').eq('id', tripId).maybeSingle(),
+            ])
+            sure = goneConfirmed(!!u.data.user && !u.error, again)
+          } catch {
+            sure = false
+          }
+          if (!sure) why = 'offline'
+        }
+      }
+      // a saved copy of a trip that is gone must not keep showing it, but only once that is certain
       if (why === 'gone') setTrip(null)
       setFailed(why)
       setStale(!!t.error || !!m.error)
@@ -691,7 +714,7 @@ function LoadError({ onRetry, onLeave, gone }: { onRetry: () => void; onLeave?: 
   if (gone && onLeave)
     return (
       <div className="center" role="alert">
-        <EmptyState icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} />
+        <EmptyState icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} second={{ label: t('נסו שוב'), onClick: onRetry }} />
       </div>
     )
   return (

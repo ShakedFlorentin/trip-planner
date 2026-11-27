@@ -53,9 +53,18 @@ export function errorText(message: string, fallback = t('לא הצלחנו לש�
 
 /**
  * Why the trip did not load. 'gone': the server answered and the trip is not there for this person (deleted, or they were
- * removed: .single() finds 0 rows, PGRST116), so Retry can never work. 'offline': anything else, no answer or a server hiccup.
+ * removed: .single() finds 0 rows, PGRST116), so Retry can never work. Without a session the same request goes out as anon and
+ * also finds 0 rows (RLS lets only signed-in users read trips), so that is 'offline', never 'gone'. Anything else: 'offline'.
  */
-export const tripLoadFailure = (error: { code?: string } | null): '' | 'gone' | 'offline' => (!error ? '' : error.code === 'PGRST116' ? 'gone' : 'offline')
+export const tripLoadFailure = (error: { code?: string } | null, hasSession: boolean): '' | 'gone' | 'offline' =>
+  !error ? '' : error.code === 'PGRST116' && hasSession ? 'gone' : 'offline'
+
+/**
+ * The second look before a trip is treated as gone (and forgotten from the list): the server confirmed the user (getUser, not
+ * the local token) and asked again with no error and no row. Any doubt is false.
+ */
+export const goneConfirmed = (hasUser: boolean, again: { error: unknown; data: unknown } | null): boolean =>
+  hasUser && !!again && !again.error && !again.data
 
 /** The calm line after credits moved to the trip, singular for one. */
 export const creditsGivenText = (n: number) =>

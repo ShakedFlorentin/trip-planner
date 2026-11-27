@@ -73,13 +73,21 @@ for (const [name, L, E] of [['he', he, null], ['en', en, true]]) {
     if (L.errorText('Failed to fetch', 'upload failed') === 'upload failed') throw new Error('offline hidden')
   })
 
-  test(name + ': no error is no failure', () => eq(L.tripLoadFailure(null), ''))
-  test(name + ': PGRST116 (no row: trip deleted or member removed) is gone', () => eq(L.tripLoadFailure({ code: 'PGRST116' }), 'gone'))
+  test(name + ': no error is no failure', () => eq(L.tripLoadFailure(null, true), ''))
+  test(name + ': PGRST116 (no row: trip deleted or member removed) is gone', () => eq(L.tripLoadFailure({ code: 'PGRST116' }, true), 'gone'))
+  test(name + ': PGRST116 with no session (anon request, expired login) is offline, never gone', () => eq(L.tripLoadFailure({ code: 'PGRST116' }, false), 'offline'))
+  test(name + ': gone needs a confirmed user and a second empty answer', () => {
+    eq(L.goneConfirmed(true, { error: null, data: null }), true)
+    eq(L.goneConfirmed(false, { error: null, data: null }), false)
+    eq(L.goneConfirmed(true, { error: { code: '503' }, data: null }), false)
+    eq(L.goneConfirmed(true, { error: null, data: { id: 'x' } }), false)
+    eq(L.goneConfirmed(true, null), false)
+  })
   test(name + ': any other error, or one with no code, is offline, never gone', () => {
-    eq(L.tripLoadFailure({ code: '' }), 'offline')
-    eq(L.tripLoadFailure({}), 'offline')
-    eq(L.tripLoadFailure({ code: '503' }), 'offline')
-    eq(L.tripLoadFailure({ code: '42501' }), 'offline')
+    eq(L.tripLoadFailure({ code: '' }, true), 'offline')
+    eq(L.tripLoadFailure({}, true), 'offline')
+    eq(L.tripLoadFailure({ code: '503' }, true), 'offline')
+    eq(L.tripLoadFailure({ code: '42501' }, true), 'offline')
   })
 
   test(name + ': wallet line is singular for 1 and plural with the number otherwise', () => {
