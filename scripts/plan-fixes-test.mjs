@@ -1,7 +1,8 @@
 // One small scenario per planner fix of 26 Nov 2026 (meals, order on the map, hours and sunset, couples and days apart,
 // real points, move/landing/departure days, baby and card facts). Each fails on the code before its fix.
 // r1…r7: the second round (what a replay of a real trip showed), same rule: each fails on the code before its fix.
-// r8 on: the third round (what was still worse than the plan it replaced).
+// r8…r12: the third round (what was still worse than the plan it replaced).
+// r13 on: the fourth round (a walk planned after dark, a late lunch on the day they arrive, rides that grew).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { engine, sunsetMin } from './plan-harness.mjs'
 
@@ -448,6 +449,42 @@ const tests = {
     const own = E.plan(d, [...us, unit('soba', { couples: ['B'], category: 'food', best: 'midday', mins: 60, opens: H('11:00'), closes: H('16:00'), point: east(TOKYO, -1) })], [])
     t(own.placed.size === 5 && at(own, 'market') < H('11:00'), `with a lunch for each couple: ${own.placed.size} of 5 planned, the market at ${say(at(own, 'market'))}`)
   },
+  r13: (t) => {
+    // a walk in the open whose card names no time of day ("any") and has no hours: its name or its plan line says it
+    // is a path, so it is held to daylight like a morning shrine path (made-up cards)
+    if (!F) return t(false, 'no flags.ts')
+    const card = (x) => ({ category: 'sight', name: 'x', best: 'any', visitMins: 90, opens: null, closes: null, notes: [], ...x })
+    const yes = (name, x) => t(F.daylightOnly(card({ name, ...x })), `"${name}" is not held to daylight`)
+    const no = (name, x) => t(!F.daylightOnly(card({ name, ...x })), `"${name}" is held to daylight`)
+    yes("Thinker's Path (Shiko-no-michi)", { notes: ['להתחיל מהמקדש לפני 16:30', 'Start at the temple before 16:30 and head south'] })
+    yes('Old Canal', { notes: [null, 'A quiet walk along the water'] })
+    yes('Kamo Riverbank', { notes: ['הליכה שקטה לאורך הנהר', null] })
+    yes('Cedar Trail')
+    // nothing says it is a walk: a crossing, a neon street or a small shrine open all night stays as it was
+    no('Neon Crossing')
+    no('Corner Shrine', { visitMins: 15, notes: [null, 'Small and quiet, worth a stop only if you are at the station'] })
+    no('All-Night Arcade', { notes: [null, 'Open 24/7, no queue early or late'] })
+    no('Sign Street', { notes: [null, 'No walk-ins after 18:00, parking behind'] })
+    // the card asks for the evening or the night, was never checked, has hours, or is not a sight: left alone
+    no('Lantern Path', { best: 'evening' })
+    no('Firefly Trail', { best: 'night' })
+    no('Riverside Path', { best: null })
+    no('Garden Path Museum', { opens: H('10:00'), closes: H('21:00') })
+    no('Canal Walk Shops', { category: 'shopping' })
+    // and in the plan: with the flag, the walk is over by dusk on a full winter day, after a dinner or not
+    const d = [day(6, { A: pres() })]
+    const dusk = sunsetMin(d[0].date, TOKYO)
+    const us = (outdoor) => [
+      unit('aquarium', { best: 'morning', mins: 120, opens: H('10:00'), closes: H('17:00'), priority: 4 }),
+      unit('market', { category: 'food', best: 'midday', mins: 75, opens: H('10:00'), closes: H('17:00'), priority: 4 }),
+      unit('shops', { category: 'shopping', best: 'afternoon', mins: 90, opens: H('11:00'), closes: H('20:00'), priority: 4, point: east(TOKYO, 0.5) }),
+      unit('grill', { category: 'food', best: 'evening', mins: 90, opens: H('17:00'), closes: H('23:00'), priority: 4 }),
+      unit('path', { mins: 90, opens: null, closes: null, point: east(TOKYO, 3, 2), outdoor }),
+    ]
+    const out = E.plan(d, us(true), [])
+    const p = out.placed.get('path')
+    t(!p || p.start + 90 <= dusk + 20, `the walk ends ${p ? E.hhmm(p.start + 90) : '-'}, dusk is ${E.hhmm(dusk)}`)
+  },
 }
 
 const only = process.argv.slice(2)
@@ -460,7 +497,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }

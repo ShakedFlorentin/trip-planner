@@ -33,14 +33,23 @@ export function servesDinner(c: CardFacts) {
   return SERVES.test([c.name, ...c.notes].filter(Boolean).join(' '))
 }
 
+// the card itself calls the place a walk in the open: a path, a trail, a promenade, a garden or a park (its name or its
+// plan line). Read only for a sight with no hours at all, so "Sea Life Park" (an aquarium that closes at 17:00) and a
+// "Floating Garden" deck open till late are never asked. "walk-ins" and "parking" are not walks
+const WALK =
+  /\b(?:path|trail|walk(?!-?ins?\b)(?:s|ing)?|stroll|hik(?:e|ing)|promenade|garden|park|grove|forest)\b|-michi\b|散歩|遊歩道|の道|庭園|公園|שביל|הליכה|טיילת|פארק|חורשה/i
+
 /**
- * A sight that has to be seen in daylight. The cards have no "out in the open" fact, and a name does not say it (a
- * "Sea Life Park" is an aquarium, a "Floating Garden" an observatory deck open till late), so only this much is
- * known: a sight with no opening hours at all (nothing to close: open ground) whose card asks for the daytime. A
- * place with a closing hour is already held to it; a card that asks for the evening or the night is left alone.
+ * A sight that has to be seen in daylight. The cards have no "out in the open" fact, and a name alone does not say it
+ * (a "Sea Life Park" is an aquarium, a "Floating Garden" an observatory deck open till late), so only this much is
+ * known: a sight with no opening hours at all (nothing to close: open ground) whose card asks for the daytime, or
+ * whose card names no time of day ("any") and calls the place a walk, a path, a garden or a park. A place with a
+ * closing hour is already held to it; a card that asks for the evening or the night is left alone, and so is a card
+ * never checked, or one with no hours and no hour of the day that says nothing of a walk (a crossing, a neon street).
  */
 export function daylightOnly(c: CardFacts) {
   if (c.category !== 'sight') return false
   if (c.opens != null || c.closes != null) return false
-  return c.best === 'morning' || c.best === 'midday' || c.best === 'afternoon'
+  if (c.best === 'morning' || c.best === 'midday' || c.best === 'afternoon') return true
+  return c.best === 'any' && WALK.test([c.name, ...c.notes].filter(Boolean).join(' '))
 }
