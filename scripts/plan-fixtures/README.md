@@ -50,7 +50,10 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   the map, hours and season, couples and days apart, real points, move/landing/departure days, baby and card facts),
   and `r1` to `r7` for the round-2 fixes of 2026-11-27 (a place both couples liked comes first, flags from the card's
   facts in `flags.ts`, a lone far place is not a day trip, meals on a day in another city, an early dinner on the day
-  they fly home, known points before unknown ones, an "afternoon" restaurant as a late lunch).
+  they fly home, known points before unknown ones, an "afternoon" restaurant as a late lunch),
+  and `r8` to `r12` for round 3 (a place with no coordinates at its neighbourhood's station, an unknown point first or
+  last in the day's order, a couple that flies out in the morning is not company for the day, a place left out goes
+  into a day's free hours when the day's times take it, a shared morning market is the lunch of the couple with none).
   `node scripts/plan-fixes-test.mjs r3 r4` runs only those; `PLAN_DIR=<a copy of plan-trip>` runs them on another
   version (each must fail on the version before its fix).
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
