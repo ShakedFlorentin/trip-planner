@@ -60,6 +60,10 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   out and back).
   and `r16` for round 5 (any stop that makes the day's line ride back across town moves to another day, the place of
   the fewest people first; one couple's own place, or a place of a couple alone that day, waits when no day takes it).
+  and `r17` to `r19` for round 6 (no day keeps a ride out and back, also when every stop on it is shared: the day is
+  timed again, a stop moves or changes places with one of another day, or the fewest, least wanted wait; a day with no
+  meal gets one from a day with two, a stop that is not a meal giving way if the pace has no room; a lunch pushed out
+  of the lunch hours by a stop that had to come first comes back into them, and that stop gives way).
   `node scripts/plan-fixes-test.mjs r3 r4` runs only those; `PLAN_DIR=<a copy of plan-trip>` runs them on another
   version (each must fail on the version before its fix).
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
