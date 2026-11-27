@@ -44,6 +44,13 @@ A 20-day, four-city, two-couple trip with 126 liked places, all invented people.
 `node scripts/plan-fixtures/gen/make-trip-20-days.mjs scripts/plan-fixtures/trip-20-days.json`. Change the generator
 and run it again; do not edit the JSON. Never put real members' names in a fixture.
 
+## Four couples (`four-couples.json`)
+
+Four invented couples, 8 days, Tokyo then Kyoto, 42 places taken from the made-up trip above. One couple sleeps in
+another part of Tokyo, one lands on day 3 with a baby, one flies home on day 7, and each place is liked by all four, by
+three, by two or by one couple alone. It is there so a trip of more than two couples is planned in every run of the
+tests. Generated: `node scripts/plan-fixtures/gen/make-four-couples.mjs scripts/plan-fixtures/four-couples.json`.
+
 ## The fixes test and the numbers
 
 - `npm run test:plan-fixes` (`scripts/plan-fixes-test.mjs`): one test per planner fix of 2026-11-26 (meals, order on
@@ -109,6 +116,8 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
 days, Tokyo then Kyoto, 24 made-up places, made-up people. A stand-in for the Supabase client serves the rows; there is
 no network and no database. The shapes: one, two and three people with no couples (the app's own trips: the vote rows
 come as `couples: null, voted: [], yes: []`), one named couple, a couple and a party of one, a couple and a member with
-no couple, and the where-to-sleep answer for a trip with no couples. Each must plan its places, take nothing off, have
+no couple, and the where-to-sleep answer for a trip with no couples. Then two couples and a member with no couple:
+that member's like counts as one more yes (a `~` name in the vote rows, see `parties.ts`), their no or silence takes
+nothing off, they get no days of their own, and the `~` name reaches nothing the app reads. Each must plan its places, take nothing off, have
 no out-and-back and no bad time, fill meals, and show the app no made-up couple name.
 `PLAN_DIR=<another copy of supabase/functions/plan-trip>` runs it on that code (the copy needs `_shared` beside it).
