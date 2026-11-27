@@ -12,3 +12,12 @@ const LINE: Record<FailCode, string> = {
 export function failBody(code: FailCode, _e?: unknown): { error: FailCode; message: string } {
   return { error: code, message: LINE[code] }
 }
+
+/**
+ * What plan_state.error holds after a failed run: the code and when, `plan_failed:2026-11-27T10:00:00.000Z`. The
+ * app calls a run failed when this text is not the one it read before asking, so the time is what lets it see the
+ * same failure a second time (plan_state has no column for when a run started).
+ */
+export function failMark(code: FailCode, at: Date): string {
+  return `${code}:${at.toISOString()}`
+}

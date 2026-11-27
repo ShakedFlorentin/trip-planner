@@ -10,6 +10,7 @@ import { buildDays, type Sleep } from './presence.ts'
 import { failBody, type FailCode } from './errors.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
+import { loop } from './lease.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
@@ -19,7 +20,6 @@ const cors = {
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MEDIA_URL = 'https://shakedflorentin.github.io/trip-planner/media.json'
-const LEASE_MS = 60_000
 
 // the fallback for a database without the cities table; the table (cities) wins when it exists
 const BASE_POINT: Record<string, Point> = {
@@ -120,57 +120,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  const work = loop(admin, tid)
+  const work = loop(admin, tid, () => run(admin, tid, false))
   edge?.waitUntil(work)
   if (trusted && body?.wait === true) return json(await work)
   return json({ started: true }, 202)
 })
-
-/** One planner at a time per trip: requests that arrive while it runs mark the trip dirty and it runs once more. */
-async function loop(admin: SupabaseClient, tid: string) {
-  await admin.from('plan_state').upsert({ trip_id: tid }, { onConflict: 'trip_id', ignoreDuplicates: true })
-  const acquire = async () => {
-    const now = new Date()
-    const { data } = await admin
-      .from('plan_state')
-      .update({ lease_until: new Date(now.getTime() + LEASE_MS).toISOString(), dirty: false })
-      .eq('trip_id', tid)
-      .or(`lease_until.is.null,lease_until.lt.${now.toISOString()}`)
-      .select('trip_id')
-    return !!data?.length
-  }
-  if (!(await acquire())) {
-    await admin.from('plan_state').update({ dirty: true }).eq('trip_id', tid)
-    // the running one may have finished in between and missed the flag
-    if (!(await acquire())) return { queued: true }
-  }
-  const results: unknown[] = []
-  try {
-    for (let round = 0; round < 2; round++) {
-      // swipes come in bursts: let the burst settle so one run covers it
-      if (round === 0) await new Promise((r) => setTimeout(r, 2000))
-      try {
-        const r = await run(admin, tid, false)
-        results.push(r.stats)
-        await admin.from('plan_state').update({ ran_at: new Date().toISOString(), error: null, summary: r.summary }).eq('trip_id', tid)
-      } catch (e) {
-        // the error itself stays in the function logs; the row the app reads gets the code
-        console.error('plan_failed', tid, e)
-        const code: FailCode = 'plan_failed'
-        await admin.from('plan_state').update({ error: code }).eq('trip_id', tid)
-      }
-      const { data } = await admin.from('plan_state').select('dirty').eq('trip_id', tid).single()
-      if (!data?.dirty) break
-      await admin
-        .from('plan_state')
-        .update({ dirty: false, lease_until: new Date(Date.now() + LEASE_MS).toISOString() })
-        .eq('trip_id', tid)
-    }
-  } finally {
-    await admin.from('plan_state').update({ lease_until: null }).eq('trip_id', tid)
-  }
-  return { results }
-}
 
 type Row = Record<string, unknown>
 type StayRow = {
