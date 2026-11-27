@@ -327,6 +327,9 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
   const [trip, setTrip] = useState<Trip | null>(tripCache?.data ?? null)
   const [members, setMembers] = useState<Member[]>(() => readCache<Member[]>('members:' + tripId)?.data ?? [])
   const [tab, setTab] = useState<Tab>('home')
+  // the wand's answer can arrive after the user left the Plan tab; the toast needs to know where they are now
+  const tabRef = useRef(tab)
+  tabRef.current = tab
   // the ☰ menu and what it opens: each is a sheet over the current page, so closing it returns to the same place (5)
   const [menu, setMenu] = useState(false)
   const [tool, setTool] = useState<MoreTab | null>(null)
@@ -375,9 +378,14 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
       setWandNote(null)
       say(msg, { error, duration: 2500 })
     }
+    // the status line lives on the Plan tab only; on any other tab a short toast says it too, and a tap opens Plan
+    const toastAway = (msg: string) => {
+      if (tabRef.current !== 'plan') say(msg, { error: true, duration: 6000, undo: () => setTab('plan'), undoLabel: t('פתיחת המסלול') })
+    }
     const fail = (kind: 'failed' | 'offline' = 'failed') => {
       run.stop()
       setWandNote(kind)
+      toastAway(kind === 'offline' ? t('אין חיבור לאינטרנט. המסלול לא עודכן.') : t('המתכנן לא הצליח לסדר את הימים.'))
     }
     const read = async () => {
       try {
@@ -414,6 +422,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
         if (Date.now() >= giveUpAt) {
           // stop looking, free the button, and say it is not finished: not "failed", the planner may still finish
           run.stop()
+          toastAway(t('המתכנן עוד לא סיים. אפשר לנסות שוב.'))
           return setWandNote('late')
         }
         timer = setTimeout(poll, slow ? 5000 : 1000)
