@@ -3,12 +3,11 @@ import PassSheet from './Pass'
 import { usePassStatus } from '../pass'
 import { supabase } from '../supabase'
 import { AUDIENCES, CARD_STYLE, CITY_HE, VERDICTS, type Candidate } from '../types'
-import { aiError, cityLabel, localizeCard, mutate, safeUrl, samePlace, useTripAvoidsPorkSeafood, useTripHasBaby } from '../lib'
+import { aiError, cityLabel, errorText, localizeCard, mutate, safeUrl, samePlace, useTripAvoidsPorkSeafood, useTripHasBaby } from '../lib'
 import { isEn, t } from '../i18n'
 import { ArrowRight, Check, Heart, LoaderCircle, Search, Star, X } from 'lucide-react'
 import { Field, Sheet } from '../ui'
 import { Icon } from '../icons'
-import { say } from '../toast'
 
 type Draft = Partial<Candidate> & { link?: string }
 /** A place already in the trip that looks like the one being added. */
@@ -418,7 +417,7 @@ export default function AddPlace({ tripId, userId, me, initial = '', onClose }: 
     // 23505: someone added the same name a moment ago
     if (error?.code === '23505') return 'dup'
     if (error) {
-      say(t('שגיאה: {msg}', { msg: error.message }), { error: true })
+      setErr(errorText(error.message))
       return 'error'
     }
     // suggesting a place counts as liking it
@@ -718,7 +717,6 @@ function DraftForm(props: {
 
   return (
     <>
-      {props.err && <p className="msg">{props.err}</p>}
       {(verdict || d.tabelog_score != null || d.google_score != null) && (
         <div className="row">
           {verdict && <span className={'verdict ' + verdict.tone}>{verdict.label}</span>}
@@ -797,6 +795,7 @@ function DraftForm(props: {
         <textarea value={shown.tip ?? ''} onChange={setTip} rows={2} dir="auto" />
       </Field>
       {weak && <p className="muted small">{t('כדי להוסיף צריך שם, עיר ושכונה.')}</p>}
+      {props.err && <p className="msg" role="alert">{props.err}</p>}
       <button className="primary" onClick={() => props.onSave(d)} disabled={props.busy || weak}>
         {props.busy ? t('שומר…') : t('הוספה')}
       </button>
