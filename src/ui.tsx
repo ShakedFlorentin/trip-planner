@@ -119,7 +119,7 @@ export function Empty(props: { children: ReactNode }) {
  * default; `slim` for the checklist rows), `hero` (Home's photo tile), `card` (a card under it) or `deck` (Discover's card).
  * No shimmer with reduced motion.
  */
-export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card' | 'deck'; slim?: boolean }) {
+export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card' | 'deck' | 'timeline'; slim?: boolean }) {
   if (props.shape === 'hero')
     return (
       <div className="skeleton" aria-hidden="true">
@@ -140,6 +140,20 @@ export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card
           <div className="skeleton-row sk-line" />
           <div className="skeleton-row sk-line short" />
         </div>
+      </div>
+    )
+  if (props.shape === 'timeline')
+    return (
+      <div className="sk-timeline" aria-hidden="true">
+        {Array.from({ length: props.rows ?? 3 }, (_, i) => (
+          <div key={i} className="sk-tl-item">
+            <div className="skeleton-row sk-dot" />
+            <div className="sk-tl-body">
+              <div className="skeleton-row sk-line short" />
+              <div className="skeleton-row sk-line" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   return (

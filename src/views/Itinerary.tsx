@@ -337,7 +337,7 @@ export default function Itinerary({ trip, day, setDay, members = [], userId, onF
       </section>
 
       {loadFailed && <LoadNote onRetry={reloadPlan} />}
-      {entries.length === 0 && loading && <Skeleton rows={3} />}
+      {entries.length === 0 && loading && <Skeleton shape="timeline" rows={4} />}
       {entries.length === 0 && !loading && !loadFailed && (
         <EmptyState
           icon={CalendarDays}

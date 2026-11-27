@@ -1173,6 +1173,13 @@ main { animation: view-in var(--dur-2) var(--ease); }
 .sk-deck-lines { flex: none; display: flex; flex-direction: column; gap: var(--s-2); align-items: flex-end; }
 .skeleton-row.sk-line { height: 14px; width: 70%; border-radius: var(--r-pill); }
 .skeleton-row.sk-line.short { width: 45%; }
+.sk-timeline { display: flex; flex-direction: column; }
+.sk-tl-item { display: grid; grid-template-columns: 44px 1fr; align-items: start; padding-block: var(--s-3); position: relative; }
+.sk-tl-item:not(:last-child)::before { content: ''; position: absolute; inset-inline-start: 21px; top: calc(var(--s-3) + 24px); bottom: calc(-1 * var(--s-3)); width: 2px; background: var(--card); }
+.skeleton-row.sk-dot { width: 24px; height: 24px; border-radius: 50%; margin-inline: auto; }
+.sk-tl-body { display: flex; flex-direction: column; gap: var(--s-2); padding-top: var(--s-1); }
+.sk-tl-body .skeleton-row.sk-line { width: 85%; height: 16px; }
+.sk-tl-body .skeleton-row.sk-line.short { width: 35%; height: 12px; }
 .sk-buttons { justify-content: space-between; min-height: 78px; }
 .skeleton-row.sk-pill { width: 72px; height: 36px; border-radius: var(--r-pill); }
 .skeleton-row.sk-round { width: 60px; height: 60px; border-radius: 50%; }
