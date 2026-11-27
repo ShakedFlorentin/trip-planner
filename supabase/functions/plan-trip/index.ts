@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
+import { failBody, type FailCode } from './errors.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
@@ -74,6 +75,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+  // a failure: the error stays in the function logs, the caller gets a code and a fixed line
+  const fail = (code: FailCode, e: unknown, tid: string) => {
+    console.error(code, tid, e)
+    return json(failBody(code, e), 500)
+  }
   const body = (await req.json().catch(() => null)) as { trip_id?: unknown; dry?: unknown; wait?: unknown; suggest_stays?: unknown; nights?: unknown } | null
   const tid = typeof body?.trip_id === 'string' && UUID.test(body.trip_id) ? body.trip_id : null
   if (!tid) return json({ error: 'trip_id missing' }, 400)
@@ -101,7 +107,7 @@ Deno.serve(async (req) => {
     try {
       return json(await suggestStays(admin, tid, countsOf(body.nights)))
     } catch (e) {
-      return json({ error: String(e instanceof Error ? e.message : e) }, 500)
+      return fail('stays_failed', e, tid)
     }
   }
 
@@ -110,7 +116,7 @@ Deno.serve(async (req) => {
     try {
       return json(await run(admin, tid, true))
     } catch (e) {
-      return json({ error: String(e instanceof Error ? e.stack : e) }, 500)
+      return fail('plan_failed', e, tid)
     }
   }
 
@@ -148,8 +154,10 @@ async function loop(admin: SupabaseClient, tid: string) {
         results.push(r.stats)
         await admin.from('plan_state').update({ ran_at: new Date().toISOString(), error: null, summary: r.summary }).eq('trip_id', tid)
       } catch (e) {
-        console.error('plan failed', e)
-        await admin.from('plan_state').update({ error: String(e instanceof Error ? e.message : e).slice(0, 500) }).eq('trip_id', tid)
+        // the error itself stays in the function logs; the row the app reads gets the code
+        console.error('plan_failed', tid, e)
+        const code: FailCode = 'plan_failed'
+        await admin.from('plan_state').update({ error: code }).eq('trip_id', tid)
       }
       const { data } = await admin.from('plan_state').select('dirty').eq('trip_id', tid).single()
       if (!data?.dirty) break
