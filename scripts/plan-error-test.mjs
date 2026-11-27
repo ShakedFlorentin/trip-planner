@@ -116,6 +116,43 @@ if (L?.loop && X?.failMark) {
   b.row.error = 'plan_failed:2026-01-01T00:00:00.000Z'
   const r = await L.loop(b.admin, 'T', fine, 0)
   t(r.queued === true && b.row.dirty === true && b.row.error === 'plan_failed:2026-01-01T00:00:00.000Z', 'a request during a run only marks the trip for one more run')
+
+  // --- changes during the wait are covered by the run that follows; changes during the run ask for one more ---
+  {
+    const c = table()
+    let runs = 0
+    const seen = []
+    setTimeout(() => { c.row.dirty = true }, 10)
+    const r1 = await L.loop(c.admin, 'T', async () => { runs++; seen.push(c.row.dirty); return fine() }, 60)
+    t(runs === 1 && r1.results.length === 1 && seen[0] === false && c.row.dirty === false, `a change during the wait before the run: one run covers it (${runs})`)
+    t(c.row.lease_until === null && c.row.ran_at !== null, 'and the run ends as any other: lease given back, time written')
+
+    const d = table()
+    runs = 0
+    const r2 = await L.loop(d.admin, 'T', async () => { if (++runs === 1) d.row.dirty = true; return fine() }, 20)
+    t(runs === 2 && r2.results.length === 2 && d.row.dirty === false, `a change while the run works: it runs once more (${runs})`)
+
+    // both: the wait's mark is cleared, the run's mark is kept
+    const e = table()
+    runs = 0
+    setTimeout(() => { e.row.dirty = true }, 5)
+    await L.loop(e.admin, 'T', async () => { if (++runs === 1) e.row.dirty = true; return fine() }, 30)
+    t(runs === 2, 'a change in the wait and one in the run: two runs, not three')
+
+    // the mark is cleared before the run reads anything, never after it started
+    const f = table()
+    const order = []
+    const base = f.admin.from
+    f.admin.from = (n) => { const q = base(n); const u = q.update; q.update = (p) => { if ('dirty' in p && !('lease_until' in p)) order.push('clear'); return u(p) }; return q }
+    await L.loop(f.admin, 'T', async () => { order.push('run'); return fine() }, 5)
+    t(order.join(',') === 'clear,run', `the mark is cleared before the run starts reading (${order.join(',')})`)
+    const g = table()
+    const cleared = []
+    const gb = g.admin.from
+    g.admin.from = (n) => { const q = gb(n); const u = q.update; q.update = (p) => { if ('dirty' in p && !('lease_until' in p)) cleared.push(1); return u(p) }; return q }
+    await L.loop(g.admin, 'T', fine, 0)
+    t(cleared.length === 0, 'with no wait there is nothing to clear, and no extra write')
+  }
   console.error = quiet
 }
 t(/import \{ loop \} from '\.\/lease\.ts'/.test(src) && !/async function loop\(/.test(src), 'index.ts runs the loop from lease.ts')

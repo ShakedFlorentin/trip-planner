@@ -7,7 +7,7 @@ import { failMark } from './errors.ts'
 
 export const LEASE_MS = 60_000
 
-/** Requests that arrive while a planner runs mark the trip dirty and it runs once more. `run` plans and writes; `settle` is the wait before the first run. */
+/** Requests that arrive while a planner runs mark the trip dirty and it runs once more; those that arrive in the wait before the first run are covered by it. `run` plans and writes; `settle` is that wait. */
 export async function loop<S>(
   admin: SupabaseClient,
   tid: string,
@@ -35,7 +35,12 @@ export async function loop<S>(
   try {
     for (let round = 0; round < 2; round++) {
       // swipes come in bursts: let the burst settle so one run covers it
-      if (round === 0 && settle > 0) await new Promise((r) => setTimeout(r, settle))
+      if (round === 0 && settle > 0) {
+        await new Promise((r) => setTimeout(r, settle))
+        // What changed during the wait is read by the run that starts now, so it asks for no second run. A change
+        // is saved together with its mark: one saved before this line is read below, one saved after it marks again.
+        await admin.from('plan_state').update({ dirty: false }).eq('trip_id', tid)
+      }
       try {
         const r = await run()
         results.push(r.stats)
