@@ -12,6 +12,9 @@ explains:
 4. **Demo account** with a ready trip, two members, cards to swipe. Needs the owner's OK for a new account in the database.
 5. **Store fields:** privacy URL, support URL, marketing URL, age rating, label.
 
+6. **Public web links for terms and privacy, and a landing page** (a creator's rejection was for legal links; no domain yet). Short, no claim lines.
+7. **A release-build test pass** on the simulator before upload (see review-readiness).
+
 ## Should fix (QA 16 Nov)
 - Sign-out on a shared phone keeps push subscription, outbox, map and photo caches (privacy and review risk).
 - Dead buy button with a price in the pass sheet.

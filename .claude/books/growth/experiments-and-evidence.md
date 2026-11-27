@@ -10,7 +10,7 @@ Hypothesis, one metric, how it is read (which `track` event), when to judge, wha
 ## Evidence levels (strongest first)
 1. Toogo's own data (almost none).
 2. First-hand screens read by frame (@danh.app app screens).
-3. Creators' captions with their own numbers (claims, tiny accounts).
+3. Creators' captions with their own numbers (claims, tiny accounts). Fully re-read 26-27 Nov: @danh.app 96, @nels_ysng 95, @aniakubow 816, @kunaluxui 672, @synsation_ 529, @ceciliakimdesign 117 (captions; registry in the marketing book).
 4. Secondhand articles (Polarsteps, TripBFF, Wanderlog): weakest.
 
 ## Free tests available
@@ -18,6 +18,9 @@ Hypothesis, one metric, how it is read (which `track` event), when to judge, wha
 - Short videos: judge a hook after 3-5 posts. Expect a long flat start (one founder had about 6 months of nothing). TikTok first.
 - Hook shape: another person + a conflict -> I showed them -> they changed their mind (creators' claim: 147K-234K vs under 3K views).
 - Guide pages and free search pages: measure `open` by source.
+
+- First user test (`toogo-indie-launch`): no helping; give the task "reach a match and open the plan", stopwatch it, watch the first tap, write down every word they ask about. Metric: time to first match.
+- Check demand before building more: a waitlist page (option, owner decides).
 
 ## Not worth it (scouts' judgement)
 Product Hunt for a consumer travel app; paid influencers (200-500 downloads from 38K views, one founder's claim).

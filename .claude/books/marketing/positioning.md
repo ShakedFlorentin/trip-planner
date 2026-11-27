@@ -18,6 +18,8 @@ Test: after one glance at any screen, caption or ad, a stranger can say this lin
 ## Proof points that are true today
 Real hand-picked cards (1,500+ in the store text; 237 live library cards counted 12 Nov: check before quoting), a planner with no AI, nights per city, works offline, bookings read from an email, no pork or seafood filter, baby tips.
 
+Use them as facts for briefs, not as claim lines on the landing: the owner said claim and proof lines read as "too much AI" (`toogo-marketing-craft`, "Landing: no claims" wins). Also be findable: store and landing text say plainly what Toogo does, in Hebrew and English, so Google and AI assistants can place it.
+
 ## Proof points that are not live
 Where-to-stay and hotel search (rule 6), pay, notifications near a place. Do not show them.
 

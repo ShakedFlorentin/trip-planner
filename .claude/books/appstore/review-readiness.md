@@ -23,6 +23,14 @@ Status from `toogo-app-review` (14 Nov), `docs/handoff-2026-11-14-agents-and-del
 | 10 | Reviewer notes and demo account (2.1) | Not created. |
 | 11 | No fake ratings (3.2.2(x), 5.6.3) | Apple's prompt only. |
 
+## Added 27 Nov (`toogo-app-review`; creators' claims, check Apple's live text)
+- **Test the release build, not the dev build.** One creator's 4 rejections: a crash only the release build showed, a broken onboarding button, in-app purchases not submitted, legal links without public web URLs. For Toogo: after every change, run the TestFlight or release build on the "Toogo Test" simulator (rule 11) and tap every onboarding button (`Onboarding`, `Login`, `Guest`), each way in Hebrew and English.
+- **Legal links need public web URLs:** privacy (`privacyUrl`) and terms at real addresses, in Settings, in App Store Connect and in the description; landing page ready before submit (owner has no domain yet).
+- **No placeholder or "coming soon" screens** (the dead buy button, row 7, is one). Backend on and demo login working on submit day. Privacy labels, export compliance, and the lowest iOS version set on purpose.
+- **First in-app product ships with the first version** (Israel credits); name product IDs consistently; test in the StoreKit sandbox. Rating prompt may be in the first build, after a good moment (`src/rating.ts`). Expedited review is for a serious bug after launch only.
+- **Sign in with Apple** whenever Google is offered; delete account in the app (row 1).
+- Row 6 note: the skill row says plan-trip and the wand use Claude; the code does not (only suggest-place, parse-booking, translate, card-facts, card-photos). Say what the code does; the skill row is out of date.
+
 ## Also from QA
 No app-wide error screen was found in the first QA read, but `src/ErrorBoundary.tsx` now exists in main (`ErrorBoundary`): verify it wraps the app. Android test build is sideload only.
 

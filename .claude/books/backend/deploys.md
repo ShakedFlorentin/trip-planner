@@ -16,5 +16,6 @@ explains: []
 
 **Before any deploy**: read open reports (`select * from public.reports where status = 'open'`), see issue-fixer book.
 **Order for risky change**: prechecks, rehearsal on a copy, SQL, function, client behind a flag (`app_settings.features.*`), rehearsal with a new account. Delete-account order is in qa-2026-11-16.md.
+**Before the first outside tester** (`toogo-backend-craft`, `toogo-ship-check`): only the public key in the client bundle; a second account to check row-level security; search the repo for TODO, REPLACE, YOUR_API_KEY; have a second agent review the change. Prefer separate dev and prod projects and StoreKit sandbox for test purchases (`toogo-supabase-prelaunch`). Add monitoring, tests and a deployment plan to the Feb 2027 list. An admin view to seed data beats hand SQL: idea, after the trip, never on the real trip. No real trip data in tests (rule 11).
 Switches without a deploy: `app_settings.features` (live, push, trip_pass, google_signin, counting).
 Related: sql-files-status, build book (release-checklist).

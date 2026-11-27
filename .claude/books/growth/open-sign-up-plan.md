@@ -22,7 +22,8 @@ Today sign-up is by invite only. Open sign-up (Google, guest mode) is planned af
 - Places can be inserted directly (breaks rule 3); fix file not applied.
 - 30 lookups per person a day, 300 total: AI cost is capped but a bot ring could use up the 300.
 - Sign-up bugs: invite + Google loses the invite, silent Google errors on web, no resend for expired confirmation.
-- Cost: 1.5 AI lookups a day per trip at 2-4 cents is small; trip pass covers beyond 10 free places.
+- Cost: 1.5 AI lookups a day per trip at 2-4 cents is small. Owner's GTM decision (Nov 2026): free v1 in Feb 2027 with AI capped, open sign-up, Japan first. Credits (`toogo-credits-offer`) are the decided wallet; the 10-free-places trip pass is an older plan, not settled.
+- Before opening: a waitlist page is an option to check demand; a landing page needs real privacy and terms pages and no claim lines; a notification must be for a real event only. Growth does not rely on email (no list) or ads, and uses no device fingerprints.
 
 ## Order
 Fix security items, then guest mode, then Google and Apple together, then store submission. Each needs the owner's go.

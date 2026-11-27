@@ -26,3 +26,9 @@ On `visibilitychange` visible or `pageshow` persisted, `comingBack` asks the wor
 `addAll` is all-or-nothing; 1.2 MB re-download each deploy; every push to main auto-deploys (rule 6: owner publishes file by file); splash never leaves if an asset fails.
 
 Test: `node scripts/sw-test.mjs` (fake worker scope, slow network, captive-portal page). Manual: sign-out clears Cache Storage (see [01-app-shell](01-app-shell.md)).
+
+## Craft rules (`toogo-frontend-craft`, performance)
+- **Cached shell first** (`page`, 4 s) is the "show the saved thing at once" rule on a weak signal. Keep `NAV_TIMEOUT` short; do not lengthen it.
+- **Bundle:** the build makes one ~1.5 MB `index-*.js` (checked in `dist`, 2026-11-18); only `Album` is `lazy`. Leaflet (`PlacesMap`, `AlbumMap`) and rarely used sheets are in the first load. Splitting them cuts the 1.2 MB re-download per deploy that the Known gaps name. See [15-craft-gaps](15-craft-gaps.md).
+- **`addAll` is all-or-nothing:** one missing asset leaves the user with no offline shell. Cache assets one by one with `Promise.allSettled`.
+- **Image hints:** the worker caches `photo` once seen; the first Discover photo should be fetched early (`fetchpriority`), not lazy.

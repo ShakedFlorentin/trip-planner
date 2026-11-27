@@ -33,7 +33,7 @@ Short rules taught by the teacher agent from creators' reels, each with a why an
 - **Reuse `src/spring.ts`** before adding a library (see `toogo-premium-feel` section 2).
 - **Ambient motion (moving blurred blobs) only on login/onboarding hero,** never on list, map or swipe screens; needs `prefers-reduced-motion` and a phone test. Why: blur plus animation drains battery in a WebView. https://www.instagram.com/aniakubow/reel/DfP8Z0ARCqY/ (owner decides).
 - **Small controls get a pressed state, a settle and a haptic at the commit point;** toggle thumb, slider fill and progress direction mirror in RTL. https://www.instagram.com/aniakubow/reel/Dfhr3ySRqzw/
-- Haptics: `@capacitor/haptics` is not installed; one no-op-on-web wrapper in `src/native.ts` (details in `toogo-premium-feel` section 1).
+- Haptics: `@capacitor/haptics` is installed; always call the one no-op-on-web wrapper in `src/haptics.ts`, never the plugin directly (details in `toogo-premium-feel` section 1).
 
 ## State, offline and speed
 

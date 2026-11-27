@@ -20,6 +20,12 @@ The owner's own trip is the real test. Collect honest footage the owner chooses 
 5. Rating prompt after a match or first day plan (Apple's own).
 6. Open sign-up (guest mode, Google plus Apple) per the growth book.
 
+## Landing page (start early, owner decides)
+Next to the app, not the week before launch. Calm and short: one sentence, one button, real app screens (not mockups), who made it plus a support link, real privacy and terms pages at public web links (Apple needs them). **No claim or proof lines**: the owner said they read as "too much AI". Hebrew and English. Gentle hover and scroll motion only, with `prefers-reduced-motion` respected. A waitlist page to check demand is an option, not a decision. Ideas: QR code beside the store button for laptop visitors; Smart App Banner once a store page exists. Rules: `toogo-marketing-craft`.
+
+## Findable and shareable
+Honest presence on Reddit threads and listicles matters more than polish (AI assistants pull from them; creators' claim). Build in public with a numbered series (the Japan trip is the series), true dates only, no countdown urgency. Before shipping the landing, have it reviewed by another agent.
+
 ## Timing notes
 December is crowded for everyone, and launch is after the trip anyway. Release the app by hand on a day the owner can watch; no expedited review: the trip is not an accepted event. A tester round capped for a true reason may say so once.
 

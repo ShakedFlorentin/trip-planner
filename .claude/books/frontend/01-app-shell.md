@@ -32,3 +32,9 @@ No router library. `src/App.tsx` is a chain of gates, each returning the next co
 No history entries: iOS swipe-back leaves the app and sheets do not close. `TripApp` is not keyed by trip id (stale state if removed from a trip). Signed-in user opening an `?invite` link: nothing happens.
 
 Related: [02-data-layer](02-data-layer.md), [12-views-share-settings-report](12-views-share-settings-report.md).
+
+## Craft rules (`toogo-frontend-craft`, `toogo-ux-ui-craft`)
+- **Plan for Japan's networks:** `TripApp` already shows the cached trip first and a stale banner after 6 s (good). The rule "each section loads and fails alone" is not met at the shell: one `ErrorBoundary` in `main.tsx` wraps everything, so a render error in one tab blanks the app. Put a small boundary around each tab body in `TripApp` (owner decides). Gap list: [15-craft-gaps](15-craft-gaps.md).
+- **Errors never raw:** `LoadError` is the model (plain line plus `נסו שוב`). Copy it for new gate failures.
+- **Back keeps your place:** no history entries (see Known gaps), so iOS swipe-back leaves the app. Rule "back from a detail returns to the same place" cannot hold until sheets push history.
+- **First paint:** `endLaunch` and `#intro` rings are the skeleton for boot; keep `Suspense fallback={null}` around `Album` only.

@@ -8,7 +8,7 @@ description: How to make a Toogo screen feel like a polished native iPhone app i
 Sources: Chris Raroque (solo iOS dev, two YouTube videos), Oliur (fixing AI-generated design), App Breakdown ep. 84, and @nels_ysng's UI reels. Read as transcripts on 2026-11-14. These are practitioners' opinions, not measured results.
 
 ## 1. Haptics (Toogo has none as of 2026-11-14)
-Needs `@capacitor/haptics` (not installed) and one wrapper in `src/native.ts` that does nothing on the web.
+Built: `@capacitor/haptics` is installed and `src/haptics.ts` is the one wrapper (does nothing on the web), already called from about 10 files (checked 2026-11-27). New haptics go through it.
 - **Light:** each swipe card leaving, a tap on a toggle or chip.
 - **Medium:** tab change, a sheet snapping open or closed.
 - **Success notification:** a match, a plan finished by the wand.

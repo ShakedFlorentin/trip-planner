@@ -12,4 +12,4 @@ Read this first. Evidence is thin: nothing is measured on real users yet (4 user
 6. [what-not-to-do](what-not-to-do.md): growth rules.
 7. [experiments-and-evidence](experiments-and-evidence.md): how to run and read tests.
 
-Skills: `toogo-growth-loops`, `toogo-short-video`, `toogo-store-listing`, `toogo-marketing-craft`, `toogo-first-run`.
+Skills: `toogo-growth-loops`, `toogo-short-video`, `toogo-store-listing`, `toogo-marketing-craft`, `toogo-indie-launch`, `toogo-credits-offer`, `toogo-first-run`. Where a page here and a skill differ, the skill and `toogo-rules` win.

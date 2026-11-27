@@ -11,7 +11,7 @@ explains:
   - holdPlace
   - logCall
 ---
-Rule (toogo-rules 2, 7): no per-user AI on every view; Claude only for one-off cacheable work; credits cover cost plus a little, no squeezing.
+Rule (toogo-rules 2, 7): no per-user AI on every view; Claude only for one-off cacheable work; credits cover cost plus a little, no squeezing. Sorting, travel times and ranking stay plain code (`learnTags` in `src/rank.ts` runs on the phone); AI improves the product, it is not the product (`toogo-backend-craft`). Credits wallet is the decided model per `toogo-credits-offer` and rule 7; the trip pass below is an older, conflicting plan (see appstore book payments page): the owner picks one before anything is built. One price for everyone; bought credits never expire.
 
 **Layers, outermost first**
 1. Shape and size checks before anything is spent (a malformed request must not burn a slot).

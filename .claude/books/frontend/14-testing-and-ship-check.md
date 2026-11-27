@@ -34,3 +34,9 @@ Build to a temp dir, `vite preview --port 4190`, drive with Playwright with Supa
 
 ## Report
 Files changed; each command with result; screenshot paths; what was not checked (device, haptics, real network). Never write "works" for something only read.
+
+## Craft rules (`toogo-frontend-craft` "Pre-beta break test", `toogo-ux-audit`)
+- Add to the UI check, with Supabase mocked and the "Toogo Test" account only (rule 11): double-tap Save saves once; paste " 1,250.50 "; delete asks first; closing an unsaved form asks; back returns to the same place; the keyboard never covers Save (also in Hebrew RTL); offline save says what happened; the longest real Hebrew name wraps.
+- Judge speed and zoom on a real phone, not in the browser: focus zoom, haptics and safe areas cannot be seen in Playwright.
+- Reduced motion: run once with `prefers-reduced-motion: reduce` emulated.
+- `toogo-ux-audit` is the screen review; this book's [15-craft-gaps](15-craft-gaps.md) is the code-side list to re-check after fixes.

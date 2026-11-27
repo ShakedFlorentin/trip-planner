@@ -37,3 +37,10 @@ One sheet searches places, deck cards, bookings, plan items and lists: `useTripT
 Test: `node scripts/search-share-test.mjs`.
 
 Related: [01-app-shell](01-app-shell.md), [13-ui-sdk-and-styles](13-ui-sdk-and-styles.md).
+
+## Craft rules (`toogo-frontend-craft`)
+- **Errors:** `Translator` is the good model (`translateError`, retry keeps heard text). But `Translator.tsx:290-291` prints the speech API's `err.message`, and `Essentials.tsx:134` prints `error.message`: map both.
+- **Per-section load:** `Lists`, `Essentials`, `Baby` each have `Skeleton` plus `LoadNote`; keep that shape for new tools.
+- **Search "searching/failed, not no results"** is implemented through the six `useTripTable` errors; keep it.
+- **`SwipeRow`** swipe-only edit and delete is an accessibility gap (add a named button path). Hit areas 44 pt via padding.
+- **Rule 2:** no AI per view; `Translator` is a per-tap call with a server cap.

@@ -27,5 +27,7 @@ Common rules
 - Secrets: `ANTHROPIC_API_KEY` env or Vault (`get_anthropic_key`), `VAPID_*` for push, never in the repo.
 - Gateway `verify_jwt` is set per function at deploy time; see deploys.
 
+**Errors never leak (`toogo-backend-craft`, 27 Nov):** a function answers a short safe message plus a code, never the raw error; the client maps the code to a Hebrew and English line. Raw text goes to `console.error` and `logCall` only. Today `plan-trip/index.ts` lines ~102 and ~111 return `e.message` and even `e.stack` in `json({error})`: fix before open sign-up (file for the owner to deploy, after the trip). `sign-up` already uses codes (`email_exists`, `invite_invalid`): copy that shape.
+
 Known gaps (qa 16 Nov): plan-trip returns raw Postgres errors and has no rate limit; sign-up has no attempt limit and reveals valid invite codes; translate's English server errors can reach the screen.
 Related: functions-ai, functions-cards, functions-other, guard-shared.

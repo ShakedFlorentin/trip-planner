@@ -12,4 +12,6 @@ Read this first. Apple's guideline text changes: say whether you read the live t
 6. [reviewer-notes](reviewer-notes.md): demo account and numbered notes.
 7. [privacy-label](privacy-label.md): the nutrition label draft and open points.
 
+Added 27 Nov: test the release build, tap every onboarding button after each change, terms and privacy at public web links (see review-readiness).
+
 Skills: `toogo-app-review`, `toogo-store-listing`, `toogo-credits-offer`. Work lands in `docs/appstore/`.

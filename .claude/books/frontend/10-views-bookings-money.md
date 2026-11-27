@@ -44,3 +44,11 @@ Test: `node scripts/import-review-test.mjs`.
 - `parseAmount` accepts messy typed numbers; `roundFor` caps decimals.
 Open: stale edit overwrites; former-member ids vanish from sums; names glued to prepositions in Hebrew.
 Tests: `npm run test:money`, `node scripts/screen-logic-test.mjs`. Related: [03-offline-outbox](03-offline-outbox.md).
+
+## Craft rules (`toogo-frontend-craft` "Forms and input", "Errors never raw")
+- **Raw server text reaches the user** in `BookingForm`: `Bookings.tsx:414` (upload) and `:436` (save) show `error.message`. Map to plain Hebrew and English (rule wins over the existing `t('שגיאה: {msg}')`).
+- **Postel for money:** `parseAmount` already takes " 1,250.50 " and "12,5". Use it, never `Number()` or `parseFloat`, on any new amount field.
+- **Keyboards:** amounts use `inputMode="decimal"` and `dir="ltr"`; keep it on every money field.
+- **Break tests:** double-tap Save saves once (client uuid plus busy guard); delete asks first (`askDelete`, 25 call sites); closing an unsaved `BookingForm` or `ExpenseForm` does not ask "Discard changes?" yet; after saving, the new row should be visible and confirmed, not only a toast.
+- **Rolling numbers** for totals (`--dur-2`, `tabular-nums`) only if the owner wants it; money text already uses `tabular-nums`.
+- **Import check is a designed waiting state:** show the stage and one sentence; errors from `parse-booking` go through `aiError`, not raw.

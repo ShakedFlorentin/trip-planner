@@ -41,3 +41,12 @@ Add from a link or text: calls the `suggest-place` edge function, streamed (one-
 Drag starting on photo edges does nothing; not-now icon not mirrored in Hebrew; only the last of several matches announced if a match is made on another tab; deck loads before the questionnaire.
 
 Tests: `node scripts/rank-test.mjs`, `node scripts/look-test.mjs`, `node scripts/screen-logic-test.mjs`. Related: [09-views-places-maps](09-views-places-maps.md).
+
+## Craft rules (`toogo-frontend-craft`, `toogo-premium-feel`)
+- **Swipe is the one place for rich motion** (`Card`, `springTo`, `MatchPop`); tabs and rows stay near-silent. `match.css` `match-in` is 0.42 s, a hair over the 0.4 s ceiling for a rare reveal; fine, do not add more.
+- **Tap vs swipe:** `Swipe.tsx` decides direction after 10 px and `moved` stops a swipe opening the card. Keep that threshold when changing drag code.
+- **First card image:** `Swipe.tsx` `card-photo` is `loading="lazy"` with no `fetchpriority`; the first card should be eager (see [15-craft-gaps](15-craft-gaps.md)). Only photos that pass rule 5; no photo keeps the icon tile.
+- **Optimistic swipe with rollback:** a swipe shows its result at once through `put`; if the write is refused the card must come back, not vanish.
+- **Per-section error:** the deck has `candidatesError` plus `LoadNote`; keep a failed photo (`onError` -> `broken`) from blanking the card.
+- **AddPlace waiting state:** `Steps` with `aria-live` and `aria-busy` is the model for any long call. Errors there still print `error.message` (AddPlace.tsx:421).
+- **Postel:** pasted links with surrounding text should still work (known miss, near AddPlace.tsx:298).

@@ -20,5 +20,7 @@ Read this first. The backend is Supabase (Postgres + RLS + edge functions in Den
 | deploys | deploy-function.yml, run-sql.yml and the ask-first rule |
 | planner-brief | plan-trip in brief: what it reads and writes |
 
+Rules added 27 Nov from `toogo-backend-craft`: errors to the client are a safe message plus a code; no tracking by Wi-Fi, battery or device fingerprints; analytics events carry no names, notes or trip details; outside tools (analytics, replay, public board) need the owner's privacy decision first. Delete account must remove the user's data server side (Apple 5.1.1(v)).
+
 Source of truth: `supabase/sql/2026-11-02-live-baseline.sql` (snapshot, reference only), `docs/HANDOFF.md`, `docs/qa-2026-11-16.md`. If a page and the code disagree, the code wins; fix the page.
 Related books: security (threats, guards), cards (library model), build (release).

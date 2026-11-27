@@ -45,3 +45,11 @@ Queue lives in localStorage key `outbox` and memory. When full it first frees `c
 `mutate(promise)` shows `errorText(message)` (plain words, never raw server text) as a toast. `OfflineBanner` + `useOnline` show the connection state.
 
 Test: `node scripts/outbox-test.mjs`, `npm run test:money` (also covers writes). Related: [04-service-worker-updates](04-service-worker-updates.md).
+
+## Craft rules (`toogo-frontend-craft`, `toogo-ux-ui-craft` "Plan for Japan's networks")
+- **Offline says what still works:** `OfflineBanner` says the connection state; the rule wants "what still works" in one sentence. Add it to the banner text, Hebrew and English (rule 1).
+- **Optimistic update with a clear failed state:** the outbox does the optimistic half (`withPending`), `failedChanges` sheet the failed half. A write that is queued must not say "saved" in words that sound final: use "saved on the phone, sending when there is signal".
+- **Errors never raw server text:** `mutate` and `errorText` are the rule's implementation. All new writes go through `mutate`; direct `supabase.from(...).insert` with `say(error.message)` is the anti-pattern (found in Bookings, AddPlace, Essentials, Settings: see [15-craft-gaps](15-craft-gaps.md)).
+- **Double tap saves once:** the client uuid for `HAS_ID` tables makes a resend idempotent; forms still need a busy guard (`Itinerary` `ItemForm` has one).
+- **Postel:** `parseAmount` (`money.ts`) already strips spaces and thousands commas; reuse it for any new money field.
+- **Designed waiting state for the queue:** `OfflineBanner` count plus `SignOutSheet` `pending()`; keep one sentence, no bare spinner.

@@ -37,3 +37,11 @@ Gaps: first join failure never resyncs; an old-path drop loses changes until ref
 - A new trip table: use `useTripTable`, add its row key to `ROW_KEY` if not `id`, add the table to the live SQL (backend), and to `ready.ts` if it must work offline.
 - Screens must check `loading`/`error` before saying "empty" (QA found this on Home, Expenses, Plan, Search; helper `canSayBalanced` in screenLogic.ts).
 - Test: `npm run test:table` (fake Supabase).
+
+## Craft rules (`toogo-frontend-craft` "State, offline and speed")
+- **Saved plan first, fresh later:** `TableStore` starting from `cache:<key>` with `stale` true is exactly this rule. Keep it: a new screen must render from `rows` while `loading` is false and `stale` true, and show the fresh data when it lands without a spinner.
+- **Per-section load, error and Retry:** every table hook returns `error` and `reload`; `LoadNote` (`ui.tsx`) is the Retry line. Rule: each section owns its `useTripTable`, its `LoadNote` and its `Skeleton`, so one failed table never blanks the screen. `Itinerary` loads three tables but shows one `loadFailed` note for all; split if one table can fail alone.
+- **Errors never raw:** `message` in the store state is for logs only. Never put `error.message` in the UI; map it (`errorText`, see [03-offline-outbox](03-offline-outbox.md)). Today seven places still do (list in [15-craft-gaps](15-craft-gaps.md)).
+- **Optimistic with rollback:** `put(rows)` after an own save is the optimistic step; if the write is refused (outbox `failed`), `withPending` stops covering the row and it disappears: that is the rollback, so the failed-changes sheet must say so.
+- **Warm the next day:** `ready.ts` `prepare()` is this idea (today and tomorrow); it is the place for any "save the next day" extension. Plain code, no AI.
+- **Silent cap at 1000 rows** is a break of "every fetch has a state": a capped read must say so.

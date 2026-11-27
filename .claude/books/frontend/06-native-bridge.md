@@ -43,4 +43,11 @@ Service worker and update reload (see [04-service-worker-updates](04-service-wor
 Password reset emails use `appUrl() + '?reset=1'`; the reset screen opens only on the `PASSWORD_RECOVERY` event (see [01-app-shell](01-app-shell.md)). The iOS Info.plist registers the `toogo://` scheme. No JS handler for a custom-scheme auth callback exists in `src/` (checked by search), so how email tokens return into the app is not documented here; QA flagged a `toogo://` hijack on Android.
 
 ## Gaps
-No haptics (`@capacitor/haptics` not installed). Android test build: translator mic dead, PDFs offline, `allowBackup`. See `toogo-premium-feel` section 1.
+Haptics exist: `src/haptics.ts` (`hapticLight`, `hapticSelect`, `hapticSuccess`; no-op on the web and under reduced motion; 23 call sites). `toogo-premium-feel` section 1 still says "not installed": the code wins, that skill line is stale. Android test build: translator mic dead, PDFs offline, `allowBackup`. See `toogo-premium-feel` section 1.
+
+## Craft rules (`toogo-premium-feel`, `toogo-frontend-craft`)
+- **Haptics:** light on swipe, select on tab and chips, success on match, never on scroll, never twice: `haptics.ts` already guards the web and reduced motion. Add new calls only through it.
+- **16 px inputs** matter most in the WebView (focus zoom). `styles.css` sets 16px on all fields; `.invite-link input` overrides it to 13px (see [15-craft-gaps](15-craft-gaps.md)).
+- **Right keyboard per field:** `inputmode="decimal"` is on Expenses amounts; URL fields use `type="url"`. Check `autoComplete` on `Login` and `Onboarding` fields (6 of 9 inputs have it).
+- **Share extension, quick actions:** a failed handoff must show a plain line, not stay silent.
+- **Judge on a real phone:** the web version on phones is what the owner uses; haptics, zoom and safe areas cannot be checked in a browser.

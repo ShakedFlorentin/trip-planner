@@ -5,7 +5,7 @@ explains:
   - App
   - TripApp
 ---
-Read this first. Toogo frontend = React 19 + Vite + TypeScript in `src/`, Hebrew (RTL) first with English, wrapped for iPhone by Capacitor 8. House rules: `.claude/skills/toogo-rules/SKILL.md` (wins over everything). Checks before "done": `toogo-ship-check`. UI behaviours: `ui-sdk`. Craft rules (empty today): `toogo-frontend-craft`.
+Read this first. Toogo frontend = React 19 + Vite + TypeScript in `src/`, Hebrew (RTL) first with English, wrapped for iPhone by Capacitor 8. House rules: `.claude/skills/toogo-rules/SKILL.md` (wins over everything). Checks before "done": `toogo-ship-check`. UI behaviours: `ui-sdk`. Craft rules: `toogo-frontend-craft` (code side), `toogo-ux-ui-craft`, `toogo-premium-feel`, `toogo-ux-audit` (screen reviews). Where a chapter disagrees with a craft rule, the chapter says which wins.
 
 ## Shell and data
 - [01-app-shell](01-app-shell.md): App.tsx gates (session, profile, guest, trip), TripApp, tabs, header, wand.
@@ -23,6 +23,12 @@ Read this first. Toogo frontend = React 19 + Vite + TypeScript in `src/`, Hebrew
 - [11-views-lists-translator-search](11-views-lists-translator-search.md): Lists, Essentials, Baby, Translator, Search.
 - [12-views-share-settings-report](12-views-share-settings-report.md): Share, SharedPlan, Settings, Menu, TripPicker, SignOutSheet, Report.
 
+## Where the code breaks a craft rule
+- [15-craft-gaps](15-craft-gaps.md): every known break of a `toogo-frontend-craft` rule, with file:line, effect, severity, smallest fix.
+
 ## Building blocks and checks
 - [13-ui-sdk-and-styles](13-ui-sdk-and-styles.md): ui.tsx, toast.tsx, ui-sdk components in use, CSS files and tokens, ErrorBoundary.
 - [14-testing-and-ship-check](14-testing-and-ship-check.md): npm scripts, scripts/*.mjs, the ship-check commands, UI check with mocked Supabase.
+
+## Skills these chapters lean on
+`toogo-rules` (wins), `toogo-ship-check`, `toogo-frontend-craft` (CSS, animation, state, forms), `toogo-ux-ui-craft` (look and flows), `toogo-premium-feel` (feedback, haptics), `toogo-first-run`, `toogo-ux-audit` (how to review a screen), `ui-sdk`. Each chapter ends with a "Craft rules" section naming the file or function the rule touches.

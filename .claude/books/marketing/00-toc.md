@@ -12,4 +12,4 @@ Read this first. No ad budget, nothing measured, one owner. Hebrew first, Englis
 6. [reel-sources-registry](reel-sources-registry.md): accounts read, how, where the notes are.
 7. [teacher-and-craft-skill](teacher-and-craft-skill.md): how lessons reach this team.
 
-Skills: `toogo-marketing-craft`, `toogo-short-video`, `toogo-store-listing`, `toogo-growth-loops`, `toogo-indie-launch`, `toogo-premium-feel`. Never promise a feature that is not live; show real screens with made-up data (rule 11).
+Skills: `toogo-marketing-craft`, `toogo-short-video`, `toogo-store-listing`, `toogo-growth-loops`, `toogo-indie-launch`, `toogo-credits-offer`, `toogo-premium-feel`. The landing has no claim lines (owner decision). Never promise a feature that is not live; show real screens with made-up data (rule 11).

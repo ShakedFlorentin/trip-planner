@@ -14,6 +14,8 @@ Current draft is a paragraph in `docs/app-store-listing.md`, with "to be created
 7. Offline works; mention the share extension and widgets when on.
 8. In-app purchase location, the day Israel purchases exist.
 
+Also (`toogo-app-review`): no "to be created" placeholder on submission day; the notes say which features use AI (add place, read a booking, translate); terms link in the description. Re-check the demo login works on submit day.
+
 ## Demo account
 Needs a non-admin account, two members, a ready plan and an invite code (sign-up is invite-only). Create only after the owner OKs a new account and trip. Never copy credentials into a page or doc. Real trip untouched.
 

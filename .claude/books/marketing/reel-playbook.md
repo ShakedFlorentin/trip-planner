@@ -14,6 +14,9 @@ Another person + a conflict -> I showed them -> they changed their mind. Never o
 - Reel: question hook, friends' own footage, short app demo on the beat. Post the same reel again with new audio and cover.
 - Demo must show swipe and match (rule 3), made-up data (rule 11).
 
+- Text on video: six words max per screen, held about 1.2 s. A demo is not a screen recording: crop to one flow, a finger leads. Pick the format by viewer stage (curious, understand, decide); one of each.
+- One ask per caption; give the value in the caption, never behind "comment a word".
+
 ## Rhythm
 TikTok first; Instagram did worse for small apps. Long flat start is normal. Judge a hook after 3-5 posts. Text on video: Hebrew is longer, check limits separately.
 

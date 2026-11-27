@@ -16,7 +16,7 @@ Status column is what the code showed on 2026-11-14. Re-check it, do not trust i
 | 3 | More than a website in a wrapper | 4.2 | **Risk**: Capacitor app. Lower it with native behaviour: haptics, share sheet (already in), push, offline, native-feeling sheets. |
 | 4 | If any third-party sign-in (Google) is offered, Sign in with Apple must be offered too | 4.8 | Email + password only, so not needed yet. **Build Google and Apple together.** Label the Apple button clearly. |
 | 5 | Do not force an account before the user can see what the app does | 5.1.1(v) | To check. `?share=` plan view works before login; the rest needs a look. |
-| 6 | Say where AI is used and what is sent | 5.1.2(i) | To check: wand, suggest-place, plan-trip, parse-booking, translate use Claude. Say so in the app and in review notes. |
+| 6 | Say where AI is used and what is sent | 5.1.2(i) | To check: suggest-place, parse-booking, translate, card-facts and card-photos call Claude (checked in `supabase/functions` on 2026-11-27); plan-trip and the wand are plain code. Say so in the app and in review notes. |
 | 7 | Anything bought in the app: Apple in-app purchase, a Restore Purchases button, tested in the StoreKit sandbox; paid vs free clearly labelled | 3.1.1 | No in-app purchase yet. Needed for Israel credits. See `toogo-credits-offer`. |
 | 8 | Camera / photos / location usage strings that say why | 5.1.1 | To check in `ios/App/App/Info.plist` |
 | 9 | Support URL, marketing site, accurate age rating and privacy "nutrition label" | 1.5, 5.1.1 | To do with the store listing |

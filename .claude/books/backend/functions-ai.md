@@ -29,5 +29,7 @@ All three: user is signed in (`getUser()`), the request is checked for shape and
 - It reads the user id from the unverified token only to start work in parallel; nothing is spent unless `getUser()` confirms the same user.
 - Prompt carries diet and baby context (QA low: sent on every call).
 
+Answers name their data and propose, never apply (`toogo-backend-craft`): suggest-place returns researched cards for swipe and match (rule 3); parse-booking returns `bookings[]` the user confirms. Keep it so: a new AI function returns what sources it read (counts, dates) and any write as a proposal. Errors: short message plus code only (see functions-overview). Test messy real input (pasted links, odd money formats) before a release.
+
 429 "daily limit reached" for a cap; 429 "busy, try again" for an Anthropic rate limit.
 Related: ai-cost-controls, guard-shared, security book (injection-defences).
