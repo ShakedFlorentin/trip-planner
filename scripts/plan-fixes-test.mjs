@@ -5,10 +5,14 @@
 // r13…r15: the fourth round (a walk planned after dark, a late lunch on the day they arrive, rides that grew).
 // r16: the fifth round (the last ride back across town).
 // r17 on: the sixth round (a ride back on a day of shared places; a day with no meal, a lunch pushed out of its hours).
+// r20: the ninth round (the same places in another order gave another plan).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
-import { engine, sunsetMin } from './plan-harness.mjs'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { engine, fixturesDir, load, sunsetMin } from './plan-harness.mjs'
 
-const { E, P, G, F } = await engine()
+const mods = await engine()
+const { E, P, G, F } = mods
 const H = (s) => { const [a, b] = s.split(':').map(Number); return a * 60 + b }
 const TOKYO = { lat: 35.693, lng: 139.7 }
 const east = (p, kmE, kmN = 0) => ({ lat: p.lat + kmN / 111, lng: p.lng + kmE / 90.4 })
@@ -680,6 +684,27 @@ const tests = {
     const meal = (id) => { const q = two.placed.get(id); return !!q && (inSlot(q.start, '11:00', '14:45') || inSlot(q.start, '17:15', '21:00')) }
     t(two.placed.size === 4 && meal('pizzeria') && meal('trattoria'), `with a second day: ${[...two.placed].sort((a, b) => a[1].day - b[1].day || a[1].start - b[1].start).map(([id, q]) => id + ' d' + q.day + ' ' + E.hhmm(q.start)).join(', ')}`)
   },
+  r20: (t) => {
+    // the same trip, its places handed over in another order: the plan was another plan (on a real trip 82 to 84
+    // places on a day, by nothing but the order the rows came in). The made-up 20-day trip (126 places, two couples),
+    // as written, backwards and in five shuffles: the same places on the same days at the same times
+    const f = JSON.parse(readFileSync(join(fixturesDir, 'trip-20-days.json'), 'utf8'))
+    const run = () => load(structuredClone(f), mods)
+    const key = (o) => JSON.stringify([...o.placed].map(([id, p]) => [id, p.day, p.start]).sort((a, b) => (a[0] < b[0] ? -1 : 1)))
+    const first = run()
+    const out = E.plan(first.days, first.units, first.fixed)
+    t(out.placed.size > 60, `only ${out.placed.size} places on a day`)
+    // a small dice of its own, the same every run
+    let seed = 20261127
+    const dice = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
+    const orders = [(us) => [...us].reverse()]
+    for (let k = 0; k < 5; k++) orders.push((us) => { const a = [...us]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(dice() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a })
+    orders.forEach((mix, k) => {
+      const x = run()
+      const o = E.plan(x.days, mix(x.units), x.fixed)
+      t(key(o) === key(out), `order ${k} (${k ? 'shuffle ' + k : 'backwards'}): ${o.placed.size} places on a day against ${out.placed.size}, ${[...o.placed].filter(([id, p]) => out.placed.get(id)?.day !== p.day || out.placed.get(id)?.start !== p.start).length} of them on another day or hour`)
+    })
+  },
 }
 
 const only = process.argv.slice(2)
@@ -692,7 +717,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 16 ? 'round 6, test ' + n : Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 19 ? 'round 9, test ' + n : Number(n.slice(1)) > 16 ? 'round 6, test ' + n : Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }

@@ -76,6 +76,9 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
   runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside
   it (`../_shared/areas.ts`).
+- `node scripts/plan-fixes-test.mjs r20` (round 9): the made-up 20-day trip planned as written, backwards and in five
+  shuffles of its places must give the same places on the same days at the same times. `plan()` sorts the places by id
+  first; before that the rows' order alone moved a real trip between 82 and 84 places on a day.
 
 ## Who a trip is planned for (`scripts/plan-parties-test.mjs`)
 
