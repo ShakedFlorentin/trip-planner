@@ -392,6 +392,16 @@ const tests = {
     const i = line.indexOf('nowhere')
     t(i === 0 || i === line.length - 1, `the day goes ${line.join(' > ')}`)
   },
+  r10: (t) => {
+    // the morning couple B flies out they have no hours in town: couple A's day is their own, and their own places
+    // are not held to the three hours "apart" of a day spent together
+    const d = [day(1, { A: pres(), B: pres({ end: H('9:30'), depart: true }) })]
+    const out = E.plan(d, ['one', 'two', 'three'].map((id, i) => unit(id, { mins: 80, point: east(TOKYO, i * 0.4) })), [])
+    t(out.placed.size === 3, `${out.placed.size} of couple A's 3 places planned on the day couple B flies out`)
+    // a day both couples do have: the three hours still hold
+    const both = E.plan([day(1, { A: pres(), B: pres() })], ['one', 'two', 'three'].map((id, i) => unit(id, { mins: 80, point: east(TOKYO, i * 0.4) })), [])
+    t(both.placed.size === 2, `${both.placed.size} of couple A's 3 places planned on a day with couple B in town, expected 2`)
+  },
 }
 
 const only = process.argv.slice(2)

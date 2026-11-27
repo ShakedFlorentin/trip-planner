@@ -473,8 +473,9 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     // the day they land is a lighter day, whatever hour the flight came in
     return Math.max(0, Math.min((p.cap ?? DAY_CAP) * (p.landing ? LANDING_SHARE : 1), p.end - p.start) - (fixedMins.get(day + '|' + c) ?? 0))
   }
-  // the couples sleeping in the same city as this couple that day
-  const together = (d: Day, c: string) => [...d.at].filter(([, p]) => p.base === d.at.get(c)!.base).map(([o]) => o)
+  // the couples in the same city as this couple that day, with hours to spend there (a couple that flies out in the
+  // morning is not company for the day: the ones who stay plan it as their own)
+  const together = (d: Day, c: string) => [...d.at].filter(([o, p]) => p.base === d.at.get(c)!.base && (o === c || p.end > p.start)).map(([o]) => o)
 
   const unplanned = new Map<string, 'closed' | 'no_day' | 'full'>()
   const options = new Map<string, number[]>()
