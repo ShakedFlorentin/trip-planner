@@ -1105,6 +1105,65 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     }
     return { bad, meals, back }
   }
+  // a detour: a place only some of the day's people liked, far from where the day is, planned between two stops in
+  // the same part of town (a tea house 12 km south between a lunch and a dinner in the centre), so they ride out and
+  // back for it. It moves on its own to a day that takes it on time with no such ride, nothing late and no meal out of
+  // its slot; with no such day it waits, and the hours it leaves are filled below. A place everyone on the day shares
+  // is the day's plan and stays, and so does a meal (its slot decides where it goes)
+  const lineOf = (day: number, c: string) =>
+    [...timesOf(day)]
+      .filter(([id]) => unitById.get(id)!.couples.includes(c) && pt(unitById.get(id)!))
+      .sort((a, b) => a[1].start - b[1].start)
+      .map(([id]) => unitById.get(id)!)
+  const detours = (day: number, c: string) => {
+    const line = lineOf(day, c)
+    const found: Unit[] = []
+    for (let i = 2; i < line.length; i++)
+      for (let j = 0; j < i - 1; j++)
+        if (km(line[i].point!, line[j].point!) <= BACK_NEAR)
+          for (let q = j + 1; q < i; q++) if (km(line[q].point!, line[j].point!) >= BACK_FAR && !found.includes(line[q])) found.push(line[q])
+    return found
+  }
+  for (const d of days) {
+    for (const c of d.at.keys()) {
+      for (let round = 0; round < 3; round++) {
+        const here = dayState(d.day)
+        if (!here.back) break
+        const all = together(d, c).length
+        let fixedIt = false
+        for (const u of detours(d.day, c)) {
+          if (isMeal(u) || whoOn(u, d).length >= all) continue
+          put(u, null)
+          const left = dayState(d.day)
+          if (left.back >= here.back || left.bad > here.bad || left.meals < here.meals) {
+            put(u, d.day)
+            continue
+          }
+          let best: number | null = null
+          let bestD = Infinity
+          for (const day of options.get(u.id)!) {
+            if (day === d.day || isAway(byDay.get(day)!, u) || !fits(u, day)) continue
+            const before = dayState(day)
+            const dl = delta(u, day)
+            put(u, day)
+            const p = timesOf(day).get(u.id)!
+            const after = dayState(day)
+            put(u, null)
+            if (p.late || p.missed || after.bad > before.bad || after.back > before.back || after.meals < before.meals) continue
+            if (dl < bestD) {
+              bestD = dl
+              best = day
+            }
+          }
+          if (best != null) put(u, best)
+          fixedIt = true
+          break
+        }
+        if (!fixedIt) break
+      }
+    }
+  }
+
   for (const u of order) {
     if (at.get(u.id) != null || u.far || !pt(u)) continue
     let best: number | null = null

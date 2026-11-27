@@ -529,6 +529,44 @@ const tests = {
     const eve = E.plan(late({ start: H('15:30') }), [{ ...us[4], best: 'midday' }], [])
     t(eve.placed.get('grill')?.start >= H('17:15') && !eve.issues.some((i) => i.kind === 'no_lunch'), `a day that starts at 15:30: the restaurant at ${eve.placed.has('grill') ? E.hhmm(eve.placed.get('grill').start) : '-'}`)
   },
+  r15: (t) => {
+    // a day together: a shrine to the south, couple B's own lunch and the shared dinner both in the centre, and a tea
+    // house only couple B liked 13 km to the south. Planned between the two meals it sends them out of the centre
+    // and back for 80 minutes of trains: it waits for a day that takes it without that, and the day keeps the rest
+    const C = { lat: 35.003, lng: 135.759 }
+    const k = (x = {}) => pres({ base: 'kyoto', hotel: C, ...x })
+    const u = (id, x = {}) => unit(id, { couples: ['A', 'B'], base: 'kyoto', point: C, priority: 4, ...x })
+    const us = [
+      u('shrine', { best: 'morning', mins: 120, opens: null, closes: null, outdoor: true, point: east(C, 1.8, -3.9) }),
+      u('bento', { couples: ['B'], category: 'food', best: 'midday', mins: 75, opens: H('11:30'), closes: H('19:30'), point: east(C, 0.8, -0.4) }),
+      u('kaiseki', { couples: ['A'], category: 'food', best: 'midday', mins: 120, opens: H('12:00'), closes: H('21:00'), priority: 3.3, point: east(C, 0.4, 0.8) }),
+      u('teashop', { couples: ['A'], category: 'shopping', mins: 60, opens: H('10:00'), closes: H('17:00'), priority: 4.5, point: east(C, 0.6, 1) }),
+      u('tea', { couples: ['B'], category: 'cafe', best: 'morning', mins: 90, opens: H('10:00'), closes: H('17:30'), point: east(C, 3.9, -12.5) }),
+      u('grill', { category: 'food', best: 'evening', mins: 90, opens: null, closes: null, point: east(C, 0.5, 0.1) }),
+    ]
+    const lineOf = (out, d, c) => [...out.placed].filter(([id, p]) => p.day === d && us.find((x) => x.id === id).couples.includes(c)).sort((a, b) => a[1].start - b[1].start).map(([id]) => id)
+    const back = (ids) => E.outAndBack(ids.map((id) => us.find((x) => x.id === id).point))
+    const one = [day(1, { A: k(), B: k() })]
+    const out = E.plan(one, us, [])
+    const b = lineOf(out, 1, 'B')
+    t(back(b) === 0, `couple B goes out and back: ${b.join(' > ')}`)
+    t(['shrine', 'bento', 'grill', 'kaiseki', 'teashop'].every((id) => out.placed.has(id)), `the day lost a place: ${[...out.placed.keys()].join(', ')}`)
+    t(out.placed.has('tea') || out.unplanned.get('tea') === 'full', 'the tea house is neither planned nor said to be waiting')
+    t(!out.issues.some((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner'), 'a meal left its slot')
+    // the plan is the same when the planner runs again on it (the tea house does not come back on the next run)
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), `a second run changed the plan: ${lineOf(again, 1, 'B').join(' > ')}`)
+    // with a day of their own after it, the tea house is planned there: nothing is lost
+    const two = E.plan([one[0], day(2, { B: k() })], us, [])
+    t(two.placed.get('tea')?.day === 2 && back(lineOf(two, 1, 'B')) === 0, `with a second day: the tea house on day ${two.placed.get('tea')?.day ?? '-'}`)
+    // a far stop everyone on the day shares is the day's plan, not a detour: it stays, whatever the line looks like
+    const shared = us.map((x) => (x.id === 'tea' ? { ...x, couples: ['A', 'B'] } : x.id === 'bento' ? { ...x, couples: ['A', 'B'] } : x)).filter((x) => x.id !== 'kaiseki' && x.id !== 'teashop')
+    const all = E.plan(one, shared, [])
+    t(all.placed.has('tea'), 'a far place both couples liked was taken off the day')
+    // and a far stop that is on the way (the shrine, then the tea house, then back for dinner) is no out-and-back: it stays
+    const way = E.plan(one, us.filter((x) => x.id !== 'bento'), [])
+    t(way.placed.has('tea') && back(lineOf(way, 1, 'B')) === 0, `with no lunch in the centre: ${lineOf(way, 1, 'B').join(' > ')}`)
+  },
 }
 
 const only = process.argv.slice(2)
