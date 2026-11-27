@@ -3,7 +3,8 @@
 // r1…r7: the second round (what a replay of a real trip showed), same rule: each fails on the code before its fix.
 // r8…r12: the third round (what was still worse than the plan it replaced).
 // r13…r15: the fourth round (a walk planned after dark, a late lunch on the day they arrive, rides that grew).
-// r16 on: the fifth round (the last ride back across town).
+// r16: the fifth round (the last ride back across town).
+// r17 on: the sixth round (a ride back on a day of shared places; a day with no meal, a lunch pushed out of its hours).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { engine, sunsetMin } from './plan-harness.mjs'
 
@@ -599,6 +600,35 @@ const tests = {
     t(back(alone, 1, 'B') === 0, `a couple alone rides back across town: ${[...alone.placed].sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')}`)
     t(alone.placed.size >= 2, `a couple alone: only ${alone.placed.size} of 3 places left on the day`)
   },
+  r17: (t) => {
+    // a day of places both couples liked: a morning café, a museum 6 km away open around noon only, and a shopping
+    // street next to the café that opens at 15:00. The hours leave one order, and it rides out and back. Nobody has a
+    // place of their own to take off: one of the three shared stops waits, or goes to the next day
+    const u = (id, x = {}) => unit(id, { couples: ['A', 'B'], priority: 4, mins: 60, ...x })
+    const us = [
+      u('cafe', { category: 'cafe', best: 'morning', opens: H('9:00'), closes: H('11:30'), point: east(TOKYO, 0.3) }),
+      u('museum', { best: 'midday', mins: 90, opens: H('11:30'), closes: H('14:30'), priority: 5, point: east(TOKYO, 6) }),
+      u('street', { category: 'shopping', best: 'afternoon', opens: H('15:00'), closes: H('20:00'), priority: 3.5, point: east(TOKYO, 0.6) }),
+    ]
+    const pts = new Map(us.map((x) => [x.id, x.point]))
+    const line = (out, d) => [...out.placed].filter(([, p]) => p.day === d).sort((a, b) => a[1].start - b[1].start).map(([id]) => id)
+    const back = (out, d) => E.outAndBack(line(out, d).map((id) => pts.get(id)))
+    const one = [day(1, { A: pres(), B: pres() })]
+    const out = E.plan(one, us, [])
+    t(back(out, 1) === 0, `a day of shared places rides out and back: ${line(out, 1).join(' > ')}`)
+    t(out.placed.size === 2 && out.placed.has('museum'), `the stops left: ${line(out, 1).join(', ')} (the museum and one of the two others expected)`)
+    t([...out.unplanned.values()].every((r) => r === 'full'), 'the stop taken off is not said to be waiting')
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), 'a second run changed the plan')
+    // with a second day: all three planned, no ride back on either
+    const two = E.plan([one[0], day(2, { A: pres(), B: pres() })], us, [])
+    t(two.placed.size === 3 && back(two, 1) === 0 && back(two, 2) === 0, `with a second day: ${two.placed.size}/3 planned, day 1 ${line(two, 1).join(' > ')}, day 2 ${line(two, 2).join(' > ')}`)
+    // when only the cards' best hours ask for that order (all three open all day), the hours give way, not a place:
+    // café and street together, the museum before or after
+    const open = us.map((x) => ({ ...x, opens: H('9:00'), closes: H('20:00') }))
+    const free = E.plan(one, open, [])
+    t(free.placed.size === 3 && back(free, 1) === 0, `open all day: ${free.placed.size}/3 planned, ${line(free, 1).join(' > ')}`)
+  },
 }
 
 const only = process.argv.slice(2)
@@ -611,7 +641,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 16 ? 'round 6, test ' + n : Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }
