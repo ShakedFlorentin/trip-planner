@@ -2013,10 +2013,8 @@ type Walk = {
   nightU: Uint8Array
   shared: number[]
   presStart: Float64Array
-  /** the hours held, per couple, as from, to, from, to…: what is fixed first, then the walk's own; busyN is how many numbers count */
+  /** the hours something fixed holds, per couple, as from, to, from, to… */
   busy: Float64Array[]
-  fixedN: Int32Array
-  busyN: Int32Array
   clock: Float64Array
   last: Int32Array
   fresh: Uint8Array
@@ -2027,15 +2025,13 @@ type Walk = {
   lineN: Int32Array
   starts: Float64Array
   // A kept walk (walkOrder with keep): where it stood after each of its steps, so that another order that begins
-  // the same way is walked from where the two part. ck holds, per step, the cost and each couple's eight numbers;
-  // keptLine and keptBusy are the kept walk's own lines, and lineOk / busyOk say how much of line / busy still is
-  // the kept walk's (a later walk writes over the rest).
+  // the same way is walked from where the two part. ck holds, per step, the cost and each couple's seven numbers;
+  // keptLine is the kept walk's own lines, and lineOk says how much of line still is the kept walk's (a later walk
+  // writes over the rest).
   stride: number
   ck: Float64Array
   keptLine: Int32Array[]
-  keptBusy: Float64Array[]
   lineOk: Int32Array
-  busyOk: Int32Array
 }
 // These stand outside timetable on purpose: a function made anew for every day that is timed is never run
 // often enough to be compiled, and a day is walked thousands of times.
@@ -2059,7 +2055,7 @@ function backOfLine(kmU: Float64Array, n: number, L: Int32Array, len: number) {
  * becomes the kept one, from `from` on.
  */
 function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: boolean) {
-  const { n, nc, csOf, hasPt, mealU, endU, closeU, wantF, minsU, stayU, rideH, rideU, startU, waitsU, floorU, slotFrom, slotTo, fixedNear, nightU, busy, busyN, clock, last, fresh, mealAt, nightDone, blind, line, lineN, starts, stride, ck, keptLine, keptBusy, lineOk, busyOk } = T
+  const { n, nc, csOf, hasPt, mealU, endU, closeU, wantF, minsU, stayU, rideH, rideU, startU, waitsU, floorU, slotFrom, slotTo, fixedNear, nightU, busy, clock, last, fresh, mealAt, nightDone, blind, line, lineN, starts, stride, ck, keptLine, lineOk } = T
   let cost = 0
   if (from > 0) {
     let o = from * stride
@@ -2074,21 +2070,14 @@ function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: 
       nightDone[c] = ck[o + 4]
       blind[c] = ck[o + 5]
       const ln = (lineN[c] = ck[o + 6])
-      const bn = (busyN[c] = ck[o + 7])
-      o += 8
-      // the kept walk's line and hours up to here, where a walk since then wrote over them
+      o += 7
+      // the kept walk's line up to here, where a walk since then wrote over it
       if (lineOk[c] < ln) {
         const L = line[c]
         const K = keptLine[c]
         for (let y = lineOk[c]; y < ln; y++) L[y] = K[y]
       }
       lineOk[c] = ln
-      if (busyOk[c] < bn) {
-        const b = busy[c]
-        const K = keptBusy[c]
-        for (let y = busyOk[c]; y < bn; y++) b[y] = K[y]
-      }
-      busyOk[c] = bn
     }
   } else {
     for (let c = 0; c < nc; c++) {
@@ -2101,9 +2090,7 @@ function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: 
       // places with no known point since the last known one, per couple: the next known place closes them in
       blind[c] = 0
       lineN[c] = 0
-      busyN[c] = T.fixedN[c]
       lineOk[c] = 0
-      busyOk[c] = T.fixedN[c]
     }
   }
   for (let k = from; k < order.length; k++) {
@@ -2124,12 +2111,14 @@ function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: 
     t = Math.max(t, floorU[i])
     // a full meal waits until the last one has settled (a café or dessert stop doesn't count)
     if (mealU[i]) for (let x = 0; x < cs.length; x++) if (mealAt[cs[x]] >= 0) t = Math.max(t, mealAt[cs[x]] + MEAL_GAP)
+    // Only what is fixed can be in the way. The walk's own earlier stops cannot: each of them ended by the time its
+    // couple's clock shows, and nothing here starts before the clock of any of its couples (t is never under arrive,
+    // which is never under a clock).
     for (let guard = 0; guard < 6; guard++) {
       let clashEnd = -1
       for (let x = 0; x < cs.length && clashEnd < 0; x++) {
         const b = busy[cs[x]]
-        const bn = busyN[cs[x]]
-        for (let y = 0; y < bn; y += 2) if (t < b[y + 1] && t + mins > b[y]) { clashEnd = b[y + 1]; break }
+        for (let y = 0; y < b.length; y += 2) if (t < b[y + 1] && t + mins > b[y]) { clashEnd = b[y + 1]; break }
       }
       // a full meal not within MEAL_GAP of a fixed one (before or after it): it goes after that meal has settled
       let near = -1
@@ -2158,14 +2147,6 @@ function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: 
       fresh[c] = 0
       clock[c] = s + mins
       last[c] = i
-      const bn = busyN[c]
-      busy[c][bn] = s
-      busy[c][bn + 1] = s + mins
-      if (keep) {
-        keptBusy[c][bn] = s
-        keptBusy[c][bn + 1] = s + mins
-      }
-      busyN[c] = bn + 2
       if (mealU[i]) mealAt[c] = s
       if (hasPt[i]) {
         cost += blind[c] * UNKNOWN_MID
@@ -2187,16 +2168,11 @@ function walkOrder(T: Walk, order: number[], bound: number, from: number, keep: 
         ck[o + 4] = nightDone[c]
         ck[o + 5] = blind[c]
         ck[o + 6] = lineN[c]
-        ck[o + 7] = busyN[c]
-        o += 8
+        o += 7
       }
     }
   }
-  if (keep)
-    for (let c = 0; c < nc; c++) {
-      lineOk[c] = lineN[c]
-      busyOk[c] = busyN[c]
-    }
+  if (keep) for (let c = 0; c < nc; c++) lineOk[c] = lineN[c]
   for (let c = 0; c < nc; c++) {
     cost += backOfLine(T.kmU, n, line[c], lineN[c]) * T.backCost
     if (lineN[c]) cost += T.rideHome[c * n + last[c]] * HOME_W
@@ -2236,10 +2212,21 @@ function insertByHour(T: Walk, us: number[], before: number[]) {
   }
   return order
 }
-/** Improve an order: move one place, swap two, reverse a stretch; the first change that makes the day cheaper is kept. */
-function improveOrder(T: Walk, start: number[]) {
+/** Are the two orders the same one? */
+const sameOrder = (a: number[], b: number[]) => {
+  if (a.length !== b.length) return false
+  for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return false
+  return true
+}
+/**
+ * Improve an order: move one place, swap two, reverse a stretch; the first change that makes the day cheaper is kept.
+ * `settled` says no single change makes the order it ends on cheaper (it did not stop at the limit of passes).
+ * `known`: an order already known to be settled. An order that becomes it would end on it, so it stops there.
+ */
+function improveOrder(T: Walk, start: number[], known: number[] | null) {
   let order = start
   let cost = walkOrder(T, order, Infinity, 0, true)
+  if (known && sameOrder(order, known)) return { order, cost, settled: true }
   const len = order.length
   // the order being tried: written over for each try, and it becomes the order when the try is cheaper
   let next: number[] = new Array(len).fill(0)
@@ -2248,11 +2235,17 @@ function improveOrder(T: Walk, start: number[]) {
   let kept = 0
   let refusedAt = -1
   let refusedWhen = -1
+  // the pair at which a try was last kept. When a pass comes round to that pair again and has kept nothing, every
+  // pair after it was already tried on this very order and refused: the pass is over
+  let keptI = -1
+  let keptJ = -1
+  let keptPass = -2
   for (let pass = 0; pass < 8; pass++) {
     let better = false
     for (let i = 0; i < len; i++) {
       for (let j = 0; j < len; j++) {
         if (i === j) continue
+        if (!better && keptPass === pass - 1 && (i > keptI || (i === keptI && j > keptJ))) return { order, cost, settled: true }
         // the tries of this pair begin like the order does, up to the first of the two
         const from = j > i ? i : j
         // the place at i taken out and put in at j
@@ -2281,7 +2274,11 @@ function improveOrder(T: Walk, start: number[]) {
             better = true
             moved = true
             kept++
+            keptI = i
+            keptJ = j
+            keptPass = pass
             walkOrder(T, order, Infinity, from, true)
+            if (known && sameOrder(order, known)) return { order, cost, settled: true }
           } else if (j === i + 1) {
             refusedAt = i
             refusedWhen = kept
@@ -2303,7 +2300,11 @@ function improveOrder(T: Walk, start: number[]) {
               better = true
               swapped = true
               kept++
+              keptI = i
+              keptJ = j
+              keptPass = pass
               walkOrder(T, order, Infinity, from, true)
+              if (known && sameOrder(order, known)) return { order, cost, settled: true }
             }
           }
           // the stretch from i to j turned round (a stretch of three: that is the two ends changed over, just tried)
@@ -2317,15 +2318,19 @@ function improveOrder(T: Walk, start: number[]) {
               cost = c
               better = true
               kept++
+              keptI = i
+              keptJ = j
+              keptPass = pass
               walkOrder(T, order, Infinity, from, true)
+              if (known && sameOrder(order, known)) return { order, cost, settled: true }
             }
           }
         }
       }
     }
-    if (!better) break
+    if (!better) return { order, cost, settled: true }
   }
-  return { order, cost }
+  return { order, cost, settled: false }
 }
 
 /**
@@ -2411,18 +2416,15 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[], backCost = BACK_COST):
     }
   }
   const fixedNear = units.map((u, i) => (mealU[i] ? who.get(u.id)!.flatMap((c) => fixedMeals.get(c) ?? []) : []))
-  // the hours something fixed holds, per couple, as from, to, from, to…; a walk adds its own after them
+  // the hours something fixed holds, per couple, as from, to, from, to…
   const fixedBusy: number[][] = couples.map(() => [])
   for (const f of fixed) if (f.start != null) for (const c of f.couples) if (cix.has(c)) fixedBusy[cix.get(c)!].push(f.start, f.start + f.mins)
-  const hours = () => fixedBusy.map((x) => { const b = new Float64Array(x.length + 2 * n); b.set(x); return b })
-  const stride = 1 + 8 * nc
+  const stride = 1 + 7 * nc
   const T: Walk = {
     n, nc, backCost, csOf, hasPt, mealU, endU, closeU, wantF, wantU, minsU, stayU, rideH, rideHome, rideU, kmU, startU, waitsU, floorU, slotFrom, slotTo, fixedNear, nightU,
     shared: units.map((u) => u.couples.length),
     presStart: Float64Array.from(pres, (q) => q.start),
-    busy: hours(),
-    fixedN: Int32Array.from(fixedBusy, (x) => x.length),
-    busyN: new Int32Array(nc),
+    busy: fixedBusy.map((x) => Float64Array.from(x)),
     clock: new Float64Array(nc),
     last: new Int32Array(nc),
     fresh: new Uint8Array(nc),
@@ -2435,14 +2437,11 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[], backCost = BACK_COST):
     stride,
     ck: new Float64Array((n + 1) * stride),
     keptLine: couples.map(() => new Int32Array(n)),
-    keptBusy: hours(),
     lineOk: new Int32Array(nc),
-    busyOk: new Int32Array(nc),
   }
   const starts = T.starts
   const walk = (order: number[]) => walkOrder(T, order, Infinity, 0, false)
   const insertInto = (us: number[], before: number[]) => insertByHour(T, us, before)
-  const improve = (start: number[]) => improveOrder(T, start)
   // the two starting orders: every place by its hour; or what everyone does together first, then each couple's own
   const groups: number[] = []
   const sets = new Map<string, number[]>()
@@ -2451,8 +2450,9 @@ function timetable(d: Day, units: Unit[], fixed: Fixed[], backCost = BACK_COST):
   // (when everyone on the day shares every place, the two are one order: it is made and improved once)
   const first = sets.size === 1 ? [...groups] : insertInto(units.map((_, i) => i), [])
   const same = first.length === groups.length && first.every((x, i) => x === groups[i])
-  const a = improve(first)
-  const b = same ? a : improve(groups)
+  const a = improveOrder(T, first, null)
+  // (the second start stops as soon as it becomes the order the first one ended on, when nothing betters that one)
+  const b = same ? a : improveOrder(T, groups, a.settled ? a.order : null)
   const best = b.cost < a.cost - 0.01 ? b : a
   walk(best.order)
   const out = new Map<string, Placed>()
