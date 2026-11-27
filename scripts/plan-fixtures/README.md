@@ -58,6 +58,8 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   a park is over by dusk; a day that starts by 14:15 gets a late lunch as its first stop, started by 14:45; one
   couple's own far place between two stops in the same part of town moves to another day or waits, so nobody rides
   out and back).
+  and `r16` for round 5 (any stop that makes the day's line ride back across town moves to another day, the place of
+  the fewest people first; one couple's own place, or a place of a couple alone that day, waits when no day takes it).
   `node scripts/plan-fixes-test.mjs r3 r4` runs only those; `PLAN_DIR=<a copy of plan-trip>` runs them on another
   version (each must fail on the version before its fix).
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after

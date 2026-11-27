@@ -2,7 +2,8 @@
 // real points, move/landing/departure days, baby and card facts). Each fails on the code before its fix.
 // r1…r7: the second round (what a replay of a real trip showed), same rule: each fails on the code before its fix.
 // r8…r12: the third round (what was still worse than the plan it replaced).
-// r13 on: the fourth round (a walk planned after dark, a late lunch on the day they arrive, rides that grew).
+// r13…r15: the fourth round (a walk planned after dark, a late lunch on the day they arrive, rides that grew).
+// r16 on: the fifth round (the last ride back across town).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { engine, sunsetMin } from './plan-harness.mjs'
 
