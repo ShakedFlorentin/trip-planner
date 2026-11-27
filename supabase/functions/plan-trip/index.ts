@@ -9,7 +9,7 @@ import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Outcome, type
 import { buildDays, type Sleep } from './presence.ts'
 import { failBody, type FailCode } from './errors.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
-import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
+import { addressVariants, areaPoint, cacheKeys, locate, primed, type GeoAsk, type GeoDeps } from './geo.ts'
 import { loop } from './lease.ts'
 import { planOnce, type PlanMemo } from './memo.ts'
 import { ownerOf, partiesOf, partyOf, shown, shownKey, wanted, yesCount, type Vote } from './parties.ts'
@@ -448,7 +448,29 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   // ---- where everyone sleeps, and the hours each couple has each day
   const hotels = bookings.filter((b) => b.kind === 'hotel' && b.starts_at && b.ends_at)
   const hotelPt = new Map<string, Point>()
-  const geo = geoDeps(admin)
+  // what is asked of the address lookup: for a hotel, a liked place with no point of its own, a booking with an address
+  const hotelAsk = (h: Booking): GeoAsk => {
+    const base = hotelBase(h.title + ' ' + (h.location ?? ''))
+    return { queries: [h.title, ...addressVariants(h.location, h.title, base ? NAME_EN[base] : null)], near: base ? BASE[base] : null, maxKm: 40 }
+  }
+  const placeAsk = (c: Cand): GeoAsk | null =>
+    c.address && c.city && BASE[c.city] ? { address: c.address, name: c.name, city: NAME_EN[c.city] ?? c.city, near: BASE[c.city] } : null
+  const bookingAsk = (b: Booking): GeoAsk | null => (b.kind !== 'train' && b.location ? { address: b.location } : null)
+  // every address the run may ask for is read from the cache at once (one read, not one for each); the lookups
+  // below then ask in the same order as before and are answered from it
+  const asks: (GeoAsk | null)[] = [
+    ...hotels.map(hotelAsk),
+    ...want.map(({ c }) => (ownPoint(c) ? null : placeAsk(c))),
+    ...bookings.map((b) => (['hotel', 'flight', 'insurance'].includes(b.kind) ? null : bookingAsk(b))),
+  ]
+  const geo = await primed(
+    geoDeps(admin),
+    asks.flatMap((x) => (x ? cacheKeys(x) : [])),
+    async (keys) => {
+      const { data, error } = await admin.from('geo_cache').select('q,lat,lng,at').in('q', keys)
+      return error ? null : data
+    },
+  )
   for (const h of hotels) {
     if (hotelPt.has(h.id)) continue
     const base = hotelBase(h.title + ' ' + (h.location ?? ''))
@@ -457,10 +479,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     // is another hotel of that name, and the next way of writing it is tried
     const p =
       (same && hotelPt.get(same.id)) ||
-      (await locate(
-        { queries: [h.title, ...addressVariants(h.location, h.title, base ? NAME_EN[base] : null)], near: base ? BASE[base] : null, maxKm: 40 },
-        geo,
-      ))
+      (await locate(hotelAsk(h), geo))
     // not found: the city's middle is closer to the truth than nothing
     hotelPt.set(h.id, p ?? (base && BASE[base] ? BASE[base] : BASE.tokyo))
   }
@@ -535,11 +554,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const f = factsOf(c)
     // where it is: its own coordinates, else its address looked up (the same free cached lookup as the hotels), else
     // not known: the city's middle then only says which city's days it belongs to (approx)
-    const own =
-      ownPoint(c) ??
-      (c.address && c.city && BASE[c.city]
-        ? await locate({ address: c.address, name: c.name, city: NAME_EN[c.city] ?? c.city, near: BASE[c.city] }, geo)
-        : null)
+    const ask = placeAsk(c)
+    const own = ownPoint(c) ?? (ask ? await locate(ask, geo) : null)
     const unitCouples = ownerOf(p.who, one)?.split(' + ') ?? couples
     // the nearest city its couples sleep in
     const bases = [...new Set(days.flatMap((d) => unitCouples.map((x) => d.at.get(x)?.base).filter((b): b is string => !!b)))]
@@ -643,7 +659,8 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     // a booked table or ticket at a place we know: plan near it
     const known = places.find((p) => factKey(p.name) === factKey(b.title) || factKey(b.title).includes(factKey(p.name)))
     let point: Point | null = known?.lat != null ? { lat: known.lat, lng: known.lng! } : null
-    if (!point && b.kind !== 'train' && b.location) point = await locate({ address: b.location }, geo)
+    const ask = point ? null : bookingAsk(b)
+    if (ask) point = await locate(ask, geo)
     // a booked table is a full meal: the planner adds no other meal around it
     fixed.push({ day, couples: whoOf(b.who, day), point, start: s.min, mins: len, meal: b.kind === 'restaurant' })
   }

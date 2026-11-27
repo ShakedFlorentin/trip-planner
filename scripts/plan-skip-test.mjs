@@ -1,6 +1,8 @@
 // A run asked to plan what it has just planned does not plan again (plan-trip/memo.ts). The plan a run gets back
-// must be the plan it would have worked out: checked on every fixture. index.ts (a Deno entry, not runnable here) is
-// read as text for how it uses it. `node scripts/plan-skip-test.mjs`
+// must be the plan it would have worked out: checked on every fixture. And a run reads the addresses it may look up
+// from geo_cache at once, not one read for each (primed in plan-trip/geo.ts): the lookups must ask and answer as
+// before. index.ts (a Deno entry, not runnable here) is read as text for how it uses the two.
+// `node scripts/plan-skip-test.mjs`
 import { build } from 'esbuild'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -14,7 +16,7 @@ const bundle = async (file) => {
   return import('data:text/javascript;base64,' + Buffer.from(b.outputFiles[0].text).toString('base64'))
 }
 const mods = await engine()
-const { E } = mods
+const { E, G } = mods
 const M = await bundle('memo.ts')
 // a plan as text, Maps written out, to compare two of them to the letter
 const text = (o) => JSON.stringify(o, (_k, v) => (v instanceof Map ? [...v] : v instanceof Set ? [...v] : v))
@@ -96,11 +98,112 @@ t(same === n, `the same input a second time is not planned again, and the plan g
   t(ms < 20, `telling the input apart costs little beside planning (${ms.toFixed(1)} ms for ${x.units.length} places)`)
 }
 
-// ---- index.ts plans through it
+// ---- the run's addresses are read from the cache at once
+{
+  const now = Date.parse('2026-11-27T00:00:00Z')
+  const TOKYO = { lat: 35.68, lng: 139.76 }
+  const table = () => new Map([
+    ['hotel a', { lat: 35.68, lng: 139.76, at: '2026-11-01T00:00:00.000Z' }],
+    // a hotel of the same name in another city: not this one, the next way of writing it is tried
+    ['hotel b', { lat: 34.7, lng: 135.5, at: '2026-11-01T00:00:00.000Z' }],
+    ['1-2-3 ginza, chuo-ku, tokyo', { lat: 35.67, lng: 139.77, at: '2026-11-01T00:00:00.000Z' }],
+    // not found two days ago: believed; not found a month ago: asked again
+    ['new cafe, tokyo', { lat: null, lng: null, at: '2026-11-25T00:00:00.000Z' }],
+    ['old miss, tokyo', { lat: null, lng: null, at: '2026-10-01T00:00:00.000Z' }],
+  ])
+  const net = new Map([['old miss, tokyo', { lat: 35.7, lng: 139.7 }], ['never seen, tokyo', null]])
+  const world = (budget = 3) => {
+    const rows = table()
+    const log = { get: [], many: [], put: [], fetch: [] }
+    const deps = {
+      now,
+      budget: { left: budget },
+      get: async (q) => (log.get.push(q), rows.get(q) ?? null),
+      put: async (q, p) => { log.put.push(q); rows.set(q, { lat: p?.lat ?? null, lng: p?.lng ?? null, at: new Date(now).toISOString() }) },
+      fetch: async (q) => {
+        log.fetch.push(q)
+        if (/down/i.test(q)) throw new Error('timeout')
+        return net.get(q.toLowerCase()) ?? null
+      },
+    }
+    const readMany = async (keys) => (log.many.push(keys), keys.filter((k) => rows.has(k)).map((k) => ({ q: k, ...rows.get(k) })))
+    return { rows, log, deps, readMany }
+  }
+  // what a run asks, in its order: hotels, places, a booking; one address twice
+  const asks = [
+    { queries: ['Hotel A', 'Hotel A, Tokyo'], near: TOKYO, maxKm: 40 },
+    { queries: ['Hotel B', '1-2-3 Ginza, Chuo-ku, Tokyo', 'Hotel B, Tokyo'], near: TOKYO, maxKm: 40 },
+    { address: '4-5-6 Shibuya, Tokyo 150-0002, Japan', name: 'New Cafe', city: 'Tokyo', near: TOKYO },
+    { address: null, name: 'Old Miss', city: 'Tokyo', near: TOKYO },
+    { address: null, name: 'Never Seen', city: 'Tokyo', near: TOKYO },
+    { address: null, name: 'Old Miss', city: 'Tokyo', near: TOKYO },
+    { address: 'Server Down St, Tokyo' },
+    { address: null, name: 'Never Seen', city: 'Tokyo', near: TOKYO },
+  ]
+  const runAll = async (deps) => { const out = []; for (const x of asks) out.push(await G.locate(x, deps)); return out }
+
+  // the keys said ahead are the keys locate asks for, in its order
+  const cold = world(0)
+  cold.rows.clear()
+  await runAll(cold.deps)
+  t(JSON.stringify(asks.flatMap((x) => G.cacheKeys(x))) === JSON.stringify(cold.log.get), `the keys read ahead are the keys the lookups ask for, in the same order (${cold.log.get.length})`)
+
+  const before = world()
+  const was = await runAll(before.deps)
+  const after = world()
+  const geo = await G.primed(after.deps, asks.flatMap((x) => G.cacheKeys(x)), after.readMany)
+  const is = await runAll(geo)
+  t(JSON.stringify(is) === JSON.stringify(was) && was[0]?.lat === 35.68 && was[1]?.lat === 35.67 && was[2] === null && was[3]?.lat === 35.7, 'every lookup answers as it did with one read for each')
+  t(after.log.get.length === 0 && after.log.many.length === 1 && before.log.get.length > 10, `one read instead of ${before.log.get.length}`)
+  t(new Set(after.log.many[0]).size === after.log.many[0].length, 'no address is asked for twice in it')
+  t(JSON.stringify(after.log.fetch) === JSON.stringify(before.log.fetch.filter((q, i, a) => a.indexOf(q) === i)) && after.log.fetch.length <= 3, `the network is asked in the same order, within the run's count (${after.log.fetch.join(' | ')})`)
+  t(geo.budget === after.deps.budget && after.deps.budget.left === 0, 'the lookups left are the run\'s own count')
+  t(JSON.stringify(after.log.put) === JSON.stringify(before.log.put.filter((q, i, a) => a.indexOf(q) === i)), 'what was found or not found is written as before')
+  t([...after.rows].every(([k, v]) => JSON.stringify(v) === JSON.stringify(before.rows.get(k))) && after.rows.size === before.rows.size, 'the table ends the same')
+
+  // the read failed: every lookup reads by itself, as before
+  for (const [why, bad] of [['fails', async () => { throw new Error('414') }], ['gives nothing back', async () => null]]) {
+    const w = world()
+    const r = await runAll(await G.primed(w.deps, asks.flatMap((x) => G.cacheKeys(x)), bad))
+    t(JSON.stringify(r) === JSON.stringify(was) && w.log.get.length > 5, `the one read ${why}: the lookups read one by one and answer the same`)
+  }
+  // a long list goes in several reads, each key in one of them
+  {
+    const w = world()
+    const keys = asks.flatMap((x) => G.cacheKeys(x))
+    const r = await runAll(await G.primed(w.deps, keys, w.readMany, 80))
+    const all = w.log.many.flat()
+    t(w.log.many.length > 2 && all.length === new Set(keys).size && new Set(all).size === all.length && w.log.get.length === 0 && JSON.stringify(r) === JSON.stringify(was), `a list too long for one read goes in ${w.log.many.length}, each address in one of them`)
+    t(w.log.many.every((c) => c.length === 1 || c.reduce((n, k) => n + encodeURIComponent(k).length + 9, 0) <= 80), 'no read is longer than its limit')
+  }
+  // a key the list cannot carry is read by itself
+  {
+    const w = world()
+    w.rows.set('bar "moon", tokyo', { lat: 35.66, lng: 139.7, at: '2026-11-01T00:00:00.000Z' })
+    const x = { queries: ['Bar "Moon", Tokyo'], near: TOKYO }
+    const g = await G.primed(w.deps, [...G.cacheKeys(x), 'hotel a'], w.readMany)
+    const p = await G.locate(x, g)
+    const p2 = await G.locate(x, g)
+    t(p?.lat === 35.66 && p2?.lat === 35.66 && !w.log.many.flat().some((k) => k.includes('"')) && w.log.get.length === 1, 'an address with a quote in it is left out of the one read and read by itself, once')
+  }
+  // a key nobody said ahead is still answered
+  {
+    const w = world()
+    const g = await G.primed(w.deps, [], w.readMany)
+    const p = await G.locate({ queries: ['Hotel A'], near: TOKYO }, g)
+    t(p?.lat === 35.68 && w.log.many.length === 0 && w.log.get.length === 1, 'an address not read ahead is read when it is asked for')
+  }
+}
+
+// ---- index.ts uses both
 const src = readFileSync(join(dir, 'index.ts'), 'utf8')
 t(/planOnce\(planMemo, tid, days, units, fixed, plan\)/.test(src), 'index.ts plans through planOnce')
 t(/if \(dry\) out = plan\(days, units, fixed\)/.test(src), 'a dry run always plans')
 t((src.match(/[^.\w]plan\(days, units, fixed\)/g) ?? []).length === 1, 'and nothing else in index.ts plans on its own')
+
+t(/const geo = await primed\(\s*geoDeps\(admin\),/.test(src) && (src.match(/geoDeps\(admin\)/g) ?? []).length === 1, 'index.ts reads the run\'s addresses ahead, and looks nothing up past it')
+t(/from\('geo_cache'\)\.select\('q,lat,lng,at'\)\.in\('q', keys\)/.test(src), 'in one read of geo_cache by its keys')
+t((src.match(/await locate\((hotelAsk\(h\)|ask), geo\)/g) ?? []).length === 3 && (src.match(/locate\(/g) ?? []).length === 3, 'the three lookups ask what was read ahead for them')
 
 console.log(failed ? `\n${failed} check(s) failed` : '\nok')
 process.exit(failed ? 1 : 0)

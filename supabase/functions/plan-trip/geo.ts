@@ -20,6 +20,75 @@ export type GeoDeps = {
   fetch: (q: string) => Promise<GeoPoint | null>
 }
 
+/** What locate is asked: an address (with the place's name and city), or the ways of writing it, ready made. */
+export type GeoAsk = { address?: string | null; name?: string | null; city?: string | null; near?: GeoPoint | null; maxKm?: number; queries?: string[] }
+
+/** The cache keys locate asks for, in the order it asks. */
+export function cacheKeys(x: GeoAsk): string[] {
+  return (x.queries ?? addressVariants(x.address, x.name, x.city)).map((q) => q.toLowerCase().trim()).filter(Boolean)
+}
+
+// the keys of one read, as they would stand in the request's address: under what a server takes in one line
+export const READ_CHARS = 6000
+
+/**
+ * The same cache with the run's addresses read ahead, many in one read (readMany: the rows of these keys, or null
+ * when the read failed). locate then asks as before, in the same order, and is answered from what was read; a key
+ * that was not read ahead (its read failed, or it holds a character the list cannot carry) is read by itself, once.
+ * What the run writes is remembered as the table would now give it back.
+ */
+export async function primed(
+  deps: GeoDeps,
+  keys: string[],
+  readMany: (keys: string[]) => Promise<({ q: string } & GeoRow)[] | null>,
+  maxChars = READ_CHARS,
+): Promise<GeoDeps> {
+  const known = new Map<string, Promise<GeoRow | null>>()
+  const chunks: string[][] = []
+  let size = 0
+  for (const k of new Set(keys)) {
+    // a quote or a backslash would break the list of keys
+    if (!k || /["\\]/.test(k)) continue
+    const len = encodeURIComponent(k).length + 9
+    if (!chunks.length || size + len > maxChars) {
+      chunks.push([])
+      size = 0
+    }
+    chunks[chunks.length - 1].push(k)
+    size += len
+  }
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      let rows: ({ q: string } & GeoRow)[] | null = null
+      try {
+        rows = await readMany(chunk)
+      } catch {
+        rows = null
+      }
+      if (!rows) return
+      const byKey = new Map(rows.map((r) => [r.q, r]))
+      for (const k of chunk) {
+        const r = byKey.get(k)
+        known.set(k, Promise.resolve(r ? { lat: r.lat, lng: r.lng, at: r.at } : null))
+      }
+    }),
+  )
+  return {
+    ...deps,
+    // the lookups left are the run's own count: the same object, not a copy
+    budget: deps.budget,
+    get: (q) => {
+      let r = known.get(q)
+      if (!r) known.set(q, (r = deps.get(q)))
+      return r
+    },
+    put: async (q, p) => {
+      await deps.put(q, p)
+      known.set(q, Promise.resolve({ lat: p?.lat ?? null, lng: p?.lng ?? null, at: new Date(deps.now).toISOString() }))
+    },
+  }
+}
+
 // a miss is believed for this long, then asked again
 export const MISS_DAYS = 14
 // an answer farther than this from where the place should be (its city's middle) is another place of the same name
@@ -97,7 +166,7 @@ function kmBetween(a: GeoPoint, b: GeoPoint) {
  * far from where the place should be is not the place.
  */
 export async function locate(
-  x: { address?: string | null; name?: string | null; city?: string | null; near?: GeoPoint | null; maxKm?: number; queries?: string[] },
+  x: GeoAsk,
   deps: GeoDeps,
 ): Promise<GeoPoint | null> {
   const ok = (p: GeoPoint) => !x.near || kmBetween(p, x.near) <= (x.maxKm ?? MAX_KM)
