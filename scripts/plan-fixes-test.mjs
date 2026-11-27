@@ -402,6 +402,28 @@ const tests = {
     const both = E.plan([day(1, { A: pres(), B: pres() })], ['one', 'two', 'three'].map((id, i) => unit(id, { mins: 80, point: east(TOKYO, i * 0.4) })), [])
     t(both.placed.size === 2, `${both.placed.size} of couple A's 3 places planned on a day with couple B in town, expected 2`)
   },
+  r11: (t) => {
+    // a long lunch and a long dinner are the day's sit-downs, not its load: with both planned and two sights, the
+    // free hour of the afternoon still takes a third place, on time, and both meals keep their hours
+    const d = [day(1, { A: pres() })]
+    const us = [
+      unit('lunch', { category: 'food', best: 'midday', mins: 120, opens: H('11:00'), closes: H('15:00'), priority: 4 }),
+      unit('dinner', { category: 'food', best: 'evening', mins: 150, opens: H('17:00'), closes: H('23:00'), priority: 4 }),
+      unit('temple', { best: 'morning', mins: 100, priority: 4, point: east(TOKYO, 0.5) }),
+      unit('garden', { best: 'afternoon', mins: 100, priority: 4, point: east(TOKYO, 0, 0.5) }),
+      unit('shop', { category: 'shopping', mins: 60, priority: 2, point: east(TOKYO, 0.3, 0.3) }),
+    ]
+    const out = E.plan(d, us, [])
+    t(out.placed.size === 5, `${out.placed.size} of 5 planned (left out: ${us.filter((u) => !out.placed.has(u.id)).map((u) => u.id).join(', ') || 'none'})`)
+    for (const [id, p] of out.placed) t(!p.late && !p.missed && p.start + us.find((u) => u.id === id).mins <= H('21:30'), `${id} at ${E.hhmm(p.start)} is late or past its hour`)
+    t(!out.issues.some((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner'), 'a meal left its slot')
+    // and the plan is the same when the planner runs again on it
+    const again = E.plan(d, us.map((u) => ({ ...u, current: out.placed.get(u.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), 'a second run on its own plan changed it')
+    // a day with no free hours takes nothing more: six two-hour sights are more than the day
+    const full = E.plan(d, Array.from({ length: 6 }, (_, i) => unit('s' + i, { mins: 120, point: east(TOKYO, i * 0.2) })), [])
+    t(full.placed.size <= 4, `${full.placed.size} two-hour sights on one day`)
+  },
 }
 
 const only = process.argv.slice(2)

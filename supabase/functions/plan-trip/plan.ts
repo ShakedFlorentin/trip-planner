@@ -122,6 +122,8 @@ const LATE_LUNCH = 13 * 60 + 15
 const LONG_MEAL = 60
 // room kept on a day for a meal still to be placed there
 const MEAL_ROOM = 70
+// a meal counts this much, at most, toward the pace of the day: sitting down to eat is the day's rest, not its load
+const MEAL_PACE = 45
 
 /**
  * Which meals a couple needs that day: lunch when their day covers 13:00-13:30, dinner when it runs to 18:30 (an early dinner still fits: the evening they fly home), and
@@ -524,11 +526,11 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
   // the day's plans plus the rides between them: from the hotel to the nearest place, on to the nearest after it, and
   // back (a day in three corners of the city is a longer day than one in a single neighbourhood)
   const loads = memo.loads
-  const load = (day: number, c: string, extra?: Unit) => {
+  const load = (day: number, c: string, extra?: Unit, rest = false) => {
     const us = [...group(day, c)].map((id) => unitById.get(id)!)
     if (extra) us.push(extra)
     if (!us.length) return 0
-    const key = day + '|' + c + '|' + us.map((u) => u.id).sort().join(',')
+    const key = (rest ? 'r' : '') + day + '|' + c + '|' + us.map((u) => u.id).sort().join(',')
     const hit = loads.get(key)
     if (hit != null) return hit
     const hotel = byDay.get(day)!.at.get(c)!.hotel
@@ -539,7 +541,7 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       let best = 0
       for (let i = 1; i < left.length; i++) if (ride(here, pt(left[i])) < ride(here, pt(left[best]))) best = i
       const [u] = left.splice(best, 1)
-      m += u.mins + HOP + ride(here, pt(u))
+      m += (rest && isMeal(u) ? Math.min(u.mins, MEAL_PACE) : u.mins) + HOP + ride(here, pt(u))
       here = pt(u) ?? here
     }
     const back = ride(here, hotel)
@@ -644,14 +646,16 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     return cost
   }
   // keep: a place already on that day in the plan as it stands; no room is held back from it for a meal still to come
-  const fits = (u: Unit, day: number, keep = false) => {
+  // rest: a meal counts as the sit-down it is (MEAL_PACE) toward the day's pace: for the plan as it stands, and for a
+  // place going into a day's free hours
+  const fits = (u: Unit, day: number, keep = false, rest = keep) => {
     // a meal needs a slot of its own for each of its people: no two lunches, no two dinners
     if (isMeal(u) && [...slotsOn(day, u).values()].some((s) => s == null)) return false
     return whoOn(u, byDay.get(day)!).every((c) => {
       const d = byDay.get(day)!
       // room stays for the lunch and the dinner still to come, while a meal that could fill them waits
       const room = keep ? 0 : mealGaps(day, c, true, isMeal(u) ? u : undefined) * MEAL_ROOM
-      if (load(day, c, u) + room > cap(day, c) + 15) return false
+      if (load(day, c, u, rest) + room > cap(day, c) + 15) return false
       if (!isMeal(u) && u.couples.length < together(d, c).length && apartLoad(day, c) + u.mins > APART_CAP) return false
       let same = 0
       for (const id of group(day, c)) {
@@ -1017,6 +1021,47 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
       }
     }
     if (!moved) break
+  }
+
+  // free hours: a place left out goes into a day that has the hours for it, when the day's times say so: it is on
+  // time there, nothing else on the day turns late or leaves its hour, no meal leaves its slot, and nobody goes back
+  // to a part of town they had left. The day's pace still holds, with a meal counted as the sit-down it is
+  const dayState = (day: number) => {
+    const d = byDay.get(day)!
+    const t = timesOf(day)
+    let bad = 0
+    let meals = 0
+    let back = 0
+    for (const [id, p] of t) {
+      if (p.late || p.missed) bad++
+      const u = unitById.get(id)!
+      if (isMeal(u) && (['lunch', 'dinner'] as const).some((s) => p.start >= MEAL_AT[s].from && p.start <= MEAL_AT[s].to)) meals += whoOn(u, d).length
+    }
+    for (const c of d.at.keys()) {
+      const line = [...t].filter(([id]) => unitById.get(id)!.couples.includes(c) && pt(unitById.get(id)!)).sort((a, b) => a[1].start - b[1].start)
+      back += outAndBack(line.map(([id]) => unitById.get(id)!.point!))
+    }
+    return { bad, meals, back }
+  }
+  for (const u of order) {
+    if (at.get(u.id) != null || u.far || !pt(u)) continue
+    let best: number | null = null
+    let bestD = Infinity
+    for (const day of options.get(u.id)!) {
+      if (isAway(byDay.get(day)!, u) || !fits(u, day, false, true)) continue
+      const before = dayState(day)
+      const dl = delta(u, day)
+      put(u, day)
+      const p = timesOf(day).get(u.id)!
+      const after = dayState(day)
+      put(u, null)
+      if (p.late || p.missed || after.bad > before.bad || after.back > before.back || after.meals < before.meals + (isMeal(u) ? whoOn(u, byDay.get(day)!).length : 0)) continue
+      if (dl < bestD) {
+        bestD = dl
+        best = day
+      }
+    }
+    if (best != null) put(u, best)
   }
 
   const placed = new Map<string, Placed>()
