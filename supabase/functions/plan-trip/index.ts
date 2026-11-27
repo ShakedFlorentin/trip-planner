@@ -5,12 +5,13 @@
 // No AI here: opening hours and the rest come with the card (place_library → candidates, the plan columns), and a
 // card without them is planned from its kind and time_needed.
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
+import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Outcome, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
 import { failBody, type FailCode } from './errors.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
 import { loop } from './lease.ts'
+import { planOnce, type PlanMemo } from './memo.ts'
 import { ownerOf, partiesOf, partyOf, shown, shownKey, wanted, yesCount, type Vote } from './parties.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
@@ -335,6 +336,8 @@ const DEFAULT_TIME: Record<string, BestTime> = { nightlife: 'night' }
 /** The facts of a card that has them; undefined for one never checked. */
 const factsOf = (c: Cand | undefined): Facts | undefined => (c?.facts_at ? c : undefined)
 
+// each trip's last input and its plan, while the function stays loaded (memo.ts)
+const planMemo: PlanMemo = new Map()
 async function run(admin: SupabaseClient, tid: string, dry: boolean) {
   const q = async <T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) => {
     const { data, error } = await p
@@ -645,7 +648,15 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     fixed.push({ day, couples: whoOf(b.who, day), point, start: s.min, mins: len, meal: b.kind === 'restaurant' })
   }
 
-  const out = plan(days, units, fixed)
+  // the same input as the run before gives the same plan: it is not worked out twice (a second request for a change
+  // already planned, a booking edited in a field the planner does not read). A dry run always plans
+  let out: Outcome
+  if (dry) out = plan(days, units, fixed)
+  else {
+    const once = planOnce(planMemo, tid, days, units, fixed, plan)
+    out = once.out
+    if (once.reused) console.log('plan_reused', tid)
+  }
 
   // ---- the rows the plan wants, against the rows there are
   const noteOf = (u: { c: Cand; f?: Facts }) => {
