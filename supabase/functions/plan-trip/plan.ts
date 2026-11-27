@@ -1283,6 +1283,121 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     }
   }
 
+  // meals: people eat every day. A lunch or dinner the day's hours cover is not left empty while a meal place they
+  // liked in that city could take it: a stop that is not a meal gives way before a meal does (the day's pace holds
+  // for sights and shops, not against a lunch).
+  // eating: the needed slots of the day that a meal is timed in, and the couples that need a meal and have none
+  const eating = (day: number) => {
+    const d = byDay.get(day)!
+    const t = timesOf(day)
+    let filled = 0
+    let none = 0
+    const open: { c: string; s: 'lunch' | 'dinner' }[] = []
+    for (const c of d.at.keys()) {
+      const need = needOf.get(day + '|' + c)
+      if (!need || (!need.lunch && !need.dinner)) continue
+      const has = (s: 'lunch' | 'dinner') =>
+        [...t].some(([id, p]) => isMeal(unitById.get(id)!) && unitById.get(id)!.couples.includes(c) && p.start >= MEAL_AT[s].from && p.start <= MEAL_AT[s].to)
+      for (const s of ['lunch', 'dinner'] as const) {
+        if (!need[s]) continue
+        if (has(s)) filled++
+        else open.push({ c, s })
+      }
+      if (!has('lunch') && !has('dinner')) none++
+    }
+    return { filled, none, open, ...ridesOf(day) }
+  }
+  const stopsOf = (day: number) => live.filter((v) => at.get(v.id) === day && !isMeal(v) && !v.far)
+  const sets = (vs: Unit[], n: number): Unit[][] => (n === 0 ? [[]] : n === 1 ? vs.map((v) => [v]) : vs.flatMap((v, i) => vs.slice(i + 1).map((w) => [v, w])))
+  // 1. an empty slot on a day: a meal they liked that is not planned takes it, or the meal already on the day comes
+  //    back into it (a lunch pushed to 15:30 by a bar that has to be reached before it closes). With nothing taken off
+  //    when that works; else with one stop off, else two: the ones that cost least to leave out. Never at the price of
+  //    a place reached after closing, a ride back across town or another place past its hour
+  const fillMeals = () => {
+    for (const d of days) {
+      for (let round = 0; round < 6; round++) {
+        const here = eating(d.day)
+        if (!here.open.length) break
+        const waiting = live.filter(
+          (w) =>
+            isMeal(w) && at.get(w.id) == null && !w.far && options.get(w.id)!.includes(d.day) && !isAway(d, w) && here.open.some((g) => w.couples.includes(g.c) && slotsFor(w, d).includes(g.s)),
+        )
+        let best: { off: Unit[]; w: Unit | null; gain: number; loss: number } | null = null
+        const stops = stopsOf(d.day)
+        for (let n = 0; n <= 2 && !best; n++) {
+          if (!n && !waiting.length) continue
+          for (const off of sets(stops, n)) {
+            for (const v of off) put(v, null)
+            const lost = off.reduce((x, v) => x + lossOf(v), 0)
+            const attempt = (w: Unit | null) => {
+              if (w) {
+                if (!fits(w, d.day, false, true)) return
+                put(w, d.day)
+              }
+              const a = eating(d.day)
+              if (w) put(w, null)
+              if (a.filled <= here.filled || a.late > here.late || a.back > here.back || a.bad > here.bad) return
+              const gain = a.filled - here.filled
+              const loss = lost - (w ? lossOf(w) : 0)
+              if (!best || gain > best.gain || (gain === best.gain && loss < best.loss)) best = { off, w, gain, loss }
+            }
+            if (n) attempt(null)
+            for (const w of waiting) attempt(w)
+            for (const v of off) put(v, d.day)
+          }
+        }
+        const b = best as { off: Unit[]; w: Unit | null } | null
+        if (!b) break
+        for (const v of b.off) put(v, null)
+        if (b.w) put(b.w, d.day)
+      }
+    }
+  }
+  fillMeals()
+  // 2. a couple's day with no meal at all, while another of their days in that city has two: one of the two comes
+  //    here (again with up to two stops off), when fewer days are left with no meal, no fewer slots are filled, and
+  //    neither day gets a late place, a ride back or more places past their hour
+  for (const d of days) {
+    for (let round = 0; round < 4; round++) {
+      const here = eating(d.day)
+      if (!here.none) break
+      const hungry = new Set(here.open.map((g) => g.c))
+      let best: { off: Unit[]; m: Unit; less: number; loss: number } | null = null
+      const stops = stopsOf(d.day)
+      const meals = live.filter((m) => {
+        const t = at.get(m.id)
+        return isMeal(m) && t != null && t !== d.day && !m.far && options.get(m.id)!.includes(d.day) && !isAway(d, m) && whoOn(m, d).some((c) => hungry.has(c))
+      })
+      for (let n = 0; n <= 2 && !best; n++) {
+        for (const off of sets(stops, n)) {
+          for (const v of off) put(v, null)
+          const loss = off.reduce((x, v) => x + lossOf(v), 0)
+          for (const m of meals) {
+            const t = at.get(m.id)!
+            const there = eating(t)
+            put(m, null)
+            if (fits(m, d.day, false, true)) {
+              put(m, d.day)
+              const a = eating(d.day)
+              const b = eating(t)
+              const less = here.none + there.none - a.none - b.none
+              const ok =
+                less > 0 && a.filled + b.filled >= here.filled + there.filled && a.late <= here.late && b.late <= there.late && a.back <= here.back && b.back <= there.back && a.bad + b.bad <= here.bad + there.bad
+              if (ok && (!best || less > best.less || (less === best.less && loss < best.loss))) best = { off, m, less, loss }
+            }
+            put(m, t)
+          }
+          for (const v of off) put(v, d.day)
+        }
+      }
+      const b = best as { off: Unit[]; m: Unit } | null
+      if (!b) break
+      for (const v of b.off) put(v, null)
+      put(b.m, d.day)
+    }
+  }
+  fillMeals()
+
   for (const u of order) {
     if (at.get(u.id) != null || u.far || !pt(u)) continue
     let best: number | null = null

@@ -629,6 +629,57 @@ const tests = {
     const free = E.plan(one, open, [])
     t(free.placed.size === 3 && back(free, 1) === 0, `open all day: ${free.placed.size}/3 planned, ${line(free, 1).join(' > ')}`)
   },
+  r18: (t) => {
+    // two days. Day 1 is full of what both couples want most (a shrine, a long walk through an old quarter, a kitchen
+    // street: open that day only); day 2 is light. They liked two restaurants: with day 1 full, both went to day 2, and
+    // day 1 had no meal at all. One meal on each day, and a stop gives way for it if the pace has no room
+    const u = (id, x = {}) => unit(id, { couples: ['A', 'B'], priority: 5, ...x })
+    const first = { openDates: [dateOf(1)] }
+    const us = [
+      u('shrine', { best: 'morning', mins: 60, opens: H('6:00'), closes: H('17:00'), point: east(TOKYO, 2, 3), ...first }),
+      u('kitchen', { category: 'shopping', best: 'morning', mins: 120, opens: H('9:30'), closes: H('17:00'), priority: 5.5, point: east(TOKYO, 5, 2.5), ...first }),
+      u('quarter', { best: 'morning', mins: 150, opens: H('10:00'), closes: H('18:00'), point: east(TOKYO, 3, 3.2), ...first }),
+      u('garden', { best: 'morning', mins: 120, opens: H('9:00'), closes: H('16:30'), priority: 4, point: east(TOKYO, 0, 0.5), ...first }),
+      u('arcade', { category: 'experience', mins: 150, opens: H('10:00'), closes: H('20:00'), priority: 4, point: east(TOKYO, 4, -6), openDates: [dateOf(2)] }),
+      u('ramen', { category: 'food', mins: 60, opens: H('10:30'), closes: H('23:00'), priority: 4, point: east(TOKYO, 5.5, -1.2) }),
+      u('pizza', { category: 'food', best: 'midday', mins: 90, opens: H('11:30'), closes: H('23:00'), priority: 4.3, point: east(TOKYO, 1, -3.5) }),
+    ]
+    const days = [day(1, { A: pres(), B: pres() }), day(2, { A: pres(), B: pres() })]
+    const out = E.plan(days, us, [])
+    const mealsOn = (o, d) => [...o.placed].filter(([id, p]) => p.day === d && (id === 'ramen' || id === 'pizza') && (inSlot(p.start, '11:00', '14:45') || inSlot(p.start, '17:15', '21:00')))
+    const show = (o) => [1, 2].map((d) => `day ${d}: ` + [...o.placed].filter(([, p]) => p.day === d).sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')).join(' | ')
+    t(mealsOn(out, 1).length >= 1 && mealsOn(out, 2).length >= 1, `a day with no meal beside a day with two: ${show(out)}`)
+    t(out.placed.has('ramen') && out.placed.has('pizza'), 'a restaurant was left out')
+    // the long walk does not sit across the lunch hours when the day has a lunch: the lunch is in its slot
+    t(mealsOn(out, 1).some(([, p]) => inSlot(p.start, '11:00', '14:45')), `day 1 has no lunch in the lunch hours: ${show(out)}`)
+    const again = E.plan(days, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.day === p.day && out.placed.get(id)?.start === p.start), `a second run changed the plan: ${show(again)}`)
+  },
+  r19: (t) => {
+    // they reach town at 14:00. A pizzeria for a late lunch, a café that closes at 15:30, a viewpoint at dusk, a
+    // dinner. The café has to come first to be reached in time, and it pushed the lunch out of the lunch hours: the
+    // day had a pizza at 15:00 and "no lunch". The café gives way, the lunch stays a lunch
+    const u = (id, x = {}) => unit(id, { couples: ['B'], priority: 3, ...x })
+    const us = [
+      u('pizzeria', { category: 'food', best: 'midday', mins: 60, opens: H('11:30'), closes: H('22:00'), point: east(TOKYO, 1, 0.5) }),
+      u('cafe', { category: 'cafe', best: 'afternoon', mins: 45, opens: H('11:00'), closes: H('15:30'), priority: 4.3, point: east(TOKYO, 1.2, 0.8) }),
+      u('view', { best: 'evening', mins: 90, opens: H('10:00'), closes: H('22:00'), priority: 5, point: east(TOKYO, -1, -1) }),
+      u('trattoria', { category: 'food', best: 'evening', mins: 75, opens: H('11:30'), closes: H('22:00'), point: east(TOKYO, -0.5, -1.5) }),
+    ]
+    const one = [day(1, { B: pres({ start: H('14:00') }) })]
+    const out = E.plan(one, us, [])
+    const show = (o) => [...o.placed].sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')
+    const p = out.placed.get('pizzeria')
+    t(p && inSlot(p.start, '11:00', '14:45'), `the lunch is out of the lunch hours: ${show(out)}`)
+    t(!out.issues.some((i) => i.kind === 'no_lunch' || i.kind === 'no_dinner'), `a meal is missing: ${show(out)}`)
+    t(out.placed.has('view') && out.placed.has('trattoria'), `the viewpoint or the dinner was taken off: ${show(out)}`)
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, q]) => out.placed.get(id)?.start === q.start), `a second run changed the plan: ${show(again)}`)
+    // with a second day nothing waits: the café is planned, and each restaurant is a lunch or a dinner
+    const two = E.plan([one[0], day(2, { B: pres() })], us, [])
+    const meal = (id) => { const q = two.placed.get(id); return !!q && (inSlot(q.start, '11:00', '14:45') || inSlot(q.start, '17:15', '21:00')) }
+    t(two.placed.size === 4 && meal('pizzeria') && meal('trattoria'), `with a second day: ${[...two.placed].sort((a, b) => a[1].day - b[1].day || a[1].start - b[1].start).map(([id, q]) => id + ' d' + q.day + ' ' + E.hhmm(q.start)).join(', ')}`)
+  },
 }
 
 const only = process.argv.slice(2)
