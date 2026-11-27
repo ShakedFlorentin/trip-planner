@@ -84,6 +84,18 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   times, must give the same places on the same days at the same times. The planner broke its ties by id; ids are
   random, so the same trip gave 95 to 97 places here (81 to 84 on a real trip). `PLAN_DIR=<a copy of the round-9
   plan-trip>` shows the test failing.
+- `node scripts/plan-fixes-test.mjs r22` (round 11, for a round-10 step): one day, two couples, nine made-up places,
+  one more than the day takes. A mall both couples liked at four stars must be on the day; a couple's own three-star
+  market waits instead. This is the lift: a place left out is tried with one stop of the day taken off. The round-9
+  code, or the current code with `lift()` switched off, leaves the mall out.
+- `node scripts/plan-fixes-test.mjs r23` (round 11, for a round-10 step): a morning garden, and the museum they want
+  most, which is reached too late after the garden. The museum stays and is on time, the garden gives way, and what is
+  left out is said to wait for room (`full`), not to be closed. This is `mendLate()`. The round-9 code, or the current
+  code with `mendLate()` switched off, takes the museum off and calls it closed.
+- Not tested: the out-and-back last step (a meal gives way when nothing else undoes the ride back). No small made-up
+  day sets it off; it needs a full day whose other days are full too. And no test says "a place both couples liked at
+  four stars or more that fits in a plan of such places alone is in the full plan": it does not hold (round 11 tried
+  laying those places out first and did not keep it; the planner page says why).
 
 ## Who a trip is planned for (`scripts/plan-parties-test.mjs`)
 

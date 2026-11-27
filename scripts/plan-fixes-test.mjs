@@ -7,6 +7,8 @@
 // r17 on: the sixth round (a ride back on a day of shared places; a day with no meal, a lunch pushed out of its hours).
 // r20: the ninth round (the same places in another order gave another plan).
 // r21: the tenth round (the same places under other ids gave another plan).
+// r22, r23: two steps of the tenth round that had no test (a place left out comes in with one stop taken off; a late
+//   place is mended on its day).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -732,6 +734,65 @@ const tests = {
       t(same, `ids ${k}: ${o.placed.size} places on a day against ${out.placed.size}, ${[...o.placed].filter(([id, p]) => out.placed.get(was.get(id))?.day !== p.day || out.placed.get(was.get(id))?.start !== p.start).length} of them on another day or at another time`)
     }
   },
+  r22: (t) => {
+    // one day, two couples, nine places: more than the day takes. Among them a mall both couples liked at four stars
+    // and couple B's own market at three. The mall was the one left out and the market stayed: what both liked at
+    // four stars or more waited for a couple's own place of fewer stars. A place left out is tried with one stop of
+    // the day taken off, and the stop that comes after it is the one to wait
+    const AB = ['A', 'B']
+    const u = (id, couples, category, priority, mins, opens, closes, best, kmN, kmE) => unit(id, { couples, category, priority, mins, opens: H(opens), closes: H(closes), best, point: east(TOKYO, kmE, kmN) })
+    const us = [
+      u('snack', AB, 'food', 4, 20, '5:00', '14:00', 'morning', -5.5, -1.7),
+      u('street', AB, 'shopping', 5.5, 90, '9:30', '17:00', 'morning', 0, 0),
+      u('workshop', ['A'], 'experience', 3, 120, '10:00', '16:00', 'morning', -2.7, -6.4),
+      u('market', ['B'], 'food', 3, 90, '8:00', '14:00', 'morning', -5.5, -1.7),
+      u('cafe', ['B'], 'cafe', 4.3, 40, '12:00', '17:30', 'morning', -0.7, -2.2),
+      u('ramen', AB, 'food', 4, 60, '10:30', '23:00', 'any', -3.8, -1.9),
+      u('sweets', ['B'], 'food', 3, 30, '11:00', '19:00', 'afternoon', -3.7, -2.0),
+      u('mall', AB, 'shopping', 4, 90, '11:00', '21:00', 'afternoon', -3.9, -2.2),
+      u('grill', ['B'], 'food', 2.5, 75, '11:00', '22:00', 'any', -3.7, -2.0),
+    ]
+    const k = pres({ start: H('9:00'), hotel: east(TOKYO, -2, -3) })
+    const one = [day(1, { A: k, B: k })]
+    const out = E.plan(one, us, [])
+    const show = (o) => [...o.placed].sort((a, b) => a[1].start - b[1].start).map(([id, p]) => id + ' ' + E.hhmm(p.start)).join(', ')
+    const high = us.filter((x) => x.couples.length > 1 && x.priority >= 4)
+    const waits = high.filter((x) => !out.placed.has(x.id)).map((x) => x.id)
+    t(!waits.length, `left out though both couples liked it at four stars or more: ${waits.join(', ')} (${show(out)})`)
+    t(out.placed.size === 8, `${out.placed.size} of 9 places on the day, 8 expected: ${show(out)}`)
+    t([...out.unplanned.values()].every((r) => r === 'full'), 'the place left out is not said to be waiting for a free day')
+    const pts = new Map(us.map((x) => [x.id, x.point]))
+    for (const c of AB) {
+      const line = [...out.placed].filter(([id]) => us.find((x) => x.id === id).couples.includes(c)).sort((a, b) => a[1].start - b[1].start).map(([id]) => pts.get(id))
+      t(E.outAndBack(line) === 0, `couple ${c} rides out and back: ${show(out)}`)
+    }
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), `a second run changed the plan: ${show(again)}`)
+  },
+  r23: (t) => {
+    // a garden for the morning (closes 11:30) and the museum they want most, which lets people in from 11:00 and
+    // needs two hours before it closes at 13:15: after the garden the museum is reached too late. The museum was the
+    // one taken off (and said to be closed), because it was the late one. The day is mended where it stands: of the
+    // stops whose leaving puts the day on time, the one the plan loses least by gives way, and that is the garden
+    const u = (id, x = {}) => unit(id, { couples: ['A'], openDates: [dateOf(1)], ...x })
+    const us = [
+      u('museum', { priority: 5, mins: 120, opens: H('11:00'), closes: H('13:15'), point: east(TOKYO, 1) }),
+      u('garden', { priority: 4.5, mins: 90, best: 'morning', opens: H('9:00'), closes: H('11:30'), point: east(TOKYO, 1.5, 0.5) }),
+      u('market', { category: 'shopping', priority: 3, mins: 120, best: 'morning', opens: H('9:00'), closes: H('13:00'), point: east(TOKYO, 0.5, 1), openDates: [] }),
+    ]
+    const show = (o) => [...o.placed].sort((a, b) => a[1].day - b[1].day || a[1].start - b[1].start).map(([id, p]) => id + ' d' + p.day + ' ' + E.hhmm(p.start)).join(', ') || 'nothing'
+    const one = [day(1, { A: pres() })]
+    const out = E.plan(one, us, [])
+    const m = out.placed.get('museum')
+    t(m && m.start + 120 <= H('13:15'), `the museum is ${m ? 'at ' + E.hhmm(m.start) : 'left out'}: ${show(out)}`)
+    t(!out.placed.has('garden') && !out.placed.has('market'), `a place the museum leaves no time for is planned: ${show(out)}`)
+    t([...out.unplanned.values()].every((r) => r === 'full'), `a place that is open that day is said to be something else than waiting for room: ${[...out.unplanned].map(([id, r]) => id + ' ' + r).join(', ')}`)
+    const again = E.plan(one, us.map((x) => ({ ...x, current: out.placed.get(x.id)?.day ?? null })), [])
+    t(again.placed.size === out.placed.size && [...again.placed].every(([id, p]) => out.placed.get(id)?.start === p.start), `a second run changed the plan: ${show(again)}`)
+    // with a second day the market (open on both) is planned there; the museum still has its day
+    const two = E.plan([one[0], day(2, { A: pres() })], us, [])
+    t(two.placed.get('museum')?.day === 1 && two.placed.get('market')?.day === 2, `with a second day: ${show(two)}`)
+  },
 }
 
 const only = process.argv.slice(2)
@@ -744,7 +805,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 20 ? 'round 10, test ' + n : Number(n.slice(1)) > 19 ? 'round 9, test ' + n : Number(n.slice(1)) > 16 ? 'round 6, test ' + n : Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 21 ? 'round 11, test ' + n : Number(n.slice(1)) > 20 ? 'round 10, test ' + n : Number(n.slice(1)) > 19 ? 'round 9, test ' + n : Number(n.slice(1)) > 16 ? 'round 6, test ' + n : Number(n.slice(1)) > 15 ? 'round 5, test ' + n : Number(n.slice(1)) > 12 ? 'round 4, test ' + n : Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }
