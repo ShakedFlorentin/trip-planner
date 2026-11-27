@@ -5,6 +5,8 @@
 // wrong with it: a miss was kept for ever (one bad day at OpenStreetMap, or one odd address, and the hotel sat in the
 // city's middle for good), and only one way of writing the address was tried.
 
+import { areaOf } from '../_shared/areas.ts'
+
 export type GeoPoint = { lat: number; lng: number }
 /** A geo_cache row: lat null is a miss; at is when it was written. */
 export type GeoRow = { lat: number | null; lng: number | null; at?: string | null }
@@ -63,6 +65,22 @@ export function addressVariants(address: string | null | undefined, name: string
   if (n && c) add(`${n}, ${c}`)
   else if (n) add(n)
   return out
+}
+
+// a written area that names no place ("Various malls", "Multiple branches")
+const NO_PLACE = /various|multiple|several|branches|citywide|all over/i
+
+/**
+ * Where a place is when its coordinates are not known and its address was not found: the main station of the
+ * neighbourhood its card names (the same table the app groups places by), or of the one its address names. A place a
+ * kilometre off is planned among its neighbours; a place with no point at all is planned blind. null when neither the
+ * area nor the address names a neighbourhood of that city: it stays unknown, it is not guessed.
+ * cityHe: the city's Hebrew name (the AREAS key).
+ */
+export function areaPoint(cityHe: string | null | undefined, area: string | null | undefined, address: string | null | undefined): GeoPoint | null {
+  if (!cityHe) return null
+  const a = (area && !NO_PLACE.test(area) ? areaOf(cityHe, area) : null) ?? (address ? areaOf(cityHe, address) : null)
+  return a ? { lat: a.lat, lng: a.lng } : null
 }
 
 function kmBetween(a: GeoPoint, b: GeoPoint) {

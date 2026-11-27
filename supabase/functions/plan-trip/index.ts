@@ -8,7 +8,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { hhmm, km, plan, type BestTime, type Day, type Fixed, type Point, type Unit } from './plan.ts'
 import { buildDays, type Sleep } from './presence.ts'
 import { daylightOnly, servesDinner } from './flags.ts'
-import { addressVariants, locate, type GeoDeps } from './geo.ts'
+import { addressVariants, areaPoint, locate, type GeoDeps } from './geo.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
@@ -572,7 +572,9 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
     const unitCouples = p.who ? p.who.split(' + ') : couples
     // the nearest city its couples sleep in
     const bases = [...new Set(days.flatMap((d) => unitCouples.map((x) => d.at.get(x)?.base).filter((b): b is string => !!b)))]
-    const point = own ?? (c.city && BASE[c.city] ? BASE[c.city] : null)
+    // neither: the neighbourhood its card names (its main station), a point to plan it among its neighbours by
+    const nearby = own ? null : areaPoint(c.city ? NAME_HE[c.city] : null, c.area, c.address)
+    const point = own ?? nearby ?? (c.city && BASE[c.city] ? BASE[c.city] : null)
     const { base, far } = baseFor(point, c.city, bases, basePt, BASE)
     if (!base) {
       unplanned.push({ place_id: p.id, name: p.name, reason: 'no_day', who: p.who })
@@ -601,7 +603,7 @@ async function run(admin: SupabaseClient, tid: string, dry: boolean) {
       base,
       far,
       point,
-      approx: !own && !!point,
+      approx: !own && !nearby && !!point,
       mins: Math.min(visitMins(f, c.time_needed, category), 420),
       category,
       best,

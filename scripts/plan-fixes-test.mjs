@@ -1,6 +1,7 @@
 // One small scenario per planner fix of 26 Nov 2026 (meals, order on the map, hours and sunset, couples and days apart,
 // real points, move/landing/departure days, baby and card facts). Each fails on the code before its fix.
 // r1…r7: the second round (what a replay of a real trip showed), same rule: each fails on the code before its fix.
+// r8 on: the third round (what was still worse than the plan it replaced).
 // `node scripts/plan-fixes-test.mjs [1 2 … r1 r2 …]`; PLAN_DIR=<another copy of plan-trip> runs them on that code.
 import { engine, sunsetMin } from './plan-harness.mjs'
 
@@ -362,6 +363,20 @@ const tests = {
     t(!out.issues.some((i) => i.kind === 'no_lunch'), 'no_lunch raised on a day with a liked lunch in reach')
     t(out.placed.has('store') && out.placed.has('grill'), 'the store and the dinner stay in the day')
   },
+  r8: (t) => {
+    // a card with no coordinates whose address is not found: the neighbourhood its card names is where it is (that
+    // neighbourhood's main station), not "somewhere in the city"
+    if (!G?.areaPoint) return t(false, 'no areaPoint: a place whose address is not found has no point at all')
+    const near = (p, lat, lng) => !!p && Math.abs(p.lat - lat) < 0.001 && Math.abs(p.lng - lng) < 0.001
+    t(near(G.areaPoint('אוסקה', 'Shinsaibashi/Dotonbori', null), 34.6665, 135.5009), 'a written area: its neighbourhood (Minami)') // he-only
+    t(near(G.areaPoint('קיוטו', 'Pontocho, Nakagyo-ku', null), 35.0039, 135.7642), 'an area and no address at all (Downtown Kyoto)') // he-only
+    // an area that names no place ("various") says nothing: the address decides
+    t(near(G.areaPoint('טוקיו', 'Various malls', 'Some Mall, Kasai, Edogawa-ku, Tokyo'), 35.6258, 139.7714), 'an area that names no place: the address (Tokyo Bay)') // he-only
+    t(near(G.areaPoint('טוקיו', null, '1-11-13 Ebisu-minami, Shibuya-ku, Tokyo'), 35.658, 139.7016), 'no area: the address (Shibuya & Ebisu)') // he-only
+    // nothing to go by: still not known, never a guess
+    t(G.areaPoint('טוקיו', 'Somewhere nice', '1-2-3 Nowhere') === null, 'an area and an address that fit no neighbourhood stay unknown') // he-only
+    t(G.areaPoint('טוקיו', 'Various', null) === null && G.areaPoint(null, 'Ebisu', null) === null, 'no place named, or no city: unknown') // he-only
+  },
 }
 
 const only = process.argv.slice(2)
@@ -374,7 +389,7 @@ for (const [n, run] of Object.entries(tests)) {
   } catch (e) {
     errs.push('threw: ' + (e.stack ?? e))
   }
-  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? 'round 2, fix ' + n.slice(1) : 'fix ' + n}`)
+  console.log(`${errs.length ? 'FAIL' : 'PASS'}  ${n.startsWith('r') ? (Number(n.slice(1)) > 7 ? 'round 3, test ' + n : 'round 2, fix ' + n.slice(1)) : 'fix ' + n}`)
   for (const e of errs) console.log('   - ' + e)
   if (errs.length) failed++
 }
