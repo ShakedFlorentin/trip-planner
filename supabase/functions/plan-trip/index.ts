@@ -12,7 +12,7 @@ import { daylightOnly, servesDinner } from './flags.ts'
 import { addressVariants, areaPoint, cacheKeys, locate, primed, type GeoAsk, type GeoDeps } from './geo.ts'
 import { loop } from './lease.ts'
 import { planOnce, type PlanMemo } from './memo.ts'
-import { ownerOf, partiesOf, partyOf, shown, shownKey, wanted, yesCount, type Vote } from './parties.ts'
+import { likedFor, ownerOf, partiesOf, partyOf, shown, shownKey, wanted, yesCount, type Vote } from './parties.ts'
 import { CITY_ROUTE, openNights, partyStretch, suggestSplit, type SplitCity, type SplitPlace, type SplitStay } from './split.ts'
 import { baseFor, basePoints, cityIdOf, sleepsFromDays, sleepsFromStays, type StayCtx, type StayPlace, type StayRec } from './stay.ts'
 
@@ -944,7 +944,7 @@ async function suggestStays(admin: SupabaseClient, tid: string, counts?: { city:
       lng: own?.lng ?? null,
       mins: visitMins(f, c.time_needed, c.category ?? 'sight'),
       openDates: (f?.open_dates ?? []).map((d) => d.slice(0, 10)),
-      parties: one || (v?.yes?.length ?? 0) >= couples.length ? [] : v!.yes!,
+      parties: likedFor(v, couples, one),
     })
   }
   const input = { startDate: trip.start_date, numDays: trip.num_days, parties, stays, cities, places: liked, firstVisit, picked, counts }

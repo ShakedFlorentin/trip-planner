@@ -47,9 +47,9 @@ const FOOD = candidates.filter((c) => c.category === 'food').length
 /**
  * One shape of trip. members: [{ id, couple, answers? }]; who(i): whose the place is, as its row says (null: everyone's);
  * the vote rows are built the way plan_place_couples builds them: only couples count, a trip with none gets couples
- * null and no votes. flightWho: whose the flights are; planned: places the planner put on a day before.
+ * null and no votes (vote(i, couples) gives a place's own { voted, yes }). flightWho: whose the flights are; planned: places the planner put on a day before.
  */
-function trip({ members, who = () => null, flightWho = null, planned = 0 }) {
+function trip({ members, who = () => null, flightWho = null, planned = 0, vote = null }) {
   const couples = [...new Set(members.map((m) => m.couple).filter(Boolean))].sort()
   const places = candidates.map((c, i) => ({
     id: `p-${c.id}`, candidate_id: c.id, name: c.name, city: c.city, area: null, lat: null, lng: null, who: who(i, c), visited: false, auto_planned: i < planned,
@@ -57,6 +57,9 @@ function trip({ members, who = () => null, flightWho = null, planned = 0 }) {
   const votes = candidates.map((c, i) => {
     if (!couples.length) return { candidate_id: c.id, couples: null, voted: [], yes: [] }
     const forWho = who(i, c) ? who(i, c).split(' + ') : couples
+    // vote(i, couples): the row for this place when a test says who voted what (else: everyone it is for said yes)
+    const own = vote?.(i, forWho)
+    if (own) return { candidate_id: c.id, couples: forWho, ...own }
     return { candidate_id: c.id, couples: forWho, voted: forWho, yes: forWho }
   })
   return {
@@ -213,11 +216,56 @@ sound('a couple and a party of one', pair)
 check('a couple and a party of one: both are on every day', pair.input.days.every((d) => Object.keys(d.at).sort().join() === [DO, NOA].sort().join()))
 check('a couple and a party of one: a place only one liked is that party\'s', pair.input.units.some((u) => u.couples.join() === DO) && pair.input.units.some((u) => u.couples.join() === NOA))
 
-// 6. a couple, and a member with no couple: planned for the couple (the member with no couple is not a party: nothing
-//    says where they sleep or what they liked). Written down here so a change of that rule is seen
+// 6. a couple, and a member with no couple: the days are the couple's (the member with no couple is not a party
+//    with days of their own: nothing says where they sleep apart from the group). What they like counts: 8 below
 const part = await dry(trip({ members: [{ id: 'u-dana', couple: DO }, { id: 'u-omer', couple: DO }, C], planned: 3 }))
 sound('a couple and a member with no couple', part)
 check('a couple and a member with no couple: planned for the couple', part.input.days.every((d) => Object.keys(d.at).join() === DO))
+
+// 8. two couples and a member with no couple: the member is one more voice (parties.ts). plan_place_couples names
+//    such a voice '~' + the member's id in voted and yes (supabase/sql/2026-11-27-lone-members-vote.sql).
+{
+  const RT = 'Rina & Tal'
+  const LONE = '~u-gil'
+  const mixedMembers = [{ id: 'u-dana', couple: DO }, { id: 'u-omer', couple: DO }, { id: 'u-rina', couple: RT }, { id: 'u-tal', couple: RT }, C]
+  // place 0: no couple said yes, the lone member did. place 1: one couple and the lone member. place 2: one couple
+  // alone, the other said no. place 3: everyone, the lone member said no. place 4: everyone, the lone member silent.
+  // place 5: nobody at all. The rest: both couples.
+  const votesWith = (lone) => (i, cs) =>
+    i === 0 ? { voted: lone ? [...cs, LONE] : cs, yes: lone ? [LONE] : [] }
+    : i === 1 ? { voted: lone ? [...cs, LONE] : cs, yes: lone ? [DO, LONE] : [DO] }
+    : i === 2 ? { voted: cs, yes: [DO] }
+    : i === 3 ? { voted: lone ? [...cs, LONE] : cs, yes: cs }
+    : i === 5 ? { voted: cs, yes: [] }
+    : null
+  const whoM = (i) => (i === 1 || i === 2 ? DO : null)
+  const with1 = await dry(trip({ members: mixedMembers, who: whoM, vote: votesWith(true) }))
+  const without = await dry(trip({ members: mixedMembers, who: whoM, vote: votesWith(false) }))
+  const unit = (r, i) => r.input.units.find((u) => u.id === `p-${candidates[i].id}`)
+  sound('two couples and a lone member', with1, { units: candidates.length - 1 })
+  check('lone member: a place only they liked is planned', !!unit(with1, 0) && !unit(without, 0), `with ${!!unit(with1, 0)} without ${!!unit(without, 0)}`)
+  check('lone member: their like beside one couple\'s counts as a second yes', unit(with1, 1)?.priority === unit(without, 1)?.priority + 1 && unit(with1, 2)?.priority === unit(without, 2)?.priority, `${unit(without, 1)?.priority} -> ${unit(with1, 1)?.priority}`)
+  check('lone member: their no takes nothing off', !!unit(with1, 3) && unit(with1, 3).priority === unit(without, 3).priority)
+  check('lone member: their silence holds nothing up', !!unit(with1, 4) && !with1.summary.unplanned.some((u) => u.reason === 'waiting'))
+  check('lone member: a place nobody liked stays out', !unit(with1, 5))
+  check('lone member: the days are the couples\', as before', with1.input.days.every((d) => Object.keys(d.at).sort().join() === [DO, RT].sort().join()) && JSON.stringify(with1.input.days) === JSON.stringify(without.input.days))
+  check('lone member: a place is planned for the couples its row names, or all', unit(with1, 0).couples.slice().sort().join() === [DO, RT].sort().join() && unit(with1, 1).couples.join() === DO)
+  const seen = JSON.stringify({ summary: with1.summary, plan: with1.plan, cities: with1.cities })
+  check('lone member: their mark reaches nothing the app reads', !seen.includes('~'))
+  const stayOf = async (lone) => post(trip({ members: mixedMembers, who: whoM, vote: votesWith(lone) }), { suggest_stays: true })
+  const s1 = await stayOf(true)
+  check('lone member, where to sleep: an answer, and their mark is not in it', !s1.error && s1.alternatives?.length > 0 && !JSON.stringify(s1).includes('~'), s1.error ? JSON.stringify(s1.error) : '')
+  // the split of the nights: a place counts for the couples that said yes, never for the lone member's mark
+  const pb = await build({ entryPoints: [join(dir, 'parties.ts')], bundle: true, write: false, format: 'esm', platform: 'node', logLevel: 'silent' })
+  const PT = await import('data:text/javascript;base64,' + Buffer.from(pb.outputFiles[0].text).toString('base64'))
+  const both = [DO, RT]
+  const lf = (yes, one = false) => PT.likedFor?.({ candidate_id: 'x', couples: both, voted: yes, yes }, both, one)?.join('|')
+  check('lone member, where to sleep: one couple and the lone member liked it: it is that couple\'s', lf([DO, LONE]) === DO, String(lf([DO, LONE])))
+  check('lone member, where to sleep: only the lone member liked it: it is everyone\'s', lf([LONE]) === '')
+  check('lone member, where to sleep: as before with no lone member', lf([DO]) === DO && lf([DO, RT]) === '' && lf([DO, RT, LONE]) === '' && lf([], true) === '')
+  check('lone member: wanted and counted', PT.wanted({ couples: both, voted: [...both, LONE], yes: [LONE] }, false) === 'plan' && PT.wanted({ couples: both, voted: [DO, LONE], yes: [LONE] }, false) === 'waiting' && PT.wanted({ couples: both, voted: both, yes: [] }, false) === 'skip' && PT.yesCount({ yes: [DO, LONE] }, false) === 2)
+  console.log(`mixed+1  ${line(with1)}`)
+}
 
 // 7. where to sleep (the split of the nights between cities) for a trip with no couples: its places count
 const split = await post(trip({ members: [A, B] }), { suggest_stays: true })
