@@ -1023,6 +1023,54 @@ function arrange(days: Day[], units: Unit[], fixed: Fixed[], barred: Map<string,
     if (!moved) break
   }
 
+  // a couple with no lunch on a day that has a long morning meal they share with the other couple (a market's food
+  // crawl), left a morning stop because the other couple has a lunch of their own that day: what they share is the
+  // lunch of both, and the one couple's own lunch goes to another day that takes it, or waits (a meal two couples
+  // share fills two lunches; nobody eats twice while the others have none)
+  const lunchOf = (day: number, c: string) => [...slotsOn(day)].find(([id, sl]) => sl === 'lunch' && unitById.get(id)!.couples.includes(c))?.[0]
+  const shareLunch = (d: Day, c: string) => {
+    const slots = slotsOn(d.day)
+    const shared = [...slots].find(([id, sl]) => sl === 'breakfast' && unitById.get(id)!.couples.includes(c) && slotsFor(unitById.get(id)!, d).includes('lunch'))
+    if (!shared) return false
+    const m = unitById.get(shared[0])!
+    const inWay = [...slots].filter(([id, sl]) => sl === 'lunch' && unitById.get(id)!.couples.some((x) => m.couples.includes(x))).map(([id]) => unitById.get(id)!)
+    if (inWay.length !== 1 || inWay[0].couples.length >= m.couples.length) return false
+    const own = inWay[0]
+    put(own, null)
+    if (slotsOn(d.day).get(m.id) !== 'lunch') {
+      put(own, d.day)
+      return false
+    }
+    let best: number | null = null
+    let bestD = Infinity
+    for (const day of options.get(own.id)!) {
+      if (day === d.day || !fits(own, day, false, true)) continue
+      const dl = delta(own, day)
+      if (dl < bestD) {
+        bestD = dl
+        best = day
+      }
+    }
+    if (best != null) put(own, best)
+    return true
+  }
+  for (const d of days) {
+    for (const c of d.at.keys()) {
+      if (!needOf.get(d.day + '|' + c)?.lunch || lunchOf(d.day, c)) continue
+      if (shareLunch(d, c)) continue
+      // or their lunch is on another day that has such a shared morning meal: the lunch comes here, and the shared
+      // meal is their lunch there
+      for (const t of days) {
+        const id = t.day === d.day || !t.at.has(c) ? undefined : lunchOf(t.day, c)
+        const l = id ? unitById.get(id)! : null
+        if (!l || l.couples.length > 1 || !options.get(l.id)!.includes(d.day) || !fitsWithout(l, d.day, [])) continue
+        put(l, d.day)
+        if (lunchOf(d.day, c) === l.id && shareLunch(t, c)) break
+        put(l, t.day)
+      }
+    }
+  }
+
   // free hours: a place left out goes into a day that has the hours for it, when the day's times say so: it is on
   // time there, nothing else on the day turns late or leaves its hour, no meal leaves its slot, and nobody goes back
   // to a part of town they had left. The day's pace still holds, with a meal counted as the sit-down it is

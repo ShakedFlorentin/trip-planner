@@ -424,6 +424,30 @@ const tests = {
     const full = E.plan(d, Array.from({ length: 6 }, (_, i) => unit('s' + i, { mins: 120, point: east(TOKYO, i * 0.2) })), [])
     t(full.placed.size <= 4, `${full.placed.size} two-hour sights on one day`)
   },
+  r12: (t) => {
+    // a market's food crawl both couples liked, and a lunch restaurant only couple A liked, on one day: the market is
+    // the lunch of both (at lunchtime, not at 9:30) instead of couple A eating twice and couple B having no lunch
+    const d = [day(1, { A: pres(), B: pres() })]
+    const us = [
+      unit('market', { couples: ['A', 'B'], category: 'food', best: 'morning', mins: 75, opens: H('9:00'), closes: H('17:00'), priority: 4 }),
+      unit('tofu', { category: 'food', best: 'midday', mins: 90, opens: H('11:00'), closes: H('16:00'), point: east(TOKYO, 1) }),
+      unit('grill', { couples: ['A', 'B'], category: 'food', best: 'evening', mins: 90, opens: H('17:00'), closes: H('23:00'), priority: 4 }),
+      unit('museum', { couples: ['A', 'B'], best: 'morning', mins: 90, priority: 4, point: east(TOKYO, 0.5) }),
+    ]
+    const out = E.plan(d, us, [])
+    const at = (o, id) => o.placed.get(id)?.start
+    const say = (s) => (s == null ? 'no hour' : E.hhmm(s))
+    t(at(out, 'market') != null && inSlot(at(out, 'market'), '11:00', '14:45'), `the market is at ${say(at(out, 'market'))}, not at lunchtime`)
+    t(!out.issues.some((i) => i.kind === 'no_lunch'), `no lunch for ${out.issues.filter((i) => i.kind === 'no_lunch').map((i) => 'couple ' + i.couple).join(', ')}`)
+    t(!out.placed.has('tofu'), 'couple A has two lunches on one day')
+    t(['market', 'grill', 'museum'].every((id) => out.placed.has(id)), 'a place both couples liked was left out')
+    // with a second day, couple A's own restaurant is the lunch of the other day: nothing is lost
+    const two = E.plan([d[0], day(2, { A: pres(), B: pres() })], us, [])
+    t(two.placed.size === 4, `${two.placed.size} of 4 planned over two days`)
+    // when each couple has a lunch of their own, the market stays a morning stop and all are planned
+    const own = E.plan(d, [...us, unit('soba', { couples: ['B'], category: 'food', best: 'midday', mins: 60, opens: H('11:00'), closes: H('16:00'), point: east(TOKYO, -1) })], [])
+    t(own.placed.size === 5 && at(own, 'market') < H('11:00'), `with a lunch for each couple: ${own.placed.size} of 5 planned, the market at ${say(at(own, 'market'))}`)
+  },
 }
 
 const only = process.argv.slice(2)
