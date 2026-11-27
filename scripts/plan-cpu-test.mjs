@@ -12,10 +12,11 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { engine, fixturesDir, load } from './plan-harness.mjs'
 
-// the goal is 800 ms on the machine it was measured on, and the code as it stands takes about 1100 ms there on this
-// fixture (the goal is not met yet); the code before round 7 took about 4000 ms. Twice the goal: a change that makes
-// the planner half as slow again fails here, long before it reaches the limit
-const BUDGET = Number(process.env.PLAN_CPU_BUDGET ?? 1600)
+// the goal is 800 ms on the machine it was measured on. The code before round 7 took about 4000 ms there on this
+// fixture, after round 7 about 1100 ms, before round 12 about 905 ms and after it about 790 ms (the goal is met,
+// barely). The budget is half as much again as the code takes now: a change that makes the planner half as slow
+// again fails here, long before it reaches the limit
+const BUDGET = Number(process.env.PLAN_CPU_BUDGET ?? 1200)
 
 const fixture = (mods) => {
   const f = load(JSON.parse(readFileSync(join(fixturesDir, 'real-japan.json'), 'utf8')), mods)

@@ -68,10 +68,14 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   version (each must fail on the version before its fix).
 - `npm run test:plan-cpu` (`node scripts/plan-cpu-test.mjs`, round 7): the planner's CPU time on a trip of 20 days and
   139 places (`real-japan.json` plus 27 made-up places with no day yet), each measurement in a new process, best of
-  three, the whole process's CPU around `plan()`. It fails over 1600 ms. A Supabase edge function gets about 2 s of CPU
-  for one request; the code before round 7 took about 4000 ms here and the code now about 1100 ms. The numbers are of
+  three, the whole process's CPU around `plan()`. It fails over 1200 ms (1600 before round 12). A Supabase edge function
+  gets about 2 s of CPU for one request; the code before round 7 took about 4000 ms here, after it about 1100 ms, before
+  round 12 about 905 ms and now about 790 ms. The numbers are of
   one machine (Apple silicon, Node 26): `PLAN_CPU_BUDGET=<ms>` sets another budget on a slower one, and
-  `PLAN_DIR=<a copy of plan-trip>` measures another version. The goal of 800 ms is not met yet.
+  `PLAN_DIR=<a copy of plan-trip>` measures another version. The goal of 800 ms is met, barely.
+- `npm run test:plan-skip` (`node scripts/plan-skip-test.mjs`, round 12): a run asked to plan the input it has just
+  planned gets the kept plan back (`memo.ts`), and that plan is the plan a new run gives, on every fixture here; any
+  change in the input is planned again; the planner does not change what it is given.
 - `node scripts/plan-metrics.mjs`: one row of numbers per fixture (places planned, meals filled, km, places after
   closing or after dark, and so on). `PLAN_DIR=<a copy of supabase/functions/plan-trip> node scripts/plan-metrics.mjs`
   runs the same fixtures on another version of the planner, for a before/after table. The copy needs `_shared` beside
