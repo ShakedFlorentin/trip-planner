@@ -227,6 +227,7 @@ button:disabled { cursor: default; }
 .code { font-family: ui-monospace, 'SF Mono', monospace; letter-spacing: 0.08em; }
 .notes { white-space: pre-wrap; font-size: var(--fs-subhead); margin-top: 4px; }
 .msg { color: var(--accent); font-size: var(--fs-subhead); margin: 0; }
+.msg.ok { color: var(--ok); display: flex; align-items: flex-start; gap: var(--s-2); }
 .empty { text-align: center; color: var(--muted); padding: var(--s-8) var(--s-4); }
 
 .stack { display: flex; flex-direction: column; gap: var(--s-3); }
@@ -1207,3 +1208,5 @@ html.inner-scroll .topbar { position: absolute; inset-inline: 0; top: 0; }
 html.inner-scroll .net-bar { position: absolute; inset-inline: 0; top: calc(var(--top-h) + env(safe-area-inset-top)); }
 /* no scroll indicator anywhere in the iOS app (html.native-app, set in native.ts): iOS draws it at the left edge in Hebrew, which read as a stray line */
 html.native-app ::-webkit-scrollbar { display: none; }
+/* Hebrew titles: no negative letter-spacing. It is tuned for Latin; in Hebrew it makes the letters touch (and breaks the joins in any cursive script). Latin keeps it. */
+html[lang="he"] :is(h2, h3, .large-title, .big, .card-title h2, .next-time, .next-title, .city-tile b, .hero-tile b, .plan-city, .ob-title, .voice-translation, .turn-text, .match-faces i.two) { letter-spacing: 0; }

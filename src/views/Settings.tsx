@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Switch, SwitchThumb } from '@ui-sdk/react/switch'
 import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectTrigger, SelectValue } from '@ui-sdk/react/select'
-import { Check, ChevronLeft, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronLeft, ChevronsUpDown, LoaderCircle } from 'lucide-react'
 import { supabase } from '../supabase'
 import type { Trip } from '../types'
-import { dayDate, fmtDay, mutate } from '../lib'
+import { dayDate, errorText, fmtDay, mutate } from '../lib'
 import { ymd } from './planUtils'
 import { isEn, lang, locale, setLang, t } from '../i18n'
 import { Field, Sheet } from '../ui'
@@ -360,6 +360,7 @@ export function CreditWallet({ tripId }: { tripId: string }) {
   const [give, setGive] = useState(1)
   const [msg, setMsg] = useState('')
   const [sending, setSending] = useState(false)
+  const [done, setDone] = useState(false)
   // one id per tap of a given amount: a double tap (or a retry) sends the same id, so credits move once
   const tap = useRef<{ amount: number; op: string } | null>(null)
   const load = async () => {
@@ -384,12 +385,14 @@ export function CreditWallet({ tripId }: { tripId: string }) {
     if (sending) return
     setSending(true)
     setMsg('')
+    setDone(false)
     if (tap.current?.amount !== give) tap.current = { amount: give, op: crypto.randomUUID() }
     const { data, error } = await supabase.rpc('give_to_trip', { p_trip: tripId, p_amount: give, p_op_id: tap.current.op })
-    if (error) setMsg(error.message)
+    if (error) setMsg(errorText(error.message))
     else if (!(data as { ok?: boolean } | null)?.ok) setMsg(t('אין לך מספיק קרדיטים'))
     else {
-      setMsg(t('הועברו {n} קרדיטים לטיול', { n: give }))
+      setMsg(give === 1 ? t('קרדיט אחד הועבר לטיול. הוא זמין לכולם בטיול.') : t('{n} קרדיטים הועברו לטיול. הם זמינים לכולם בטיול.', { n: give }))
+      setDone(true)
       tap.current = null
     }
     await load()
@@ -409,9 +412,13 @@ export function CreditWallet({ tripId }: { tripId: string }) {
         <input type="number" min={1} max={Math.max(w.paid, 1)} value={give} onChange={(e) => setGive(Math.max(1, Math.floor(+e.target.value || 1)))} />
       </Field>
       <button className="secondary" disabled={sending || w.paid < 1 || give > w.paid} onClick={send}>
-        {t('העברה לטיול')}
+        {sending ? <><Icon as={LoaderCircle} className="spin" /> {t('מעבירים…')}</> : t('העברה לטיול')}
       </button>
-      {msg && <p className="msg">{msg}</p>}
+      {msg && (
+        <p className={'msg' + (done ? ' ok' : '')} role={done ? 'status' : 'alert'}>
+          {done && <Icon as={Check} />} {msg}
+        </p>
+      )}
     </section>
   )
 }
