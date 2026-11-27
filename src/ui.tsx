@@ -166,11 +166,11 @@ export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card
 }
 
 /** An empty screen, Apple style: a grey line icon that fits the case, a bold title, one line and one button. */
-export function EmptyState(props: { icon: LucideIcon; title: string; line?: string; action?: { label: string; onClick: () => void }; second?: { label: string; onClick: () => void } }) {
+export function EmptyState(props: { alert?: boolean; icon: LucideIcon; title: string; line?: string; action?: { label: string; onClick: () => void }; second?: { label: string; onClick: () => void } }) {
   return (
     <div className="empty-state">
       <Icon as={props.icon} size={50} className="empty-icon" />
-      <b>{props.title}</b>
+      <b role={props.alert ? 'alert' : undefined}>{props.title}</b>
       {props.line && <p>{props.line}</p>}
       {props.action && (
         <button className="primary" onClick={props.action.onClick}>

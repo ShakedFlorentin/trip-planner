@@ -637,23 +637,39 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void; o
       <OfflineBanner since={stale ? syncedAt : null} />
       <main className={'tab-' + tab}>
         <h1 className="large-title">{TABS.find((t) => t.id === tab)?.label}</h1>
-        {tab === 'plan' && wandNote && (
-          <p className={'wand-note' + (wandNote === 'failed' || wandNote === 'offline' ? ' fail' : '')} role={wandNote === 'failed' || wandNote === 'offline' ? 'alert' : 'status'}>
-            {(wandNote === 'send' || wandNote === 'work') && <Icon as={LoaderCircle} className="spin" />}
-            <span>
-              {wandNote === 'send' && t('שולחים את הבקשה למתכנן…')}
-              {wandNote === 'work' && t('המתכנן מסדר את הימים…')}
-              {wandNote === 'failed' && t('המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.')}
-              {wandNote === 'offline' && t('אין חיבור לאינטרנט, אז הבקשה לא נשלחה. המסלול נשאר כמו שהיה.')}
-              {wandNote === 'slow' && t('זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.')}
-              {wandNote === 'late' && t('המתכנן עוד לא סיים. אפשר לנסות שוב מאוחר יותר.')}
-            </span>
-            {(wandNote === 'failed' || wandNote === 'offline' || wandNote === 'late') && (
-              <button className="link" onClick={wand}>
-                {t('נסו שוב')}
-              </button>
+        {tab === 'plan' && (
+          <>
+            {/* one always-mounted status region for progress and the neutral "not finished" line; a failure is its own alert element */}
+            <div role="status">
+              {(wandNote === 'send' || wandNote === 'work' || wandNote === 'slow' || wandNote === 'late') && (
+                <p className="wand-note">
+                  {(wandNote === 'send' || wandNote === 'work') && <Icon as={LoaderCircle} className="spin" />}
+                  <span>
+                    {wandNote === 'send' && t('שולחים את הבקשה למתכנן…')}
+                    {wandNote === 'work' && t('המתכנן מסדר את הימים…')}
+                    {wandNote === 'slow' && t('זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.')}
+                    {wandNote === 'late' && t('המתכנן עוד לא סיים. אפשר לנסות שוב מאוחר יותר.')}
+                  </span>
+                  {wandNote === 'late' && (
+                    <button className="link" onClick={wand}>
+                      {t('נסו שוב')}
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+            {(wandNote === 'failed' || wandNote === 'offline') && (
+              <p className="wand-note fail">
+                <span role="alert">
+                  {wandNote === 'failed' && t('המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.')}
+                  {wandNote === 'offline' && t('אין חיבור לאינטרנט, אז הבקשה לא נשלחה. המסלול נשאר כמו שהיה.')}
+                </span>
+                <button className="link" onClick={wand}>
+                  {t('נסו שוב')}
+                </button>
+              </p>
             )}
-          </p>
+          </>
         )}
         {tab === 'home' && (
           <Home
@@ -731,13 +747,13 @@ function LoadError({ onRetry, onLeave, gone }: { onRetry: () => void; onLeave?: 
   // a deleted trip, or one this person was removed from: Retry can never work, so the way out is the trip list
   if (gone && onLeave)
     return (
-      <div className="center" role="alert">
-        <EmptyState icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} second={{ label: t('נסו שוב'), onClick: onRetry }} />
+      <div className="center">
+        <EmptyState alert icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} second={{ label: t('נסו שוב'), onClick: onRetry }} />
       </div>
     )
   return (
-    <div className="center stack" role="alert">
-      <p>{t('אין חיבור לשרת. בדקו את האינטרנט.')}</p>
+    <div className="center stack">
+      <p role="alert">{t('אין חיבור לשרת. בדקו את האינטרנט.')}</p>
       <button className="primary" onClick={onRetry}>
         {t('נסו שוב')}
       </button>
