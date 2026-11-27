@@ -355,6 +355,7 @@ function BookingForm(props: {
   const [busy, setBusy] = useState(false)
   const [reading, setReading] = useState(false)
   const [readNote, setReadNote] = useState('')
+  const [err, setErr] = useState('')
 
   /** Claude reads the attached confirmation and fills the form; the file stays attached. */
   const readFile = async () => {
@@ -400,10 +401,11 @@ function BookingForm(props: {
   const save = async () => {
     if (!f.title?.trim()) return
     setBusy(true)
+    setErr('')
     let filePath = f.file_path ?? null
     if (file) {
       if (!isDocType(file.type)) {
-        say(t('העלאת הקובץ נכשלה: {msg}', { msg: 'PDF, JPG, PNG' }), { error: true })
+        setErr(t('אפשר לצרף רק PDF, JPG או PNG.'))
         setBusy(false)
         return
       }
@@ -411,7 +413,7 @@ function BookingForm(props: {
       const path = `${tripId}/${crypto.randomUUID()}.${ext}`
       const { error } = await supabase.storage.from('docs').upload(path, file, { contentType: file.type })
       if (error) {
-        say(t('העלאת הקובץ נכשלה: {msg}', { msg: error.message }), { error: true })
+        setErr(errorText(error.message, t('העלאת הקובץ נכשלה. נסו שוב, או שמרו בלי הקובץ.')))
         setBusy(false)
         return
       }
@@ -432,8 +434,8 @@ function BookingForm(props: {
     }
     const { error } = await (f.id ? supabase.from('bookings').update(row).eq('id', f.id) : supabase.from('bookings').insert(row))
     const ok = !error
-    if (error?.code === '23505') say(t('כבר יש הזמנה כזו: אותו מספר אישור באותה שעה, או אותו שם, שעה וזוג.'), { error: true })
-    else if (error) say(t('שגיאה: {msg}', { msg: error.message }), { error: true })
+    if (error?.code === '23505') setErr(t('כבר יש הזמנה כזו: אותו מספר אישור באותה שעה, או אותו שם, שעה וזוג.'))
+    else if (error) setErr(errorText(error.message))
     if (ok) {
       // the old attachment goes only once the row points at the new one
       if (file && f.file_path && f.id) await removeDocIfUnused(tripId, f.file_path, f.id)
@@ -512,6 +514,7 @@ function BookingForm(props: {
           {readNote}
         </p>
       )}
+      {err && <p className="msg" role="alert">{err}</p>}
       <button className="primary" onClick={save} disabled={busy || !f.title?.trim()}>
         {busy ? t('שומר…') : t('שמירה')}
       </button>

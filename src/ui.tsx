@@ -119,7 +119,7 @@ export function Empty(props: { children: ReactNode }) {
  * default; `slim` for the checklist rows), `hero` (Home's photo tile), `card` (a card under it) or `deck` (Discover's card).
  * No shimmer with reduced motion.
  */
-export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card' | 'deck'; slim?: boolean }) {
+export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card' | 'deck' | 'timeline'; slim?: boolean }) {
   if (props.shape === 'hero')
     return (
       <div className="skeleton" aria-hidden="true">
@@ -142,6 +142,20 @@ export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card
         </div>
       </div>
     )
+  if (props.shape === 'timeline')
+    return (
+      <div className="sk-timeline" aria-hidden="true">
+        {Array.from({ length: props.rows ?? 3 }, (_, i) => (
+          <div key={i} className="sk-tl-item">
+            <div className="skeleton-row sk-dot" />
+            <div className="sk-tl-body">
+              <div className="skeleton-row sk-line short" />
+              <div className="skeleton-row sk-line" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   return (
     <div className="skeleton" aria-hidden="true">
       {Array.from({ length: props.rows ?? 3 }, (_, i) => (
@@ -152,15 +166,20 @@ export function Skeleton(props: { rows?: number; shape?: 'rows' | 'hero' | 'card
 }
 
 /** An empty screen, Apple style: a grey line icon that fits the case, a bold title, one line and one button. */
-export function EmptyState(props: { icon: LucideIcon; title: string; line?: string; action?: { label: string; onClick: () => void } }) {
+export function EmptyState(props: { alert?: boolean; icon: LucideIcon; title: string; line?: string; action?: { label: string; onClick: () => void }; second?: { label: string; onClick: () => void } }) {
   return (
     <div className="empty-state">
       <Icon as={props.icon} size={50} className="empty-icon" />
-      <b>{props.title}</b>
+      <b role={props.alert ? 'alert' : undefined}>{props.title}</b>
       {props.line && <p>{props.line}</p>}
       {props.action && (
         <button className="primary" onClick={props.action.onClick}>
           {props.action.label}
+        </button>
+      )}
+      {props.second && (
+        <button className="link" onClick={props.second.onClick}>
+          {props.second.label}
         </button>
       )}
     </div>

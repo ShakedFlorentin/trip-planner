@@ -7,7 +7,9 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
-import { Wand2 } from 'lucide-react'
+import { goneConfirmed, tripLoadFailure, wandStartFailure } from './screenLogic'
+import { LoaderCircle, MapPinOff, Wand2 } from 'lucide-react'
+import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl, savedInvite } from './views/Login'
 import TripPicker from './views/TripPicker'
@@ -39,7 +41,7 @@ import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
 import { OverlayLayer, say } from './toast'
-import { toast } from '@ui-sdk/react/toast'
+import { Icon } from './icons'
 import { forgetPushSync, syncPush } from './push'
 import Guide, { type GuideMode, onGuideOpen } from './views/Guide'
 
@@ -303,16 +305,31 @@ function TripGate({ userId, invited = false }: { userId: string; invited?: boole
     const back = lastTrip()
     return <TripPicker onPick={choose} trips={tripIds} backTo={back && tripIds.includes(back) ? back : null} />
   }
-  return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} />
+  // the trip is deleted or this person was removed: drop it from the list too, or it would be offered again
+  const forgetGone = () => {
+    const ids = tripIds.filter((x) => x !== tripId)
+    setTripIds(ids)
+    writeCache('memberTrips:' + userId, ids)
+    try {
+      if (localStorage.getItem('lastTrip') === tripId) localStorage.removeItem('lastTrip')
+    } catch {
+      // the next launch just tries it once more
+    }
+    choose(null)
+  }
+  return <TripApp tripId={tripId} userId={userId} onLeave={() => choose(null)} onGone={forgetGone} />
 }
 
-function TripApp(props: { tripId: string; userId: string; onLeave: () => void }) {
+function TripApp(props: { tripId: string; userId: string; onLeave: () => void; onGone: () => void }) {
   const { tripId } = props
   // the last good copy opens the app with no network
   const [tripCache] = useState(() => readCache<Trip>('trip:' + tripId))
   const [trip, setTrip] = useState<Trip | null>(tripCache?.data ?? null)
   const [members, setMembers] = useState<Member[]>(() => readCache<Member[]>('members:' + tripId)?.data ?? [])
   const [tab, setTab] = useState<Tab>('home')
+  // the wand's answer can arrive after the user left the Plan tab; the toast needs to know where they are now
+  const tabRef = useRef(tab)
+  tabRef.current = tab
   // the ☰ menu and what it opens: each is a sheet over the current page, so closing it returns to the same place (5)
   const [menu, setMenu] = useState(false)
   const [tool, setTool] = useState<MoreTab | null>(null)
@@ -327,9 +344,12 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
   const [album, setAlbum] = useState(false)
   // the wand's wait for the planner: one run at a time, dropped when the trip changes or the app closes
   const wandRun = useRef<{ stop: () => void } | null>(null)
+  // the wand's status line on the Plan tab: the stage it is at, or why it stopped, with a Retry
+  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'offline' | 'slow' | 'late'>(null)
   useEffect(
     () => () => {
       wandRun.current?.stop()
+      setWandNote(null)
     },
     [tripId],
   )
@@ -352,11 +372,20 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       },
     }
     wandRun.current = run
-    const progress = say(t('מעדכנים את המסלול, כמה שניות…'), { duration: 30_000 })
+    setWandNote('send')
     const finish = (msg: string, error = false) => {
       run.stop()
-      toast.dismiss(progress)
+      setWandNote(null)
       say(msg, { error, duration: 2500 })
+    }
+    // the status line lives on the Plan tab only; on any other tab a short toast says it too, and a tap opens Plan
+    const toastAway = (msg: string) => {
+      if (tabRef.current !== 'plan') say(msg, { error: true, duration: 6000, undo: () => setTab('plan'), undoLabel: t('פתיחת המסלול') })
+    }
+    const fail = (kind: 'failed' | 'offline' = 'failed') => {
+      run.stop()
+      setWandNote(kind)
+      toastAway(kind === 'offline' ? t('אין חיבור לאינטרנט. המסלול לא עודכן.') : t('המתכנן לא הצליח לסדר את הימים.'))
     }
     const read = async () => {
       try {
@@ -370,19 +399,33 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       // what the row says before the tap, so an old error or run time is not taken for the answer (and no clock skew)
       const before = await read()
       if (stopped) return
-      await replan(tripId)
-      const deadline = Date.now() + 30_000
+      const res = await replan(tripId)
+      if (stopped) return
+      // offline or refused (401/403): say so now, not "working, will update by itself"
+      const bad = wandStartFailure(res, navigator.onLine)
+      if (bad) return fail(bad)
+      setWandNote('work')
+      const slowAt = Date.now() + 30_000
+      const giveUpAt = Date.now() + 5 * 60_000
       const poll = async () => {
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
+        if (row?.error && row.error !== before?.error) return fail('failed')
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
           // no rating prompt here: a re-plan is not a moment of delight
           return finish(t('המסלול עודכן'))
         }
-        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
-        timer = setTimeout(poll, 1000)
+        // slow is not failed: the planner may still finish, so keep looking (less often) and only say it takes longer
+        const slow = Date.now() >= slowAt
+        if (slow) setWandNote('slow')
+        if (Date.now() >= giveUpAt) {
+          // stop looking, free the button, and say it is not finished: not "failed", the planner may still finish
+          run.stop()
+          toastAway(t('המתכנן עוד לא סיים. אפשר לנסות שוב.'))
+          return setWandNote('late')
+        }
+        timer = setTimeout(poll, slow ? 5000 : 1000)
       }
       timer = setTimeout(poll, 1000)
     })()
@@ -430,7 +473,8 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     document.documentElement.classList.add('inner-scroll')
     return () => document.documentElement.classList.remove('inner-scroll')
   }, [])
-  const [failed, setFailed] = useState(false)
+  // 'gone': the server answered and this trip is not there for this person (deleted, or they were removed); 'offline': no answer
+  const [failed, setFailed] = useState<'' | 'offline' | 'gone'>('')
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)
@@ -453,7 +497,33 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         setMembers(m.data as Member[])
         writeCache('members:' + tripId, m.data)
       }
-      setFailed(!!t.error)
+      let why = tripLoadFailure(t.error, true)
+      if (t.error?.code === 'PGRST116') {
+        // 0 rows can also mean an expired login (the request went out as anon). Gone only after a session check and a second look.
+        let session = false
+        try {
+          session = !!(await supabase.auth.getSession()).data.session
+        } catch {
+          session = false
+        }
+        why = tripLoadFailure(t.error, session)
+        if (why === 'gone') {
+          let sure = false
+          try {
+            const [u, again] = await Promise.all([
+              supabase.auth.getUser(),
+              supabase.from('trips').select('id').eq('id', tripId).maybeSingle(),
+            ])
+            sure = goneConfirmed(!!u.data.user && !u.error, again)
+          } catch {
+            sure = false
+          }
+          if (!sure) why = 'offline'
+        }
+      }
+      // a saved copy of a trip that is gone must not keep showing it, but only once that is certain
+      if (why === 'gone') setTrip(null)
+      setFailed(why)
       setStale(!!t.error || !!m.error)
       if (!t.error && !m.error) setSyncedAt(Date.now())
     }
@@ -521,7 +591,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (trip) setDay(pointedDay.current ?? currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
-  if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <Loading />
+  if (!trip) return failed ? <LoadError gone={failed === 'gone'} onRetry={() => setAttempt((a) => a + 1)} onLeave={props.onGone} /> : <Loading />
   const me = members.find((m) => m.user_id === props.userId)?.display_name ?? ''
   const openDay = (d: number) => {
     setDay(d)
@@ -554,6 +624,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
           <button
             className="menu-btn"
             aria-label={t('סידור המסלול מחדש')}
+            disabled={wandNote === 'send' || wandNote === 'work' || wandNote === 'slow'}
             onClick={askThenWand}
           >
             <Wand2 size={22} strokeWidth={2} aria-hidden="true" />
@@ -566,6 +637,40 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       <OfflineBanner since={stale ? syncedAt : null} />
       <main className={'tab-' + tab}>
         <h1 className="large-title">{TABS.find((t) => t.id === tab)?.label}</h1>
+        {tab === 'plan' && (
+          <>
+            {/* one always-mounted status region for progress and the neutral "not finished" line; a failure is its own alert element */}
+            <div role="status">
+              {(wandNote === 'send' || wandNote === 'work' || wandNote === 'slow' || wandNote === 'late') && (
+                <p className="wand-note">
+                  {(wandNote === 'send' || wandNote === 'work') && <Icon as={LoaderCircle} className="spin" />}
+                  <span>
+                    {wandNote === 'send' && t('שולחים את הבקשה למתכנן…')}
+                    {wandNote === 'work' && t('המתכנן מסדר את הימים…')}
+                    {wandNote === 'slow' && t('זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.')}
+                    {wandNote === 'late' && t('המתכנן עוד לא סיים. אפשר לנסות שוב מאוחר יותר.')}
+                  </span>
+                  {wandNote === 'late' && (
+                    <button className="link" onClick={wand}>
+                      {t('נסו שוב')}
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+            {(wandNote === 'failed' || wandNote === 'offline') && (
+              <p className="wand-note fail">
+                <span role="alert">
+                  {wandNote === 'failed' && t('המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.')}
+                  {wandNote === 'offline' && t('אין חיבור לאינטרנט, אז הבקשה לא נשלחה. המסלול נשאר כמו שהיה.')}
+                </span>
+                <button className="link" onClick={wand}>
+                  {t('נסו שוב')}
+                </button>
+              </p>
+            )}
+          </>
+        )}
         {tab === 'home' && (
           <Home
             trip={trip}
@@ -638,10 +743,17 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
 const MORE_LABEL: Record<MoreTab, string> = { money: t('הוצאות'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
 
 
-function LoadError({ onRetry }: { onRetry: () => void }) {
+function LoadError({ onRetry, onLeave, gone }: { onRetry: () => void; onLeave?: () => void; gone?: boolean }) {
+  // a deleted trip, or one this person was removed from: Retry can never work, so the way out is the trip list
+  if (gone && onLeave)
+    return (
+      <div className="center">
+        <EmptyState alert icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} second={{ label: t('נסו שוב'), onClick: onRetry }} />
+      </div>
+    )
   return (
-    <div className="center stack" role="alert">
-      <p>{t('אין חיבור לשרת. בדקו את האינטרנט.')}</p>
+    <div className="center stack">
+      <p role="alert">{t('אין חיבור לשרת. בדקו את האינטרנט.')}</p>
       <button className="primary" onClick={onRetry}>
         {t('נסו שוב')}
       </button>

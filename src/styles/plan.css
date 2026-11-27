@@ -331,5 +331,12 @@ main.tab-plan:has(.fab) { padding-bottom: calc(var(--tabbar-h) + 8px + 52px + 32
 .pt-now-time { font-size: var(--fs-caption); font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
 .pt .arrival { margin-block: var(--s-2) var(--s-3); }
 
+/* the wand's status line under the Plan title: the stage it is at, or why it stopped, with a Retry */
+.wand-note { display: flex; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-3); padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--card); font-size: var(--fs-subhead); }
+.wand-note > span { flex: 1; min-width: 0; }
+.wand-note .ic { flex: none; color: var(--accent); }
+.wand-note.fail { background: var(--accent-soft); }
+.wand-note.fail > span { color: var(--accent); }
+
 /* a plain text button in a sheet (the stays sheet's two links): 44 high, centred */
 .stays-link { display: flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: 44px; padding: 0 var(--s-3); }

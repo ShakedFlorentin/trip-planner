@@ -21,7 +21,6 @@ export const EN_C: Record<string, string> = {
   'לא מצאתי הזמנה בקובץ הזה. אפשר למלא ידנית.': 'No booking found in this file. You can fill it in by hand.',
   'מילאתי את הראשונה מתוך {n} ההזמנות בקובץ. בדקו ושמרו, או הוסיפו את כולן דרך "הוספה מאישור הזמנה".': 'Filled in the first of the {n} bookings in the file. Check and save, or add them all with "Add from a confirmation".',
   'מילאתי את הפרטים מהקובץ. בדקו ושמרו.': 'Filled in the details from the file. Check and save.',
-  'העלאת הקובץ נכשלה: {msg}': 'File upload failed: {msg}',
   'כבר יש הזמנה כזו: אותו מספר אישור באותה שעה, או אותו שם, שעה וזוג.': 'This booking already exists: same confirmation number at the same time, or same name, time and couple.',
   'שגיאה: {msg}': 'Error: {msg}',
   'למחוק את ההזמנה?': 'Delete this booking?',

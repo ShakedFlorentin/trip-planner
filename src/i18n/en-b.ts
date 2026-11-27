@@ -135,7 +135,6 @@ export const EN_B: Record<string, string> = {
   'מקום אחד בלי מיקום לא מופיע במפה': '1 place without a location is not on the map',
   '{n} מקומות בלי מיקום לא מופיעים במפה': '{n} places without a location are not on the map',
   'המיקומים משוערים, כדאי לבדוק בגוגל מפות': 'Locations are approximate, check in Google Maps',
-  'מעדכנים את המסלול, כמה שניות…': 'Updating the plan, a few seconds…',
   'סידור המסלול מחדש': 'Re-plan the trip',
   'אין מקומות בסינון הזה': 'No places match this filter',
   'עוד אין מקומות. מקום שקיבל מאצ׳ בגילוי יופיע כאן': 'No places yet. A place that gets a match in Discover shows up here',
