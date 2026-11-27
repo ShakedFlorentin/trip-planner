@@ -308,7 +308,9 @@ const startFor = (u: Unit, p: Presence) => (opensEarly(u) && p.early != null ? M
  * The plan: each unit on the day that keeps the days compact and balanced, then a rough time for each. A place the
  * day's timetable can't fit before it closes is barred from that day and the days are worked out again.
  */
-export function plan(days: Day[], liked: Unit[], fixed: Fixed[]): Outcome {
+export function plan(days: Day[], input: Unit[], fixed: Fixed[]): Outcome {
+  // the places in one order of their own, whatever order they came in: the same places give the same plan
+  const liked = [...input].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   // who travels with a baby (nobody, when the trip does not say: then nothing below changes anything)
   const withBaby = new Set(days.flatMap((d) => [...d.at].filter(([, p]) => p.baby).map(([c]) => c)))
   // a place that is not for a baby, liked by a couple with one and a couple without: it is the other couple's plan
