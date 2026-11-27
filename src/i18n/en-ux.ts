@@ -60,4 +60,7 @@ export const EN_UX: Record<string, string> = {
   'ל-{n} טיסות אין קוד אישור': '{n} flights have no confirmation code',
   'מופעל': 'On',
   'כבוי': 'Off',
+  'הטיול לא נמצא': 'Trip not found',
+  'הוא נמחק, או שהוסרתם ממנו.': 'It was deleted, or you were removed from it.',
+  'לרשימת הטיולים': 'To my trips',
 }

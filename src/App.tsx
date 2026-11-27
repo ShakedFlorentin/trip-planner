@@ -7,7 +7,8 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
-import { Wand2 } from 'lucide-react'
+import { MapPinOff, Wand2 } from 'lucide-react'
+import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl, savedInvite } from './views/Login'
 import TripPicker from './views/TripPicker'
@@ -430,7 +431,8 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     document.documentElement.classList.add('inner-scroll')
     return () => document.documentElement.classList.remove('inner-scroll')
   }, [])
-  const [failed, setFailed] = useState(false)
+  // 'gone': the server answered and this trip is not there for this person (deleted, or they were removed); 'offline': no answer
+  const [failed, setFailed] = useState<'' | 'offline' | 'gone'>('')
   const [attempt, setAttempt] = useState(0)
   // when the trip and members shown were last confirmed by the server; the banner shows while they're a saved copy
   const [syncedAt, setSyncedAt] = useState<number | null>(tripCache?.at ?? null)
@@ -453,7 +455,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
         setMembers(m.data as Member[])
         writeCache('members:' + tripId, m.data)
       }
-      setFailed(!!t.error)
+      setFailed(t.error ? (t.error.code === 'PGRST116' ? 'gone' : 'offline') : '')
       setStale(!!t.error || !!m.error)
       if (!t.error && !m.error) setSyncedAt(Date.now())
     }
@@ -521,7 +523,7 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (trip) setDay(pointedDay.current ?? currentDay(trip.start_date, trip.num_days) ?? 1)
   }, [trip?.start_date, trip?.num_days])
 
-  if (!trip) return failed ? <LoadError onRetry={() => setAttempt((a) => a + 1)} /> : <Loading />
+  if (!trip) return failed ? <LoadError gone={failed === 'gone'} onRetry={() => setAttempt((a) => a + 1)} onLeave={props.onLeave} /> : <Loading />
   const me = members.find((m) => m.user_id === props.userId)?.display_name ?? ''
   const openDay = (d: number) => {
     setDay(d)
@@ -638,7 +640,14 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
 const MORE_LABEL: Record<MoreTab, string> = { money: t('הוצאות'), lists: t('רשימות'), info: t('חירום'), say: t('תרגום'), baby: t('תינוק') }
 
 
-function LoadError({ onRetry }: { onRetry: () => void }) {
+function LoadError({ onRetry, onLeave, gone }: { onRetry: () => void; onLeave?: () => void; gone?: boolean }) {
+  // a deleted trip, or one this person was removed from: Retry can never work, so the way out is the trip list
+  if (gone && onLeave)
+    return (
+      <div className="center" role="alert">
+        <EmptyState icon={MapPinOff} title={t('הטיול לא נמצא')} line={t('הוא נמחק, או שהוסרתם ממנו.')} action={{ label: t('לרשימת הטיולים'), onClick: onLeave }} />
+      </div>
+    )
   return (
     <div className="center stack" role="alert">
       <p>{t('אין חיבור לשרת. בדקו את האינטרנט.')}</p>
