@@ -7,7 +7,7 @@ import { t } from './i18n'
 import type { Member, Trip } from './types'
 import { liveOn, onLive } from './live'
 import { clearCache, currentDay, readCache, replan, useTripHasBaby, writeCache } from './lib'
-import { MapPinOff, Wand2 } from 'lucide-react'
+import { LoaderCircle, MapPinOff, Wand2 } from 'lucide-react'
 import { EmptyState } from './ui'
 import { OfflineBanner } from './offline'
 import Login, { inviteInUrl, savedInvite } from './views/Login'
@@ -40,7 +40,7 @@ import GuestImport from './views/GuestImport'
 import { forgetGuest, pendingGuest } from './guest'
 import { track } from './track'
 import { OverlayLayer, say } from './toast'
-import { toast } from '@ui-sdk/react/toast'
+import { Icon } from './icons'
 import { forgetPushSync, syncPush } from './push'
 import Guide, { type GuideMode, onGuideOpen } from './views/Guide'
 
@@ -341,6 +341,8 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
     if (wandRun.current) return
     setReplanning(true)
   }
+  // the wand's status line on the Plan tab: the stage it is at, or why it stopped, with a Retry
+  const [wandNote, setWandNote] = useState<null | 'send' | 'work' | 'failed' | 'slow'>(null)
   const wand = () => {
     if (wandRun.current) return
     let stopped = false
@@ -353,11 +355,15 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       },
     }
     wandRun.current = run
-    const progress = say(t('מעדכנים את המסלול, כמה שניות…'), { duration: 30_000 })
+    setWandNote('send')
     const finish = (msg: string, error = false) => {
       run.stop()
-      toast.dismiss(progress)
+      setWandNote(null)
       say(msg, { error, duration: 2500 })
+    }
+    const stopWith = (note: 'failed' | 'slow') => {
+      run.stop()
+      setWandNote(note)
     }
     const read = async () => {
       try {
@@ -372,17 +378,19 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       const before = await read()
       if (stopped) return
       await replan(tripId)
+      if (stopped) return
+      setWandNote('work')
       const deadline = Date.now() + 30_000
       const poll = async () => {
         if (stopped) return
         const row = await read()
         if (stopped) return
-        if (row?.error && row.error !== before?.error) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
+        if (row?.error && row.error !== before?.error) return stopWith('failed')
         if (row?.ran_at && row.ran_at !== before?.ran_at && !row.dirty) {
           // no rating prompt here: a re-plan is not a moment of delight
           return finish(t('המסלול עודכן'))
         }
-        if (Date.now() >= deadline) return finish(t('לא הצלחנו לעדכן את המסלול, נסו שוב'), true)
+        if (Date.now() >= deadline) return stopWith('slow')
         timer = setTimeout(poll, 1000)
       }
       timer = setTimeout(poll, 1000)
@@ -568,6 +576,22 @@ function TripApp(props: { tripId: string; userId: string; onLeave: () => void })
       <OfflineBanner since={stale ? syncedAt : null} />
       <main className={'tab-' + tab}>
         <h1 className="large-title">{TABS.find((t) => t.id === tab)?.label}</h1>
+        {tab === 'plan' && wandNote && (
+          <p className={'wand-note' + (wandNote === 'failed' ? ' fail' : '')} role={wandNote === 'failed' ? 'alert' : 'status'}>
+            {(wandNote === 'send' || wandNote === 'work') && <Icon as={LoaderCircle} className="spin" />}
+            <span>
+              {wandNote === 'send' && t('שולחים את הבקשה למתכנן…')}
+              {wandNote === 'work' && t('המתכנן מסדר את הימים…')}
+              {wandNote === 'failed' && t('המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.')}
+              {wandNote === 'slow' && t('זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.')}
+            </span>
+            {wandNote === 'failed' && (
+              <button className="link" onClick={wand}>
+                {t('נסו שוב')}
+              </button>
+            )}
+          </p>
+        )}
         {tab === 'home' && (
           <Home
             trip={trip}

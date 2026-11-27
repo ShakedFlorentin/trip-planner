@@ -63,4 +63,8 @@ export const EN_UX: Record<string, string> = {
   'הטיול לא נמצא': 'Trip not found',
   'הוא נמחק, או שהוסרתם ממנו.': 'It was deleted, or you were removed from it.',
   'לרשימת הטיולים': 'To my trips',
+  'שולחים את הבקשה למתכנן…': 'Sending the request to the planner…',
+  'המתכנן מסדר את הימים…': 'The planner is arranging the days…',
+  'המתכנן לא הצליח לסדר את הימים. המסלול נשאר כמו שהיה.': 'The planner could not rearrange the days. Your plan is as it was.',
+  'זה לוקח יותר מהרגיל. המסלול יתעדכן לבד כשהמתכנן יסיים.': 'This is taking longer than usual. The plan will update by itself when the planner is done.',
 }
