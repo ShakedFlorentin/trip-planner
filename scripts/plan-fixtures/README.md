@@ -78,7 +78,12 @@ and run it again; do not edit the JSON. Never put real members' names in a fixtu
   it (`../_shared/areas.ts`).
 - `node scripts/plan-fixes-test.mjs r20` (round 9): the made-up 20-day trip planned as written, backwards and in five
   shuffles of its places must give the same places on the same days at the same times. `plan()` sorts the places by id
-  first; before that the rows' order alone moved a real trip between 82 and 84 places on a day.
+  first; before that the rows' order alone moved a real trip between 82 and 84 places on a day. (Round 10 replaced
+  the sort by id with `inOrder()`: by what the place is, the id last.)
+- `node scripts/plan-fixes-test.mjs r21` (round 10): the same made-up trip with every place under a new random id, ten
+  times, must give the same places on the same days at the same times. The planner broke its ties by id; ids are
+  random, so the same trip gave 95 to 97 places here (81 to 84 on a real trip). `PLAN_DIR=<a copy of the round-9
+  plan-trip>` shows the test failing.
 
 ## Who a trip is planned for (`scripts/plan-parties-test.mjs`)
 
