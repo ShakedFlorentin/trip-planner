@@ -13,6 +13,7 @@ Source: `2026-11-02-live-baseline.sql` (triggers near line 1230) plus later file
 - `swipes_match` (AFTER insert/update/delete on `swipes`) runs `on_swipe()`, which calls `match_place(candidate)`: counts who liked, and creates or removes the `places` row (the only legal way a place enters a trip, rule 3). `match_place` is not callable by app roles.
 - `check_same_trip` (BEFORE on `swipes`, `places`, `itinerary_items`): the candidate or place must belong to the same trip as the row, else "candidate belongs to another trip".
 - `swipes_replan`, `places_replan_new`, `places_replan_who`, `bookings_replan`, `trip_stays_replan`: call `request_plan()`, which sets `plan_state.dirty` and calls plan-trip through pg_net (see replan-while-running).
+  - Written, not applied (`supabase/sql/2026-11-27-replan-on-read-fields.sql`, branch planner-fixes-2026-11-26): `bookings_replan` on insert only, plus `bookings_replan_fields` on an update of a field the planner reads (kind, title, starts_at, ends_at, who, location, trip_id); `trip_stays_replan` on insert or delete, plus `trip_stays_replan_changed` on an update that changes the row (a hotel booking's save rewrites its stay with the same values); `swipes_replan` removed (`request_plan()` has returned at once for swipes since 14 Nov; a swipe reaches the planner through `swipes_match` -> `match_place` -> the places triggers).
 - `itinerary_touched`: a person's edit marks the item so the planner never moves it. `itinerary_item_address`: fills address from the place.
 
 **Cards**

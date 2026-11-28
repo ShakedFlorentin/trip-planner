@@ -5,10 +5,10 @@ explains:
   - sendPush
   - featureOn
 ---
-**plan-trip** (`plan-trip/index.ts`; modules `plan.ts`, `presence.ts`, `split.ts`, `stay.ts`, `route-data.ts`). See planner-brief.
+**plan-trip** (`plan-trip/index.ts`; modules `plan.ts`, `presence.ts`, `split.ts`, `stay.ts`, `route-data.ts`, `lease.ts`, `errors.ts`). See planner-brief.
 - Auth: `x-plan-token` header (compared with `get_planner_token()`; wrong token is 401) OR a signed-in member (`getUser()` then `is_trip_member`, 403 if not). The gateway JWT check is off because the browser preflight has no JWT.
 - In: `{trip_id, suggest_stays?, nights?, dry?, wait?}`. Plain call answers 202 `{started:true}` and runs in the background (`EdgeRuntime.waitUntil`). `suggest_stays` only reads. `dry` and `wait` need the token.
-- One planner per trip: lease in `plan_state` (60 s `LEASE_MS`); requests during a run set `dirty` and it runs once more.
+- One planner per trip: lease in `plan_state` (60 s `LEASE_MS`, in `lease.ts`); requests during a run set `dirty` and it runs once more.
 - No AI. Known gaps: raw Postgres errors returned, no rate limit.
 
 **notify** (`notify/index.ts`, `_shared/webpush.ts`)

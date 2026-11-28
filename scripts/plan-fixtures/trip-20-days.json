@@ -1,0 +1,329 @@
+{
+ "name": "trip-20-days",
+ "description": "Made up, shaped like a real trip: 20 days from 12 Dec 2026, Yokohama 1-3 → Tokyo 4-7 → Kyoto 8-11 → Osaka 12-14 → Tokyo 15-20. Couple A lands day 1 (HND) and leaves on the night of day 20; Couple B (with the baby) lands day 4 (NRT) and leaves on the morning of day 17. About 130 public places with real hours and rough coordinates, 10 of them with no coordinates, plus day trips (Hakone, Fuji lakes, Nara, Kobe, Himeji). Day 6 is a theme park booked all day; day 13 holds an untimed item a person added. Regenerate from the script named in the fixtures README.",
+ "presence": {
+  "startDate": "2026-12-12",
+  "numDays": 20,
+  "couples": [
+   "Couple A",
+   "Couple B"
+  ],
+  "baby": [
+   "Couple B"
+  ],
+  "cities": {
+   "tokyo": {
+    "lat": 35.681,
+    "lng": 139.767
+   },
+   "yokohama": {
+    "lat": 35.444,
+    "lng": 139.638
+   },
+   "kyoto": {
+    "lat": 35.003,
+    "lng": 135.759
+   },
+   "osaka": {
+    "lat": 34.686,
+    "lng": 135.502
+   },
+   "nara": {
+    "lat": 34.685,
+    "lng": 135.805
+   }
+  },
+  "sleeps": [
+   {
+    "party": "Couple A",
+    "checkIn": "2026-12-12",
+    "checkOut": "2026-12-15",
+    "city": "yokohama",
+    "point": {
+     "lat": 35.456,
+     "lng": 139.633
+    },
+    "label": "Yokohama Bay Hotel",
+    "key": "Yokohama Bay Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   },
+   {
+    "party": null,
+    "checkIn": "2026-12-15",
+    "checkOut": "2026-12-19",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.693,
+     "lng": 139.688
+    },
+    "label": "Nishi-Shinjuku Hotel",
+    "key": "Nishi-Shinjuku Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   },
+   {
+    "party": null,
+    "checkIn": "2026-12-19",
+    "checkOut": "2026-12-23",
+    "city": "kyoto",
+    "point": {
+     "lat": 35.003,
+     "lng": 135.759
+    },
+    "label": "Karasuma Hotel",
+    "key": "Karasuma Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   },
+   {
+    "party": null,
+    "checkIn": "2026-12-23",
+    "checkOut": "2026-12-26",
+    "city": "osaka",
+    "point": {
+     "lat": 34.676,
+     "lng": 135.501
+    },
+    "label": "Shinsaibashi Hotel",
+    "key": "Shinsaibashi Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   },
+   {
+    "party": "Couple A",
+    "checkIn": "2026-12-26",
+    "checkOut": "2026-12-31",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6627,
+     "lng": 139.7563
+    },
+    "label": "Shiodome Hotel",
+    "key": "Shiodome Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   },
+   {
+    "party": "Couple B",
+    "checkIn": "2026-12-26",
+    "checkOut": "2026-12-28",
+    "city": "tokyo",
+    "point": {
+     "lat": 35.6627,
+     "lng": 139.7563
+    },
+    "label": "Shiodome Hotel",
+    "key": "Shiodome Hotel",
+    "confirmed": true,
+    "booked": true,
+    "outMin": 660,
+    "inMin": 900
+   }
+  ],
+  "flights": [
+   {
+    "who": "Couple A",
+    "title": "TLV → HND",
+    "starts_at": "2026-12-11T22:00:00",
+    "ends_at": "2026-12-12T09:15:00"
+   },
+   {
+    "who": "Couple B",
+    "title": "TLV → NRT",
+    "starts_at": "2026-12-14T23:00:00",
+    "ends_at": "2026-12-15T10:20:00"
+   },
+   {
+    "who": "Couple B",
+    "title": "HND → TLV",
+    "starts_at": "2026-12-28T10:45:00",
+    "ends_at": "2026-12-28T17:00:00"
+   },
+   {
+    "who": "Couple A",
+    "title": "HND → TLV",
+    "starts_at": "2026-12-31T22:55:00",
+    "ends_at": "2027-01-01T05:00:00"
+   }
+  ]
+ },
+ "places": [
+  { "id": "yokohama-chinatown-dinner", "city": "yokohama", "point": { "lat": 35.4437, "lng": 139.6453 }, "mins": 75, "category": "food", "best": "evening", "opens": 660, "closes": 1290, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "cup-noodles-museum", "city": "yokohama", "point": { "lat": 35.4555, "lng": 139.6388 }, "mins": 90, "category": "experience", "best": "any", "opens": 600, "closes": 1080, "priority": 3, "couples": [ "Couple A" ], "closedWeekdays": [ 2 ] },
+  { "id": "teamlab-planets", "city": "tokyo", "point": { "lat": 35.649, "lng": 139.789 }, "mins": 120, "category": "experience", "best": "morning", "opens": 540, "closes": 1320, "priority": 4, "couples": [ "Couple A" ], "booking": true },
+  { "id": "tsukiji-outer-market", "city": "tokyo", "point": { "lat": 35.6655, "lng": 139.7707 }, "mins": 60, "category": "food", "best": "morning", "opens": 360, "closes": 840, "priority": 3.5, "couples": [ "Couple A" ], "closedWeekdays": [ 0, 3 ] },
+  { "id": "shimokitazawa-vintage", "city": "tokyo", "point": { "lat": 35.6613, "lng": 139.668 }, "mins": 120, "category": "shopping", "best": "afternoon", "opens": 720, "closes": 1200, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "baby-store-kasai", "city": "tokyo", "point": null, "mins": 60, "category": "shopping", "best": "any", "opens": 600, "closes": 1260, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "gotokuji-temple", "city": "tokyo", "point": { "lat": 35.6487, "lng": 139.6474 }, "mins": 60, "category": "sight", "best": "morning", "opens": 360, "closes": 1020, "priority": 3.5, "outdoor": true },
+  { "id": "koenji-vintage", "city": "tokyo", "point": { "lat": 35.7053, "lng": 139.6497 }, "mins": 45, "category": "shopping", "best": "afternoon", "opens": 720, "closes": 1200, "priority": 3 },
+  { "id": "shibuya-sky", "city": "tokyo", "point": { "lat": 35.6585, "lng": 139.7022 }, "mins": 90, "category": "sight", "best": "evening", "opens": 600, "closes": 1350, "priority": 4.5, "booking": true },
+  { "id": "golden-gai", "city": "tokyo", "point": { "lat": 35.694, "lng": 139.7046 }, "mins": 60, "category": "nightlife", "best": "night", "opens": 1140, "closes": 1440, "priority": 3.5, "adults": true },
+  { "id": "afuri-ebisu", "city": "tokyo", "point": { "lat": 35.6478, "lng": 139.7103 }, "mins": 60, "category": "food", "best": "night", "opens": 660, "closes": 1380, "priority": 3.5 },
+  { "id": "nezu-shrine", "city": "tokyo", "point": { "lat": 35.7202, "lng": 139.7607 }, "mins": 45, "category": "sight", "best": "morning", "opens": 360, "closes": 1020, "priority": 3.5, "outdoor": true },
+  { "id": "kappabashi-street", "city": "tokyo", "point": { "lat": 35.7143, "lng": 139.7888 }, "mins": 90, "category": "shopping", "best": "morning", "opens": 600, "closes": 1020, "priority": 3, "closedWeekdays": [ 0 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "yanaka-ginza", "city": "tokyo", "point": { "lat": 35.7277, "lng": 139.7659 }, "mins": 90, "category": "shopping", "best": "morning", "opens": 600, "closes": 1080, "priority": 3.5 },
+  { "id": "ameyoko", "city": "tokyo", "point": { "lat": 35.7106, "lng": 139.7745 }, "mins": 60, "category": "shopping", "best": "afternoon", "opens": 600, "closes": 1200, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "takiya-tempura", "city": "tokyo", "point": { "lat": 35.6608, "lng": 139.73 }, "mins": 120, "category": "food", "best": "evening", "opens": 1080, "closes": 1320, "priority": 4.5, "couples": [ "Couple A" ], "booking": true, "adults": true, "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "garden-house-crafts", "city": "tokyo", "point": { "lat": 35.649, "lng": 139.714 }, "mins": 45, "category": "cafe", "best": "morning", "opens": 480, "closes": 1080, "priority": 3 },
+  { "id": "shinjuku-gyoen", "city": "tokyo", "point": { "lat": 35.6852, "lng": 139.7101 }, "mins": 120, "category": "sight", "best": "morning", "opens": 540, "closes": 990, "priority": 4, "couples": [ "Couple A" ], "outdoor": true, "closedWeekdays": [ 1 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "isetan-depachika", "city": "tokyo", "point": { "lat": 35.6917, "lng": 139.7046 }, "mins": 90, "category": "shopping", "best": "midday", "opens": 600, "closes": 1200, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "ties-cakes-yushima", "city": "tokyo", "point": { "lat": 35.7074, "lng": 139.7702 }, "mins": 40, "category": "cafe", "best": "afternoon", "opens": 660, "closes": 1140, "priority": 3, "couples": [ "Couple B" ], "closedWeekdays": [ 1, 2, 3 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "alpen-tokyo", "city": "tokyo", "point": { "lat": 35.6921, "lng": 139.703 }, "mins": 90, "category": "shopping", "best": "afternoon", "opens": 660, "closes": 1320, "priority": 3 },
+  { "id": "roppongi-christmas-market", "city": "tokyo", "point": { "lat": 35.6605, "lng": 139.7292 }, "mins": 90, "category": "shopping", "best": "evening", "opens": 660, "closes": 1260, "priority": 3.5, "closedDates": [ "2026-12-26", "2026-12-27", "2026-12-28", "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "bar-benfiddich", "city": "tokyo", "point": { "lat": 35.6921, "lng": 139.6975 }, "mins": 90, "category": "nightlife", "best": "night", "opens": 1080, "closes": 1440, "priority": 3.5, "couples": [ "Couple A" ], "adults": true, "closedWeekdays": [ 0 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "joypolis-odaiba", "city": "tokyo", "point": null, "mins": 150, "category": "experience", "best": "morning", "opens": 600, "closes": 1200, "priority": 3 },
+  { "id": "pizza-marumo-ebisu", "city": "tokyo", "point": null, "mins": 75, "category": "food", "best": "midday", "opens": 690, "closes": 1320, "priority": 3.5, "closedDates": [ "2026-12-31" ] },
+  { "id": "tokyo-ramen-street", "city": "tokyo", "point": { "lat": 35.6803, "lng": 139.7675 }, "mins": 60, "category": "food", "best": "any", "opens": 630, "closes": 1380, "priority": 3 },
+  { "id": "kitte-marunouchi", "city": "tokyo", "point": { "lat": 35.6797, "lng": 139.765 }, "mins": 60, "category": "shopping", "best": "afternoon", "opens": 660, "closes": 1260, "priority": 3 },
+  { "id": "mega-donki-shibuya", "city": "tokyo", "point": { "lat": 35.6607, "lng": 139.6987 }, "mins": 90, "category": "shopping", "best": "morning", "opens": null, "closes": null, "priority": 2.5, "couples": [ "Couple A" ] },
+  { "id": "bar-trench-ebisu", "city": "tokyo", "point": { "lat": 35.647, "lng": 139.7085 }, "mins": 90, "category": "nightlife", "best": "night", "opens": 1080, "closes": 1440, "priority": 3.5, "couples": [ "Couple A" ], "adults": true, "closedDates": [ "2026-12-31" ] },
+  { "id": "hie-shrine", "city": "tokyo", "point": { "lat": 35.6747, "lng": 139.7397 }, "mins": 45, "category": "sight", "best": "morning", "opens": 360, "closes": 1020, "priority": 3, "couples": [ "Couple A" ], "outdoor": true },
+  { "id": "muji-ginza", "city": "tokyo", "point": { "lat": 35.6736, "lng": 139.7667 }, "mins": 90, "category": "shopping", "best": "any", "opens": 660, "closes": 1260, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "itoya-ginza", "city": "tokyo", "point": { "lat": 35.6722, "lng": 139.7672 }, "mins": 60, "category": "shopping", "best": "any", "opens": 600, "closes": 1200, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "sumida-aquarium", "city": "tokyo", "point": { "lat": 35.71, "lng": 139.8094 }, "mins": 90, "category": "experience", "best": "morning", "opens": 600, "closes": 1200, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "coredo-muromachi", "city": "tokyo", "point": { "lat": 35.6866, "lng": 139.7745 }, "mins": 90, "category": "shopping", "best": "evening", "opens": 660, "closes": 1200, "priority": 2.5, "couples": [ "Couple A" ], "closedDates": [ "2026-12-31" ] },
+  { "id": "takeshita-street", "city": "tokyo", "point": { "lat": 35.6716, "lng": 139.7031 }, "mins": 60, "category": "shopping", "best": "morning", "opens": 600, "closes": 1200, "priority": 2.5, "couples": [ "Couple A" ] },
+  { "id": "nakano-broadway", "city": "tokyo", "point": { "lat": 35.709, "lng": 139.6657 }, "mins": 90, "category": "shopping", "best": "afternoon", "opens": 720, "closes": 1200, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "omoide-yokocho", "city": "tokyo", "point": { "lat": 35.693, "lng": 139.6995 }, "mins": 90, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1440, "priority": 3.5, "couples": [ "Couple A" ], "adults": true, "meal": true },
+  { "id": "marutake-tamagoyaki", "city": "tokyo", "point": { "lat": 35.6652, "lng": 139.7702 }, "mins": 30, "category": "food", "best": "morning", "opens": 240, "closes": 870, "priority": 3, "closedWeekdays": [ 0, 3 ], "closedDates": [ "2026-12-31" ] },
+  { "id": "kasai-sea-life-park", "city": "tokyo", "point": { "lat": 35.64, "lng": 139.862 }, "mins": 120, "category": "experience", "best": "morning", "opens": 570, "closes": 1020, "priority": 3.5, "closedWeekdays": [ 3 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "uchitaka-izakaya-tateishi", "city": "tokyo", "point": { "lat": 35.7382, "lng": 139.8487 }, "mins": 90, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1320, "priority": 3.5, "couples": [ "Couple A" ], "adults": true, "meal": true, "closedWeekdays": [ 0 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "tempura-ginza", "city": "tokyo", "point": { "lat": 35.672, "lng": 139.764 }, "mins": 90, "category": "food", "best": "evening", "opens": 1050, "closes": 1320, "priority": 4, "couples": [ "Couple A" ], "closedWeekdays": [ 0 ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "tokyo-toy-museum", "city": "tokyo", "point": { "lat": 35.689, "lng": 139.719 }, "mins": 90, "category": "experience", "best": "any", "opens": 600, "closes": 960, "priority": 3, "couples": [ "Couple A" ], "closedWeekdays": [ 4 ], "closedDates": [ "2026-12-28", "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "onigiri-manma-shinjuku", "city": "tokyo", "point": { "lat": 35.6925, "lng": 139.704 }, "mins": 45, "category": "food", "best": "midday", "opens": 600, "closes": 960, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "fuunji-ramen", "city": "tokyo", "point": { "lat": 35.6869, "lng": 139.6965 }, "mins": 45, "category": "food", "best": "any", "opens": 660, "closes": 1260, "priority": 4, "couples": [ "Couple A" ], "closedWeekdays": [ 0 ] },
+  { "id": "sushi-ginza-lunch", "city": "tokyo", "point": { "lat": 35.671, "lng": 139.765 }, "mins": 75, "category": "food", "best": "any", "opens": 690, "closes": 1320, "priority": 3.5 },
+  { "id": "savoy-pizza-azabu", "city": "tokyo", "point": { "lat": 35.656, "lng": 139.734 }, "mins": 60, "category": "food", "best": "any", "opens": 690, "closes": 1320, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "maguro-mart-nakano", "city": "tokyo", "point": { "lat": 35.7075, "lng": 139.666 }, "mins": 75, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "hiiragi-ginza", "city": "tokyo", "point": { "lat": 35.67, "lng": 139.764 }, "mins": 40, "category": "cafe", "best": "afternoon", "opens": 660, "closes": 1140, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "sensoji-asakusa", "city": "tokyo", "point": { "lat": 35.7148, "lng": 139.7967 }, "mins": 90, "category": "sight", "best": "morning", "opens": 360, "closes": 1020, "priority": 4, "outdoor": true },
+  { "id": "gyukatsu-shibuya", "city": "tokyo", "point": { "lat": 35.659, "lng": 139.7 }, "mins": 60, "category": "food", "best": "any", "opens": 660, "closes": 1320, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "yurakucho-yakitori-alley", "city": "tokyo", "point": { "lat": 35.6745, "lng": 139.7625 }, "mins": 90, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3, "meal": true },
+  { "id": "fushimi-inari", "city": "kyoto", "point": { "lat": 34.9671, "lng": 135.7727 }, "mins": 120, "category": "sight", "best": "morning", "opens": null, "closes": null, "priority": 4.5, "outdoor": true },
+  { "id": "philosophers-path", "city": "kyoto", "point": { "lat": 35.0268, "lng": 135.7954 }, "mins": 90, "category": "sight", "best": "any", "opens": null, "closes": null, "priority": 3, "couples": [ "Couple B" ], "outdoor": true },
+  { "id": "menya-inoichi", "city": "kyoto", "point": { "lat": 35.002, "lng": 135.765 }, "mins": 60, "category": "food", "best": "midday", "opens": 660, "closes": 1260, "priority": 3.5, "adults": true },
+  { "id": "nishiki-market", "city": "kyoto", "point": { "lat": 35.005, "lng": 135.7649 }, "mins": 75, "category": "food", "best": "midday", "opens": 600, "closes": 1020, "priority": 4, "closedWeekdays": [ 3 ] },
+  { "id": "kiyomizu-dera", "city": "kyoto", "point": { "lat": 34.9949, "lng": 135.785 }, "mins": 90, "category": "sight", "best": "morning", "opens": 360, "closes": 1080, "priority": 4, "couples": [ "Couple A" ], "outdoor": true },
+  { "id": "ichizawa-hanpu", "city": "kyoto", "point": null, "mins": 30, "category": "shopping", "best": "any", "opens": 600, "closes": 1080, "priority": 3, "couples": [ "Couple A" ], "closedWeekdays": [ 2 ] },
+  { "id": "kyoto-handicraft-center", "city": "kyoto", "point": { "lat": 35.017, "lng": 135.783 }, "mins": 60, "category": "shopping", "best": "any", "opens": 600, "closes": 1080, "priority": 2.5, "couples": [ "Couple A" ] },
+  { "id": "nakamura-tokichi-uji", "city": "kyoto", "point": { "lat": 34.8893, "lng": 135.801 }, "mins": 60, "category": "cafe", "best": "morning", "opens": 600, "closes": 1020, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "matcha-roastery-uji", "city": "kyoto", "point": { "lat": 34.89, "lng": 135.8018 }, "mins": 45, "category": "cafe", "best": "midday", "opens": 600, "closes": 1020, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "tsuen-tea-uji", "city": "kyoto", "point": { "lat": 34.893, "lng": 135.806 }, "mins": 40, "category": "cafe", "best": "any", "opens": 570, "closes": 1050, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "miyako-yasai-kamo", "city": "kyoto", "point": { "lat": 35.004, "lng": 135.759 }, "mins": 75, "category": "food", "best": "midday", "opens": 660, "closes": 1320, "priority": 3.5 },
+  { "id": "pontocho-alley", "city": "kyoto", "point": { "lat": 35.005, "lng": 135.771 }, "mins": 60, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3.5 },
+  { "id": "yakiniku-pontocho", "city": "kyoto", "point": null, "mins": 90, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3.5 },
+  { "id": "gio-ji", "city": "kyoto", "point": { "lat": 35.0237, "lng": 135.667 }, "mins": 30, "category": "sight", "best": "morning", "opens": 540, "closes": 990, "priority": 3, "couples": [ "Couple B" ], "outdoor": true },
+  { "id": "kyoto-aquarium", "city": "kyoto", "point": { "lat": 34.9875, "lng": 135.7478 }, "mins": 120, "category": "experience", "best": "morning", "opens": 600, "closes": 1080, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "kasagiya-sweets", "city": "kyoto", "point": { "lat": 34.9985, "lng": 135.7806 }, "mins": 50, "category": "cafe", "best": "afternoon", "opens": 600, "closes": 1050, "priority": 3, "couples": [ "Couple B" ], "closedWeekdays": [ 2 ] },
+  { "id": "daimaru-kyoto", "city": "kyoto", "point": { "lat": 35.004, "lng": 135.762 }, "mins": 90, "category": "shopping", "best": "afternoon", "opens": 600, "closes": 1200, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "gyukaku-shijo", "city": "kyoto", "point": null, "mins": 90, "category": "food", "best": "evening", "opens": null, "closes": null, "priority": 3 },
+  { "id": "wakuden-kyoto", "city": "kyoto", "point": { "lat": 35.007, "lng": 135.76 }, "mins": 120, "category": "food", "best": "midday", "opens": 690, "closes": 900, "priority": 4, "couples": [ "Couple A" ], "adults": true, "booking": true },
+  { "id": "ippodo-tea", "city": "kyoto", "point": { "lat": 35.0143, "lng": 135.7672 }, "mins": 60, "category": "shopping", "best": "afternoon", "opens": 600, "closes": 1020, "priority": 3.5, "couples": [ "Couple A" ] },
+  { "id": "nanzenji-junsei", "city": "kyoto", "point": { "lat": 35.0113, "lng": 135.7905 }, "mins": 90, "category": "food", "best": "midday", "opens": 660, "closes": 1200, "priority": 3.5, "couples": [ "Couple A" ] },
+  { "id": "tominokoji-yamagishi", "city": "kyoto", "point": { "lat": 35.0052, "lng": 135.764 }, "mins": 120, "category": "food", "best": "evening", "opens": 1080, "closes": 1320, "priority": 4, "couples": [ "Couple A" ], "booking": true },
+  { "id": "tofukuji", "city": "kyoto", "point": { "lat": 34.976, "lng": 135.774 }, "mins": 75, "category": "sight", "best": "morning", "opens": 540, "closes": 960, "priority": 3.5, "couples": [ "Couple A" ], "outdoor": true },
+  { "id": "kyoto-railway-museum", "city": "kyoto", "point": { "lat": 34.987, "lng": 135.743 }, "mins": 120, "category": "experience", "best": "any", "opens": 600, "closes": 1020, "priority": 3, "couples": [ "Couple A" ], "closedWeekdays": [ 3 ] },
+  { "id": "kyoto-botanical-gardens", "city": "kyoto", "point": { "lat": 35.049, "lng": 135.763 }, "mins": 90, "category": "sight", "best": "any", "opens": 540, "closes": 1020, "priority": 2.5, "couples": [ "Couple A" ], "outdoor": true },
+  { "id": "kodaiji", "city": "kyoto", "point": { "lat": 35.0008, "lng": 135.7812 }, "mins": 60, "category": "sight", "best": "afternoon", "opens": 540, "closes": 1050, "priority": 3.5 },
+  { "id": "teramachi-arcade", "city": "kyoto", "point": { "lat": 35.0065, "lng": 135.767 }, "mins": 90, "category": "shopping", "best": "any", "opens": 600, "closes": 1200, "priority": 3 },
+  { "id": "aritsugu-knives", "city": "kyoto", "point": { "lat": 35.005, "lng": 135.7645 }, "mins": 30, "category": "shopping", "best": "morning", "opens": 600, "closes": 1020, "priority": 3, "adults": true },
+  { "id": "sanjokai-shotengai", "city": "kyoto", "point": { "lat": 35.0085, "lng": 135.748 }, "mins": 60, "category": "shopping", "best": "any", "opens": null, "closes": null, "priority": 2.5 },
+  { "id": "awomb-sushi", "city": "kyoto", "point": { "lat": 35.0055, "lng": 135.757 }, "mins": 75, "category": "food", "best": "midday", "opens": 690, "closes": 900, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "gokago-tea", "city": "kyoto", "point": { "lat": 35.001, "lng": 135.779 }, "mins": 40, "category": "cafe", "best": "afternoon", "opens": 600, "closes": 1080, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "kichisen-kaiseki", "city": "kyoto", "point": { "lat": 35.04, "lng": 135.772 }, "mins": 120, "category": "food", "best": "evening", "opens": 1050, "closes": 1260, "priority": 4.5, "couples": [ "Couple A" ], "adults": true, "booking": true },
+  { "id": "yakiniku-hiro-shoten", "city": "kyoto", "point": null, "mins": 90, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "hayakawa-knives", "city": "kyoto", "point": { "lat": 35.002, "lng": 135.768 }, "mins": 30, "category": "shopping", "best": "any", "opens": 540, "closes": 1080, "priority": 2.5, "couples": [ "Couple B" ], "closedWeekdays": [ 0 ] },
+  { "id": "starbucks-ninenzaka", "city": "kyoto", "point": { "lat": 34.9983, "lng": 135.7808 }, "mins": 45, "category": "cafe", "best": "morning", "opens": 480, "closes": 1200, "priority": 2.5 },
+  { "id": "hankyu-depachika-umeda", "city": "osaka", "point": { "lat": 34.7028, "lng": 135.4985 }, "mins": 90, "category": "shopping", "best": "afternoon", "opens": 600, "closes": 1200, "priority": 3.5 },
+  { "id": "umeda-sky-christmas-market", "city": "osaka", "point": { "lat": 34.7052, "lng": 135.4896 }, "mins": 75, "category": "shopping", "best": "evening", "opens": 720, "closes": 1320, "priority": 3.5, "closedDates": [ "2026-12-26", "2026-12-27", "2026-12-28", "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "stand-age", "city": "osaka", "point": { "lat": 34.673, "lng": 135.501 }, "mins": 60, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3, "couples": [ "Couple A" ], "adults": true },
+  { "id": "abeno-harukas", "city": "osaka", "point": { "lat": 34.6459, "lng": 135.5137 }, "mins": 90, "category": "sight", "best": "evening", "opens": 540, "closes": 1320, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "tenma-alleys", "city": "osaka", "point": { "lat": 34.705, "lng": 135.512 }, "mins": 90, "category": "nightlife", "best": "night", "opens": 1020, "closes": 1380, "priority": 3, "couples": [ "Couple B" ], "adults": true, "meal": true },
+  { "id": "doguyasuji", "city": "osaka", "point": { "lat": 34.664, "lng": 135.5035 }, "mins": 60, "category": "shopping", "best": "morning", "opens": 600, "closes": 1080, "priority": 3, "adults": true },
+  { "id": "amemura", "city": "osaka", "point": { "lat": 34.6722, "lng": 135.498 }, "mins": 90, "category": "shopping", "best": "any", "opens": 660, "closes": 1200, "priority": 3 },
+  { "id": "donki-ferris-dotonbori", "city": "osaka", "point": null, "mins": 45, "category": "experience", "best": "evening", "opens": 660, "closes": 1380, "priority": 3, "adults": true },
+  { "id": "craftroom-bar", "city": "osaka", "point": { "lat": 34.699, "lng": 135.496 }, "mins": 60, "category": "nightlife", "best": "night", "opens": 1080, "closes": 1440, "priority": 3, "couples": [ "Couple B" ], "adults": true },
+  { "id": "den-den-town", "city": "osaka", "point": { "lat": 34.659, "lng": 135.506 }, "mins": 120, "category": "shopping", "best": "morning", "opens": 600, "closes": 1200, "priority": 2.5, "couples": [ "Couple A" ], "closedDates": [ "2026-12-29", "2026-12-30", "2026-12-31" ] },
+  { "id": "tenjinbashi-suji", "city": "osaka", "point": { "lat": 34.704, "lng": 135.5115 }, "mins": 90, "category": "shopping", "best": "any", "opens": 600, "closes": 1200, "priority": 3 },
+  { "id": "ajinoya-okonomiyaki", "city": "osaka", "point": { "lat": 34.6682, "lng": 135.5015 }, "mins": 75, "category": "food", "best": "afternoon", "opens": 660, "closes": 1320, "priority": 4, "closedWeekdays": [ 1 ] },
+  { "id": "taiyo-no-tou-cafe", "city": "osaka", "point": { "lat": 34.708, "lng": 135.499 }, "mins": 60, "category": "food", "best": "midday", "opens": 660, "closes": 1320, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "umeda-floating-garden", "city": "osaka", "point": { "lat": 34.7053, "lng": 135.4903 }, "mins": 60, "category": "sight", "best": "evening", "opens": 570, "closes": 1350, "priority": 4 },
+  { "id": "chikichiki-yakiniku", "city": "osaka", "point": { "lat": 34.703, "lng": 135.501 }, "mins": 90, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3, "adults": true },
+  { "id": "ganso-daruma-kushikatsu", "city": "osaka", "point": { "lat": 34.6525, "lng": 135.5063 }, "mins": 60, "category": "food", "best": "any", "opens": 660, "closes": 1320, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "wagyu-mow-mow", "city": "osaka", "point": { "lat": 34.672, "lng": 135.503 }, "mins": 75, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3.5 },
+  { "id": "yakiniku-hanamichi", "city": "osaka", "point": null, "mins": 90, "category": "food", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3 },
+  { "id": "tsuruhashi-alleys", "city": "osaka", "point": { "lat": 34.665, "lng": 135.53 }, "mins": 75, "category": "food", "best": "any", "opens": 660, "closes": 1200, "priority": 3, "couples": [ "Couple B" ] },
+  { "id": "gyukatsu-motomura-namba", "city": "osaka", "point": { "lat": 34.6655, "lng": 135.5015 }, "mins": 60, "category": "food", "best": "any", "opens": 660, "closes": 1320, "priority": 3.5, "couples": [ "Couple B" ] },
+  { "id": "mooken-burger", "city": "osaka", "point": { "lat": 34.677, "lng": 135.499 }, "mins": 60, "category": "food", "best": "midday", "opens": 690, "closes": 900, "priority": 3, "closedWeekdays": [ 1, 2 ] },
+  { "id": "hozenji-yokocho", "city": "osaka", "point": { "lat": 34.668, "lng": 135.5025 }, "mins": 60, "category": "nightlife", "best": "evening", "opens": 1020, "closes": 1380, "priority": 3.5, "meal": true },
+  { "id": "janjan-yokocho", "city": "osaka", "point": { "lat": 34.651, "lng": 135.506 }, "mins": 60, "category": "nightlife", "best": "evening", "opens": 720, "closes": 1260, "priority": 3, "meal": true },
+  { "id": "shinsaibashi-suji", "city": "osaka", "point": { "lat": 34.673, "lng": 135.5013 }, "mins": 90, "category": "shopping", "best": "any", "opens": 660, "closes": 1200, "priority": 3 },
+  { "id": "tsutenkaku", "city": "osaka", "point": { "lat": 34.6525, "lng": 135.5063 }, "mins": 60, "category": "sight", "best": "any", "opens": 600, "closes": 1200, "priority": 3 },
+  { "id": "round1-stadium", "city": "osaka", "point": { "lat": 34.669, "lng": 135.502 }, "mins": 120, "category": "experience", "best": "any", "opens": null, "closes": null, "priority": 2.5 },
+  { "id": "wad-cafe", "city": "osaka", "point": { "lat": 34.676, "lng": 135.504 }, "mins": 45, "category": "cafe", "best": "afternoon", "opens": 720, "closes": 1140, "priority": 3 },
+  { "id": "todaiji-nara-park", "city": "nara", "point": { "lat": 34.689, "lng": 135.8398 }, "mins": 150, "category": "sight", "best": "morning", "opens": 480, "closes": 1020, "priority": 4, "outdoor": true },
+  { "id": "nakatanidou-mochi", "city": "nara", "point": { "lat": 34.6825, "lng": 135.829 }, "mins": 20, "category": "food", "best": "any", "opens": 600, "closes": 1140, "priority": 3.5 },
+  { "id": "hiraso-sushi", "city": "nara", "point": { "lat": 34.68, "lng": 135.83 }, "mins": 60, "category": "food", "best": "midday", "opens": 600, "closes": 1200, "priority": 3, "couples": [ "Couple B" ], "closedWeekdays": [ 1 ] },
+  { "id": "wakakusa-cafe", "city": "nara", "point": { "lat": 34.689, "lng": 135.84 }, "mins": 45, "category": "cafe", "best": "any", "opens": 600, "closes": 1020, "priority": 2.5, "couples": [ "Couple B" ] },
+  { "id": "higashimuki-arcade", "city": "nara", "point": { "lat": 34.6835, "lng": 135.8285 }, "mins": 60, "category": "shopping", "best": "any", "opens": 600, "closes": 1140, "priority": 2.5, "couples": [ "Couple A" ] },
+  { "id": "hakone-manju-stall", "city": "daytrip", "point": { "lat": 35.233, "lng": 139.104 }, "mins": 15, "category": "food", "best": "any", "opens": 540, "closes": 1020, "priority": 3, "couples": [ "Couple A" ] },
+  { "id": "owakudani", "city": "daytrip", "point": { "lat": 35.244, "lng": 139.02 }, "mins": 90, "category": "sight", "best": "morning", "opens": 540, "closes": 1020, "priority": 4, "outdoor": true },
+  { "id": "lake-shoji", "city": "daytrip", "point": { "lat": 35.489, "lng": 138.61 }, "mins": 90, "category": "sight", "best": "evening", "opens": 480, "closes": 1020, "priority": 4, "couples": [ "Couple A" ], "outdoor": true },
+  { "id": "gotemba-outlets", "city": "daytrip", "point": { "lat": 35.308, "lng": 138.953 }, "mins": 240, "category": "shopping", "best": "morning", "opens": 600, "closes": 1140, "priority": 4 },
+  { "id": "himeji-castle", "city": "daytrip", "point": { "lat": 34.8394, "lng": 134.6939 }, "mins": 180, "category": "sight", "best": "morning", "opens": 540, "closes": 960, "priority": 4, "outdoor": true },
+  { "id": "kobe-motomachi", "city": "daytrip", "point": { "lat": 34.689, "lng": 135.187 }, "mins": 240, "category": "shopping", "best": "morning", "opens": 600, "closes": 1170, "priority": 4 },
+  { "id": "arima-onsen", "city": "daytrip", "point": { "lat": 34.797, "lng": 135.248 }, "mins": 180, "category": "experience", "best": "any", "opens": 480, "closes": 1320, "priority": 3.5 },
+  { "id": "amanohashidate", "city": "daytrip", "point": { "lat": 35.57, "lng": 135.192 }, "mins": 180, "category": "sight", "best": "morning", "opens": 480, "closes": 1020, "priority": 3, "outdoor": true },
+  { "id": "cafe-stand-somewhere", "city": "daytrip", "point": null, "mins": 40, "category": "cafe", "best": "any", "opens": null, "closes": null, "priority": 3 }
+ ],
+ "fixed": [
+  {
+   "day": 6,
+   "couples": [
+    "Couple A",
+    "Couple B"
+   ],
+   "point": {
+    "lat": 35.6329,
+    "lng": 139.8804
+   },
+   "start": 0,
+   "mins": 1439
+  },
+  {
+   "day": 13,
+   "couples": [
+    "Couple A",
+    "Couple B"
+   ],
+   "point": {
+    "lat": 34.6545,
+    "lng": 135.429
+   },
+   "start": null,
+   "mins": 180
+  }
+ ],
+ "expect": {
+  "stable": true,
+  "noIssueKinds": [
+   "hours",
+   "overlap",
+   "tight"
+  ],
+  "emptyDays": [
+   6
+  ]
+ }
+}

@@ -1,6 +1,6 @@
 {
  "name": "real-japan",
- "description": "Dry run of the live Japan trip (2026-11-02): place names as slugs, couples S (sleeps in Yokohama days 1-3, the only couple in Japan then) and A. There is no Yokohama place in the library (the four 'yokohama' units are Hakone / Fuji day trips), so days 1-3 can only hold Tokyo places: the Yokohama stay has no hotel booking, so its point is the city centre, and Tokyo is within NEAR_KM (30 km) of it. Those Tokyo places are allowed there (nothing of Yokohama's is eligible) but must be reported as away (in Tokyo); the Hakone day trip on day 2 is not.",
+ "description": "Dry run of the live Japan trip (2026-11-02): place names as slugs, couples S (sleeps in Yokohama days 1-3, the only couple in Japan then) and A. There is no Yokohama place in the library (the four 'yokohama' units are Hakone / Fuji day trips), so days 1-3 can only hold Tokyo places: the Yokohama stay has no hotel booking, so its point is the city centre, and Tokyo is within NEAR_KM (30 km) of it. Those Tokyo places are allowed there (nothing of Yokohama's is eligible) but must be reported as away (in Tokyo); the Hakone day trip on day 2 is not. (26 Nov 2026: the fixture no longer names which six Tokyo places land on the Yokohama days. That depended on the old order of placing; the harness's own rule still checks that every place outside its day's city is labelled, and awayMin that some are.)",
  "days": [
   {
    "day": 1,
@@ -2856,14 +2856,6 @@
   "noIssueKinds": [
    "hours"
   ],
-  "away": {
-   "isetan-shinjuku-depachik88": "tokyo",
-   "shimokitazawa-vintage-sh62": "tokyo",
-   "tokyo-metropolitan-gover38": "tokyo",
-   "tsukiji-outer-market-str43": "tokyo",
-   "teamlab-planets-tokyo86": "tokyo",
-   "akachan-honpo64": "tokyo"
-  },
-  "awayMin": 6
+  "awayMin": 1
  }
 }
